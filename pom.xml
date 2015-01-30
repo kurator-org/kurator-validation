@@ -3,10 +3,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.kurator</groupId>
-    <artifactId>kurator-name-validation</artifactId>
-    <version>0.2</version>
+    <artifactId>kurator-validation</artifactId>
+    <version>0.3</version>
     <packaging>jar</packaging>
-    <name>kurator-name-validator</name>
+    <name>kurator-validator</name>
     <url>http://opensource.ncsa.illinois.edu/projects/KURATOR</url>
         
     <properties>
@@ -55,7 +55,70 @@
 				</configuration>
 			</plugin>
 		
+	    	<!-- Copy the dependency jars into the target/dependency directory -->
+	     	<plugin>
+	        	<groupId>org.apache.maven.plugins</groupId>
+	        	<artifactId>maven-dependency-plugin</artifactId>
+	        	<executions>
+	          		<execution>
+	            		<id>copy</id>
+	            		<phase>compile</phase>
+	            		<goals>
+	              			<goal>copy-dependencies</goal>
+	            		</goals>
+	          		</execution>
+	       		 </executions>
+	      	</plugin>
+
+    	<!-- Add the manifest file to the jar and force classpath to the dependency directory to automatically include the dependency jars-->
+      	<plugin>
+        	<groupId>org.apache.maven.plugins</groupId>
+        	<artifactId>maven-jar-plugin</artifactId>
+        	<configuration>
+          		<archive>
+            		<manifest>
+              			<addClasspath>true</addClasspath>
+              			<mainClass>org.kurator.akka.KuratorAkkaCLI</mainClass>
+             			<!--  <classpathPrefix>dependency/</classpathPrefix>-->
+            		</manifest>
+          		</archive>
+        	</configuration>
+      	</plugin>     
+
+		<!-- Build javadocs -->      	
+		<plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-javadoc-plugin</artifactId>
+	        <version>2.10.1</version>
+	        <configuration>
+	        </configuration>
+      	</plugin>
+
+   		<!-- Make a standalone jar file -->
+       	<plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <configuration>
+                <archive>
+                    <manifest>
+                        <mainClass>org.kurator.akka.KuratorAkkaCLI</mainClass>
+                    </manifest>
+                </archive>
+                <descriptorRefs>
+                    <descriptorRef>jar-with-dependencies</descriptorRef>
+                </descriptorRefs>
+            </configuration>
+		    <executions>
+		        <execution>
+		            <phase>package</phase>
+		            <goals>
+		                <goal>single</goal>
+		            </goals>
+		        </execution>
+		    </executions>
+		</plugin>
+
         </plugins>
+
 
         <pluginManagement>
         	<plugins>
