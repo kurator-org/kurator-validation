@@ -4,7 +4,7 @@
 
 imports:
 
-- classpath:/org/kurator/akka/actors.yaml
+- classpath:/org/kurator/validation/actors.yaml
 
 components:
 
