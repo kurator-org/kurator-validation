@@ -8,19 +8,38 @@
     <packaging>jar</packaging>
     <name>kurator-validator</name>
     <url>http://opensource.ncsa.illinois.edu/projects/KURATOR</url>
-        
-    <properties>
+
+	<properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <repositories>
+
+        <repository>
+            <id>filteredpush</id>
+            <name>Filtered Push Repository</name>
+            <url>http://firuta.huh.harvard.edu:9090/archiva/repository/filteredpush/</url>
+            <layout>default</layout>
+            <releases>
+	           <enabled>true</enabled>
+	           <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </snapshots>
+        </repository>
+
+    </repositories>
+
     <dependencies>
 
-		<dependency>
+        <dependency>
             <groupId>org.kurator</groupId>
             <artifactId>kurator-akka</artifactId>
             <version>0.3</version>
         </dependency>
-	
+
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-actor_2.10</artifactId>
@@ -33,137 +52,147 @@
             <version>2.3.6</version>
         </dependency>
 
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.11</version>
-		</dependency>
-    
-    	<dependency>
-	   		<groupId>org.yaml</groupId>
-	    	<artifactId>snakeyaml</artifactId>
-	    	<version>1.13</version>
-	    	<optional>true</optional>
-	    </dependency>
-	    
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.13</version>
+            <optional>true</optional>
+        </dependency>
+
+	    <dependency>
+            <groupId>org.filteredpush</groupId>
+            <artifactId>FP-KurationServices</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        
     </dependencies>
-      
-    <build>
-        <plugins>
 
-			<!-- Set Java compiler source and target versions -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
-				</configuration>
-			</plugin>
-		
-	    	<!-- Copy the dependency jars into the target/dependency directory -->
-	     	<plugin>
-	        	<groupId>org.apache.maven.plugins</groupId>
-	        	<artifactId>maven-dependency-plugin</artifactId>
-	        	<executions>
-	          		<execution>
-	            		<id>copy</id>
-	            		<phase>compile</phase>
-	            		<goals>
-	              			<goal>copy-dependencies</goal>
-	            		</goals>
-	          		</execution>
-	       		 </executions>
-	      	</plugin>
+	<build>
+	   <plugins>
 
-    	<!-- Add the manifest file to the jar and force classpath to the dependency directory to automatically include the dependency jars-->
-      	<plugin>
-        	<groupId>org.apache.maven.plugins</groupId>
-        	<artifactId>maven-jar-plugin</artifactId>
-        	<configuration>
-          		<archive>
-            		<manifest>
-              			<addClasspath>true</addClasspath>
-              			<mainClass>org.kurator.akka.KuratorAkkaCLI</mainClass>
-             			<!--  <classpathPrefix>dependency/</classpathPrefix>-->
-            		</manifest>
-          		</archive>
-        	</configuration>
-      	</plugin>     
+	       <!-- Set Java compiler source and target versions -->
+	       <plugin>
+	           <groupId>org.apache.maven.plugins</groupId>
+	           <artifactId>maven-compiler-plugin</artifactId>
+	           <version>2.3.2</version>
+	           <configuration>
+	               <source>1.7</source>
+	               <target>1.7</target>
+	           </configuration>
+	       </plugin>
 
-		<!-- Build javadocs -->      	
-		<plugin>
-	        <groupId>org.apache.maven.plugins</groupId>
-	        <artifactId>maven-javadoc-plugin</artifactId>
-	        <version>2.10.1</version>
-	        <configuration>
-	        </configuration>
-      	</plugin>
+	       <!-- Copy the dependency jars into the target/dependency directory -->
+	       <plugin>
+	           <groupId>org.apache.maven.plugins</groupId>
+	           <artifactId>maven-dependency-plugin</artifactId>
+	           <executions>
+	               <execution>
+    	               <id>copy</id>
+    	               <phase>compile</phase>
+    	               <goals>
+	                       <goal>copy-dependencies</goal>
+	                   </goals>
+	               </execution>
+	           </executions>
+      	 </plugin>
 
-   		<!-- Make a standalone jar file -->
-       	<plugin>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <configuration>
-                <archive>
-                    <manifest>
-                        <mainClass>org.kurator.akka.KuratorAkkaCLI</mainClass>
-                    </manifest>
-                </archive>
-                <descriptorRefs>
-                    <descriptorRef>jar-with-dependencies</descriptorRef>
-                </descriptorRefs>
-            </configuration>
-		    <executions>
-		        <execution>
-		            <phase>package</phase>
-		            <goals>
-		                <goal>single</goal>
-		            </goals>
-		        </execution>
-		    </executions>
-		</plugin>
+    	   <!-- Add the manifest file to the jar and force classpath to the 
+                dependency directory to automatically include the dependency jars -->
+    	   <plugin>
+    	       <groupId>org.apache.maven.plugins</groupId>
+    	       <artifactId>maven-jar-plugin</artifactId>
+    	       <configuration>
+    	           <archive>
+    	               <manifest>
+    	                   <addClasspath>true</addClasspath>
+    	                   <mainClass>org.kurator.akka.KuratorAkkaCLI</mainClass>
+    	                   <!--  <classpathPrefix>dependency/</classpathPrefix>-->
+    	               </manifest>
+    	           </archive>
+                </configuration>
+    	   </plugin>       
+    
+        	<!-- Build javadocs -->      	
+        	<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.1</version>
+                <configuration>
+                </configuration>            
+        	</plugin>
 
-        </plugins>
-
+            <!-- Make a standalone jar file -->
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>org.kurator.akka.KuratorAkkaCLI</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+    
+    	</plugins>
 
         <pluginManagement>
         	<plugins>
-        		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+            
+        		<!--This plugin's configuration is used to store Eclipse m2e settings only. 
+                    It has no influence on the Maven build itself -->
         		<plugin>
-        			<groupId>org.eclipse.m2e</groupId>
-        			<artifactId>lifecycle-mapping</artifactId>
-        			<version>1.0.0</version>
-        			<configuration>
-        				<lifecycleMappingMetadata>
-        					<pluginExecutions>
-        						<pluginExecution>
-        							<pluginExecutionFilter>
-        								<groupId>
-        									org.apache.maven.plugins
-        								</groupId>
-        								<artifactId>
-        									maven-dependency-plugin
-        								</artifactId>
-        								<versionRange>
-        									[2.8,)
-        								</versionRange>
-        								<goals>
-        									<goal>
-        										copy-dependencies
-        									</goal>
-        								</goals>
-        							</pluginExecutionFilter>
-        							<action>
-        								<ignore></ignore>
-        							</action>
-        						</pluginExecution>
-        					</pluginExecutions>
-        				</lifecycleMappingMetadata>
-        			</configuration>
-        		</plugin>
-        	</plugins>
-        </pluginManagement>
-    </build>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+	                   <lifecycleMappingMetadata>
+	                       <pluginExecutions>
+	                           <pluginExecution>
+	                               <pluginExecutionFilter>
+	                                   <groupId>
+	                                       org.apache.maven.plugins
+	                                    </groupId>
+	                                   <artifactId>
+	                                       maven-dependency-plugin
+	                                   </artifactId>
+	                                   <versionRange>
+	                                       [2.8,)
+	                                   </versionRange>
+	                                   <goals>
+	                                       <goal>
+	                                           copy-dependencies
+	                                       </goal>
+	                                   </goals>
+                                   </pluginExecutionFilter>
+	                               <action>
+	                                   <ignore></ignore>
+	                               </action>
+	                           </pluginExecution>
+	                       </pluginExecutions>
+	                   </lifecycleMappingMetadata>
+	               </configuration>
+	           </plugin>
+
+	       </plugins>
+	   </pluginManagement>
+       
+	</build>
 	  
 </project>
