@@ -6,7 +6,7 @@
     <artifactId>kurator-validation</artifactId>
     <version>0.3</version>
     <packaging>jar</packaging>
-    <name>kurator-validator</name>
+    <name>kurator-validation</name>
     <url>http://opensource.ncsa.illinois.edu/projects/KURATOR</url>
 
 	<properties>
