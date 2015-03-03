@@ -13,25 +13,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <repositories>
-
-        <repository>
-            <id>filteredpush</id>
-            <name>Filtered Push Repository</name>
-            <url>http://firuta.huh.harvard.edu:9090/archiva/repository/filteredpush/</url>
-            <layout>default</layout>
-            <releases>
-	           <enabled>true</enabled>
-	           <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </snapshots>
-        </repository>
-
-    </repositories>
-
     <dependencies>
 
         <dependency>
@@ -63,12 +44,6 @@
             <artifactId>snakeyaml</artifactId>
             <version>1.13</version>
             <optional>true</optional>
-        </dependency>
-
-	    <dependency>
-            <groupId>org.filteredpush</groupId>
-            <artifactId>FP-KurationServices</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
         
     </dependencies>
