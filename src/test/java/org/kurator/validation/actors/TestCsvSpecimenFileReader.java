@@ -23,11 +23,9 @@ public class TestCsvSpecimenFileReader extends KuratorAkkaTestCase {
                  .outputStream(stdoutStream)
                  .errorStream(stderrStream);
 
-         readerActor = wr.configureNewActor()
-                 .actorClass(CsvFileReader.class);
+         readerActor = wr.actor(CsvFileReader.class);
 
-         printerActor = wr.configureNewActor()
-                 .actorClass(PrintStreamWriter.class)
+         printerActor = wr.actor(PrintStreamWriter.class)
                  .parameter("separator", EOL)
                  .listensTo(readerActor);
      }
