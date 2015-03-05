@@ -1,7 +1,7 @@
 package org.kurator.validation.actors;
 
 import org.kurator.akka.KuratorAkkaTestCase;
-import org.kurator.akka.data.GenericRecord;
+import org.kurator.akka.data.GenericMapRecord;
 
 public class TestSciNameAssembler extends KuratorAkkaTestCase {
 
@@ -16,7 +16,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
 
     	Exception caught = null;
     	try {
-    		sciNameAssembler.assembleName(new GenericRecord(new String[] {}));
+    		sciNameAssembler.assembleName(new GenericMapRecord(new String[] {}));
 			fail("Exception expected");
     	} catch (Exception ex) {
     		caught = ex;
@@ -27,7 +27,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
 
 	public void testSciNameAssembler_Genus() throws Exception {
 
-		String assembledName = sciNameAssembler.assembleName(new GenericRecord(new String[] {
+		String assembledName = sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
 				"genus", "Emoia"
 		}));
 
@@ -38,7 +38,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
 
     	Exception caught = null;
     	try {
-    		sciNameAssembler.assembleName(new GenericRecord(new String[] {
+    		sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
 				"subgenus", "pallidiceps"
 			}));
 			fail("Exception expected");
@@ -51,7 +51,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
 
     public void testSciNameAssembler_Genus_SpecificEpithet() throws Exception {
 
-		String assembledName = sciNameAssembler.assembleName(new GenericRecord(new String[] {
+		String assembledName = sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
 				"genus", 			"Emoia",
 				"specificEpithet", 	"pallidiceps"
 		}));
@@ -61,7 +61,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
 
     public void testSciNameAssembler_Genus_SpecificEpithet_IntraspecificEpithet() throws Exception {
 
-		String assembledName = sciNameAssembler.assembleName(new GenericRecord(new String[] {
+		String assembledName = sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
 				"genus", 				"Hadrurus",
 				"specificEpithet", 		"arizonensis",
 				"infraspecificEpithet", "arizonensis"
@@ -74,7 +74,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
 
     	Exception caught = null;
     	try {
-    		sciNameAssembler.assembleName(new GenericRecord(new String[] {
+    		sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
 				"genus", 				"Hadrurus",
 				"infraspecificEpithet", "arizonensis"
 			}));
@@ -88,7 +88,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
 
     public void testSciNameAssembler_Genus_SpecificEpithet_IntraspecificEpithet_TaxonRank() throws Exception {
 
-		String assembledName = sciNameAssembler.assembleName(new GenericRecord(new String[] {
+		String assembledName = sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
 				"genus", 				"Lithobius",
 				"specificEpithet", 		"utahensis",
 				"taxonRank",			"var.",
@@ -100,7 +100,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
 
     public void testSciNameAssembler_Genus_SpecificEpithet_IntraspecificEpithet_VerbatimTaxonRank() throws Exception {
 
-		String assembledName = sciNameAssembler.assembleName(new GenericRecord(new String[] {
+		String assembledName = sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
 				"genus", 				"Lithobius",
 				"specificEpithet", 		"utahensis",
 				"verbatimTaxonRank",	"var.",
@@ -112,7 +112,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
 
     public void testSciNameAssembler_Genus_SpecificEpithet_IntraspecificEpithet_TaxonRank_Equals_VerbatimTaxonRank() throws Exception {
 
-		String assembledName = sciNameAssembler.assembleName(new GenericRecord(new String[] {
+		String assembledName = sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
 				"genus", 				"Lithobius",
 				"specificEpithet", 		"utahensis",
 				"verbatimTaxonRank",	"var.",
@@ -125,7 +125,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
 
     public void testSciNameAssembler_Genus_SpecificEpithet_IntraspecificEpithet_TaxonRank_DiffersFrom_VerbatimTaxonRank() throws Exception {
 
-		String assembledName = sciNameAssembler.assembleName(new GenericRecord(new String[] {
+		String assembledName = sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
 				"genus", 				"Lithobius",
 				"specificEpithet", 		"utahensis",
 				"verbatimTaxonRank",	"var.verbatim",
