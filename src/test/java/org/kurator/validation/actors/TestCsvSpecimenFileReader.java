@@ -54,6 +54,7 @@ public class TestCsvSpecimenFileReader extends KuratorAkkaTestCase {
     public void testCsvFileReader_NineMczIptRecords() throws Exception {
 
         readerActor.parameter("filePath", "src/test/resources/org/kurator/validation/data/mcz_ipt_snippet.csv");
+        readerActor.parameter("quote", '"');
 
         wr.build();
         wr.start();
