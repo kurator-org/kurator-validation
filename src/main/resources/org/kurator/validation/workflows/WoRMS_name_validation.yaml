@@ -1,0 +1,49 @@
+####################################
+# internal_date_validation.yaml
+####################################
+
+imports:
+
+- classpath:/org/kurator/validation/actors.yaml
+
+components:
+
+- id: FileReader
+  type: CsvFileReader
+  properties:
+    parameters:
+      filePath:
+
+- id: NameValidator
+  type: WoRMSNameValidator
+  properties:
+    listensTo:
+      - !ref FileReader
+
+- id: FileWriter
+  type: CsvFileWriter
+  properties:
+    parameters:
+      outputWriter:
+      filePath: out.csv
+    listensTo:
+      - !ref NameValidator
+  
+- id: WoRMSNameValidationWorkflow
+  type: Workflow
+  properties:
+    actors:
+      - !ref FileReader
+      - !ref NameValidator
+      - !ref FileWriter
+    parameters:
+      in:
+        actor: !ref FileReader
+        parameter: filePath
+      out:
+        actor: !ref FileWriter
+        parameter: filePath
+      writer:
+        actor: !ref FileWriter
+        parameter: outputWriter
+      
