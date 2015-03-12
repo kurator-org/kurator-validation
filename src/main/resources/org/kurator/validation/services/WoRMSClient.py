@@ -1,5 +1,6 @@
+import sys
+sys.path =  ['', '/Users/tmcphill/jython2.5.3/Lib', '__classpath__', '__pyclasspath__/', '/Users/tmcphill/jython2.5.3/Lib/site-packages', '/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages']
 from suds.client import Client
-import re
 
 class WoRMSClient(object): 
 
@@ -56,8 +57,23 @@ class AphiaRecordLookupResult(object):
       '}'
     )
 
-if __name__ == '__main__':
-  wc = WoRMSClient()
-  print wc.lookUpAphiaRecordByTaxonName('Mollusca')
-  print wc.lookUpAphiaRecordByTaxonName('Architectonica reevi')
+def start():
+    global wc
+    wc = WoRMSClient()
+
+def validate(record):
+    taxonName = record['TaxonName']
+    result = wc.lookUpAphiaRecordByTaxonName(taxonName)
+    if result != None:
+      record['TaxonName'] = result.returnedTaxonName
+      record['OriginalName'] = result.submittedTaxonName
+      record['OriginalAuthor'] = record['Author']
+      record['Author'] = result.aphiaRecord['authority']
+      record['lsid'] = result.aphiaRecord['lsid']
+      return record
+
+#if __name__ == '__main__':
+#  wc = WoRMSClient()
+#  print wc.lookUpAphiaRecordByTaxonName('Mollusca')
+#  print wc.lookUpAphiaRecordByTaxonName('Architectonica reevi')
 
