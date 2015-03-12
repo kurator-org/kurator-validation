@@ -1,0 +1,13 @@
+imports:
+
+- classpath:/org/kurator/akka/actors.yaml
+
+types:
+
+- id: WoRMSNameValidator
+  type: JythonRecordProcessor
+  properties:
+    defaults:
+      path: src/main/resources/org/kurator/validation/services/WoRMSClient.py
+      start: start
+      function: validate
