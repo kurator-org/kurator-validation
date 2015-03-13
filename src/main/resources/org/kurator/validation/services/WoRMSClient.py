@@ -21,14 +21,14 @@ class WoRMSClient(object):
       return None
     else:
       aphiaRecord = self.client.service.getAphiaRecordByID(aphiaId)
-      return AphiaRecordLookupResult(submittedName, aphiaRecord)
+      return self.composeMatchResult(submittedName, aphiaRecord)
 
   def lookupAphiaRecordByFuzzyTaxonName(self, submittedName):
     matchingRecords = self.client.service.matchAphiaRecordsByNames(submittedName, self.marineOnly);
     if len(matchingRecords) != 1 or len(matchingRecords[0]) != 1:
       return None
     else:
-      return AphiaRecordLookupResult(submittedName, matchingRecords[0][0])
+      return self.composeMatchResult(submittedName, matchingRecords[0][0])
   
   def lookUpAphiaRecordByTaxonName(self, submittedName):    
     result = self.lookupAphiaRecordByExactTaxonName(submittedName)
@@ -36,30 +36,16 @@ class WoRMSClient(object):
       return result
     else:
       return self.lookupAphiaRecordByFuzzyTaxonName(submittedName)
-
-class AphiaRecordLookupResult(object):
-  
-  def __init__(self, submitted, record):
-    self.submittedTaxonName = submitted
-    self.returnedTaxonName = record['scientificname']
-    self.exactMatch = (record['match_type'] == 'exact')
-    self.aphiaRecord = record
-
-  def lsid(self):
-    return self.aphiaRecord['lsid']
-
-  def author(self):
-    return self.aphiaRecord['authority']
-
-  def __repr__(self):
-    return (
-      'AphiaRecordLookupResult{' + '\n' + 
-      '  submittedTaxonName = ' + self.submittedTaxonName + '\n'
-      '  returnedTaxonName = ' + self.returnedTaxonName + '\n'
-      '  exactMatch = ' + str(self.exactMatch) + '\n'
-      '  aphiaId = ' + str(self.aphiaRecord['AphiaID']) + '\n'
-      '}'
-    )
+      
+  def composeMatchResult(self, submittedName, aphiaRecord):
+    return {
+      'submittedTaxonName': submittedName,
+      'returnedTaxonName': aphiaRecord['scientificname'],
+      'exactMatch': (aphiaRecord['match_type'] == 'exact'),
+      'lsid': aphiaRecord['lsid'],
+      'author':  aphiaRecord['authority'],
+      'aphiaRecord': aphiaRecord
+    }
 
 def start():
     global wc
@@ -69,11 +55,11 @@ def validate(record):
     taxonName = record['TaxonName']
     result = wc.lookUpAphiaRecordByTaxonName(taxonName)
     if result != None:
-      record['TaxonName'] = result.returnedTaxonName
-      record['OriginalName'] = result.submittedTaxonName
+      record['TaxonName'] = result['returnedTaxonName']
+      record['OriginalName'] = result['submittedTaxonName']
       record['OriginalAuthor'] = record['Author']
-      record['Author'] = result.aphiaRecord['authority']
-      record['lsid'] = result.aphiaRecord['lsid']
+      record['Author'] = result['author']
+      record['lsid'] = result['lsid']
       return record
 
 #if __name__ == '__main__':
