@@ -1,6 +1,9 @@
 
 from org.kurator.validation.services.WoRMSClient import WoRMSClient
 
+import sys
+print sys.path
+
 def start():
     global wc
     wc = WoRMSClient()
