@@ -1,11 +1,4 @@
 
-try:
-    import java.lang
-    import sys
-    sys.path =  ['', '/Users/tmcphill/jython2.5.3/Lib', '__classpath__', '__pyclasspath__/', '/Users/tmcphill/jython2.5.3/Lib/site-packages', '/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages', '/Users/tmcphill/GitRepos/kurator-validation/src/main/resources']
-except:
-  pass
-  
 from suds.client import Client
 
 class WoRMSClient(object): 
@@ -47,20 +40,6 @@ class WoRMSClient(object):
       'aphiaRecord': aphiaRecord
     }
 
-def start():
-    global wc
-    wc = WoRMSClient()
-
-def validate(record):
-    taxonName = record['TaxonName']
-    result = wc.lookUpAphiaRecordByTaxonName(taxonName)
-    if result != None:
-      record['TaxonName'] = result['returnedTaxonName']
-      record['OriginalName'] = result['submittedTaxonName']
-      record['OriginalAuthor'] = record['Author']
-      record['Author'] = result['author']
-      record['lsid'] = result['lsid']
-      return record
 
 #if __name__ == '__main__':
 #  wc = WoRMSClient()
