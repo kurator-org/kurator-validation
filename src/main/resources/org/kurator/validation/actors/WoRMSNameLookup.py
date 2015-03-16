@@ -1,5 +1,5 @@
 
-from org.kurator.validation.services.WoRMSClient import WoRMSClient
+from kurator.validation.services.WoRMSClient import WoRMSClient
 
 import sys
 print sys.path

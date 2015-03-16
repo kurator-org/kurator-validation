@@ -2,9 +2,9 @@
 import sys
 import csv
 
-sys.path.append('/Users/tmcphill/GitRepos/kurator-validation/src/main/resources')
-from org.kurator.validation.actors.WoRMSNameLookup import start as startActor
-from org.kurator.validation.actors.WoRMSNameLookup import validate as validateRecord
+sys.path.append('/Users/tmcphill/GitRepos/kurator-validation/src/main/resources/org')
+from kurator.validation.actors.WoRMSNameLookup import start as startActor
+from kurator.validation.actors.WoRMSNameLookup import validate as validateRecord
 
 inputfile = "/Users/tmcphill/GitRepos/kurator-validation/src/test/resources/org/kurator/validation/data/testinput_moll.csv"
 
