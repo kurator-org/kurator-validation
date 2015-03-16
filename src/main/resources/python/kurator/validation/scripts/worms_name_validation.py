@@ -2,7 +2,7 @@
 import sys
 import csv
 
-sys.path.append('/Users/tmcphill/GitRepos/kurator-validation/src/main/resources/org')
+sys.path.append('/Users/tmcphill/GitRepos/kurator-validation/src/main/resources/python')
 from kurator.validation.actors.WoRMSNameLookup import start as startActor
 from kurator.validation.actors.WoRMSNameLookup import validate as validateRecord
 
