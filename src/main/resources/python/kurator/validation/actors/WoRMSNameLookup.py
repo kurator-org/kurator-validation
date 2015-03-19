@@ -2,12 +2,12 @@
 from kurator.validation.services.WoRMSClient import WoRMSClient
 
 def start():
-    global wc
-    wc = WoRMSClient()
+    global worms_client
+    worms_client = WoRMSClient()
 
 def validate(record):
     taxonName = record['TaxonName']
-    result = wc.lookUpAphiaRecordByTaxonName(taxonName)
+    result = worms_client.lookup_aphia_record_by_taxon_name(taxonName)
     if result != None:
       record['TaxonName'] = result['returnedTaxonName']
       record['OriginalName'] = result['submittedTaxonName']
