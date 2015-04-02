@@ -8,6 +8,6 @@ types:
   type: JythonRecordProcessor
   properties:
     defaults:
-      path: src/main/resources/python/kurator/validation/actors/WoRMSNameLookup.py
+      path: src/main/resources/python/kurator/validation/actors/WoRMSActor.py
       start: start
-      function: validate
+      function: curate
