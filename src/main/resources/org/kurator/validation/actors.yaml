@@ -5,9 +5,10 @@ imports:
 types:
 
 - id: WoRMSNameValidator
-  type: JythonRecordProcessor
+  type: JythonClassActor
   properties:
     defaults:
       path: src/main/resources/python/kurator/validation/actors/WoRMSActor.py
-      start: start
-      function: curate
+      actorName: WoRMSActor
+      method: curate_taxon_name_and_author
+      outputTypeIsInputType: true
