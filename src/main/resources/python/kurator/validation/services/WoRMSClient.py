@@ -34,8 +34,7 @@ class WoRMSClient(object):
         Perform fuzzy match search for the input name against the taxon names in WoRMS.
         
         The invoked Aphia names service returns a list of list matches.  This function 
-        returns a match only if exactly one match (i.e. if one list of one match) is 
-        returned by the AphiaNameService. 
+        returns a match only if exactly one match is returned by the AphiaNameService. 
         """        
         matches = self._client.service.matchAphiaRecordsByNames(name, self._marine_only);
         if len(matches) == 1 and len(matches[0]) == 1:
@@ -48,20 +47,22 @@ class WoRMSClient(object):
         Perform exact and fuzzy match searches as needed to lookup the input taxon name 
         in WoRMS.
         
-        Returns the result of calling aphia_record_by_exact_taxon_name() if an exact match 
-        is found, and the results of calling aphia_record_by_fuzzy_taxon_name() otherwise.
-        A fuzzy match (a slow operation) is performed only if exact match (a fast 
-        operation) fails. 
+        Returns a tuple with two elements.  The first is a boolean value indicating if an
+        exact match to the input taxon name was found.  The second element of the
+        returned tuple is the result of calling aphia_record_by_exact_taxon_name() if an 
+        exact match is found, or the results of calling aphia_record_by_fuzzy_taxon_name() 
+        otherwise.  A fuzzy match (a slow operation) is performed only if the exact match 
+        (a fast operation) fails.
         """
         exact_match_result = self.aphia_record_by_exact_taxon_name(name)
         if exact_match_result is not None:
-            return exact_match_result
+            return True, exact_match_result
         else:
-            return self.aphia_record_by_fuzzy_taxon_name(name)
+            return False, self.aphia_record_by_fuzzy_taxon_name(name)
       
 if __name__ == '__main__':
     """ Demonstration of class usage"""
     wc = WoRMSClient()
-    print wc.aphia_record_by_taxon_name('Mollusca')
-    print wc.aphia_record_by_taxon_name('Architectonica reevi')
+    print wc.aphia_record_by_taxon_name('Mollusca')[1]
+    print wc.aphia_record_by_taxon_name('Architectonica reevi')[1]
 

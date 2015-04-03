@@ -8,7 +8,8 @@ def start():
 def curate(input_record):
 
     # look up aphia record for input taxon name in WoRMS taxonomic database
-    aphia_record = worms_client.aphia_record_by_taxon_name(input_record['TaxonName'])
+    is_exact_match, aphia_record = (
+        worms_client.aphia_record_by_taxon_name(input_record['TaxonName']))
     if aphia_record is not None:
     
         # save taxon name and author values from input record in new fields
@@ -19,13 +20,15 @@ def curate(input_record):
         input_record['TaxonName'] = aphia_record['scientificname']
         input_record['Author'] = aphia_record['authority']
       
-        # add an lsid field to the original record
+        # add new fields
+        input_record['WoRMsExactMatch'] = is_exact_match
         input_record['lsid'] = aphia_record['lsid']
         
     else:
       
         input_record['OriginalName'] = None
         input_record['OriginalAuthor'] = None
+        input_record['WoRMsExactMatch'] = None
         input_record['lsid'] = None
 
     return input_record

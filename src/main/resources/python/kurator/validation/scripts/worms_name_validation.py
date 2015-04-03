@@ -9,7 +9,8 @@ inputfile = '/Users/tmcphill/GitRepos/kurator-validation/src/test/resources/org/
 
 with open(inputfile, 'r') as infile, open('out.csv', 'w') as outfile:
     dr = csv.DictReader(infile)
-    dw = csv.DictWriter(outfile, ["ID", 'TaxonName', 'Author', 'OriginalName', 'OriginalAuthor', 'lsid'])
+    dw = csv.DictWriter(outfile, ['ID', 'TaxonName', 'Author', 'OriginalName', 
+                                  'OriginalAuthor', 'WoRMsExactMatch', 'lsid'])
     dw.writeheader()
     WoRMSActor.start()
     for record in dr:
