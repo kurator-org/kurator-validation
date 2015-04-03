@@ -35,11 +35,3 @@ class WoRMSActor:
 
         return input_record
 
-def start():
-    global worms_actor
-    worms_actor = WoRMSActor()
-
-def curate(input_record):
-    global worms_actor
-    return worms_actor.curate_taxon_name_and_author(input_record)
-
