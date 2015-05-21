@@ -1,0 +1,58 @@
+@BEGIN clean_data_using_worms
+@PARAM input_data_file_name
+@PARAM cleaned_data_file_name
+@PARAM rejected_data_file_name
+@PARAM input_field_delimiter
+@PARAM output_field_delimiter
+@IN input_data @URI file:{input_data_file_name}
+@OUT cleaned_data  @URI file:{cleaned_data_file_name}
+@OUT rejected_data @URI file:{rejected_data_file_name}
+@BEGIN read_input_data_records
+@PARAM input_data_file_name
+@PARAM input_field_delimiter
+@IN input_data @URI file:{input_data_file_name}
+@OUT original_record
+@END read_input_data_records
+@BEGIN extract_record_fields
+@IN original_record
+@OUT original_scientific_name
+@OUT original_authorship
+@END extract_record_fields
+@BEGIN find_matching_worms_record
+@IN original_scientific_name
+@OUT matching_worms_record
+@OUT worms_lsid
+@END find_matching_worms_record
+@BEGIN reject_records_not_in_worms
+@IN original_record
+@IN matching_worms_record
+@PARAM rejected_data_file_name
+@PARAM output_field_delimiter
+@OUT rejected_data @URI file:{rejected_data_file_name}
+@END reject_records_not_in_worms
+@BEGIN update_scientific_name
+@IN original_scientific_name
+@IN matching_worms_record
+@OUT updated_scientific_name
+@END update_scientific_name
+@BEGIN update_authorship
+@IN matching_worms_record
+@IN original_authorship
+@OUT updated_authorship
+@END update_authorship
+@BEGIN compose_cleaned_record
+@IN original_record
+@IN worms_lsid
+@IN updated_scientific_name
+@IN original_scientific_name
+@IN updated_authorship
+@IN original_authorship
+@OUT cleaned_record
+@END compose_cleaned_record
+@BEGIN write_clean_data_set
+@PARAM cleaned_data_file_name
+@PARAM output_field_delimiter
+@IN cleaned_record
+@OUT cleaned_data  @URI file:{cleaned_data_file_name}
+@END write_clean_data_set
+@END clean_data_using_worms
