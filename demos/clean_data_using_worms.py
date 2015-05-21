@@ -1,6 +1,8 @@
 import sys
 import csv
 import WoRMSClient
+import time
+from datetime import datetime
 
 ##################################################################################################
 # @BEGIN clean_data_using_worms
@@ -22,6 +24,8 @@ def clean_data_using_worms(
     ):  
     
     worms_client = WoRMSClient.WoRMSClient()
+    accepted_record_count = 0
+    rejected_record_count = 0
 
     ##############################################################################################
     # @BEGIN read_input_data_records
@@ -31,11 +35,17 @@ def clean_data_using_worms(
     # @OUT original_record
     
     # create CSV reader for input records
+    timestamp("Reading input records from '{0}'.".format(input_data_file_name))
     input_data = csv.DictReader(open(input_data_file_name, 'r'),
                                 delimiter=input_field_delimiter)
 
     # iterate over input data records
+    record_num = 0
     for original_record in input_data:
+        
+        record_num += 1
+        print
+        timestamp('Reading input record {0:03d}.'.format(record_num))
     
     # @END read_input_data_records
 
@@ -62,17 +72,22 @@ def clean_data_using_worms(
         worms_lsid = None
         
         # first try exact match of the scientific name against WoRMs
-        matching_worms_record = (
-            worms_client.aphia_record_by_exact_name(original_record['scientificName']))
+        timestamp("Trying WoRMs EXACT match for scientific name: '{0}'.".format(original_scientific_name))
+        matching_worms_record = worms_client.aphia_record_by_exact_name(original_scientific_name)
         if matching_worms_record is not None:
+            timestamp('WoRMs EXACT match was SUCCESSFUL.')
             worms_match_result = 'exact'
-        
+
         # otherwise try a fuzzy match
         else:
-            matching_worms_record = (
-                worms_client.aphia_record_by_fuzzy_name(original_record['scientificName']))
+            timestamp('EXACT match FAILED.')      
+            timestamp("Trying WoRMs FUZZY match for scientific name: '{0}'.".format(original_scientific_name))
+            matching_worms_record = worms_client.aphia_record_by_fuzzy_name(original_scientific_name)
             if matching_worms_record is not None:
+                timestamp('WoRMs FUZZY match was SUCCESSFUL.')
                 worms_match_result = 'fuzzy'
+            else:
+                timestamp('WoRMs FUZZY match FAILED.')
         
         # if either match succeeds extract the LSID for the taxon
         if matching_worms_record is not None:
@@ -99,7 +114,9 @@ def clean_data_using_worms(
                 rejected_data.writeheader()
                 
             # write current record to rejects file
+            timestamp('REJECTED record {0:03d}.'.format(record_num))
             rejected_data.writerow(original_record)
+            rejected_record_count += 1
             
             # skip to processing of next record in input file
             continue
@@ -150,10 +167,14 @@ def clean_data_using_worms(
         cleaned_record['WoRMsMatchResult'] = worms_match_result
         
         if updated_scientific_name is not None:
+            timestamp("UPDATING scientific name from '{0}' to '{1}'.".format(
+                     original_scientific_name, updated_scientific_name))
             cleaned_record['scientificName'] = updated_scientific_name
             cleaned_record['originalScientificName'] = original_scientific_name
             
         if updated_authorship is not None:
+            timestamp("UPDATING scientific name authorship from '{0}' to '{1}'.".format(
+                original_authorship, updated_authorship))
             cleaned_record['scientificNameAuthorship'] = updated_authorship
             cleaned_record['originalAuthor'] = original_authorship
                 
@@ -175,11 +196,23 @@ def clean_data_using_worms(
                                           delimiter=output_field_delimiter)
             cleaned_data.writeheader()
     
+        timestamp('ACCEPTED record {0:03d}.'.format(record_num))
         cleaned_data.writerow(cleaned_record)
+        accepted_record_count += 1
         
     # @END write_clean_data_set
 
+    print
+    timestamp("Wrote {0} accepted records to '{1}'.".format(accepted_record_count, cleaned_data_file_name))
+    timestamp("Wrote {0} rejected records to '{1}'.".format(rejected_record_count, rejected_data_file_name))
+
 # @END clean_data_using_worms
+
+
+def timestamp(message):
+    current_time = time.time()
+    timestamp = datetime.fromtimestamp(current_time).strftime('%Y-%m-%d %H:%M:%S')
+    print "{0}  {1}".format(timestamp, message)
 
 
 if __name__ == '__main__':
