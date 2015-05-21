@@ -94,7 +94,7 @@ def clean_data_using_worms(
             # open file for storing rejected data if not already open
             if 'rejected_data' not in locals():
                 rejected_data = csv.DictWriter(open(rejected_data_file_name, 'w'), 
-                                                  original_record.keys(), 
+                                                  input_data.fieldnames, 
                                                   delimiter=output_field_delimiter)
                 rejected_data.writeheader()
                 
@@ -168,8 +168,8 @@ def clean_data_using_worms(
 
         # open file for storing cleaned data if not already open
         if 'cleaned_data' not in locals():
-            cleaned_record_field_names = cleaned_record.keys() + \
-                ['originalScientificName', 'originalAuthor', 'WoRMsMatchResult', 'LSID']
+            cleaned_record_field_names = input_data.fieldnames + \
+                ['LSID', 'WoRMsMatchResult', 'originalScientificName', 'originalAuthor']
             cleaned_data = csv.DictWriter(open(cleaned_data_file_name, 'w'), 
                                           cleaned_record_field_names, 
                                           delimiter=output_field_delimiter)
@@ -188,6 +188,5 @@ if __name__ == '__main__':
     clean_data_using_worms(
         input_data_file_name='input.csv',
         cleaned_data_file_name='cleaned.csv',
-        rejected_data_file_name='rejected.csv',
-        input_field_delimiter='\t'
+        rejected_data_file_name='rejected.csv'
     )
