@@ -13,8 +13,8 @@ import csv
 def change_field_delimiter(
     input_file_name, 
     output_file_name,
-    input_field_delimiter=',',
-    output_field_delimiter=','
+    input_field_delimiter,
+    output_field_delimiter
     ):  
     
     ##############################################################################################
@@ -44,7 +44,7 @@ def change_field_delimiter(
         # open file for storing cleaned data if not already open
         if 'output_data' not in locals():
             output_data = csv.DictWriter(open(output_file_name, 'w'),
-                                          record.keys(), 
+                                          input_data.fieldnames, 
                                           delimiter=output_field_delimiter)
             output_data.writeheader()
     
@@ -60,6 +60,6 @@ if __name__ == '__main__':
     change_field_delimiter(
         input_file_name=sys.argv[1],
         output_file_name=sys.argv[2],
-        input_field_delimiter='\t',
+        input_field_delimiter=',',
         output_field_delimiter=','
     )
