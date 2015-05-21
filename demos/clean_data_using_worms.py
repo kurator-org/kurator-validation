@@ -15,8 +15,8 @@ import WoRMSClient
 
 def clean_data_using_worms(
     input_data_file_name, 
-    cleaned_records_file_name, 
-    rejected_records_file_name, 
+    cleaned_data_file_name, 
+    rejected_data_file_name, 
     input_field_delimiter=',',
     output_field_delimiter=','
     ):  
@@ -53,49 +53,48 @@ def clean_data_using_worms(
 
         
     ##############################################################################################
-    # @BEGIN look_up_worms_record 
+    # @BEGIN find_matching_worms_record 
     # @IN original_scientific_name
     # @OUT matching_worms_record
-    # @OUT worms_match_type    
     # @OUT worms_lsid
     
-        worms_match_type = None
+        worms_match_result = None
         worms_lsid = None
         
         # first try exact match of the scientific name against WoRMs
         matching_worms_record = (
             worms_client.aphia_record_by_exact_name(original_record['scientificName']))
         if matching_worms_record is not None:
-            worms_match_type = 'exact'
+            worms_match_result = 'exact'
         
         # otherwise try a fuzzy match
         else:
             matching_worms_record = (
-                self.aphia_record_by_fuzzy_name(original_record['scientificName']))
+                worms_client.aphia_record_by_fuzzy_name(original_record['scientificName']))
             if matching_worms_record is not None:
-                worms_match_type = 'fuzzy'
+                worms_match_result = 'fuzzy'
         
         # if either match succeeds extract the LSID for the taxon
         if matching_worms_record is not None:
             worms_lsid = matching_worms_record['lsid']
                     
-    # @END look_up_worms_record
+    # @END find_matching_worms_record
 
     ##############################################################################################
     # @BEGIN reject_records_not_in_worms
     # @IN original_record
-    # @IN worms_match_type
+    # @IN matching_worms_record
     # @PARAM rejected_data_file_name
     # @PARAM output_field_delimiter
-    # @OUT rejected_data @URI file:{rejected_records_file_name}
+    # @OUT rejected_data @URI file:{rejected_data_file_name}
     
         # reject the currect record if not matched successfully against WoRMs
-        if worms_match_type is None:
+        if worms_match_result is None:
 
             # open file for storing rejected data if not already open
             if 'rejected_data' not in locals():
                 rejected_data = csv.DictWriter(open(rejected_data_file_name, 'w'), 
-                                                  oiginal_record.keys() + ["RejectionReason"], 
+                                                  original_record.keys(), 
                                                   delimiter=output_field_delimiter)
                 rejected_data.writeheader()
                 
@@ -111,13 +110,12 @@ def clean_data_using_worms(
     # @BEGIN update_scientific_name
     # @IN original_scientific_name
     # @IN matching_worms_record
-    # @IN worms_match_type    
     # @OUT updated_scientific_name
         
         updated_scientific_name = None
         
         # get scientific name from WoRMs record if the taxon name match was fuzzy
-        if worms_match_type == 'fuzzy':
+        if worms_match_result == 'fuzzy':
             updated_scientific_name = matching_worms_record['scientificname']
 
     # @END update_scientific_name
@@ -140,7 +138,6 @@ def clean_data_using_worms(
     ##############################################################################################
     # @BEGIN compose_cleaned_record
     # @IN original_record
-    # @IN worms_match_type
     # @IN worms_lsid
     # @IN updated_scientific_name
     # @IN original_scientific_name
@@ -150,6 +147,7 @@ def clean_data_using_worms(
        
         cleaned_record = original_record
         cleaned_record['LSID'] = worms_lsid
+        cleaned_record['WoRMsMatchResult'] = worms_match_result
         
         if updated_scientific_name is not None:
             cleaned_record['scientificName'] = updated_scientific_name
@@ -157,7 +155,7 @@ def clean_data_using_worms(
             
         if updated_authorship is not None:
             cleaned_record['scientificNameAuthorship'] = updated_authorship
-            cleaned_record['originalScientificNameAuthorship'] = original_authorship
+            cleaned_record['originalAuthor'] = original_authorship
                 
     # @END compose_cleaned_record
 
@@ -166,13 +164,13 @@ def clean_data_using_worms(
     # @PARAM cleaned_data_file_name
     # @PARAM output_field_delimiter
     # @IN cleaned_record
-    # @OUT cleaned_data  @URI file:{cleaned_records_file_name}
+    # @OUT cleaned_data  @URI file:{cleaned_data_file_name}
 
         # open file for storing cleaned data if not already open
         if 'cleaned_data' not in locals():
             cleaned_record_field_names = cleaned_record.keys() + \
-                ['originalScientificName', 'originalAuthor', 'WoRMsMatchType', 'LSID']
-            cleaned_data = csv.DictWriter(open(cleaned_records_file_name, 'w'), 
+                ['originalScientificName', 'originalAuthor', 'WoRMsMatchResult', 'LSID']
+            cleaned_data = csv.DictWriter(open(cleaned_data_file_name, 'w'), 
                                           cleaned_record_field_names, 
                                           delimiter=output_field_delimiter)
             cleaned_data.writeheader()
@@ -189,7 +187,7 @@ if __name__ == '__main__':
 
     clean_data_using_worms(
         input_data_file_name='input.csv',
-        cleaned_records_file_name='cleaned.csv',
-        rejected_records_file_name='rejected.csv',
+        cleaned_data_file_name='cleaned.csv',
+        rejected_data_file_name='rejected.csv',
         input_field_delimiter='\t'
     )
