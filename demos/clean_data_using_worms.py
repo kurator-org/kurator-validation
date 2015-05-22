@@ -11,9 +11,9 @@ from datetime import datetime
 # @PARAM rejected_data_file_name
 # @PARAM input_field_delimiter
 # @PARAM output_field_delimiter
-# @IN input_data @URI file:{input_data_file_name}
-# @OUT cleaned_data  @URI file:{cleaned_data_file_name}
-# @OUT rejected_data @URI file:{rejected_data_file_name}
+# @IN input_data @FILE file:{input_data_file_name}
+# @OUT cleaned_data  @FILE file:{cleaned_data_file_name}
+# @OUT rejected_data @FILE file:{rejected_data_file_name}
 
 def clean_data_using_worms(
     input_data_file_name, 
@@ -31,7 +31,7 @@ def clean_data_using_worms(
     # @BEGIN read_input_data_records
     # @PARAM input_data_file_name
     # @PARAM input_field_delimiter
-    # @IN input_data @URI file:{input_data_file_name}
+    # @IN input_data @FILE file:{input_data_file_name}
     # @OUT original_record
     
     # create CSV reader for input records
@@ -101,7 +101,7 @@ def clean_data_using_worms(
     # @IN matching_worms_record
     # @PARAM rejected_data_file_name
     # @PARAM output_field_delimiter
-    # @OUT rejected_data @URI file:{rejected_data_file_name}
+    # @OUT rejected_data @FILE file:{rejected_data_file_name}
     
         # reject the currect record if not matched successfully against WoRMs
         if worms_match_result is None:
@@ -185,7 +185,7 @@ def clean_data_using_worms(
     # @PARAM cleaned_data_file_name
     # @PARAM output_field_delimiter
     # @IN cleaned_record
-    # @OUT cleaned_data  @URI file:{cleaned_data_file_name}
+    # @OUT cleaned_data  @FILE file:{cleaned_data_file_name}
 
         # open file for storing cleaned data if not already open
         if 'cleaned_data' not in locals():
