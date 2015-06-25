@@ -8,7 +8,7 @@ types:
   type: JythonClassActor
   properties:
     defaults:
-      path: src/main/resources/python/kurator/validation/actors/WoRMSActor.py
+      script: src/main/resources/python/kurator/validation/actors/WoRMSActor.py
       actorName: WoRMSActor
       method: curate_taxon_name_and_author
       outputTypeIsInputType: true
