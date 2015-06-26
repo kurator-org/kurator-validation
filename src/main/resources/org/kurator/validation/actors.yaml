@@ -7,8 +7,8 @@ types:
 - id: WoRMSNameValidator
   type: JythonClassActor
   properties:
+    script: src/main/resources/python/kurator/validation/actors/WoRMSActor.py
     defaults:
-      script: src/main/resources/python/kurator/validation/actors/WoRMSActor.py
       actorName: WoRMSActor
       method: curate_taxon_name_and_author
       outputTypeIsInputType: true
