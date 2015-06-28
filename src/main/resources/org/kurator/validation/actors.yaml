@@ -5,7 +5,7 @@ imports:
 types:
 
 - id: WoRMSNameValidator
-  type: JythonClassActor
+  type: PythonClassActor
   properties:
     script: src/main/resources/python/kurator/validation/actors/WoRMSActor.py
     defaults:
