@@ -1,9 +1,10 @@
 ####################################
-# internal_date_validation.yaml
+# WORMS_name_validation.yaml
 ####################################
 
 imports:
 
+- classpath:/org/kurator/akka/actors.yaml
 - classpath:/org/kurator/validation/actors.yaml
 
 components:
