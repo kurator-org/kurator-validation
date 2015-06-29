@@ -7,7 +7,7 @@ types:
   type: PythonClassActor
   properties:
     script: src/main/resources/python/kurator/validation/actors/WoRMSActor.py
+    onData: curate_taxon_name_and_author
     defaults:
       pythonClass: WoRMSActor
-      onData: curate_taxon_name_and_author
       outputTypeIsInputType: true
