@@ -9,42 +9,25 @@ imports:
 
 components:
 
-- id: FileReader
+- id: ReadInput
   type: CsvFileReader
-  properties:
-    parameters:
-      filePath:
 
-- id: NameValidator
-  type: WoRMSNameValidator
+- id: CurateRecords
+  type: WoRMSNameCurator
   properties:
     listensTo:
-      - !ref FileReader
+      - !ref ReadInput
 
-- id: FileWriter
+- id: WriteOutput
   type: CsvFileWriter
   properties:
-    parameters:
-      outputWriter:
-      filePath: out.csv
     listensTo:
-      - !ref NameValidator
+      - !ref CurateRecords
   
 - id: WoRMSNameValidationWorkflow
   type: Workflow
   properties:
     actors:
-      - !ref FileReader
-      - !ref NameValidator
-      - !ref FileWriter
-    parameters:
-      in:
-        actor: !ref FileReader
-        parameter: filePath
-      out:
-        actor: !ref FileWriter
-        parameter: filePath
-      writer:
-        actor: !ref FileWriter
-        parameter: outputWriter
-      
+      - !ref ReadInput
+      - !ref CurateRecords
+      - !ref WriteOutput

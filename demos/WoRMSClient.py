@@ -47,4 +47,3 @@ if __name__ == '__main__':
     wc = WoRMSClient()
     print wc.aphia_record_by_taxon_name('Mollusca')[1]
     print wc.aphia_record_by_taxon_name('Architectonica reevi')[1]
-

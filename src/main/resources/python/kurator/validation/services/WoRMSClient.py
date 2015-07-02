@@ -58,8 +58,8 @@ class WoRMSClient(object):
         if exact_match_result is not None:
             return True, exact_match_result
         else:
-            return False, self.aphia_record_by_fuzzy_taxon_name(name)
-      
+            return False, self.aphia_record_by_fuzzy_taxon_name(name)          
+                  
 if __name__ == '__main__':
     """ Demonstration of class usage"""
     wc = WoRMSClient()

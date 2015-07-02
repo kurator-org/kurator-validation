@@ -2,8 +2,7 @@ package org.kurator.validation.actors;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.PrintStream;
 
 import org.kurator.akka.KuratorAkkaCLI;
 import org.kurator.akka.KuratorAkkaTestCase;
@@ -12,26 +11,26 @@ import org.kurator.akka.YamlFileWorkflowRunner;
 
 public class TestWoRMSNameValidation extends KuratorAkkaTestCase {
 
-    static final String RESOURCE_PATH = "classpath:/org/kurator/validation/workflows/";
+    static final String RESOURCE_PATH = "src/main/resources/org/kurator/validation/workflows/";
 
     private OutputStream outputBuffer;
-    private Writer bufferWriter;
-
+    PrintStream outPrintStream;
+    
     @Override
     public void setUp() throws Exception {
         super.setUp();
         KuratorAkkaCLI.enableLog4J();
-
         outputBuffer = new ByteArrayOutputStream();
-        bufferWriter = new OutputStreamWriter(outputBuffer);
+        outPrintStream = new PrintStream(outputBuffer);
     }
 
     public void testWoRMSNameValidation() throws Exception {
 
-        WorkflowRunner wr = new YamlFileWorkflowRunner(RESOURCE_PATH + "WoRMS_name_validation.yaml");
-        wr.apply("in", "src/test/resources/org/kurator/validation/data/testinput_moll.csv");
-        wr.apply("writer", bufferWriter);
-        wr.apply("FileWriter.quoteCharacter", '\'');
+
+        WorkflowRunner wr = new YamlFileWorkflowRunner("file:" + RESOURCE_PATH + "WoRMS_name_validation.yaml");
+        wr.outputStream(outPrintStream);
+        wr.apply("ReadInput.filePath", RESOURCE_PATH + "WoRMS_name_validation_input.csv");
+        wr.apply("WriteOutput.quoteCharacter", '\'');
         wr.build();
         wr.run();
 
