@@ -1,7 +1,7 @@
 
 from suds.client import Client
 
-class WoRMSClient(object): 
+class WoRMSService(object): 
     """
     Class for accessing the WoRMS taxonomic name database via the AphiaNameService. 
     
@@ -62,7 +62,7 @@ class WoRMSClient(object):
                   
 if __name__ == '__main__':
     """ Demonstration of class usage"""
-    wc = WoRMSClient()
-    print wc.aphia_record_by_taxon_name('Mollusca')[1]
-    print wc.aphia_record_by_taxon_name('Architectonica reevi')[1]
+    ws = WoRMSService()
+    print ws.aphia_record_by_taxon_name('Mollusca')[1]
+    print ws.aphia_record_by_taxon_name('Architectonica reevi')[1]
 
