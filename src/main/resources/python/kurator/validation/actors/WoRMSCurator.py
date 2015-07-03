@@ -1,5 +1,5 @@
 
-from WoRMSClient import WoRMSClient
+from kurator.validation.services.WoRMSService import WoRMSService
 
 class WoRMSCurator(object): 
     """
@@ -8,13 +8,13 @@ class WoRMSCurator(object):
 
     def __init__(self):
         """ Initialize a SOAP client using the WSDL for the WoRMS Aphia names service"""        
-        self._worms_client = WoRMSClient()
+        self._worms = WoRMSService()
 
     def curate_taxon_name_and_author(self, input_record):
     
         # look up aphia record for input taxon name in WoRMS taxonomic database
         is_exact_match, aphia_record = (
-            self._worms_client.aphia_record_by_taxon_name(input_record['TaxonName']))
+            self._worms.aphia_record_by_taxon_name(input_record['TaxonName']))
         
         if aphia_record is not None:
     
