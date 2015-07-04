@@ -1,5 +1,5 @@
 ################  Script task configuration in Bamboo ################
-#  Script file:           src/main/python/build_dist.sh
+#  Script file:           src/main/python/build_dist_on_bamboo.sh
 #  Environment variables: TMPDIR=${bamboo.build.working.directory}/tmp
 ######################################################################
 
