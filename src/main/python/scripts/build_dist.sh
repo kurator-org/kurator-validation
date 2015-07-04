@@ -1,4 +1,4 @@
-TMPDIR=${bamboo.build.working.directory}/tmp
+# TMPDIR=${bamboo.build.working.directory}/tmp
 
 # install pip in a temporary directory
 wget https://bootstrap.pypa.io/get-pip.py
