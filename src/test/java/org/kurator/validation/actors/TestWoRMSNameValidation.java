@@ -11,10 +11,10 @@ import org.kurator.akka.YamlFileWorkflowRunner;
 
 public class TestWoRMSNameValidation extends KuratorAkkaTestCase {
 
-    static final String RESOURCE_PATH = "src/main/resources/org/kurator/validation/workflows/";
-
     private OutputStream outputBuffer;
     PrintStream outPrintStream;
+    
+    private final String WORKFLOW_RESOURCE_PATH="src/main/resources/org/kurator/validation/workflows";
     
     @Override
     public void setUp() throws Exception {
@@ -26,10 +26,9 @@ public class TestWoRMSNameValidation extends KuratorAkkaTestCase {
 
     public void testWoRMSNameValidation() throws Exception {
 
-
-        WorkflowRunner wr = new YamlFileWorkflowRunner("file:" + RESOURCE_PATH + "WoRMS_name_validation.yaml");
+        WorkflowRunner wr = new YamlFileWorkflowRunner("file:" + WORKFLOW_RESOURCE_PATH + "/WoRMS_name_validation.yaml");
         wr.outputStream(outPrintStream);
-        wr.apply("ReadInput.filePath", RESOURCE_PATH + "WoRMS_name_validation_input.csv");
+        wr.apply("ReadInput.filePath", WORKFLOW_RESOURCE_PATH + "/WoRMS_name_validation_input.csv");
         wr.apply("WriteOutput.quoteCharacter", '\'');
         wr.build();
         wr.run();
