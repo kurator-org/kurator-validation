@@ -1,6 +1,6 @@
+from kurator.validation.services.WoRMSService import WoRMSService
 import sys
 import csv
-import WoRMSClient
 import time
 from datetime import datetime
 
@@ -23,7 +23,7 @@ def clean_data_using_worms(
     output_field_delimiter=','
     ):  
     
-    worms_client = WoRMSClient.WoRMSClient()
+    worms = WoRMSService()
     accepted_record_count = 0
     rejected_record_count = 0
 
@@ -73,7 +73,7 @@ def clean_data_using_worms(
         
         # first try exact match of the scientific name against WoRMs
         timestamp("Trying WoRMs EXACT match for scientific name: '{0}'.".format(original_scientific_name))
-        matching_worms_record = worms_client.aphia_record_by_exact_name(original_scientific_name)
+        matching_worms_record = worms.aphia_record_by_exact_taxon_name(original_scientific_name)
         if matching_worms_record is not None:
             timestamp('WoRMs EXACT match was SUCCESSFUL.')
             worms_match_result = 'exact'
@@ -82,7 +82,7 @@ def clean_data_using_worms(
         else:
             timestamp('EXACT match FAILED.')      
             timestamp("Trying WoRMs FUZZY match for scientific name: '{0}'.".format(original_scientific_name))
-            matching_worms_record = worms_client.aphia_record_by_fuzzy_name(original_scientific_name)
+            matching_worms_record = worms.aphia_record_by_fuzzy_taxon_name(original_scientific_name)
             if matching_worms_record is not None:
                 timestamp('WoRMs FUZZY match was SUCCESSFUL.')
                 worms_match_result = 'fuzzy'
@@ -219,7 +219,7 @@ if __name__ == '__main__':
     """ Demo of clean_data_using_worms script """
 
     clean_data_using_worms(
-        input_data_file_name='input.csv',
-        cleaned_data_file_name='cleaned.csv',
-        rejected_data_file_name='rejected.csv'
+        input_data_file_name='demo_input.csv',
+        cleaned_data_file_name='demo_cleaned.csv',
+        rejected_data_file_name='demo_rejected.csv'
     )
