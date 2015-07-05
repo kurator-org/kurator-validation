@@ -9,6 +9,25 @@ Other Python classes made available through this package may be used similarly. 
 
 For information about the **Kurator-Akka** workflow framework please see the [README](https://github.com/kurator-org/kurator-akka/blob/master/README.md) in the [Kurator-Akka](https://github.com/kurator-org/kurator-akka) repository
 
-Example actor and workflow
---------------------------
+Structure of this repository
+----------------------------
 
+##### Maven project layout
+
+The overall structure of the kurator-validation repository is as a Maven project.  This structure makes it easy to test the libraries, scripts, actors, and workflows using Java-based tools and to employ the Bamboo continuous build server at NCSA.  This structure also facilitates the use of Python libraries and actors from the **Kurator-Akka** framework (which is Java based).  Finally, the kurator-validation package provides additional data cleaning actors implemented entirely in Java.
+
+Directory            | Description
+---------------------|------------
+src/main/python      | Python sources for libraries, scripts, and actors.
+src/main/java        | Source code for Java-based actors.
+src/main/resources   | Resource files used by Kurator-Akka framework.
+src/test/java        | Source code for Java-based tests of actors and workflows.
+src/test/resources   | Resource files available to Java-based tests.
+
+##### Python library layout
+
+All python code provided with kurator-validation is organized in a single directory tree at `src/main/python`.  This directory tree is structured so that all code is in sub-packages of the `kurator.validation` Python package.  The 
+
+Directory            | Description
+-----------------------------------------|------------
+kurator/validation/actors      | Python sources for libraries, scripts, and actors.
