@@ -1,4 +1,4 @@
-from kurator.validation.services.WoRMSService import WoRMSService
+from org.kurator.validation.services.WoRMSService import WoRMSService
 import sys
 import csv
 import time

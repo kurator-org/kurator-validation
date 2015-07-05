@@ -14,7 +14,7 @@ public class TestWoRMSNameValidation extends KuratorAkkaTestCase {
     private OutputStream outputBuffer;
     PrintStream outPrintStream;
     
-    private final String WORKFLOW_RESOURCE_PATH="src/main/python/kurator/validation/workflows";
+    private final String WORKFLOW_RESOURCE_PATH="src/main/python/org/kurator/validation/workflows";
     
     @Override
     public void setUp() throws Exception {

@@ -14,20 +14,22 @@ Structure of this repository
 
 ##### Maven project layout
 
-The overall structure of the kurator-validation repository is as a Maven project.  This structure makes it easy to test the libraries, scripts, actors, and workflows using Java-based tools and to employ the Bamboo continuous build server at NCSA.  This structure also facilitates the use of Python libraries and actors from the **Kurator-Akka** framework (which is Java based).  Finally, the kurator-validation package provides additional data cleaning actors implemented entirely in Java.
+The overall structure of the kurator-validation repository is as a Maven project.  This structure makes it easy to test the libraries, scripts, actors, and workflows using Java-based tools and to employ the Bamboo continuous build server at NCSA.  This structure also facilitates the use of Python libraries and actors from the (Java-based) **Kurator-Akka** framework.
+
+Overall structure of the repository:
 
 Directory            | Description
 ---------------------|------------
 src/main/python      | Python sources for libraries, scripts, and actors.
-src/main/java        | Source code for Java-based actors.
-src/main/resources   | Resource files used by Kurator-Akka framework.
 src/test/java        | Source code for Java-based tests of actors and workflows.
 src/test/resources   | Resource files available to Java-based tests.
 
 ##### Python library layout
 
-All python code provided with kurator-validation is organized in a single directory tree at `src/main/python`.  This directory tree is structured so that all code is in sub-packages of the `kurator.validation` Python package.  The 
+All python code provided with kurator-validation is organized in a single directory tree at `src/main/python`.  This directory tree is structured so that all code is in sub-packages of the `kurator.validation` Python package.
 
-Directory            | Description
------------------------------------------|------------
-kurator/validation/actors      | Python sources for libraries, scripts, and actors.
+Subdirectories of the repository `src/main/python` directory:
+
+Directory                     | Description
+------------------------------|------------
+org/kurator/validation/actors | Python sources for actors

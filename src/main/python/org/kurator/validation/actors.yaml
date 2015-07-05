@@ -7,6 +7,6 @@ types:
 - id: WoRMSNameCurator
   type: PythonClassActor
   properties:
-    pythonClass: kurator.validation.actors.WoRMSCurator.WoRMSCurator
+    pythonClass: org.kurator.validation.actors.WoRMSCurator.WoRMSCurator
     onData: curate_taxon_name_and_author
 
