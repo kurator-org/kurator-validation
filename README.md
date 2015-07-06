@@ -185,6 +185,13 @@ Below is a portion of the logging information sent to the terminal when when run
     2015-07-06 08:35:10  Wrote 7 accepted records to 'demo_cleaned.csv'.
     2015-07-06 08:35:10  Wrote 3 rejected records to 'demo_rejected.csv'.
 
-## The WoRMSCurator actor
+## Composeable code:  The WoRMSCurator actor
 
-## A YAML declaration of a workflow that uses the WoRMSCurator actor
+Although using the WoRMSService class directly from a data cleaning script is straightforward, this approach to developing data cleaning scripts has a signficant weakness.  If you have developed two data cleaning scripts, one that detects problems in fields related to the scientific name, and another that detects errors in specimen collection dates, how can these two scripts (or the functions within them) be used together to perform both data cleaning operations on a set of input data?  Depending on how the original scripts were designed, it may be necessary to write a completely new script that peforms both functions together.  Alternative designs of the original scripts would allow them to be easily combined to yield the combined functionality with a minimum of additional programming.
+
+Actor-oriented programming is a general approach to addressing the problem of code composeability.  The **[Kurator-Akka](https://github.com/kurator-org/kurator-akka)** framework builds on the [Akka actor framework](http://akka.io) to make it easy to develop data cleaning actors that can be readily composed into workflows that perform multiple data cleaning steps.  Although Akka and **Kurator-Akka** are Java based, the code executed by individual actors can written in Python, and no Java programming is needed to assemble these actors into runnable workflows.
+
+
+
+
+## A workflow that uses the WoRMSCurator actor
