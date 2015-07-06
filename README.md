@@ -187,11 +187,67 @@ Below is a portion of the logging information sent to the terminal when when run
 
 ## Composeable code:  The WoRMSCurator actor
 
-Although using the WoRMSService class directly from a data cleaning script is straightforward, this approach to developing data cleaning scripts has a signficant weakness.  If you have developed two data cleaning scripts, one that detects problems in fields related to the scientific name, and another that detects errors in specimen collection dates, how can these two scripts (or the functions within them) be used together to perform both data cleaning operations on a set of input data?  Depending on how the original scripts were designed, it may be necessary to write a completely new script that peforms both functions together.  Alternative designs of the original scripts would allow them to be easily combined to yield the combined functionality with a minimum of additional programming.
+Although using the WoRMSService class directly from a data cleaning script is straightforward, this approach to developing data cleaning scripts has a signficant weakness.  If you have developed two data cleaning scripts, one that detects problems in fields related to the scientific name, and another that detects errors in specimen collection dates, how can these two scripts (or the functions within them) be used together to perform both data cleaning operations on a set of input data?  Depending on how the original scripts were designed, it may be necessary to write a completely new script that peforms both functions together.
 
-Actor-oriented programming is a general approach to addressing the problem of code composeability.  The **[Kurator-Akka](https://github.com/kurator-org/kurator-akka)** framework builds on the [Akka actor framework](http://akka.io) to make it easy to develop data cleaning actors that can be readily composed into workflows that perform multiple data cleaning steps.  Although Akka and **Kurator-Akka** are Java based, the code executed by individual actors can written in Python, and no Java programming is needed to assemble these actors into runnable workflows.
+One can implement alternative designs of the original scripts that allow them to be easily combined to yield the combined functionality with a minimum of additional programming.  However, different programmers are likely to take different approaches to solving this problem.  As a result, combining one's own scripts with those provided by others remains problematic.
 
+Actor-oriented programming is a general approach to addressing the problem of code composeability.  The **[Kurator-Akka](https://github.com/kurator-org/kurator-akka)** framework builds on the [Akka actor framework](http://akka.io) to make it easy to develop data cleaning actors.  These actors can be readily composed into workflows that perform multiple data cleaning steps.  Although Akka and **Kurator-Akka** are Java based, the code executed by individual actors can be written in Python, and no Java programming is needed to assemble these actors into runnable workflows.
 
+As described in [Kurator-Akka README](https://github.com/kurator-org/kurator-akka/blob/master/README.md), no special APIs need to be employed by Python-based **Kurator-Akka** actors. Instead one simply refers to Python functions or classes in actor declarations stored in a YAML file.  Thus, to write a new actor one writes a new Python function or class along with a short snippet of YAML that declares that the new code is an actor that can be used in workflows.
+
+The [WoRMSCurator.py script](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/actors/WoRMSCurator.py) defines code for a simple actor that uses the WoRMSService class.  The full code for this actor is as follows:
+
+    from org.kurator.validation.services.WoRMSService import WoRMSService
+
+    class WoRMSCurator(object):
+        """
+        Class for accessing the WoRMS taxonomic name database via the AphiaNameService.
+        """
+
+        def __init__(self):
+            """ Initialize a SOAP client using the WSDL for the WoRMS Aphia names service"""
+            self._worms = WoRMSService()
+
+        def curate_taxon_name_and_author(self, input_record):
+
+            # look up aphia record for input taxon name in WoRMS taxonomic database
+            is_exact_match, aphia_record = (
+                self._worms.aphia_record_by_taxon_name(input_record['TaxonName']))
+
+            if aphia_record is not None:
+
+                # save taxon name and author values from input record in new fields
+                input_record['OriginalName'] = input_record['TaxonName']
+                input_record['OriginalAuthor'] = input_record['Author']
+
+                # replace taxon name and author fields in input record with values in aphia record
+                input_record['TaxonName'] = aphia_record['scientificname']
+                input_record['Author'] = aphia_record['authority']
+
+                # add new fields
+                input_record['WoRMsExactMatch'] = is_exact_match
+                input_record['lsid'] = aphia_record['lsid']
+
+            else:
+
+                input_record['OriginalName'] = None
+                input_record['OriginalAuthor'] = None
+                input_record['WoRMsExactMatch'] = None
+                input_record['lsid'] = None
+
+            return input_record
+
+The `WoRMSCurator` class provides just one one method, `curate_taxon_name_and_author()` that takes a record (represented as a Python dictionary) as input, updates the record, and returns the updated record.  It calls methods on an instance of the `WoRMSService` class to look up the WoRMS record corresponding to the input, updates the TaxonName and Author fields of the record if needed, and adds fields to the record to indicate what updates were performed and to save any field values that were replaced.
+
+This class can be used from another Python script directly.  It also can be used from a Kurator-Akka workflow via the YAML declaration of the actor in [actors.yaml](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/actors.yaml):
+
+    - id: WoRMSNameCurator
+      type: PythonClassActor
+      properties:
+        pythonClass: org.kurator.validation.actors.WoRMSCurator.WoRMSCurator
+        onData: curate_taxon_name_and_author
+
+The above YAML snippet declares that `WoRMSNameCurator` is a Python class actor that invokes the `curate_taxon_name_and_author()` method of the `WoRMSCurator` class on each item of data it receives during the execution of a workflow. Use of this actor declaration is demonstrated in the example workflow below.
 
 
 ## A workflow that uses the WoRMSCurator actor
