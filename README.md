@@ -26,10 +26,16 @@ src/test/resources   | Resource files available to Java-based tests.
 
 ##### Python library layout
 
-All python code provided with kurator-validation is organized in a single directory tree at `src/main/python`.  This directory tree is structured so that all code is in sub-packages of the `kurator.validation` Python package.
+All python code provided with kurator-validation is organized in a single directory tree at `src/main/python`.  This directory tree is structured so that all code is in sub-packages of the `org.kurator.validation` Python package.
 
 Subdirectories of the repository `src/main/python` directory:
 
-Directory                     | Description
-------------------------------|------------
-org/kurator/validation/actors | Python sources for actors
+Directory                       | Description
+--------------------------------|------------
+org/kurator/validation/**actors**   | Python sources for actors
+org/kurator/validation/**scripts**  | Python scripts using the data cleaning services and actors
+org/kurator/validation/**services** | Python sources for functions and classes providing data cleaning services
+org/kurator/validation/standards | Python scritpts and data files supporting various data standards
+org/kurator/validation/utilities | Library of general purpose Python scripts and classes
+org/kurator/validation/**workflows** | YAML files declaring workflow composed from actors
+
