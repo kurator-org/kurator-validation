@@ -314,4 +314,22 @@ The The **[Kurator-Akka](https://github.com/kurator-org/kurator-akka)** allows a
 
 This workflow definition combines three actors of type `CsvFileReader`, `WoRMSNameCurator`, and `CsvFileWriter` into a single data processing pipeline.  More information about how **Kurator-Akka** workflows are specified is provided in the [Kurator-Akka README](https://github.com/kurator-org/kurator-akka/blob/master/README.md).
 
-The above workflow can be executed...
+To run this workflow at the command prompt one must first do two things:
+1.  Set up the Kurator-Akka runtime environment as described in [Setting up Kurator-Akka](https://github.com/kurator-org/kurator-akka#setting-up-kurator-akka) such that the `ka` command invokes the **Kurator-Akka** system.
+2.  Set the environment variable `KURATOR_LOCAL_PACKAGES` to refer to the directory that contains the root of the `org.kurator.validation` python package.  For example,
+
+        export KURATOR_LOCAL_PACKAGES="/Users/myhomedir/kurator-validation/src/main/python"
+
+Now the workflow can be run using the `ka` command, e.g. using the `WoRMS_name_validation_input.csv` file in the same directory as the workflow definition file:
+
+    $ ka -f WoRMS_name_validation.yaml < WoRMS_name_validation_input.csv
+    ID,TaxonName,Author,OriginalName,OriginalAuthor,WoRMsExactMatch,lsid
+    37929,Architectonica reevei,"(Hanley, 1862)",Architectonica reevi,,false,urn:lsid:marinespecies.org:taxname:588206
+    37932,Rapana rapiformis,"(Born, 1778)",Rapana rapiformis,"(Von Born, 1778)",true,urn:lsid:marinespecies.org:taxname:140415
+    180593,Buccinum donomani,"(Linnaeus, 1758)",,,,
+    179963,Codakia paytenorum,"(Iredale, 1937)",Codakia paytenorum,"Iredale, 1937",true,urn:lsid:marinespecies.org:taxname:215841
+    0,Rissoa venusta,"Garrett, 1873",Rissoa venusta,,true,urn:lsid:marinespecies.org:taxname:607233
+    62156,Rissoa venusta,"Garrett, 1873",Rissoa   venusta,Phil.,true,urn:lsid:marinespecies.org:taxname:607233
+    $
+
+Additional actors that process data records similarly can easily be added to such a workflow--without the composition challenges that scripts typically exhibit.  In addition, each actor in a **Kurator-Akka** workflow runs concurrently (in different threads).  This means that once several records have been read into a workflow with multiple data cleaning actors connected in series, multiple actors (sometimes *all* of the actors) often will be busy at the same time.  This can increase the data throughput rate of the workflow compared to that of a single-threaded script.
