@@ -28,14 +28,27 @@ src/test/resources   | Resource files available to Java-based tests.
 
 All python code provided with kurator-validation is organized in a single directory tree at `src/main/python`.  This directory tree is structured so that all code is in sub-packages of the `org.kurator.validation` Python package.
 
-Subdirectories of the repository `src/main/python` directory:
+Subdirectories of the `src/main/python` directory include:
 
-Directory                       | Description
---------------------------------|------------
-org/kurator/validation/**actors**   | Python sources for actors
-org/kurator/validation/**scripts**  | Python scripts using the data cleaning services and actors
-org/kurator/validation/**services** | Python sources for functions and classes providing data cleaning services
-org/kurator/validation/standards | Python scritpts and data files supporting various data standards
-org/kurator/validation/utilities | Library of general purpose Python scripts and classes
-org/kurator/validation/**workflows** | YAML files declaring workflow composed from actors
+Directory                            | Description
+-------------------------------------|------------
+org/kurator/validation/**actors**    | Sources for python-based actors.
+org/kurator/validation/**scripts**   | Python scripts using the data cleaning services and actors.
+org/kurator/validation/**services**  | Python classes and functions providing data cleaning services.
+org/kurator/validation/standards     | Support for various data standards
+org/kurator/validation/utilities     | General purpose Python scripts and classes
+org/kurator/validation/**workflows** | Workflows composed from actors and declared in YAML.
 
+The actors, scripts, services, and workflows directories each provide different ways of accessing the data cleaning capabilities provided by this software. The next section of this README illustrates how to use each approach.
+
+Example: Validating names using WoRMS
+-------------------------------------
+This section demonstrates how one can validate, correct, or reject data using a specific web service as a reference. The [WoRMS web service](http://marinespecies.org/aphia.php?p=webservice) allows the standard WoRMS taxononmy to be searched for taxon names.  The search may be for an exact match, or for similar names using a fuzzy match.  The kurator-validation package provides (1) a Python class for invoking the WoRMS web service; (2) an example script using this class to access the service and thereby clean a data set; (3) a Python-based actor for performing this service within the context of a **Kurator-Akka** workflow; and (4) a declaration of such a workflow.
+
+##### The WoRMSService class
+
+##### A data cleaning script that uses the WoRMSService class directly
+
+##### The WoRMSCurator actor
+
+##### A YAML declaration of a workflow that uses the WoRMSCurator actor
