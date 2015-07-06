@@ -62,7 +62,20 @@ class WoRMSService(object):
                   
 if __name__ == '__main__':
     """ Demonstration of class usage"""
+
+    # create an instance of WoRMSService
     ws = WoRMSService()
-    print ws.aphia_record_by_taxon_name('Mollusca')[1]
-    print ws.aphia_record_by_taxon_name('Architectonica reevi')[1]
+    
+    # Use the exact taxon name lookup service
+    matched_record = ws.aphia_record_by_exact_taxon_name('Mollusca')
+    print matched_record['scientificname']
+
+    # Use the fuzzy taxon name lookup service
+    matched_record = ws.aphia_record_by_fuzzy_taxon_name('Architectonica reevi')
+    print matched_record['scientificname']
+    
+    # use the automatic failover from exact to fuzzy name lookup
+    was_exact_match, matched_record = ws.aphia_record_by_taxon_name('Architectonica reevi')
+    print matched_record['scientificname']
+    print was_exact_match
 
