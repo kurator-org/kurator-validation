@@ -35,20 +35,62 @@ Directory                            | Description
 org/kurator/validation/**actors**    | Sources for python-based actors.
 org/kurator/validation/**scripts**   | Python scripts using the data cleaning services and actors.
 org/kurator/validation/**services**  | Python classes and functions providing data cleaning services.
-org/kurator/validation/standards     | Support for various data standards
-org/kurator/validation/utilities     | General purpose Python scripts and classes
+org/kurator/validation/standards     | Support for various data standards.
+org/kurator/validation/utilities     | General purpose Python scripts and classes.
 org/kurator/validation/**workflows** | Workflows composed from actors and declared in YAML.
 
-The actors, scripts, services, and workflows directories each provide different ways of accessing the data cleaning capabilities provided by this software. The next section of this README illustrates how to use each approach.
+The **actors**, **scripts**, **services**, and **workflows** directories each provide different ways of accessing the data cleaning capabilities provided by this software. The next section of this README illustrates how to use each approach.
 
 Example: Validating names using WoRMS
 -------------------------------------
-This section demonstrates how one can validate, correct, or reject data using a specific web service as a reference. The [WoRMS web service](http://marinespecies.org/aphia.php?p=webservice) allows the standard WoRMS taxononmy to be searched for taxon names.  The search may be for an exact match, or for similar names using a fuzzy match.  The kurator-validation package provides (1) a Python class for invoking the WoRMS web service; (2) an example script using this class to access the service and thereby clean a data set; (3) a Python-based actor for performing this service within the context of a **Kurator-Akka** workflow; and (4) a declaration of such a workflow.
+This section demonstrates how one can validate, correct, or reject data using a specific web service as a reference. The [WoRMS web service](http://marinespecies.org/aphia.php?p=webservice) allows the standard WoRMS taxononmy to be searched by taxon name.  The search may be for an exact match, or for similar names using a fuzzy match.  The kurator-validation package provides (1) a Python class for invoking the WoRMS web service; (2) an example script using this class to access the service and thereby clean a data set; (3) a Python-based actor for performing this service within the context of a **Kurator-Akka** workflow; and (4) a declaration of a workflow using this actor.
 
-##### The WoRMSService class
+#### The WoRMSService class
 
-##### A data cleaning script that uses the WoRMSService class directly
+The Python class defined in [WoRMSService.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/services/WoRMSService.py) makes it easy to use the taxonomic record lookup services provided by the [World Register of Marine Species (WoRMS)](http://marinespecies.org/).  The `WoRMSService` class makes SOAP web service calls on behalf of Python scripts using the class. It provides the following three methods:
 
-##### The WoRMSCurator actor
+    aphia_record_by_exact_taxon_name(name)
+    aphia_record_by_fuzzy_taxon_name(name)
+    aphia_record_by_taxon_name(name)
 
-##### A YAML declaration of a workflow that uses the WoRMSCurator actor
+The third method calls the other two as needed, first attempting an exact match, then trying a fuzzy match if the exact match fails.
+
+The `__main__` block at the end of `WoRMSService.py` illustrates how to use the service:
+
+    # create an instance of WoRMSService
+    ws = WoRMSService()
+
+    # Use the exact taxon name lookup service
+    matched_record = ws.aphia_record_by_exact_taxon_name('Mollusca')
+    print matched_record['scientificname']
+
+    # Use the fuzzy taxon name lookup service
+    matched_record = ws.aphia_record_by_fuzzy_taxon_name('Architectonica reevi')
+    print matched_record['scientificname']
+
+    # use the automatic failover from exact to fuzzy name lookup
+    was_exact_match, matched_record = ws.aphia_record_by_taxon_name('Architectonica reevi')
+    print matched_record['scientificname']
+    print was_exact_match
+
+You can run this code simply by running `WoRMSService.py` as a standalone Python script
+However, you first will need to install the `suds-jurko` Python package using `pip`:
+
+	$ pip install suds-jurko
+
+Now you can run the  `WoRMSService.py` demonstration:
+
+    $ python WoRMSService.py
+    Mollusca
+    Architectonica reevei
+    Architectonica reevei
+    False
+    $
+
+
+
+#### A data cleaning script that uses the WoRMSService class directly
+
+#### The WoRMSCurator actor
+
+#### A YAML declaration of a workflow that uses the WoRMSCurator actor
