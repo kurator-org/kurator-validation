@@ -45,7 +45,7 @@ Example: Validating names using WoRMS
 -------------------------------------
 This section demonstrates how one can validate, correct, or reject data using a specific web service as a reference. The [WoRMS web service](http://marinespecies.org/aphia.php?p=webservice) allows the standard WoRMS taxononmy to be searched by taxon name.  The search may be for an exact match, or for similar names using a fuzzy match.  The kurator-validation package provides (1) a Python class for invoking the WoRMS web service; (2) an example script using this class to access the service and thereby clean a data set; (3) a Python-based actor for performing this service within the context of a **Kurator-Akka** workflow; and (4) a declaration of a workflow using this actor.
 
-#### The WoRMSService class
+## The WoRMSService class
 
 The Python class defined in [WoRMSService.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/services/WoRMSService.py) makes it easy to use the taxonomic record lookup services provided by the [World Register of Marine Species (WoRMS)](http://marinespecies.org/).  The `WoRMSService` class makes SOAP web service calls on behalf of Python scripts using the class. It provides the following three methods:
 
@@ -86,7 +86,8 @@ Now you can run the  `WoRMSService.py` demonstration:
     False
     $
 
-#### A data cleaning script that uses the WoRMSService class directly
+
+## A data cleaning script that uses the WoRMSService class directly
 
 The `WoRMSService` class can be used in other scripts that import the class definition.  The class can be imported using the following statement :
 
@@ -106,8 +107,44 @@ The arrows between the boxes above represent their dataflow dependencies, but th
 
 ![combined view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/combined.png)
 
-
 Besides revealing the input, intermediate, and output data items produced by a run of the script (the yellow rounded boxes), this figure shows that the names of the input and output files are named by the parameters `input_data_file_name`, `rejected_data_file_name`, and `cleaned_data_file_name`.
+
+The WoRMSService methods are called from the code for the block named `find_matching_worms_record`:
+
+    ##############################################################################################
+    # @BEGIN find_matching_worms_record
+    # @IN original_scientific_name
+    # @OUT matching_worms_record
+    # @OUT worms_lsid
+
+        worms_match_result = None
+        worms_lsid = None
+
+        # first try exact match of the scientific name against WoRMS
+        timestamp("Trying WoRMS EXACT match for scientific name: '{0}'.".format(original_scientific_name))
+        matching_worms_record = worms.aphia_record_by_exact_taxon_name(original_scientific_name)
+        if matching_worms_record is not None:
+            timestamp('WoRMS EXACT match was SUCCESSFUL.')
+            worms_match_result = 'exact'
+
+        # otherwise try a fuzzy match
+        else:
+            timestamp('EXACT match FAILED.')
+            timestamp("Trying WoRMS FUZZY match for scientific name: '{0}'.".format(original_scientific_name))
+            matching_worms_record = worms.aphia_record_by_fuzzy_taxon_name(original_scientific_name)
+            if matching_worms_record is not None:
+                timestamp('WoRMS FUZZY match was SUCCESSFUL.')
+                worms_match_result = 'fuzzy'
+            else:
+                timestamp('WoRMS FUZZY match FAILED.')
+
+        # if either match succeeds extract the LSID for the taxon
+        if matching_worms_record is not None:
+            worms_lsid = matching_worms_record['lsid']
+
+    # @END find_matching_worms_record
+
+The comments starting with `@BEGIN`, `@IN`, `@OUT`, and `@END` are the YesWorkflow annotations that identify this block of code and connect it via variable names to the other blocks in the figures above.
 
 The script is used by calling the `clean_data_using_worms()` function defined in the script.  The `__main__` block at the end of [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/scripts/WoRMS/clean_data_using_worms.py) demonstrates the use of the function using the input file `demo_input.csv` which is provided in the directory with the script:
 
@@ -148,6 +185,6 @@ Below is a portion of the logging information sent to the terminal when when run
     2015-07-06 08:35:10  Wrote 7 accepted records to 'demo_cleaned.csv'.
     2015-07-06 08:35:10  Wrote 3 rejected records to 'demo_rejected.csv'.
 
-#### The WoRMSCurator actor
+## The WoRMSCurator actor
 
-#### A YAML declaration of a workflow that uses the WoRMSCurator actor
+## A YAML declaration of a workflow that uses the WoRMSCurator actor
