@@ -88,17 +88,19 @@ Now you can run the  `WoRMSService.py` demonstration:
 
 #### A data cleaning script that uses the WoRMSService class directly
 
-Using the `WoRMSService` class in your own scripts is easy.  Simply import the class definition in your own script by adding this line:
+The `WoRMSService` class can be used in other scripts that import the class definition.  The class can be imported using the following statement :
 
     from org.kurator.validation.services.WoRMSService import WoRMSService
 
-In order for Python to find the `org.kurator.validation.services.WoRMSService` package, you will need to add the directory containing the root of this package to your `PYTHONPATH` environment variable (`JYTHONPATH` if using Jython).
+In order for Python to find the `org.kurator.validation.services.WoRMSService` package, the directory containing the root of this package must be present in the `PYTHONPATH` environment variable (`JYTHONPATH` if using Jython).
 
-The script [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/scripts/WoRMS/clean_data_using_worms.py) illustrates how WoRMSService can be used in a standalone Python script.  The script also illustrates the use of [YesWorkflow](https://github.com/yesworkflow-org/yw-prototypes) comments to document how data flows through the various operations in the script.  The YesWorkflow rendering of the process view of this script is as follows:
+The script [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/scripts/WoRMS/clean_data_using_worms.py) illustrates how WoRMSService can be used in a standalone Python script.  The script also illustrates the use of [YesWorkflow](https://github.com/yesworkflow-org/yw-prototypes) comments to document how data flows through the various operations in the script.  The YesWorkflow rendering of the *process view* of this script is as follows:
 
 ![process view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/process.png)
 
-The process view reveals only the data processing steps (green blocks in the figure) marked up with YesWorkflow annotaitons in the script.  The arrows between the blocks represent their dataflow dependencies, but the data items themselves are hidden.  The *combined* view, below,represetns the process blocks together with the data (yellow rounded blocks for actual data, white rounded blocks for parameters) that each processing step consumes and produces:
+The process view reveals only the data processing steps (green blocks in the figure above) identified by YesWorkflow annotations in the script comments.
+
+The arrows between the blocks above represent their dataflow dependencies, but the data items themselves are hidden.  The *combined view*, below, represents the process blocks together with the data (yellow rounded blocks for actual data, white rounded blocks for parameters) that each processing step consumes and produces:
 
 ![combined view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/combined.png)
 
