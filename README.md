@@ -239,7 +239,35 @@ The [WoRMSCurator.py script](https://github.com/kurator-org/kurator-validation/b
 
 The `WoRMSCurator` class provides just one one method, `curate_taxon_name_and_author()` that takes a record (represented as a Python dictionary) as input, updates the record, and returns the updated record.  It calls methods on an instance of the `WoRMSService` class to look up the WoRMS record corresponding to the input, updates the TaxonName and Author fields of the record if needed, and adds fields to the record to indicate what updates were performed and to save any field values that were replaced.
 
-This class can be used from another Python script directly.  It also can be used from a Kurator-Akka workflow via the YAML declaration of the actor in [actors.yaml](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/actors.yaml):
+This class can be used from another Python script directly.  The `__main__` block block at the end of [WoRMSCurator.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/actors/WoRMSCurator.py) illustrates the use of the WoRMSCurator class to clean a set of records:
+
+    if __name__ == '__main__':
+        """ Demonstration of class usage"""
+        import sys
+        import csv
+        curator = WoRMSCurator()
+        dr = csv.DictReader(open('WoRMSCurator_demo.csv', 'r'))
+        dw = csv.DictWriter(sys.stdout, ['ID', 'TaxonName', 'Author', 'OriginalName', 
+                                         'OriginalAuthor', 'WoRMsExactMatch', 'lsid'])
+        dw.writeheader()
+        for record in dr:
+            curator.curate_taxon_name_and_author(record)
+            dw.writerow(record)
+
+
+This demonstration code reads records from a CSV file, invokes the `curate_taxon_name_and_author()` on each, and writes the updated records to the terminal.  Running the demonstration produces the following output:
+
+    $ python WoRMSCurator.py
+    ID,TaxonName,Author,OriginalName,OriginalAuthor,WoRMsExactMatch,lsid
+    37929,Architectonica reevei,"(Hanley, 1862)",Architectonica reevi,,False,urn:lsid:marinespecies.org:taxname:588206
+    37932,Rapana rapiformis,"(Born, 1778)",Rapana rapiformis,"(Von Born,1778)",True,urn:lsid:marinespecies.org:taxname:140415
+    180593,Buccinum donomani,"(Linnaeus, 1758)",,,,
+    179963,Codakia paytenorum,"(Iredale, 1937)",Codakia paytenorum,"Iredale, 1937",True,urn:lsid:marinespecies.org:taxname:215841
+    0,Rissoa venusta,"Garrett, 1873",Rissoa venusta,,True,urn:lsid:marinespecies.org:taxname:607233
+    62156,Rissoa venusta,"Garrett, 1873",Rissoa venusta,Phil.,True,urn:lsid:marinespecies.org:taxname:607233
+    $
+
+The actor also can be used from a **Kurator-Akka** workflow via the YAML declaration of the actor in [actors.yaml](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/actors.yaml):
 
     - id: WoRMSNameCurator
       type: PythonClassActor
