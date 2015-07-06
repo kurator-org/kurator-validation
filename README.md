@@ -96,11 +96,11 @@ In order for Python to find the `org.kurator.validation.services.WoRMSService` p
 
 The script [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/scripts/WoRMS/clean_data_using_worms.py) illustrates how WoRMSService can be used in a standalone Python script.  The script also illustrates the use of [YesWorkflow](https://github.com/yesworkflow-org/yw-prototypes) comments to document how data flows through the various operations in the script.  The YesWorkflow rendering of the process view of this script is as follows:
 
-![process view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/process.svg)
+![process view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/process.png)
 
 The process view reveals only the data processing steps (green blocks in the figure) marked up with YesWorkflow annotaitons in the script.  The arrows between the blocks represent their dataflow dependencies, but the data items themselves are hidden.  The *combined* view, below,represetns the process blocks together with the data (yellow rounded blocks for actual data, white rounded blocks for parameters) that each processing step consumes and produces:
 
-![combined view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/combined.svg)
+![combined view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/combined.png)
 
 
 
