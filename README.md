@@ -55,7 +55,7 @@ The Python class defined in [WoRMSService.py](https://github.com/kurator-org/kur
 
 The third method calls the other two as needed, first attempting an exact match, then trying a fuzzy match if the exact match fails.
 
-The `__main__` block at the end of `WoRMSService.py` illustrates how to use the service:
+The `__main__` block at the end of [WoRMSService.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/services/WoRMSService.py) illustrates how to use the service:
 
     # create an instance of WoRMSService
     ws = WoRMSService()
@@ -73,8 +73,7 @@ The `__main__` block at the end of `WoRMSService.py` illustrates how to use the 
     print matched_record['scientificname']
     print was_exact_match
 
-You can run this code simply by running `WoRMSService.py` as a standalone Python script
-However, you first will need to install the `suds-jurko` Python package using `pip`:
+You can run this code simply by running `WoRMSService.py` as a standalone Python script.  However, you first will need to install the [suds-jurko](https://pypi.python.org/pypi/suds-jurko/0.6) (lightweight SOAP client package) using `pip`:
 
 	$ pip install suds-jurko
 
