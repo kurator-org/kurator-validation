@@ -92,26 +92,27 @@ The `WoRMSService` class can be used in other scripts that import the class defi
 
     from org.kurator.validation.services.WoRMSService import WoRMSService
 
-In order for Python to find the `org.kurator.validation.services.WoRMSService` package, the directory containing the root of this package must be present in the `PYTHONPATH` environment variable (`JYTHONPATH` if using Jython).
+In order for Python to find the `org.kurator.validation.services.WoRMSService` package, the directory containing the root of this package must be present in the `PYTHONPATH` environment variable (`JYTHONPATH` if using Jython).  In a bash shell, the command to add the necessary path to the `PYTHONPATH` variables will be similar to this (replace `/Users/myhomedir/kurator-validation/` below with the path to the cloned repository):
+
+    export PYTHONPATH="/Users/myhomedir/kurator-validation/src/main/python/:$PYTHONPATH"
 
 The script [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/scripts/WoRMS/clean_data_using_worms.py) illustrates how `WoRMSService` can be used in a standalone Python script.  The script also illustrates the use of [YesWorkflow](https://github.com/yesworkflow-org/yw-prototypes) comments to document how data flows through the various operations in the script.  The YesWorkflow rendering of the *process view* of this script is as follows:
 
 ![process view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/process.png)
 
-The process view reveals only the data processing steps (green blocks in the figure above) identified by YesWorkflow annotations in the script comments. As illustrated in the figure, the script takes as input a set of records (in CSV format), attempts to find corresponding records in the WoRMS taxonomy, rejects input records that cannot be found in WoRMS, and corrects the scientific name and authorship fields as needed in the records that it does find matches for.  The rejected and accepted (poossibly corrected) records are output separately.
+The process view reveals only the data processing steps (green boxes in the figure above) identified by YesWorkflow annotations in the script comments. As illustrated in the figure, the script takes as input a set of records (in CSV format), attempts to find corresponding records in the WoRMS taxonomy, rejects input records that cannot be found in WoRMS, and corrects the scientific name and authorship fields as needed in the records that it does find matches for.  The rejected and accepted (poossibly corrected) records are output separately.
 
-The arrows between the blocks above represent their dataflow dependencies, but the data items themselves are hidden.  The *combined view*, below, represents the process blocks together with the data (yellow rounded blocks) and parameters (white rounded blocks) that each processing step consumes and produces:
+The arrows between the boxes above represent their dataflow dependencies, but the data items themselves are hidden.  The *combined view*, below, represents the process blocks together with the data (yellow rounded boxes) and parameters (white rounded boxes) that each processing step consumes and produces:
 
 ![combined view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/combined.png)
 
 
 Besides revealing the input, intermediate, and output data items produced by a run of the script (the yellow rounded boxes), this figure shows that the names of the input and output files are named by the parameters `input_data_file_name`, `rejected_data_file_name`, and `cleaned_data_file_name`.
 
-The `__main__` block at the end of [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/scripts/WoRMS/clean_data_using_worms.py) demonstrates the use of the script using the input file `demo_input.csv` which is provided in the directory with the script:
+The script is used by calling the `clean_data_using_worms()` function defined in the script.  The `__main__` block at the end of [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/scripts/WoRMS/clean_data_using_worms.py) demonstrates the use of the function using the input file `demo_input.csv` which is provided in the directory with the script:
 
     if __name__ == '__main__':
         """ Demo of clean_data_using_worms script """
-
         clean_data_using_worms(
             input_data_file_name='demo_input.csv',
             cleaned_data_file_name='demo_cleaned.csv',
@@ -120,34 +121,32 @@ The `__main__` block at the end of [clean_data_using_worms.py](https://github.co
 
 The records successfully cleaned are stored in the file 'demo_cleaned.csv', while those that could not be repaired are stored in `demo_rejected.csv'.
 
-The first few lines of output when running this demonstration are:
+Below is a portion of the logging information sent to the terminal when when running this demonstration :
 
-    $ python clean_data_using_worms.py 
-    2015-07-05 23:50:57  Reading input records from 'demo_input.csv'.
+    2015-07-06 08:34:33  Reading input records from 'demo_input.csv'.
 
-    2015-07-05 23:50:57  Reading input record 001.
-    2015-07-05 23:50:57  Trying WoRMs EXACT match for scientific name: 'Placopecten magellanicus'.
-    2015-07-05 23:50:57  WoRMs EXACT match was SUCCESSFUL.
-    2015-07-05 23:50:57  UPDATING scientific name authorship from 'Gmelin, 1791' to '(Gmelin, 1791)'.
-    2015-07-05 23:50:57  ACCEPTED record 001.
+    2015-07-06 08:34:33  Reading input record 001.
+    2015-07-06 08:34:33  Trying WoRMs EXACT match for scientific name: 'Placopecten magellanicus'.
+    2015-07-06 08:34:34  WoRMs EXACT match was SUCCESSFUL.
+    2015-07-06 08:34:34  UPDATING scientific name authorship from 'Gmelin, 1791' to '(Gmelin, 1791)'.
+    2015-07-06 08:34:34  ACCEPTED record 001.
 
-    2015-07-05 23:50:57  Reading input record 002.
-    2015-07-05 23:50:57  Trying WoRMs EXACT match for scientific name: 'Placopecten magellanicus'.
-    2015-07-05 23:50:58  WoRMs EXACT match was SUCCESSFUL.
-    2015-07-05 23:50:58  ACCEPTED record 002.
+    2015-07-06 08:34:34  Reading input record 002.
+    2015-07-06 08:34:34  Trying WoRMs EXACT match for scientific name: 'Placopecten magellanicus'.
+    2015-07-06 08:34:35  WoRMs EXACT match was SUCCESSFUL.
+    2015-07-06 08:34:35  ACCEPTED record 002.
 
-    2015-07-05 23:50:58  Reading input record 003.
-    2015-07-05 23:50:58  Trying WoRMs EXACT match for scientific name: 'magellanicus placopecten'.
-    2015-07-05 23:50:59  EXACT match FAILED.
-    2015-07-05 23:50:59  Trying WoRMs FUZZY match for scientific name: 'magellanicus placopecten'.
-    2015-07-05 23:51:04  WoRMs FUZZY match FAILED.
-    2015-07-05 23:51:04  REJECTED record 003.
-
-    2015-07-05 23:51:04  Reading input record 004.
-    2015-07-05 23:51:04  Trying WoRMs EXACT match for scientific name: 'Placopecten magellanicus'.
-    2015-07-05 23:51:05  WoRMs EXACT match was SUCCESSFUL.
-    2015-07-05 23:51:05  UPDATING scientific name authorship from '' to '(Gmelin, 1791)'.
-    2015-07-05 23:51:05  ACCEPTED record 004.
+    2015-07-06 08:34:35  Reading input record 003.
+    2015-07-06 08:34:35  Trying WoRMs EXACT match for scientific name: 'magellanicus placopecten'.
+    2015-07-06 08:34:36  EXACT match FAILED.
+    2015-07-06 08:34:36  Trying WoRMs FUZZY match for scientific name: 'magellanicus placopecten'.
+    2015-07-06 08:34:42  WoRMs FUZZY match FAILED.
+    2015-07-06 08:34:42  REJECTED record 003.
+    .
+    .
+    .
+    2015-07-06 08:35:10  Wrote 7 accepted records to 'demo_cleaned.csv'.
+    2015-07-06 08:35:10  Wrote 3 rejected records to 'demo_rejected.csv'.
 
 #### The WoRMSCurator actor
 
