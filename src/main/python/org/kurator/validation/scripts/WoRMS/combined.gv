@@ -1,0 +1,91 @@
+digraph Workflow {
+rankdir=TB
+fontname=Courier; fontsize=18; labelloc=t
+label="Clean Data Using WORMs"
+subgraph cluster_workflow_box_outer { label=""; color=black; penwidth=2
+subgraph cluster_workflow_box_inner { label=""; color=white
+node[shape=box style=filled fillcolor="#CCFFCC" peripheries=1 fontname=Courier]
+read_input_data_records
+extract_record_fields
+find_matching_worms_record
+reject_records_not_in_worms
+update_scientific_name
+update_authorship
+compose_cleaned_record
+write_clean_data_set
+node[shape=box style="rounded,filled" fillcolor="#FFFFCC" peripheries=1 fontname=Helvetica]
+cleaned_data [shape=record rankdir=LR label="{<f0> cleaned_data |<f1> file\:\{cleaned_data_file_name\}}"];
+rejected_data [shape=record rankdir=LR label="{<f0> rejected_data |<f1> file\:\{rejected_data_file_name\}}"];
+input_data [shape=record rankdir=LR label="{<f0> input_data |<f1> file\:\{input_data_file_name\}}"];
+original_record
+original_scientific_name
+matching_worms_record
+original_authorship
+worms_lsid
+updated_scientific_name
+updated_authorship
+cleaned_record
+node[shape=box style="rounded,filled" fillcolor="#FCFCFC" peripheries=1 fontname=Helvetica]
+input_data_file_name
+input_field_delimiter
+rejected_data_file_name
+output_field_delimiter
+cleaned_data_file_name
+read_input_data_records -> original_record
+input_data_file_name -> read_input_data_records
+input_field_delimiter -> read_input_data_records
+input_data -> read_input_data_records
+extract_record_fields -> original_scientific_name
+extract_record_fields -> original_authorship
+original_record -> extract_record_fields
+find_matching_worms_record -> matching_worms_record
+find_matching_worms_record -> worms_lsid
+original_scientific_name -> find_matching_worms_record
+reject_records_not_in_worms -> rejected_data
+original_record -> reject_records_not_in_worms
+matching_worms_record -> reject_records_not_in_worms
+rejected_data_file_name -> reject_records_not_in_worms
+output_field_delimiter -> reject_records_not_in_worms
+update_scientific_name -> updated_scientific_name
+original_scientific_name -> update_scientific_name
+matching_worms_record -> update_scientific_name
+update_authorship -> updated_authorship
+matching_worms_record -> update_authorship
+original_authorship -> update_authorship
+compose_cleaned_record -> cleaned_record
+original_record -> compose_cleaned_record
+worms_lsid -> compose_cleaned_record
+updated_scientific_name -> compose_cleaned_record
+original_scientific_name -> compose_cleaned_record
+updated_authorship -> compose_cleaned_record
+original_authorship -> compose_cleaned_record
+write_clean_data_set -> cleaned_data
+cleaned_data_file_name -> write_clean_data_set
+output_field_delimiter -> write_clean_data_set
+cleaned_record -> write_clean_data_set
+}}
+subgraph cluster_input_ports_group_outer { label=""; color=white
+subgraph cluster_input_ports_group_inner { label=""; color=white
+node[shape=circle style="rounded,filled" fillcolor="#FFFFFF" peripheries=1 fontname=Helvetica width=0.2]
+input_data_file_name_input_port [label=""]
+cleaned_data_file_name_input_port [label=""]
+rejected_data_file_name_input_port [label=""]
+input_field_delimiter_input_port [label=""]
+output_field_delimiter_input_port [label=""]
+input_data_input_port [label=""]
+}}
+subgraph cluster_output_ports_group_outer { label=""; color=white
+subgraph cluster_output_ports_group_inner { label=""; color=white
+node[shape=circle style="rounded,filled" fillcolor="#FFFFFF" peripheries=1 fontname=Helvetica width=0.2]
+cleaned_data_output_port [label=""]
+rejected_data_output_port [label=""]
+}}
+input_data_file_name_input_port -> input_data_file_name
+cleaned_data_file_name_input_port -> cleaned_data_file_name
+rejected_data_file_name_input_port -> rejected_data_file_name
+input_field_delimiter_input_port -> input_field_delimiter
+output_field_delimiter_input_port -> output_field_delimiter
+input_data_input_port -> input_data
+cleaned_data -> cleaned_data_output_port
+rejected_data -> rejected_data_output_port
+}
