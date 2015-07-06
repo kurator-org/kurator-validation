@@ -279,3 +279,39 @@ The above YAML snippet declares that `WoRMSNameCurator` is a Python class actor 
 
 
 ## A workflow that uses the WoRMSCurator actor
+
+The The **[Kurator-Akka](https://github.com/kurator-org/kurator-akka)** allows actors such as the `WoRMSCurator` actor above to be assembled into pipelines of actors, or workflows, that operate on a stream of data one after the other.  A minimal workflow using the `WoRMSCurator` actor is defined in [WoRMS_name_validation.yaml](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/workflows/WoRMS_name_validation.yaml). The full definition in this file is given below:
+
+    imports:
+
+    - classpath:/org/kurator/akka/actors.yaml
+    - classpath:/org/kurator/validation/actors.yaml
+
+    components:
+
+    - id: ReadInput
+      type: CsvFileReader
+
+    - id: CurateRecords
+      type: WoRMSNameCurator
+      properties:
+        listensTo:
+          - !ref ReadInput
+
+    - id: WriteOutput
+      type: CsvFileWriter
+      properties:
+        listensTo:
+          - !ref CurateRecords
+
+    - id: WoRMSNameValidationWorkflow
+      type: Workflow
+      properties:
+        actors:
+          - !ref ReadInput
+          - !ref CurateRecords
+          - !ref WriteOutput
+
+This workflow definition combines three actors of type `CsvFileReader`, `WoRMSNameCurator`, and `CsvFileWriter` into a single data processing pipeline.  More information about how **Kurator-Akka** workflows are specified is provided in the [Kurator-Akka README](https://github.com/kurator-org/kurator-akka/blob/master/README.md).
+
+The above workflow can be executed...
