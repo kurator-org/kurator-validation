@@ -312,7 +312,7 @@ The **[Kurator-Akka](https://github.com/kurator-org/kurator-akka)** framework al
           - !ref CurateRecords
           - !ref WriteOutput
 
-This workflow definition combines three actors, of type `CsvFileReader`, `WoRMSNameCurator`, and `CsvFileWriter`, into a single data processing pipeline.  More information about how **Kurator-Akka** workflows are specified is provided in the [Kurator-Akka README](https://github.com/kurator-org/kurator-akka/blob/master/README.md).
+This workflow definition combines three actors (of types `CsvFileReader`, `WoRMSNameCurator`, and `CsvFileWriter`) into a single data processing pipeline.  More information about how **Kurator-Akka** workflows are specified is provided in the [Kurator-Akka README](https://github.com/kurator-org/kurator-akka/blob/master/README.md).
 
 To run this workflow at the command prompt one must first do two things:
 
@@ -334,4 +334,4 @@ Now the workflow can be run using the `ka` command, e.g. taking as input the `Wo
     62156,Rissoa venusta,"Garrett, 1873",Rissoa   venusta,Phil.,true,urn:lsid:marinespecies.org:taxname:607233
     $
 
-Additional actors that process data records similarly can easily be added to such a workflow--without the composition challenges that scripts typically exhibit.  In addition, each actor in a **Kurator-Akka** workflow runs concurrently (in different threads).  This means that once several records have been read into a workflow with multiple data cleaning actors connected in series, multiple actors (sometimes *all* of the actors) often will be busy at the same time.  This can increase the data throughput rate of the workflow compared to that of a single-threaded script.
+Additional actors that process data records similarly can easily be added to such a workflow--without the composition challenges that scripts typically exhibit.  In addition, each actor in a **Kurator-Akka** workflow runs concurrently in different threads.  This means that once several records have been read into a workflow with multiple data cleaning actors connected in series, multiple actors (sometimes *all* of the actors) often will be busy at the same time.  This can increase the data throughput rate of the workflow compared to that of a single-threaded script.
