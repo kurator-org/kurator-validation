@@ -280,7 +280,7 @@ The above YAML snippet declares that `WoRMSNameCurator` is a Python class actor 
 
 ## A workflow that uses the WoRMSCurator actor
 
-The The **[Kurator-Akka](https://github.com/kurator-org/kurator-akka)** allows actors such as the `WoRMSCurator` actor above to be assembled into pipelines of actors, or workflows, that operate on a stream of data one after the other.  A minimal workflow using the `WoRMSCurator` actor is defined in [WoRMS_name_validation.yaml](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/workflows/WoRMS_name_validation.yaml). The full definition in this file is given below:
+The **[Kurator-Akka](https://github.com/kurator-org/kurator-akka)** framework allows actors such as `WoRMSCurator` above to be assembled into pipelines of actors, or workflows, that operate on a stream of data one after the other.  A minimal workflow using the `WoRMSCurator` actor is defined in [WoRMS_name_validation.yaml](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/workflows/WoRMS_name_validation.yaml). The full definition in this file is given below:
 
     imports:
 
@@ -312,15 +312,17 @@ The The **[Kurator-Akka](https://github.com/kurator-org/kurator-akka)** allows a
           - !ref CurateRecords
           - !ref WriteOutput
 
-This workflow definition combines three actors of type `CsvFileReader`, `WoRMSNameCurator`, and `CsvFileWriter` into a single data processing pipeline.  More information about how **Kurator-Akka** workflows are specified is provided in the [Kurator-Akka README](https://github.com/kurator-org/kurator-akka/blob/master/README.md).
+This workflow definition combines three actors, of type `CsvFileReader`, `WoRMSNameCurator`, and `CsvFileWriter`, into a single data processing pipeline.  More information about how **Kurator-Akka** workflows are specified is provided in the [Kurator-Akka README](https://github.com/kurator-org/kurator-akka/blob/master/README.md).
 
 To run this workflow at the command prompt one must first do two things:
+
 1.  Set up the Kurator-Akka runtime environment as described in [Setting up Kurator-Akka](https://github.com/kurator-org/kurator-akka#setting-up-kurator-akka) such that the `ka` command invokes the **Kurator-Akka** system.
-2.  Set the environment variable `KURATOR_LOCAL_PACKAGES` to refer to the directory that contains the root of the `org.kurator.validation` python package.  For example,
+
+2.  Set the environment variable `KURATOR_LOCAL_PACKAGES` to refer to the directory containing the root of the `org.kurator.validation` python package.  For example,
 
         export KURATOR_LOCAL_PACKAGES="/Users/myhomedir/kurator-validation/src/main/python"
 
-Now the workflow can be run using the `ka` command, e.g. using the `WoRMS_name_validation_input.csv` file in the same directory as the workflow definition file:
+Now the workflow can be run using the `ka` command, e.g. taking as input the `WoRMS_name_validation_input.csv` file that is in the same directory as the workflow definition file:
 
     $ ka -f WoRMS_name_validation.yaml < WoRMS_name_validation_input.csv
     ID,TaxonName,Author,OriginalName,OriginalAuthor,WoRMsExactMatch,lsid
