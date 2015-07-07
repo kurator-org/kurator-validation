@@ -314,13 +314,17 @@ The **[Kurator-Akka](https://github.com/kurator-org/kurator-akka)** framework al
 
 This workflow definition combines three actors (of types `CsvFileReader`, `WoRMSNameCurator`, and `CsvFileWriter`) into a single data processing pipeline.  More information about how **Kurator-Akka** workflows are specified is provided in the [Kurator-Akka README](https://github.com/kurator-org/kurator-akka/blob/master/README.md).
 
-To run this workflow at the command prompt one must first do two things:
+To run this workflow at the command prompt one must first do three things:
 
 1.  Set up the Kurator-Akka runtime environment as described in [Setting up Kurator-Akka](https://github.com/kurator-org/kurator-akka#setting-up-kurator-akka) such that the `ka` command invokes the **Kurator-Akka** system.
 
-2.  Set the environment variable `KURATOR_LOCAL_PACKAGES` to refer to the directory containing the root of the `org.kurator.validation` python package.  For example,
+2.  Follow the instructions for [Developing new python actors](https://github.com/kurator-org/kurator-akka#developing-new-python-actors).  Make sure that the `KURATOR_LOCAL_PYTHON_LIB` environment variable refers to the Lib subdirectory of a local Jython installation, e.g.:
 
-        export KURATOR_LOCAL_PACKAGES="/Users/myhomedir/kurator-validation/src/main/python"
+        export KURATOR_LOCAL_PYTHON_LIB=$HOME/jython2.7.0/Lib/
+
+3.  Set the environment variable `KURATOR_LOCAL_PACKAGES` to refer to the directory containing the root of the `org.kurator.validation` python package.  For example,
+
+        export KURATOR_LOCAL_PACKAGES=/Users/myhomedir/kurator-validation/src/main/python
 
 Now the workflow can be run using the `ka` command, e.g. taking as input the `WoRMS_name_validation_input.csv` file that is in the same directory as the workflow definition file:
 
