@@ -324,7 +324,7 @@ To run this workflow at the command prompt one must first do three things:
 
 3.  Set the environment variable `KURATOR_LOCAL_PACKAGES` to refer to the directory containing the root of the `org.kurator.validation` python package.  For example,
 
-        export KURATOR_LOCAL_PACKAGES=/Users/myhomedir/kurator-validation/src/main/python
+        export KURATOR_LOCAL_PACKAGES=$HOME/kurator-validation/src/main/python
 
 Now the workflow can be run using the `ka` command, e.g. taking as input the `WoRMS_name_validation_input.csv` file that is in the same directory as the workflow definition file:
 
