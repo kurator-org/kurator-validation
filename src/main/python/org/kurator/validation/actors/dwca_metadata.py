@@ -25,9 +25,12 @@ from optparse import OptionParser
 from dwca.read import DwCAReader
 
 def dwca_metadata(dwca_file):
+    """Open a Darwin Core archive and return the metadata."""
     # Open the Darwin Core Archive given in dwca_file
     dwca = DwCAReader(dwca_file)
-    
+    if not dwca:
+        return None
+        
     # Pull the metadata from the archive
     metadata=dwca.metadata
     
@@ -57,5 +60,5 @@ def main():
     print metadata.prettify()
     
 if __name__ == '__main__':
-    """ Demo of dwca_metadata script """
+    """ Demo of dwca_metadata script"""
     main()
