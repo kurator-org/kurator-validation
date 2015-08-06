@@ -26,9 +26,11 @@ from optparse import OptionParser
 from dwca.read import DwCAReader
 from dwca.darwincore.utils import qualname as qn
 from dwca.darwincore.terms import TERMS
+from dwcaterms import geogkeytermlist
+from dwcaterms import taxonkeytermlist
 
-geogkeytermlist = ['continent', 'country', 'stateProvince', 'county', 'municipality', 'waterBody', 'islandGroup', 'island']
-taxonkeytermlist = ['kingdom', 'genus', 'subgenus', 'specificEpithet', 'infraspecificEpithet', 'scientificNameAuthorship', 'scientificName']
+# geogkeytermlist = ['continent', 'country', 'stateProvince', 'county', 'municipality', 'waterBody', 'islandGroup', 'island']
+# taxonkeytermlist = ['kingdom', 'genus', 'subgenus', 'specificEpithet', 'infraspecificEpithet', 'scientificNameAuthorship', 'scientificName']
 
 def dwca_metadata(dwcareader):
     """Return metadata from Darwin Core Archive Reader."""
@@ -177,7 +179,7 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     options = _getoptions()
     if options.dwca_file is None:
-        print 'syntax: dwca_metadata.py -f dwca_file'
+        print 'syntax: dwca_utils.py -f dwca_file'
         return
     dwcareader = DwCAReader(options.dwca_file)
     metadata=dwca_metadata(dwcareader)
@@ -213,5 +215,5 @@ def main():
     print '\nCore row count:%s' % (rowcount)
 
 if __name__ == '__main__':
-    """ Demo of dwca_metadata_element script"""
+    """ Demo of dwca_utils functions"""
     main()
