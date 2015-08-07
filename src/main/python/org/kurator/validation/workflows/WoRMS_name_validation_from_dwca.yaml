@@ -1,11 +1,11 @@
-####################################
-# WORMS_name_validation.yaml
-####################################
+######################################
+# WORMS_name_validation_from_dwca.yaml
+######################################
 
 imports:
 
 - classpath:/org/kurator/akka/actors.yaml
-- classpath:/org/kurator/validation/actors.yaml
+- classpath:/org/kurator/validation/actors/actors.yaml
 
 components:
 
@@ -14,6 +14,11 @@ components:
 
 - id: ReadInput
   type: DarwinCoreArchiveCoreRowReader
+#  properties:
+#    parameters:
+#      gfilename:
+#        actor: !ref DarwinCoreArchiveCoreRowReader
+#        parameter: gfilename
 
 - id: CurateRecords
   type: WoRMSNameCurator
