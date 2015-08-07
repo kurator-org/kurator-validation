@@ -10,3 +10,11 @@ types:
     pythonClass: org.kurator.validation.actors.WoRMSCurator.WoRMSCurator
     onData: curate_taxon_name_and_author
 
+- id: DarwinCoreArchiveCoreRowReader
+  type: PythonActor
+  properties:
+    script: src/main/python/org/kurator/validation/actors/dwca_reader.py
+    onStart: read_core_rows
+    defaults:
+      outputTypeIsInputType: true
+

@@ -26,7 +26,7 @@ from dwca.read import DwCAReader
 from dwca_utils import get_term_group_key
 from dwcaterms import geogkeytermlist
 
-def read_file(filename):
+def read_core_rows(filename):
     # The with statement ensures resources will be properly cleaned after leaving the 
     # block - after all yields have completed.
     with DwCAReader(filename) as dwca:
@@ -49,7 +49,7 @@ def main():
         return
     print '\nGeography keys:'
     i = 0
-    for row in read_file(options.dwca_file):
+    for row in read_core_rows(options.dwca_file):
         geogkey = get_term_group_key(row.data, geogkeytermlist)
         i = i + 1
         print '%s' % (geogkey)

@@ -1,0 +1,36 @@
+####################################
+# WORMS_name_validation.yaml
+####################################
+
+imports:
+
+- classpath:/org/kurator/akka/actors.yaml
+- classpath:/org/kurator/validation/actors.yaml
+
+components:
+
+#- id: ReadInput
+#  type: CsvFileReader
+
+- id: ReadInput
+  type: DarwinCoreArchiveCoreRowReader
+
+- id: CurateRecords
+  type: WoRMSNameCurator
+  properties:
+    listensTo:
+      - !ref ReadInput
+
+- id: WriteOutput
+  type: CsvFileWriter
+  properties:
+    listensTo:
+      - !ref CurateRecords
+  
+- id: WoRMSNameValidationWorkflow
+  type: Workflow
+  properties:
+    actors:
+      - !ref ReadInput
+      - !ref CurateRecords
+      - !ref WriteOutput
