@@ -101,7 +101,7 @@ The script [clean_data_using_worms.py](https://github.com/kurator-org/kurator-va
 
 ![process view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/process.png)
 
-The process view reveals only the data processing steps (green boxes in the figure above) identified by YesWorkflow annotations in the script comments. As illustrated in the figure, the script takes as input a set of records (in CSV format), attempts to find corresponding records in the WoRMS taxonomy, rejects input records that cannot be found in WoRMS, and corrects the scientific name and authorship fields as needed in the records that it does find matches for.  The rejected and accepted (poossibly corrected) records are output separately.
+The process view reveals only the data processing steps (green boxes in the figure above) identified by YesWorkflow annotations in the script comments. As illustrated in the figure, the script takes as input a set of records (in CSV format), attempts to find corresponding records in the WoRMS taxonomy, rejects input records that cannot be found in WoRMS, and corrects the scientific name and authorship fields as needed in the records that it does find matches for.  The rejected and accepted (possibly corrected) records are output separately.
 
 The arrows between the boxes above represent their dataflow dependencies, but the data items themselves are hidden.  The *combined view*, below, represents the process blocks together with the data (yellow rounded boxes) and parameters (white rounded boxes) that each processing step consumes and produces:
 
@@ -239,7 +239,7 @@ The [WoRMSCurator.py script](https://github.com/kurator-org/kurator-validation/b
 
 The `WoRMSCurator` class provides just one one method, `curate_taxon_name_and_author()` that takes a record (represented as a Python dictionary) as input, updates the record, and returns the updated record.  It calls methods on an instance of the `WoRMSService` class to look up the WoRMS record corresponding to the input, updates the TaxonName and Author fields of the record if needed, and adds fields to the record to indicate what updates were performed and to save any field values that were replaced.
 
-This class can be used from another Python script directly.  The `__main__` block block at the end of [WoRMSCurator.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/actors/WoRMSCurator.py) illustrates the use of the WoRMSCurator class to clean a set of records:
+This class can be used from another Python script directly.  The `__main__` block at the end of [WoRMSCurator.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/actors/WoRMSCurator.py) illustrates the use of the WoRMSCurator class to clean a set of records:
 
     if __name__ == '__main__':
         """ Demonstration of class usage"""
