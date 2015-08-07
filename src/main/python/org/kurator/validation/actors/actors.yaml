@@ -1,0 +1,20 @@
+imports:
+
+- classpath:/org/kurator/akka/types.yaml
+
+types:
+
+- id: WoRMSNameCurator
+  type: PythonClassActor
+  properties:
+    pythonClass: org.kurator.validation.actors.WoRMSCurator.WoRMSCurator
+    onData: curate_taxon_name_and_author
+
+- id: DarwinCoreArchiveCoreRowReader
+  type: PythonActor
+  properties:
+    script: actors/dwca/dwca_reader_global.py
+    onStart: read_core_rows
+    defaults:
+      outputTypeIsInputType: true
+
