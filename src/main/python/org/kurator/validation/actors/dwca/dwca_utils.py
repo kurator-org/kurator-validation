@@ -19,6 +19,8 @@ __author__ = "John Wieczorek"
 import logging
 from optparse import OptionParser
 
+import csv
+
 # Python Darwin Core Archive Reader from 
 # https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
 # pip install python-dwca-reader
@@ -31,6 +33,17 @@ from dwcaterms import taxonkeytermlist
 
 # geogkeytermlist = ['continent', 'country', 'stateProvince', 'county', 'municipality', 'waterBody', 'islandGroup', 'island']
 # taxonkeytermlist = ['kingdom', 'genus', 'subgenus', 'specificEpithet', 'infraspecificEpithet', 'scientificNameAuthorship', 'scientificName']
+
+def get_dict_for_vocab(filename):
+    """Create a lookup dictionary for standard values of a term."""
+    dict={}
+    with open(filename) as csvfile:
+        dr = csv.DictReader(csvfile)
+        for row in dr:
+            verbatim=row['verbatim']
+            standard=row['standard']
+            dict[verbatim]=standard
+    return dict
 
 def dwca_metadata(dwcareader):
     """Return metadata from Darwin Core Archive Reader."""
@@ -145,6 +158,26 @@ def get_term_value(rowdata, term):
         return rowdata[term]
     return None
     
+def standardize_term_value(rowdata, term, valuedict):
+    """Replace the value of the term in rowdata with the value from the valuedict."""
+    was=None
+    shouldbe=None
+    if rowdata is None:
+        return False
+    if term is None:
+        return False
+    if term in rowdata.keys():
+        was=rowdata[term]
+    elif qn(term) in rowdata.keys():
+        was=rowdata[qn(term)]
+    if was is not None:
+    	shouldbe=valuedict[was]
+    	if was!=shouldbe:
+            rowdata[term]=shouldbe
+            print 'was: %s shouldbe: %s' % (was, shouldbe)
+            return True
+    return False
+    
 def shortname(qualname):
     """Return a term name from a fully qualified term identifier.
 
@@ -188,7 +221,7 @@ def main():
     coretermnames = term_name_list(list(dwcareader.descriptor.core.terms))
     print '\nTerms in core:\n%s' % (coretermnames)
         
-    t='collectionCode'
+    t='establishmentMeans'
     set_values = get_term_valueset(dwcareader, t)
     if set_values is not None:
         print '\nDistinct %s values in data set:\n%s' % (t, sorted(list(set_values)))
@@ -208,9 +241,31 @@ def main():
         i = i + 1
         print '%s' % (taxonkey)
     print 'Count=%s' % i
+
+    i = 0
+    changed=0
+    changeterm='establishmentMeans'
+    em_dict=get_dict_for_vocab('../../vocabularies/establishmentMeans.csv')
+    print 'establishmentMeans dict:\n %s' % em_dict
+    for row in dwcareader:
+        if standardize_term_value(row.data, changeterm, em_dict) is True:
+            changed=changed+1
+        i = i + 1
+    print 'Count=%s %s changed %s times' % (i, changeterm, changed)
+    
+    i = 0
+    changed=0
+    changeterm='basisOfRecord'
+    bor_dict=get_dict_for_vocab('../../vocabularies/basisOfRecord.csv')
+    print 'basisOfRecord dict:\n %s' % bor_dict
+    for row in dwcareader:
+        if standardize_term_value(row.data, changeterm, bor_dict) is True:
+            changed=changed+1
+        i = i + 1
+    print 'Count=%s %s changed %s times' % (i, changeterm, changed)
     
     dwcareader.close()
-        
+
     rowcount = get_core_rowcount(dwcareader)
     print '\nCore row count:%s' % (rowcount)
 
