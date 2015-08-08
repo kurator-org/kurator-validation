@@ -1,0 +1,34 @@
+# This workflow reads a CSV file and outputs to another CSV file
+#
+# Example command-line usage:
+# kurator -f csv_read_write_wf.yaml -p in=input.csv -p out=output.csv
+
+imports:
+
+- classpath:/org/kurator/akka/actors.yaml
+- classpath:/org/kurator/validation/actors/samples/actors.yaml
+
+components:
+
+- id: ReadInputCsv
+  type: CsvReader
+
+- id: WriteOutputCsv
+  type: CsvFileWriter
+  properties:
+    listensTo:
+      - !ref ReadInputCsv
+
+- id: CsvReadWriteWF
+  type: Workflow
+  properties:
+    actors:
+      - !ref ReadInputCsv
+      - !ref WriteOutputCsv
+    parameters:
+      in:
+        actor: !ref ReadInputCsv
+        parameter: filename
+      out:
+        actor: !ref WriteOutputCsv
+        parameter: filePath

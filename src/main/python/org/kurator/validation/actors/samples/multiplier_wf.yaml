@@ -1,0 +1,39 @@
+# This workflow does what? An example that works?
+#
+# Example command-line usage:
+# kurator -f multiplier_wf.yaml 
+
+imports:
+
+- classpath:/org/kurator/akka/actors.yaml
+- classpath:/org/kurator/validation/actors/samples/actors.yaml
+
+components:
+
+- id: Repeater
+  type: PythonRepeater
+
+- id: MultiplyByTwo
+  type: PythonMultiplier
+  properties:
+    listensTo:
+      - !ref Repeater
+    parameters:
+      factor: 2
+
+- id: Printer
+  type: PythonPrinter
+  properties:
+    listensTo:
+      - !ref MultiplyByTwo
+    parameters:
+      delimiter: ","
+       
+- id: ThreeActorWorkflow
+  type: Workflow
+  properties:
+    actors:
+      - !ref Repeater
+      - !ref MultiplyByTwo
+      - !ref Printer
+    inputActor: !ref Repeater
