@@ -1,4 +1,5 @@
 "verbatim","standard","checked"
+"unknown","unknown",1
 "?","unknown",1
 "accidental transport","introduced",1
 "captive","managed",1
@@ -12,5 +13,4 @@
 "native","native",1
 "purchased","unknown",1
 "Uncertain","unknown",1
-"unknown","unknown",1
-"wild caught","",0
+"wild caught","",0

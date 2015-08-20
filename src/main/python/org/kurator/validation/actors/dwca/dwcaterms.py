@@ -16,6 +16,24 @@
 
 __author__ = "John Wieczorek"
 
-geogkeytermlist = ['continent', 'country', 'stateProvince', 'county', 'municipality', 'waterBody', 'islandGroup', 'island']
+# The geogkeytermlist contains the terms that make up a distinct geography combination
+geogkeytermlist = [
+    'continent', 'country', 'stateProvince', 'county', 'municipality', 'waterBody', 
+    'islandGroup', 'island']
 
-taxonkeytermlist = ['kingdom', 'genus', 'subgenus', 'specificEpithet', 'infraspecificEpithet', 'scientificNameAuthorship', 'scientificName']
+# The taxonkeytermlist contains the terms that make up a distinct taxon name combination
+taxonkeytermlist = [
+    'kingdom', 'genus', 'subgenus', 'specificEpithet', 'infraspecificEpithet', 
+    'scientificNameAuthorship', 'scientificName']
+
+# For each term in the controlledtermlist there should be a vocabulary file with the
+# name [term].csv in which there are three columns: verbatim, standard, checked
+controlledtermlist = [
+    'type', 'language', 'license', 'basisOfRecord', 'sex', 'lifeStage', 
+    'reproductiveCondition', 'establishmentMeans', 'occurrenceStatus', 'preparations', 
+    'disposition', 'organismScope', 'month', 'day', 'geodeticDatum', 
+    'georeferenceVerificationStatus', 'identificationQualifier', 'typeStatus', 
+    'identificationVerificationStatus', 'taxonRank', 'nomenclaturalCode', 
+    'taxonomicStatus', 'nomenclaturalStatus']	
+    
+vocabfieldlist = ['verbatim','standard','checked']

@@ -16,6 +16,7 @@
 
 __author__ = "John Wieczorek"
 
+import os.path
 import logging
 from optparse import OptionParser
 
@@ -31,6 +32,8 @@ from dwca.darwincore.utils import qualname as qn
 from dwca.darwincore.terms import TERMS
 from dwcaterms import geogkeytermlist
 from dwcaterms import taxonkeytermlist
+from dwcaterms import controlledtermlist
+from dwcaterms import vocabfieldlist
 
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
     # csv.py doesn't do Unicode; encode temporarily as UTF-8:
@@ -43,50 +46,93 @@ def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
 def utf_8_encoder(unicode_csv_data):
     for line in unicode_csv_data:
         yield line.encode('utf-8')
-        
-def standardize_term(dwcareader, changeterm, lookupdict):
+
+def get_distinct_term_values(dwcareader, term):
+    """Find all the distinct values of a term in an archive and return them in a set."""
+    if dwcareader is None or term is None:
+        return None
+    allvalues=set()
+    for row in dwcareader:
+        termvalue=get_term_value(row.data, term)
+        if termvalue not in allvalues:
+            allvalues.add(termvalue)
+    return sorted(list(allvalues))
+
+def standardize_term_values(dwcareader, changeterm, lookupdict):
     if dwcareader is None or changeterm is None or lookupdict is None:
         return None
         
     newvalues=set()
+    allvalues=set()
     for row in dwcareader:
         shouldbe=None
         was=get_term_value(row.data, changeterm)
-        if was not in newvalues:
+        if was not in allvalues: # all values encountered in the archive thus far
+            allvalues.add(was)
             shouldbe=get_standard_value(was, lookupdict)
+#            print 'was: %s shouldbe: %s' % (was, shouldbe)
             if shouldbe is None:
                 newvalues.add(was)
-            elif was!=shouldbe:
-                set_term_value(row.data, changeterm, shouldbe)
+            elif was!=shouldbe[0] and shouldbe[1]==1:
+                print 'changing %s to %s' % (was, shouldbe[0])
+                set_term_value(row.data, changeterm, shouldbe[0])
+#    print 'allvalues: %s\nnewvalues: %s' % (allvalues, newvalues)
     return newvalues
 
 def append_to_vocab(filename, newtermlist):
     """Add values to a lookup dictionary file."""
     dialect = None
+    isfile = os.path.isfile(filename)
+    print 'Checking if is file %s: %s' % (filename,isfile)
+    if not isfile:
+        with open(filename, 'w') as csvfile:
+            dialect = csv.excel
+            dialect.lineterminator='\r'
+            writer = csv.DictWriter(csvfile, dialect=dialect, 
+                quoting=csv.QUOTE_NONNUMERIC, fieldnames=vocabfieldlist)
+            writer.writeheader()
+
     with open(filename, 'rb') as csvfile:
-        dialect = csv.Sniffer().sniff(csvfile.read(1024))
+            dialect = csv.Sniffer().sniff(csvfile.read(1024))
     dialect.lineterminator='\r'
 
+    vdict=get_dict_for_vocab(filename)
+    print 'newterms before vocab check: %s' % newtermlist
+    checklist=[]
+    for t in newtermlist:
+        checklist.append(t)
+    if len(checklist)>0:
+        for t in checklist:
+            print 'for %s in vdict: %s' % (t,vdict)
+            if t is not None and (t in vdict or t==''):
+                print 'Removing %s from list' % t
+                newtermlist.remove(t)
+    print 'newterms after vocab check: %s' % newtermlist
+
     with open(filename, 'a') as csvfile:
-        fieldnames=['verbatim','standard','checked']
-        writer = csv.DictWriter(csvfile, dialect=dialect, quoting=csv.QUOTE_NONNUMERIC, fieldnames=fieldnames)
+        writer = csv.DictWriter(csvfile, dialect=dialect, quoting=csv.QUOTE_NONNUMERIC, 
+            fieldnames=vocabfieldlist)
         for term in newtermlist:
-            if term is not None:
+            if term is not None and term!='':
                 writer.writerow({'verbatim':term, 'standard':'', 'checked':0 })
 
 def get_dict_for_vocab(filename):
     """Create a lookup dictionary for standard values of a term."""
     dict={}
     dialect = None
-    with open(filename, 'rb') as csvfile:
-        dialect = csv.Sniffer().sniff(csvfile.read(1024))
-    dialect.lineterminator='\r'
-    with open(filename) as csvfile:
-        dr = csv.DictReader(csvfile, dialect=dialect, quoting=csv.QUOTE_NONNUMERIC)
+#     with open(filename, 'rb') as csvfile:
+#         dialect = csv.Sniffer().sniff(csvfile.read(1024))
+#     dialect.lineterminator='\r'
+    with open(filename, 'rU') as csvfile:
+        dr = csv.DictReader(csvfile, dialect=csv.excel, quoting=csv.QUOTE_NONNUMERIC, 
+            fieldnames=vocabfieldlist)
+        # Skip the header row.
+        dr.next()
         for row in dr:
             verbatim=row['verbatim']
             standard=row['standard']
-            dict[verbatim]=standard
+            checked=row['checked']
+            dict[verbatim]=[standard, checked]
     return dict
 
 def dwca_metadata(dwcareader):
@@ -272,6 +318,9 @@ def _getoptions():
     parser.add_option("-f", "--dwca_file", dest="dwca_file",
                       help="Darwin Core Archive file",
                       default=None)
+    parser.add_option("-v", "--vocab_path", dest="vocab_path",
+                      help="Path to vocabulary files",
+                      default=None)
     parser.add_option("-t", "--archive_type", dest="archive_type",
                       help="Darwin Core Archive file type. None or 'gbif'",
                       default=None)
@@ -281,45 +330,65 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     options = _getoptions()
     if options.dwca_file is None:
-        print 'syntax: dwca_utils.py -f dwca_file'
+        print 'syntax: dwca_utils.py -f dwca_file [-v vocab_path] [-t archive_type]'
         return
+    
+    # Make an appropriate reader based on whether the archive is standard or a GBIF
+    # download.
     dwcareader = None
     if options.archive_type=='gbif':
-        dwcareader = GBIFResultsReader(options.dwca_file)
+        try:
+            dwcareader = GBIFResultsReader(options.dwca_file)
+        except Exception, e:
+            logging.error('GBIF archive %s has an exception: %s ' % (options.dwca_file, e))
     else:
         dwcareader = DwCAReader(options.dwca_file)
     if dwcareader is None:
         print 'No archive found at %s' % options.dwca_file
 
+    # Get the number of records in the core file.
     rowcount = get_core_rowcount(dwcareader)
     print '\nCore row count:%s' % (rowcount)
 
-    metadata=dwca_metadata(dwcareader)
-    print 'Metadata:\n%s' % metadata
+    # Get metadata out of the archive.
+#     metadata=dwca_metadata(dwcareader)
+#     print 'Metadata:\n%s' % metadata
 
-    coretermnames = term_name_list(list(dwcareader.descriptor.core.terms))
-    print '\nTerms in core:\n%s' % (coretermnames)
+    # Get a list of fields in the core file.
+#     coretermnames = term_name_list(list(dwcareader.descriptor.core.terms))
+#     print '\nTerms in core:\n%s' % (coretermnames)
+
+    # Get the distinct values of a term from the archive and add any new ones to the 
+    # vocabulary file as not vetted.
+#     term='establishmentMeans'
+#     termvalues=get_distinct_term_values(dwcareader, term)
+#     vocabfile='%s/%s.csv' % (options.vocab_path,term)
+#     append_to_vocab(vocabfile, termvalues)
+
+    # Get the distinct value lists for terms that are recommended to be controlled and
+    # add any new ones found to the appropriate vocabulary file.
+    if options.vocab_path is not None:
+        for term in controlledtermlist:
+            termvalues=get_distinct_term_values(dwcareader, term)
+            vocabfile='%s/%s.csv' % (options.vocab_path,term)
+            append_to_vocab(vocabfile, termvalues)
+            print '%s values: %s' % (term, termvalues)
         
-    t='establishmentMeans'
-    set_values = get_term_valueset(dwcareader, t)
-    if set_values is not None:
-        print '\nDistinct %s values in data set:\n%s' % (t, sorted(list(set_values)))
-
-    print '\nGeography keys:'
-    i = 0
-    for row in dwcareader:
-        geogkey = get_term_group_key(row.data, geogkeytermlist)
-        i = i + 1
-        print '%s' % (geogkey)
-    print 'Count=%s' % i
-    
-    i = 0
-    print '\nTaxonomy keys:\n'
-    for row in dwcareader:
-        taxonkey = get_term_group_key(row.data, taxonkeytermlist)
-        i = i + 1
-        print '%s' % (taxonkey)
-    print 'Count=%s' % i
+#     print '\nGeography keys:'
+#     i = 0
+#     for row in dwcareader:
+#         geogkey = get_term_group_key(row.data, geogkeytermlist)
+#         i = i + 1
+#         print '%s' % (geogkey)
+#     print 'Count=%s' % i
+#     
+#     i = 0
+#     print '\nTaxonomy keys:\n'
+#     for row in dwcareader:
+#         taxonkey = get_term_group_key(row.data, taxonkeytermlist)
+#         i = i + 1
+#         print '%s' % (taxonkey)
+#     print 'Count=%s' % i
 
 #     i = 0
 #     changed=0
@@ -343,22 +412,33 @@ def main():
 #         i = i + 1
 #     print 'Count=%s %s changed %s times' % (i, changeterm, changed)
 
-    changeterm='basisOfRecord'
-    vocab_file='../../vocabularies/basisOfRecord.csv'
-    vdict=get_dict_for_vocab(vocab_file)
-    newvalues=standardize_term(dwcareader, changeterm, vdict)
-    print 'Append these to %s newvalues=%s' % (vocab_file, newvalues)
-    if newvalues is not None:
-        append_to_vocab(vocab_file, newvalues)
+#     changeterm='basisOfRecord'
+#     vocab_file='../../vocabularies/basisOfRecord.csv'
+#     vdict=get_dict_for_vocab(vocab_file)
+#     print 'Dict for %s: %s' % (changeterm, vdict)
+#     newvalues=standardize_term_values(dwcareader, changeterm, vdict)
+#     print 'Append these to %s newvalues=%s' % (vocab_file, newvalues)
+#     if newvalues is not None:
+#         append_to_vocab(vocab_file, newvalues)
 
-    changeterm='institutionCode'
-    vocab_file='../../vocabularies/icode.csv'
-    vdict=get_dict_for_vocab(vocab_file)
-    newvalues=standardize_term(dwcareader, changeterm, vdict)
-    print 'Append these to %s newvalues=%s' % (vocab_file, newvalues)
-    if newvalues is not None:
-        append_to_vocab(vocab_file, newvalues)
-    
+#     changeterm='institutionCode'
+#     vocab_file='../../vocabularies/institutionCode.csv'
+#     vdict=get_dict_for_vocab(vocab_file)
+#     print 'Dict for %s: %s' % (changeterm, vdict)
+#     newvalues=standardize_term_values(dwcareader, changeterm, vdict)
+#     print 'Append these to %s newvalues=%s' % (vocab_file, newvalues)
+#     if newvalues is not None:
+#         append_to_vocab(vocab_file, newvalues)
+
+#     changeterm='establishmentMeans'
+#     vocab_file='../../vocabularies/establishmentMeans.csv'
+#     vdict=get_dict_for_vocab(vocab_file)
+#     print 'Dict for %s: %s' % (changeterm, vdict)
+#     newvalues=standardize_term_values(dwcareader, changeterm, vdict)
+#     print 'Append these to %s newvalues=%s' % (vocab_file, newvalues)
+#     if newvalues is not None:
+#         append_to_vocab(vocab_file, newvalues)
+
     dwcareader.close()
 
 if __name__ == '__main__':
