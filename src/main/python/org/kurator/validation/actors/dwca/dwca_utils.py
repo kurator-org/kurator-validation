@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# Copyright 2015 President and Fellows of Harvard College
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -15,6 +13,7 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
+__copyright__ = "Copyright 2015 President and Fellows of Harvard College"
 
 import os.path
 import logging
@@ -35,17 +34,43 @@ from dwcaterms import taxonkeytermlist
 from dwcaterms import controlledtermlist
 from dwcaterms import vocabfieldlist
 
-def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
-    # csv.py doesn't do Unicode; encode temporarily as UTF-8:
-    csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
-                            dialect=dialect, **kwargs)
-    for row in csv_reader:
-        # decode UTF-8 back to Unicode, cell by cell:
-        yield [unicode(cell, 'utf-8') for cell in row]
+# Fundamental ideas: (csv or DwCA
+# Scan archive - get distinct values into vocabs
+# Summarize archive - report archive statistics
+# Report data quality - configure tests
+# Improve archive - standardize, augment, complete (configure improvements)
+# Write archive
+# Diff two archives
 
-def utf_8_encoder(unicode_csv_data):
-    for line in unicode_csv_data:
-        yield line.encode('utf-8')
+def dwca_write_core(dwcareader,filename):
+    """Save the core of the archive to a csv file."""
+    if dwcareader is None or filename is None:
+        return None
+#     isfile = os.path.isfile(filename)
+#     print 'Checking if is file %s: %s' % (filename,isfile)
+#     if not isfile:
+    with open(filename, 'w') as csvfile:
+        dialect = csv.excel
+        dialect.lineterminator='\r'
+        longnames=list(dwcareader.descriptor.core.terms)
+        print 'longnames before: %s' % longnames
+        for i in range(len(longnames)):
+            longname=longnames[i]
+            sname=shortname(longname)
+            longnames[i] = sname
+        print 'longnames after: %s' % longnames
+        writer = csv.DictWriter(csvfile, dialect=dialect, 
+            quoting=csv.QUOTE_NONNUMERIC, fieldnames=longnames)
+        writer.writeheader()
+        
+    with open(filename, 'a') as csvfile:
+        dialect = csv.excel
+        dialect.lineterminator='\r'
+        writer = csv.DictWriter(csvfile, dialect=dialect, 
+            quoting=csv.QUOTE_NONNUMERIC, fieldnames=list(dwcareader.descriptor.core.terms))
+        for row in dwcareader:
+#            print ' Row: %s' % row.data
+            writer.writerow(row.data)
 
 def get_distinct_term_values(dwcareader, term):
     """Find all the distinct values of a term in an archive and return them in a set."""
@@ -344,11 +369,13 @@ def main():
     else:
         dwcareader = DwCAReader(options.dwca_file)
     if dwcareader is None:
-        print 'No archive found at %s' % options.dwca_file
+        print 'No viable archive found at %s' % options.dwca_file
+        return
 
     # Get the number of records in the core file.
     rowcount = get_core_rowcount(dwcareader)
     print '\nCore row count:%s' % (rowcount)
+
 
     # Get metadata out of the archive.
 #     metadata=dwca_metadata(dwcareader)
@@ -357,6 +384,9 @@ def main():
     # Get a list of fields in the core file.
 #     coretermnames = term_name_list(list(dwcareader.descriptor.core.terms))
 #     print '\nTerms in core:\n%s' % (coretermnames)
+
+    # Write the contents of the archive to a csv file.
+    dwca_write_core(dwcareader,'testout.csv')
 
     # Get the distinct values of a term from the archive and add any new ones to the 
     # vocabulary file as not vetted.
@@ -367,12 +397,13 @@ def main():
 
     # Get the distinct value lists for terms that are recommended to be controlled and
     # add any new ones found to the appropriate vocabulary file.
-    if options.vocab_path is not None:
-        for term in controlledtermlist:
-            termvalues=get_distinct_term_values(dwcareader, term)
-            vocabfile='%s/%s.csv' % (options.vocab_path,term)
-            append_to_vocab(vocabfile, termvalues)
-            print '%s values: %s' % (term, termvalues)
+#     if options.vocab_path is not None:
+#         for term in controlledtermlist:
+#             termvalues=get_distinct_term_values(dwcareader, term)
+#             vocabfile='%s/%s.csv' % (options.vocab_path,term)
+#             print 'vocabfile: %s term: %s termlist: %s' % (vocabfile, term, termvalues)
+#             append_to_vocab(vocabfile, termvalues)
+#             print '%s values: %s' % (term, termvalues)
         
 #     print '\nGeography keys:'
 #     i = 0
