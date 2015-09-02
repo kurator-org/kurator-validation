@@ -24,7 +24,6 @@ import csv
 # Python Darwin Core Archive Reader from 
 # https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
 # pip install python-dwca-reader
-
 from dwca.read import DwCAReader
 from dwca.read import GBIFResultsReader
 from dwca.darwincore.utils import qualname as qn
@@ -46,7 +45,7 @@ from dwcaterms import vocabfieldlist
 
 DWCA_UTILS_VERSION='dwca_utils.py 2015-09-01T17:12:04+02:00'
 
-def dwca_write_core_csv(dwcareader,filename):
+def dwca_write_core_tsv(dwcareader,filename):
     """Save the core of the archive to a csv file with short DwC term names as headers."""
     if dwcareader is None or filename is None:
         return None
@@ -474,7 +473,7 @@ def main():
 #         append_to_vocab(vocab_file, newvalues)
 
     # Write the contents of the archive to a csv file.
-    dwca_write_core_csv(dwcareader,'testout.csv')
+    dwca_write_core_tsv(dwcareader,'testout.csv')
 
     dwcareader.close()
 
