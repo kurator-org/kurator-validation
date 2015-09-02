@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2015-09-02T21:21:53+02:00"
+__version__ = "dwca_utils.py 2015-09-02T22:23:58+02:00"
 
 import os.path
 import logging
@@ -58,26 +58,6 @@ def split_path(fullpath):
     fileext = fullpath[fullpath.rfind('.')+1:]
     filepattern = fullpath[fullpath.rfind('/')+1:fullpath.rfind('.')]
     return path, fileext, filepattern
-
-def dwca_write_core_tsv(dwcareader,filename):
-    """Save the core of the archive to a csv file with short DwC term names as headers."""
-    if dwcareader is None or filename is None:
-        return None
-    termnames=list(dwcareader.descriptor.core.terms)
-    shorttermnames=short_term_names(termnames)
-    dialect = csv.excel
-    dialect.lineterminator='\r'
-    dialect.delimiter='\t'
-    with open(filename, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, quoting=csv.QUOTE_NONE, 
-            fieldnames=shorttermnames)
-        writer.writeheader()
- 
-    with open(filename, 'a') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, quoting=csv.QUOTE_NONE, 
-            fieldnames=termnames)
-        for row in dwcareader:
-            writer.writerow(row.data)
 
 def short_term_names(termlist):
     """Return a list of term names that are the short versions of the fully qualified ones."""
@@ -485,9 +465,6 @@ def main():
 #     print 'Append these to %s newvalues=%s' % (vocab_file, newvalues)
 #     if newvalues is not None:
 #         append_to_vocab(vocab_file, newvalues)
-
-    # Write the contents of the archive to a csv file.
-    dwca_write_core_tsv(dwcareader,'testout.csv')
 
     dwcareader.close()
 

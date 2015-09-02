@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2015-09-02T21:50:17+02:00"
+__version__ = "dwca_core_to_tsv.py 2015-09-02T22:54:58+02:00"
 
 from optparse import OptionParser
 from dwca_utils import short_term_names
@@ -55,18 +55,23 @@ def dwca_core_to_tsv(inputfile, outputfile, type='standard'):
     dialect.lineterminator='\r'
     dialect.delimiter='\t'
     with open(outputfile, 'w') as tsvfile:
-        writer = csv.DictWriter(tsvfile, dialect=dialect, quoting=csv.QUOTE_NONE, 
-            fieldnames=shorttermnames)
+        writer = csv.DictWriter(tsvfile, dialect=dialect, fieldnames=shorttermnames, 
+            quoting=csv.QUOTE_NONE, quotechar='')
         writer.writeheader()
  
+    rowcount = 0
     with open(outputfile, 'a') as tsvfile:
-        writer = csv.DictWriter(tsvfile, dialect=dialect, quoting=csv.QUOTE_NONE, 
-            fieldnames=termnames)
+        writer = csv.DictWriter(tsvfile, dialect=dialect, fieldnames=termnames,
+            quoting=csv.QUOTE_NONE, quotechar='')
         for row in dwcareader:
+#            print 'Row %s:\n%s' % (rowcount,row.data)
+            for f in row.data:
+                row.data[f]=row.data[f].encode("utf-8")
             writer.writerow(row.data)
+            rowcount += 1
 
     # Get the number of records in the core file.
-    rowcount = get_core_rowcount(dwcareader)
+#    rowcount = get_core_rowcount(dwcareader)
 
     # Close the archive    
     dwcareader.close()
@@ -100,10 +105,10 @@ def main():
         outputfile = 'dwca_core_to_tsv_output.tsv'
 
     # Write the core to a tsv file at the specified location
-    dwca_core_to_tsv(inputfile, outputfile, archivetype)
+    outputfile, rowcount = dwca_core_to_tsv(inputfile, outputfile, archivetype)
     
-    print 'TSV file %s extracted from archive %s (type %s).' \
-        % (outputfile, inputfile, archivetype)
+    print '%s records TSV file %s extracted from core of archive %s (type %s).' \
+        % (rowcount, outputfile, inputfile, archivetype)
 
 if __name__ == '__main__':
     """ Demo of dwca_core_splitter"""
