@@ -34,43 +34,60 @@ from dwcaterms import taxonkeytermlist
 from dwcaterms import controlledtermlist
 from dwcaterms import vocabfieldlist
 
-# Fundamental ideas: (csv or DwCA
-# Scan archive - get distinct values into vocabs
+# Fundamental ideas: (csv or DwCA)
+# Shard core csv
+# Scan shard - get distinct values into vocab sets
+# Assemble vocab set from shards
 # Summarize archive - report archive statistics
 # Report data quality - configure tests
 # Improve archive - standardize, augment, complete (configure improvements)
 # Write archive
 # Diff two archives
 
-def dwca_write_core(dwcareader,filename):
-    """Save the core of the archive to a csv file."""
+DWCA_UTILS_VERSION='dwca_utils.py 2015-09-01T17:12:04+02:00'
+
+def dwca_write_core_csv(dwcareader,filename):
+    """Save the core of the archive to a csv file with short DwC term names as headers."""
     if dwcareader is None or filename is None:
         return None
-#     isfile = os.path.isfile(filename)
-#     print 'Checking if is file %s: %s' % (filename,isfile)
-#     if not isfile:
+    termnames=list(dwcareader.descriptor.core.terms)
+    shorttermnames=short_term_names(termnames)
+    dialect = csv.excel
+    dialect.lineterminator='\r'
+    dialect.delimiter='\t'
     with open(filename, 'w') as csvfile:
-        dialect = csv.excel
-        dialect.lineterminator='\r'
-        longnames=list(dwcareader.descriptor.core.terms)
-        print 'longnames before: %s' % longnames
-        for i in range(len(longnames)):
-            longname=longnames[i]
-            sname=shortname(longname)
-            longnames[i] = sname
-        print 'longnames after: %s' % longnames
-        writer = csv.DictWriter(csvfile, dialect=dialect, 
-            quoting=csv.QUOTE_NONNUMERIC, fieldnames=longnames)
+        writer = csv.DictWriter(csvfile, dialect=dialect, quoting=csv.QUOTE_NONE, 
+            fieldnames=shorttermnames)
         writer.writeheader()
-        
+ 
     with open(filename, 'a') as csvfile:
-        dialect = csv.excel
-        dialect.lineterminator='\r'
-        writer = csv.DictWriter(csvfile, dialect=dialect, 
-            quoting=csv.QUOTE_NONNUMERIC, fieldnames=list(dwcareader.descriptor.core.terms))
+        writer = csv.DictWriter(csvfile, dialect=dialect, quoting=csv.QUOTE_NONE, 
+            fieldnames=termnames)
         for row in dwcareader:
-#            print ' Row: %s' % row.data
             writer.writerow(row.data)
+
+def short_term_names(termlist):
+    """Return a list of term names that are the short versions of the fully qualified ones."""
+    shortnamelist=[]
+    for i in range(len(termlist)):
+        longname=termlist[i]
+        sname=shortname(longname)
+        if sname is None:
+            shortnamelist.append(longname)
+        else:
+            shortnamelist.append(sname)
+    return shortnamelist
+
+def shortname(qualname):
+    """Return a term name from a fully qualified term identifier.
+
+    Example::
+        shortname("http://rs.tdwg.org/dwc/terms/Occurrence")  # => "Occurrence"
+    """
+    for t in TERMS:
+        if t==qualname:
+            return t.rpartition('/')[2]
+    return None
 
 def get_distinct_term_values(dwcareader, term):
     """Find all the distinct values of a term in an archive and return them in a set."""
@@ -308,25 +325,14 @@ def get_standard_value(was, valuedict):
 #     elif qn(term) in rowdata.keys():
 #         was=rowdata[qn(term)]
 #     if was is not None:
-#     	shouldbe=valuedict[was]
-#     	if was!=shouldbe:
+#       shouldbe=valuedict[was]
+#       if was!=shouldbe:
 #             rowdata[term]=shouldbe
 #             print 'was: %s shouldbe: %s' % (was, shouldbe)
 #             return True
 #     return False
 #     
-def shortname(qualname):
-    """Return a term name from a fully qualified term identifier.
-
-    Example::
-        shortname("http://rs.tdwg.org/dwc/terms/Occurrence")  # => "Occurrence"
-    """
-    for t in TERMS:
-        if t==qualname:
-            return t.rpartition('/')[2]
-    return None
-
-def term_name_list(identifierlist):
+def sorted_short_term_name_list(identifierlist):
     """Return a sorted list of term names from a list of term identifiers with 
     fully qualified names.
     """
@@ -382,11 +388,8 @@ def main():
 #     print 'Metadata:\n%s' % metadata
 
     # Get a list of fields in the core file.
-#     coretermnames = term_name_list(list(dwcareader.descriptor.core.terms))
+#     coretermnames = sorted_short_term_name_list(list(dwcareader.descriptor.core.terms))
 #     print '\nTerms in core:\n%s' % (coretermnames)
-
-    # Write the contents of the archive to a csv file.
-    dwca_write_core(dwcareader,'testout.csv')
 
     # Get the distinct values of a term from the archive and add any new ones to the 
     # vocabulary file as not vetted.
@@ -469,6 +472,9 @@ def main():
 #     print 'Append these to %s newvalues=%s' % (vocab_file, newvalues)
 #     if newvalues is not None:
 #         append_to_vocab(vocab_file, newvalues)
+
+    # Write the contents of the archive to a csv file.
+    dwca_write_core_csv(dwcareader,'testout.csv')
 
     dwcareader.close()
 
