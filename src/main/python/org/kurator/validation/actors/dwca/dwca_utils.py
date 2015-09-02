@@ -14,6 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2015 President and Fellows of Harvard College"
+__version__ = "dwca_utils.py 2015-09-02T21:21:53+02:00"
 
 import os.path
 import logging
@@ -34,16 +35,29 @@ from dwcaterms import controlledtermlist
 from dwcaterms import vocabfieldlist
 
 # Fundamental ideas: (csv or DwCA)
-# Shard core csv
-# Scan shard - get distinct values into vocab sets
-# Assemble vocab set from shards
-# Summarize archive - report archive statistics
-# Report data quality - configure tests
-# Improve archive - standardize, augment, complete (configure improvements)
+# Compose preferences in configuration
+# Compose TSV from DWCA or csv input
+# Chunk composed TSV
+# Run parallel processes on all chunks
+#    get distinct vocab sets
+# Compose parallel results
+#     assemble aggregate vocab from vocab sets
+#     assemble annotations
+# Create summary statistics
+# Create reports
+# Second pass
+#    Improve archive - standardize, augment, complete
 # Write archive
+
 # Diff two archives
 
-DWCA_UTILS_VERSION='dwca_utils.py 2015-09-01T17:12:04+02:00'
+def split_path(fullpath):
+    if fullpath is None or len(fullpath)==0:
+        return None, None, None
+    path = fullpath[:fullpath.rfind('/')]
+    fileext = fullpath[fullpath.rfind('.')+1:]
+    filepattern = fullpath[fullpath.rfind('/')+1:fullpath.rfind('.')]
+    return path, fileext, filepattern
 
 def dwca_write_core_tsv(dwcareader,filename):
     """Save the core of the archive to a csv file with short DwC term names as headers."""
