@@ -1,0 +1,55 @@
+# This workflow reads a CSV file and outputs to another CSV file, filtering in or out
+# all records that match the criteria, depending on whether the include parameter is True
+#
+# Example command-line usage:
+# kurator -f record_filter2.yaml -p in=input.csv -p out=output.csv -p term=year -p value=1990 -p include=True
+
+imports:
+
+- classpath:/org/kurator/akka/actors.yaml
+- classpath:/org/kurator/validation/actors/samples/actors.yaml
+
+components:
+
+- id: CsvReader
+  type: CsvFileReader
+
+- id: PythonRecordFilter
+  type: PythonActor
+  properties:
+    script: record_filter2.py
+    onData: filter
+    parameters:
+      outputTypeIsInputType: true
+    listensTo:
+      - !ref CsvReader
+
+- id: CsvWriter
+  type: CsvFileWriter
+  properties:
+    listensTo:
+      - !ref PythonRecordFilter
+
+- id: CsvRecordFilter
+  type: Workflow
+  properties:
+    actors:
+      - !ref CsvReader
+      - !ref PythonRecordFilter
+      - !ref CsvWriter
+    parameters:
+      in:
+        actor: !ref CsvReader
+        parameter: filePath
+      out:
+        actor: !ref CsvWriter
+        parameter: filePath
+      term:
+        actor: !ref PythonRecordFilter
+        parameter: term
+      value:
+        actor: !ref PythonRecordFilter
+        parameter: value
+      include:
+        actor: !ref PythonRecordFilter
+        parameter: include

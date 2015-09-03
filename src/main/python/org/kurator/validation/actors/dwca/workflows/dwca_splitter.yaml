@@ -1,0 +1,53 @@
+# This workflow reads a CSV file and outputs to another CSV file, filter out
+# all records that do not match the criteria.
+#
+# Example command-line usage:
+# kurator -f workflows/dwca_splitter.yaml -p dwcafile=../../data/dwca-uwymv_herp.zip -p tsvoutputfile=./workspace/dwcatsvout.tsv -p archivetype=standard  -p splitterchunksize=5 -p splitterworkspace=./workspace
+
+imports:
+
+- classpath:/org/kurator/akka/actors.yaml
+- classpath:/org/kurator/validation/actors/dwca/actors.yaml
+
+components:
+
+- id: DWCAtoTSVWriter
+  type: PythonActor
+  properties:
+    script: dwca_core_to_tsv.py
+    onStart: dwca_core_to_tsv
+    parameters:
+      outputTypeIsInputType: true
+
+- id: TextFileSplitter
+  type: PythonActor
+  properties:
+    script: text_file_splitter.py
+    onData: text_file_splitter
+    listensTo:
+      - !ref DWCAtoTSVWriter
+    parameters:
+      outputTypeIsInputType: true
+
+- id: DWCASplitWorkflow
+  type: Workflow
+  properties:
+    actors:
+      - !ref DWCAtoTSVWriter
+      - !ref TextFileSplitter
+    parameters:
+      dwcafile:
+        actor: !ref DWCAtoTSVWriter
+        parameter: dwcafile
+      tsvoutputfile:
+        actor: !ref DWCAtoTSVWriter
+        parameter: tsvoutputfile
+      archivetype:
+        actor: !ref DWCAtoTSVWriter
+        parameter: archivetype
+      splitterchunksize:
+        actor: !ref TextFileSplitter
+        parameter: splitterchunksize
+      splitterworkspace:
+        actor: !ref TextFileSplitter
+        parameter: splitterworkspace
