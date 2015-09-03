@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2015-09-02T22:54:58+02:00"
+__version__ = "dwca_core_to_tsv.py 2015-09-03T12:47:22+02:00"
 
 from optparse import OptionParser
 from dwca_utils import short_term_names
@@ -30,7 +30,12 @@ import text_file_splitter
 from dwca.read import DwCAReader
 from dwca.read import GBIFResultsReader
 
-def dwca_core_to_tsv(inputfile, outputfile, type='standard'):
+inputfile=None
+outputfile='./testout.tsv'
+type='standard'
+
+#def dwca_core_to_tsv(inputfile, outputfile='./testout.tsv', type='standard'):
+def dwca_core_to_tsv():
     """Save the core of the archive to a csv file with short DwC term names as headers."""
     if not os.path.isfile(inputfile):
         return None, 0
@@ -43,6 +48,7 @@ def dwca_core_to_tsv(inputfile, outputfile, type='standard'):
             dwcareader = GBIFResultsReader(inputfile)
         except Exception, e:
             logging.error('GBIF archive %s has an exception: %s ' % (inputfile, e))
+            pass
     else:
         dwcareader = DwCAReader(inputfile)
     if dwcareader is None:

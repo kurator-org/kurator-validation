@@ -4,15 +4,24 @@ imports:
 
 types:
 
-- id: WoRMSNameCurator
-  type: PythonClassActor
-  properties:
-    pythonClass: org.kurator.validation.actors.WoRMSCurator.WoRMSCurator
-    onData: curate_taxon_name_and_author
-
-- id: DarwinCoreArchiveCoreRowReader
+- id: DarwinCoreArchiveCoreTSVWriter
   type: PythonActor
   properties:
-    script: dwca_reader_global.py
-    onStart: read_core_rows
+    script: ./dwca_core_to_tsv.py
+    onStart: dwca_core_to_tsv
+    defaults:
+      outputTypeIsInputType: true
 
+- id: TextFileSplitter
+  type: PythonActor
+  properties:
+    script: text_file_splitter.py
+    onStart: text_file_splitter
+    defaults:
+      outputTypeIsInputType: true
+
+#- id: DarwinCoreArchiveCoreRowReader
+#  type: PythonActor
+#  properties:
+#    script: dwca_reader_global.py
+#    onStart: read_core_rows

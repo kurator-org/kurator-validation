@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "text_file_splitter.py 2015-09-02T21:50:29+02:00"
+__version__ = "text_file_splitter.py 2015-09-03T14:34:27+02:00"
 
 from optparse import OptionParser
 from dwca_utils import split_path
@@ -22,7 +22,13 @@ import os.path
 import uuid
 import logging
 
-def text_file_splitter(fullpath, chunksize, workspace):
+fullpath=None
+chunksize=None
+workspace=None
+
+#def text_file_splitter(fullpath, chunksize, workspace):
+#def text_file_splitter(fullpath, chunksize=10000, workspace='./'):
+def text_file_splitter():
     """Split a text file into chunks with headers. Put the chunk files in the workspace"""
     if not os.path.isfile(fullpath):
         return None, None, None
@@ -48,7 +54,7 @@ def text_file_splitter(fullpath, chunksize, workspace):
             if dest:
                 dest.close()
             # Open a new chunk file to write the next lines into, with a header
-            destfile=workspace+filepattern+'-'+str(at)+'.'+fileext
+            destfile=workspace+'/'+filepattern+'-'+str(at)+'.'+fileext
             dest = open(destfile, 'w')
             dest.write(header)
             at += 1
@@ -79,23 +85,29 @@ def _getoptions():
     return parser.parse_args()[0]
 
 def main():
+    global fullpath, chunksize, workspace
     logging.basicConfig(level=logging.DEBUG)
     options = _getoptions()
-    inputfile = options.inputfile
-    workspace = options.workspace
+    fullpath = options.inputfile
     chunksize = options.chunksize
+    workspace = options.workspace
+
+    if fullpath is None:
+        print 'syntax: text_file_splitter.py -i inputfile -c chunksize -w workspace'
+        return
     try:
         chunksize=int(str(chunksize))
     except:
         chunksize=1000
-    if inputfile is None:
-        print 'syntax: text_file_splitter.py -i inputfile -w workspace'
-        return
+
     if workspace is None:
         workspace = './'
     
+    print 'Splitting file %s in %s record chunks in workspace %s.' \
+        % (fullpath, chunksize, workspace)
     # Split text file into chucks
-    pattern, ext, chunks=text_file_splitter(inputfile, chunksize, workspace)
+    pattern, ext, chunks=text_file_splitter()
+#    pattern, ext, chunks=text_file_splitter(inputfile, chunksize, workspace)
 
     print 'File %s.%s chunked into %s chunks of %s or less records, with headers.' \
         % (pattern, ext, chunks, chunksize)
