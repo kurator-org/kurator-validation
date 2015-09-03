@@ -2,7 +2,7 @@
 # all records that do not match the criteria.
 #
 # Example command-line usage:
-# kurator -f text_file_splitter.yaml -p fullpath=../../data/eight_specimen_records.csv -p chunksize=5 -p workspace=./
+# kurator -f workflows/dwca_splitter.yaml -p dwcafile=../../data/dwca-uwymv_herp.zip -p tsvoutputfile=./workspace/dwcatsvout.tsv -p archivetype=standard  -p splitterchunksize=5 -p splitterworkspace=./workspace
 
 imports:
 
@@ -23,7 +23,7 @@ components:
   type: PythonActor
   properties:
     script: text_file_splitter.py
-    onStart: text_file_splitter
+    onData: text_file_splitter
     listensTo:
       - !ref DWCAtoTSVWriter
     parameters:
@@ -38,19 +38,16 @@ components:
     parameters:
       dwcafile:
         actor: !ref DWCAtoTSVWriter
-        parameter: inputfile
-      dwcatsvfile:
+        parameter: dwcafile
+      tsvoutputfile:
         actor: !ref DWCAtoTSVWriter
-        parameter: outputfile
-      dwcatype:
+        parameter: tsvoutputfile
+      archivetype:
         actor: !ref DWCAtoTSVWriter
-        parameter: type
-      fullpath:
+        parameter: archivetype
+      splitterchunksize:
         actor: !ref TextFileSplitter
-        parameter: fullpath
-      chunksize:
+        parameter: splitterchunksize
+      splitterworkspace:
         actor: !ref TextFileSplitter
-        parameter: chunksize
-      workspace:
-        actor: !ref TextFileSplitter
-        parameter: workspace
+        parameter: splitterworkspace

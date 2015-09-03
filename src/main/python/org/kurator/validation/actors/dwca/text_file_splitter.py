@@ -14,22 +14,39 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "text_file_splitter.py 2015-09-03T14:34:27+02:00"
+__version__ = "text_file_splitter.py 2015-09-03T23:26:15+02:00"
 
 from optparse import OptionParser
 from dwca_utils import split_path
 import os.path
+import json
 import uuid
 import logging
 
-fullpath=None
-chunksize=None
-workspace=None
+# For now, use global variables to capture parameters sent at the command line in 
+# a workflow
+# Example: 
+#
+# ka -f workflows/text_file_splitter.yaml -p p=fullpath -p v=../../data/eight_specimen_records.csv  -p c=5 -p w=./workspace
+#
+# or as a command-line script.
+# Example:
+#
+# python text_file_splitter.py -i ../../data/eight_specimen_records.csv -c 5 -w ./workspace
 
-#def text_file_splitter(fullpath, chunksize, workspace):
-#def text_file_splitter(fullpath, chunksize=10000, workspace='./'):
-def text_file_splitter():
+splitterchunksize=10000
+splitterworkspace='./'
+
+def text_file_splitter(inputs_as_json):
     """Split a text file into chunks with headers. Put the chunk files in the workspace"""
+    chunksize=splitterchunksize
+    workspace=splitterworkspace
+
+    inputs = json.loads(inputs_as_json)
+    fullpath = inputs['fullpath']
+
+    print 'text_file_splitter inputs: %s' % inputs_as_json
+        
     if not os.path.isfile(fullpath):
         return None, None, None
 
@@ -43,32 +60,39 @@ def text_file_splitter():
 
     # dest will be used for the chunk files
     dest = None
-    count = 0
-    at = 0
+    rowcount = 0
+    chunks = 0
 
     # Iterate though the entire input file
     for line in input:
         # For the first line and every multiple of subsequent max_chunk_length lines
-        if count % chunksize == 0:
+        if rowcount % chunksize == 0:
             # Close the old chunk file, if there is one
             if dest:
                 dest.close()
             # Open a new chunk file to write the next lines into, with a header
-            destfile=workspace+'/'+filepattern+'-'+str(at)+'.'+fileext
+            destfile=workspace+'/'+filepattern+'-'+str(chunks)+'.'+fileext
             dest = open(destfile, 'w')
             dest.write(header)
-            at += 1
+            chunks += 1
         # Write a line to the current chunk and keep going
         dest.write(line)
-        count += 1
+        rowcount += 1
 
     # Close the last chunk file
     if dest:
         dest.close()
 
     # Successfully completed the mission
-    # Return the file pattern of the file chunked and the number of chunks created
-    return filepattern, fileext, at
+    # Return a dict of important information as a JSON string
+    response = {}
+    returnvars = ['filepattern', 'fileext', 'chunks', 'rowcount', 'workspace']
+    returnvals = [filepattern, fileext, chunks, rowcount, workspace]
+    i=0
+    for a in returnvars:
+        response[a]= returnvals[i] 
+        i+=1
+    return json.dumps(response)
     
 def _getoptions():
     """Parses command line options and returns them."""
@@ -85,32 +109,32 @@ def _getoptions():
     return parser.parse_args()[0]
 
 def main():
-    global fullpath, chunksize, workspace
+    global splitterchunksize, splitterworkspace
     logging.basicConfig(level=logging.DEBUG)
     options = _getoptions()
     fullpath = options.inputfile
-    chunksize = options.chunksize
-    workspace = options.workspace
+    splitterworkspace = options.workspace
 
     if fullpath is None:
-        print 'syntax: text_file_splitter.py -i inputfile -c chunksize -w workspace'
+        print 'syntax: python text_file_splitter.py -i ../../data/eight_specimen_records.csv -c 5 -w ./workspace'
         return
     try:
-        chunksize=int(str(chunksize))
+        splitterchunksize=int(str(options.chunksize))
     except:
-        chunksize=1000
+        splitterchunksize=1000
 
-    if workspace is None:
-        workspace = './'
+    if splitterworkspace is None:
+        splitterworkspace = './'
     
-    print 'Splitting file %s in %s record chunks in workspace %s.' \
-        % (fullpath, chunksize, workspace)
+    inputs = {}
+    inputs['fullpath'] = fullpath
+    
     # Split text file into chucks
-    pattern, ext, chunks=text_file_splitter()
-#    pattern, ext, chunks=text_file_splitter(inputfile, chunksize, workspace)
+    response=json.loads(text_file_splitter(json.dumps(inputs)))
 
-    print 'File %s.%s chunked into %s chunks of %s or less records, with headers.' \
-        % (pattern, ext, chunks, chunksize)
+    print 'File %s with %s records chunked into %s chunks of %s or less rows in %s.' \
+        % (fullpath, response['rowcount'], response['chunks'], splitterchunksize, response['workspace'])
+    print 'Response: %s' % response
 
 if __name__ == '__main__':
     """ Demo of text_file_splitter"""

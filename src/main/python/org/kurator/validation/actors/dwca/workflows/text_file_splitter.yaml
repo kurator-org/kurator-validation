@@ -2,7 +2,7 @@
 # all records that do not match the criteria.
 #
 # Example command-line usage:
-# kurator -f text_file_splitter.yaml -p fullpath=../../data/eight_specimen_records.csv -p chunksize=5 -p workspace=./
+# kurator -f workflows/text_file_splitter.yaml -p p=fullpath -p v=../../data/eight_specimen_records.csv  -p c=5 -p w=./workspace
 
 imports:
 
@@ -11,11 +11,21 @@ imports:
 
 components:
 
+- id: WorkflowPrimer
+  type: PythonActor
+  properties:
+    script: workflow_primer.py
+    onStart: workflow_primer
+    parameters:
+      outputTypeIsInputType: true
+
 - id: TextFileSplitter
   type: PythonActor
   properties:
     script: text_file_splitter.py
-    onStart: text_file_splitter
+    onData: text_file_splitter
+    listensTo:
+      - !ref WorkflowPrimer
     parameters:
       outputTypeIsInputType: true
 
@@ -23,14 +33,18 @@ components:
   type: Workflow
   properties:
     actors:
+      - !ref WorkflowPrimer
       - !ref TextFileSplitter
     parameters:
-      fullpath:
+      p:
+        actor: !ref WorkflowPrimer
+        parameter: wfparameter
+      v:
+        actor: !ref WorkflowPrimer
+        parameter: wfvalue
+      c:
         actor: !ref TextFileSplitter
-        parameter: fullpath
-      chunksize:
+        parameter: splitterchunksize
+      w:
         actor: !ref TextFileSplitter
-        parameter: chunksize
-      workspace:
-        actor: !ref TextFileSplitter
-        parameter: workspace
+        parameter: splitterworkspace

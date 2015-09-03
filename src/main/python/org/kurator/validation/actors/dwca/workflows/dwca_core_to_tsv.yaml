@@ -1,7 +1,7 @@
 # This workflow reads a Darwin Core Archive file and writes its core file to a TSV
 #
 # Example command-line usage:
-# kurator -f dwca_core_to_tsv.yaml -p inputfile=../../data/dwca-uwymv_herp.zip -p outputfile=testout.tsv -p type=standard
+# kurator -f workflows/dwca_core_to_tsv.yaml -p dwcafile=../../data/dwca-uwymv_herp.zip -p tsvoutputfile=./workspace/dwcatsvout.tsv -p archivetype=standard
 
 imports:
 
@@ -24,12 +24,12 @@ components:
     actors:
       - !ref DWCAtoTSVWriter
     parameters:
-      inputfile:
+      dwcafile:
         actor: !ref DWCAtoTSVWriter
-        parameter: inputfile
-      outputfile:
+        parameter: dwcafile
+      tsvoutputfile:
         actor: !ref DWCAtoTSVWriter
-        parameter: outputfile
-      type:
+        parameter: tsvoutputfile
+      archivetype:
         actor: !ref DWCAtoTSVWriter
-        parameter: type
+        parameter: archivetype
