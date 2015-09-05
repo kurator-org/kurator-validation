@@ -26,13 +26,13 @@ public class TestCsvSpecimenFileReader extends KuratorAkkaTestCase {
          readerActor = wr.actor(CsvFileReader.class);
 
          printerActor = wr.actor(PrintStreamWriter.class)
-                 .parameter("separator", EOL)
+                 .param("separator", EOL)
                  .listensTo(readerActor);
      }
 
     public void testCsvFileReader_EightSpecimenRecordFile() throws Exception {
 
-        readerActor.parameter("filePath", "src/test/resources/org/kurator/validation/data/eight_specimen_records.csv");
+        readerActor.param("filePath", "src/test/resources/org/kurator/validation/data/eight_specimen_records.csv");
 
         wr.build();
         wr.start();
@@ -53,8 +53,8 @@ public class TestCsvSpecimenFileReader extends KuratorAkkaTestCase {
 
     public void testCsvFileReader_NineMczIptRecords() throws Exception {
 
-        readerActor.parameter("filePath", "src/test/resources/org/kurator/validation/data/mcz_ipt_snippet.csv");
-        readerActor.parameter("quote", '"');
+        readerActor.param("filePath", "src/test/resources/org/kurator/validation/data/mcz_ipt_snippet.csv");
+        readerActor.param("quote", '"');
 
         wr.build();
         wr.start();
