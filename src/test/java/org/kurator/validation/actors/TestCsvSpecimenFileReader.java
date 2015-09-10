@@ -34,9 +34,7 @@ public class TestCsvSpecimenFileReader extends KuratorAkkaTestCase {
 
         readerActor.param("filePath", "src/test/resources/org/kurator/validation/data/eight_specimen_records.csv");
 
-        wr.build();
-        wr.start();
-        wr.await();
+        wr.run();
 
         String expected =
             "{catalogNumber=100001, recordedBy=Megan A. Jensen, fieldNumber=126, year=2007, month=6, day=29, decimalLatitude=47.1384, decimalLongitude=-120.9263, geodeticDatum=WGS84, country=United States, stateProvince=Washington, county=Chelan, locality=Wenatchee National Forest. South Cle Elum Ridge., family=Asteraceae, scientificName=Taraxacum erythrospermum, scientificNameAuthorship=auct., reproductiveCondition=Flower:March;April;May;June;July;August, InstitutionCode=DAV, CollectionCode=FilteredPush, DatasetName=SPNHCDEMO, Id=926137834}" + EOL +
@@ -56,9 +54,7 @@ public class TestCsvSpecimenFileReader extends KuratorAkkaTestCase {
         readerActor.param("filePath", "src/test/resources/org/kurator/validation/data/mcz_ipt_snippet.csv");
         readerActor.param("quote", '"');
 
-        wr.build();
-        wr.start();
-        wr.await();
+        wr.run();
 
         String expected =
                 "{id=MCZ:Herp:R-90780, type=PhysicalObject, modified=2012-12-06 08:47:03.0, language=en, rightsHolder=President and Fellows of Harvard College, references=http://mczbase.mcz.harvard.edu/guid/MCZ:Herp:R-90780, institutionID=b4640710-8e03-11d8-b956-b8a03c50a862, institutionCode=MCZ, collectionCode=Herp, ownerInstitutionCode=Museum of Comparative Zoology, Harvard University, basisOfRecord=PreservedSpecimen, informationWithheld=, dynamicProperties=, catalogNumber=R-90780, recordNumber=14942, recordedBy=Fred Parker, individualCount=1, sex=, lifeStage=, preparations=whole animal (ethanol), disposition=in collection, otherCatalogNumbers=collector number=14942; muse location number=ZR90753, associatedMedia=http://mczbase.mcz.harvard.edu/guid/MCZ:Herp:R-90780, associatedOccurrences=, associatedSequences=, associatedTaxa=, samplingProtocol=, eventDate=1965-09-30, startDayOfYear=0, year=, month=, day=, verbatimEventDate=30/9/1965-30/9/1965, habitat=, fieldNumber=, higherGeography=Papua New Guinea, Eastern Highlands Province, continent=, waterBody=, islandGroup=, island=, country=Papua New Guinea, stateProvince=Eastern Highlands Province, county=, locality=New Guinea: Purosa, verbatimElevation=, minimumElevationInMeters=, maximumElevationInMeters=, minimumDepthInMeters=, maximumDepthInMeters=, verbatimLatitude=, verbatimLongitude=, verbatimCoordinateSystem=, decimalLatitude=, decimalLongitude=, geodeticDatum=, coordinateUncertaintyInMeters=, coordinatePrecision=, georeferencedBy=, georeferenceProtocol=, georeferenceSources=, geo referenceRemarks=, earliestEraOrLowestErathem=, latestEraOrHighestErathem=, earliestPeriodOrLowestSystem=, latestPeriodOrHighestSystem=, earliestEpochOrLowestSeries=, latestEpochOrHighestSeries=, earliestAgeOrLowestStage=, latestAgeOrHighestStage=, lithostratigraphicTerms=, group=, formation=, member=, bed=, identifiedBy=Catalog, dateIdentified=, identificationRemarks=, identificationQualifier=, identificationVerificationStatus=, typeStatus=, scientificName=Emoia pallidiceps, higherClassification=Animalia Chordata Reptilia Lepidosauromorpha Squamata Sauria Scincidae Emoia pallidiceps, kingdom=Animalia, phylum=Chordata, class=Reptilia, order=Squamata, family=Scincidae, genus=Emoia, specificEpithet=pallidiceps, infraspecificEpithet=, taxonRank=, verbatimTaxonRank=, scientificNameAuthorship=, nomenclaturalCode=ICZN}" + EOL +

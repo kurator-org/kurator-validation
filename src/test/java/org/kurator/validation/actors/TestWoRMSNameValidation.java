@@ -30,7 +30,6 @@ public class TestWoRMSNameValidation extends KuratorAkkaTestCase {
         wr.outputStream(outPrintStream);
         wr.apply("ReadInput.filePath", WORKFLOW_RESOURCE_PATH + "/WoRMS_name_validation_input.csv");
         wr.apply("WriteOutput.quoteCharacter", '\'');
-        wr.build();
         wr.run();
 
         String expected =
