@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2015-09-03T23:49:38s+02:00"
+__version__ = "dwca_core_to_tsv.py 2015-09-10T17:57:41s-07:00"
 
 from optparse import OptionParser
 from dwca_utils import short_term_names
@@ -36,7 +36,7 @@ from dwca.read import GBIFResultsReader
 # a workflow
 # Example: 
 #
-# ka -f workflows/dwca_core_to_tsv.yaml -p dwcafile=../../data/dwca-uwymv_herp.zip -p tsvoutputfile=./workspace/dwcatsvout.tsv -p archivetype=standard
+# kurator -f workflows/dwca_core_to_tsv.yaml -p dwcafile=../../data/dwca-uwymv_herp.zip -p tsvoutputfile=./workspace/dwcatsvout.tsv -p archivetype=standard
 #
 # or as a command-line script.
 # Example:

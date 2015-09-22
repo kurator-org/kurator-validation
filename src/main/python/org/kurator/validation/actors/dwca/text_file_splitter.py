@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "text_file_splitter.py 2015-09-03T23:26:15+02:00"
+__version__ = "text_file_splitter.py 2015-09-10T17:57:07-07:00"
 
 from optparse import OptionParser
 from dwca_utils import split_path
@@ -27,7 +27,7 @@ import logging
 # a workflow
 # Example: 
 #
-# ka -f workflows/text_file_splitter.yaml -p p=fullpath -p v=../../data/eight_specimen_records.csv  -p c=5 -p w=./workspace
+# kurator -f workflows/text_file_splitter.yaml -p p=fullpath -p v=../../data/eight_specimen_records.csv  -p c=5 -p w=./workspace
 #
 # or as a command-line script.
 # Example:
@@ -38,7 +38,10 @@ splitterchunksize=10000
 splitterworkspace='./'
 
 def text_file_splitter(inputs_as_json):
-    """Split a text file into chunks with headers. Put the chunk files in the workspace"""
+    """Split a text file into chunks with headers. Put the chunk files in the workspace
+    inputs_as_json - JSON string containing "fullpath", which is the full path to the file to
+    split.
+    returns JSON string with information about the results."""
     chunksize=splitterchunksize
     workspace=splitterworkspace
 
@@ -48,7 +51,7 @@ def text_file_splitter(inputs_as_json):
     print 'text_file_splitter inputs: %s' % inputs_as_json
         
     if not os.path.isfile(fullpath):
-        return None, None, None
+        return None
 
     # Open the file in universal mode
     input = open(fullpath, 'rU')
