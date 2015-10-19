@@ -19,7 +19,7 @@ __version__ = "dwca_utils.py 2015-09-10T23:35:32-07:00"
 import os.path
 import logging
 from optparse import OptionParser
-
+import xml.etree.ElementTree as ET
 import csv
 
 # Python Darwin Core Archive Reader from 
@@ -111,6 +111,7 @@ def dwca_metadata(dwcareader):
 
     # Pull the metadata from the archive
     # metadata is a BeautifulSoup object
+    
     metadata=dwcareader.metadata
     return metadata
 
@@ -289,11 +290,12 @@ def main():
     rowcount = get_core_rowcount(dwcareader)
     print '\nCore row count:%s' % (rowcount)
 
-
     # Get metadata out of the archive.
-#     metadata=dwca_metadata(dwcareader)
-#     print 'Metadata:\n%s' % metadata
-
+    print '%s' % ET.dump(dwcareader.metadata)
+    print 'Description:\n%s' % dwcareader.metadata.find("./dataset/abstract/para").text
+    print 'IP Rights:\n%s' % dwcareader.metadata.find("./dataset/intellectualRights/para").text
+    print 'Language:\n%s' % dwcareader.metadata.find("./dataset/language").text
+    
     # Get a list of fields in the core file.
 #     coretermnames = sorted_short_term_name_list(list(dwcareader.descriptor.core.terms))
 #     print '\nTerms in core:\n%s' % (coretermnames)

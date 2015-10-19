@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2015-010-19T21:09:29+01:00"
+__version__ = "vocab_extractor_complex.py 2015-10-19T21:28:57+01:00"
 
 from optparse import OptionParser
 from dwca_utils import split_path
@@ -28,33 +28,54 @@ import logging
 # a workflow
 # Example: 
 #
-# kurator -f workflows/vocab_extractor.yaml -p p=fullpath -p v=../../data/eight_specimen_records.csv -p t=country
+# kurator -f workflows/vocab_complex_extractor.yaml -p p=fullpath -p v=../../data/eight_specimen_records.csv -p c="continent,country,stateProvince,county,municipality,island,islandGroup,waterbody"
 #
 # or as a command-line script.
 # Example:
 #
-# python vocab_extractor.py -i ../../data/eight_specimen_records.csv -t country
+# python vocab_complex_extractor.py -i ../../data/eight_specimen_records.csv -c "continent,country,stateProvince,county,municipality,island,islandGroup,waterbody"
 
-# The name of the term for which the distinct values are sought
-termname = None
+# The order-dependent, comma-separated string of term names in the term complex for which 
+# the distinct values are sought
+# termcomplex = None
 
-def vocab_extractor(inputs_as_json):
-    """Extract a list of the distinct values of a given term in a text file.
-    inputs_as_json - {'fullpath':'[p]', 'termname':'[t]'} where:
+termcomplex = None
+
+def make_key(alist):
+    """Given a list of values, return a string consisting of the values in the 
+    list separated by '|' characters."""
+    n=0
+    for i in alist:
+        if n==0:
+            key=i
+        else:
+            key=key+'|'+i
+        n+=1
+    return key
+    
+def vocab_complex_extractor(inputs_as_json):
+    """Extract a list of the distinct values of a given termcomplex in a text file.
+    inputs_as_json - {'fullpath':'[p]', 'termcomplex':'[c]'} where:
     p is the full path to the file from which to extract
-    t is the name of the term for which to extract values
+    c is the ordered list of terms in the term complex for which to extract values
+    
+    Example for a geography key: 
+    
+    c "continent,country,stateprovince,county,municipality,island,islandgroup,waterbody"
     
     returns JSON string with information about the results."""
     
-    global termname
+    global termcomplex
+    
+    
     inputs = json.loads(inputs_as_json)
     fullpath = inputs['fullpath']
-    # Use the termname from the input JSON, if it exists
+    # Use the termcomplex from the input JSON, if it exists
     try:
-        termname = inputs['termname']
+        termcomplex = inputs['termcomplex']
     except:
         # Otherwise use the global value, if it exists
-        if termname is None:
+        if termcomplex is None:
             return None
 
     if not os.path.isfile(fullpath):
@@ -63,21 +84,30 @@ def vocab_extractor(inputs_as_json):
     valueset = set()
     dialect=csv.excel
 #    print_dialect_properties(dialect)
+
+    termlist = termcomplex.lower().split(',')
     
     # Iterate over the file rows to get the values of the term
     with open(fullpath, 'rU') as csvfile:
         dr = csv.DictReader(csvfile, dialect=dialect)
         header=dr.fieldnames
-        termname = termname.lower()
         i=0
         for t in header:
             header[i]=header[i].strip().lower()
             i+=1
-        if termname not in header:
-            return None
+
+        # Header list ready. Now pull out the values of all the terms in the term complex
+        # for every row and add the key to the vocabulary with the values of the 
+        # constituent terms.
         for row in dr:
-            v=row[termname]
-            valueset.add(v)
+            vallist=[]
+            for t in termlist:
+                try:
+                    v=row[t]
+                    vallist.append(v)
+                except:
+                    vallist.append('')
+            valueset.add(make_key(vallist))
 
     # Successfully completed the mission
     # Return a dict of important information as a JSON string
@@ -90,7 +120,7 @@ def vocab_extractor(inputs_as_json):
         i+=1
 
     # Reset global variables to None
-    termname = None
+    termcomplex = None
 
     return json.dumps(response)
     
@@ -100,7 +130,7 @@ def _getoptions():
     parser.add_option("-i", "--input", dest="inputfile",
                       help="Text file to mine for vocab values",
                       default=None)
-    parser.add_option("-t", "--termname", dest="termname",
+    parser.add_option("-c", "--termcomplex", dest="termcomplex",
                       help="Name of the term for which distinct values are sought",
                       default=None)
     parser.add_option("-l", "--loglevel", dest="loglevel",
@@ -113,23 +143,24 @@ def main():
     loglevel = options.loglevel
     logging.basicConfig(level=getattr(logging, loglevel.upper()))
     fullpath = options.inputfile
-    local_termname = options.termname
+    local_termcomplex = options.termcomplex
 
-    if fullpath is None or local_termname is None:
-        print 'syntax: python vocab_extractor.py -i ../../data/eight_specimen_records.csv -t basisOfRecord'
+    if fullpath is None or local_termcomplex is None:
+        print 'syntax: python vocab_complex_extractor.py -i ../../data/eight_specimen_records.csv -c "continent,country,stateprovince,county,municipality,island,islandgroup,waterbody"'
         return
     
     inputs = {}
     inputs['fullpath'] = fullpath
-    inputs['termname'] = local_termname
+    inputs['termcomplex'] = local_termcomplex
     
-    # Get distinct values of termname from inputfile
-    response=json.loads(vocab_extractor(json.dumps(inputs)))
+    # Get distinct values of termcomplex from inputfile
+    response=json.loads(vocab_complex_extractor(json.dumps(inputs)))
 
 #    print 'Response: %s' % response
-    logging.info('File %s mined for values of %s. Results: %s' %
-        (fullpath, local_termname, response['valueset']) )
+    logging.info('File %s mined for values of\n%s.' % (fullpath,local_termcomplex))
+    for r in response['valueset']:
+        logging.info('%s' % (r) )
 
 if __name__ == '__main__':
-    """ Demo of vocab_extractor"""
+    """ Demo of vocab_extractor_complex"""
     main()
