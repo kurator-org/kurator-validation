@@ -36,20 +36,22 @@ import logging
 # python vocab_complex_extractor.py -i ../../data/eight_specimen_records.csv -c "continent,country,stateProvince,county,municipality,island,islandGroup,waterbody"
 
 # The order-dependent, comma-separated string of term names in the term complex for which 
-# the distinct values are sought
+# the distinct values are sought. Term names may not contain commas. Content can. Content
+# cannot contain the VALUE_SEPARATOR - '|' by default.
 # termcomplex = None
 
+VALUE_SEPARATOR = '|'
 termcomplex = None
 
 def make_key(alist):
     """Given a list of values, return a string consisting of the values in the 
-    list separated by '|' characters."""
+    list separated by VALUE_SEPARATOR characters."""
     n=0
     for i in alist:
         if n==0:
             key=i
         else:
-            key=key+'|'+i
+            key=key+VALUE_SEPARATOR+i
         n+=1
     return key
     
