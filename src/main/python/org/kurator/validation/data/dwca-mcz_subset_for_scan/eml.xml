@@ -1,0 +1,172 @@
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
+         xmlns:dc="http://purl.org/dc/terms/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd"
+         packageId="http://digir.mcz.harvard.edu/ipt/resource.do?id=mcz_subset_for_scan/v120" system="http://gbif.org" scope="system"
+         xml:lang="eng">
+
+<dataset>
+  <alternateIdentifier>http://digir.mcz.harvard.edu/ipt/resource.do?r=mcz_subset_for_scan</alternateIdentifier>
+  <title xml:lang="eng">Museum of Comparative Zoology, Harvard University, Subset of data for SCAN TCN</title>
+<creator>
+    <individualName>
+        <givenName>MCZ</givenName>
+      <surName>Harvard University</surName>
+    </individualName>
+    <organizationName>Museum of Comparative Zoology</organizationName>
+    <address>
+        <deliveryPoint>26 Oxford Street</deliveryPoint>
+        <city>Cambridge</city>
+        <administrativeArea>MA</administrativeArea>
+        <postalCode>02138</postalCode>
+        <country>US</country>
+    </address>
+    <onlineUrl>http://www.mcz.harvard.edu</onlineUrl>
+</creator>
+<metadataProvider>
+    <individualName>
+        <givenName>Paul J.</givenName>
+      <surName>Morris</surName>
+    </individualName>
+    <organizationName>Harvard University Herbaria and Museum of Comparative Zoology</organizationName>
+    <positionName>Biodiversity Informatics Manager</positionName>
+    <address>
+        <deliveryPoint>22 Divinity Ave</deliveryPoint>
+        <city>Cambridge</city>
+        <administrativeArea>MA</administrativeArea>
+        <postalCode>02138</postalCode>
+        <country>US</country>
+    </address>
+    <electronicMailAddress>bdim@oeb.harvard.edu</electronicMailAddress>
+</metadataProvider>
+    <associatedParty>
+    <individualName>
+        <givenName>Paul J.</givenName>
+      <surName>Morris</surName>
+    </individualName>
+    <organizationName>Harvard University Herbaria and Museum of Comparative Zoology</organizationName>
+    <positionName>Biodiversity Informatics Manager</positionName>
+    <address>
+        <deliveryPoint>22 Divinity Ave</deliveryPoint>
+        <city>Cambridge</city>
+        <administrativeArea>MA</administrativeArea>
+        <postalCode>02138</postalCode>
+        <country>US</country>
+    </address>
+    <electronicMailAddress>mole@oeb.harvard.edu</electronicMailAddress>
+    <role>metadataProvider</role>
+    </associatedParty>
+    <associatedParty>
+    <individualName>
+        <givenName>Linda S.</givenName>
+      <surName>Ford</surName>
+    </individualName>
+    <organizationName>Museum of Comparative Zoology</organizationName>
+    <positionName>Director of Collections Operations</positionName>
+    <address>
+        <deliveryPoint>26 Oxford St</deliveryPoint>
+        <city>Cambridge</city>
+        <administrativeArea>MA</administrativeArea>
+        <postalCode>02138</postalCode>
+        <country>US</country>
+    </address>
+    <electronicMailAddress>lford@oeb.harvard.edu</electronicMailAddress>
+    <onlineUrl>http://www.mcz.harvard.edu/contacts/administrative.html</onlineUrl>
+    <role>pointOfContact</role>
+    </associatedParty>
+<pubDate>
+      	2015-07-17
+</pubDate>
+<language>eng</language>
+<abstract>
+  <para>A subset of Museum of Comparative Zoology data, filtered for the SCAN TCN.   The Museum of Comparative Zoology was founded in 1859 on the concept that collections are an integral and fundamental component of zoological research and teaching. This more than 150-year-old commitment remains a strong and proud tradition for the MCZ.
+
+The present-day MCZ contains over 21-million specimens in ten research collections which comprise one of the world&apos;s richest and most varied resources for studying the diversity of life. The museum serves as the primary repository for zoological specimens collected by past and present Harvard faculty-curators, staff and associates conducting research around the world.
+
+As a premier university museum and research institution, the specimens and their related data are available to researchers of the scientific and museum community.</para>
+</abstract>
+      <keywordSet>
+            <keyword>Specimen</keyword>
+        <keywordThesaurus>GBIF Dataset Subtype Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_subtype.xml</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Specimen</keyword>
+        <keywordThesaurus>GBIF Dataset Subtype Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_subtype.xml</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Occurrence</keyword>
+        <keywordThesaurus>GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type.xml</keywordThesaurus>
+      </keywordSet>
+  <additionalInfo>
+    <para>The MCZ does not guarantee the accuracy of these data. Individual researchers should verify individual records by making direct reference to corresponding museum specimens.
+
+For terms and conditions of use, see: http://www.mcz.harvard.edu/privacy/user.html</para>
+  </additionalInfo>
+  <intellectualRights>
+    <para>Copyright © 2012 The President and Fellows of Harvard College</para>
+  </intellectualRights>
+  <distribution scope="document">
+    <online>
+      <url function="information">http://mczbase.mcz.harvard.edu/</url>
+    </online>
+  </distribution>
+  <coverage>
+      <geographicCoverage>
+          <geographicDescription>Southwestern US</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-120</westBoundingCoordinate>
+          <eastBoundingCoordinate>-100</eastBoundingCoordinate>
+          <northBoundingCoordinate>42</northBoundingCoordinate>
+          <southBoundingCoordinate>30</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+          <temporalCoverage>
+              <rangeOfDates>
+                  <beginDate>
+                    <calendarDate>1679-01-01</calendarDate>
+                  </beginDate>
+                <endDate>
+                  <calendarDate>2012-01-30</calendarDate>
+                </endDate>
+              </rangeOfDates>
+          </temporalCoverage>
+          <taxonomicCoverage>
+              <generalTaxonomicCoverage>Recent Arthropods.</generalTaxonomicCoverage>
+              <taxonomicClassification>
+                  <taxonRankName>kingdom</taxonRankName>
+                <taxonRankValue>Animalia</taxonRankValue>
+                  <commonName>Animals</commonName>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>phylum</taxonRankName>
+                <taxonRankValue>Arthropoda</taxonRankValue>
+              </taxonomicClassification>
+          </taxonomicCoverage>
+  </coverage>
+  <contact>
+    <individualName>
+        <givenName>Brendan</givenName>
+      <surName>Haley</surName>
+    </individualName>
+    <organizationName>Museum of Comparative Zoology</organizationName>
+    <positionName>Senior Database Manager</positionName>
+    <address>
+        <deliveryPoint>26 Oxford Street</deliveryPoint>
+        <city>Cambridge</city>
+        <administrativeArea>MA</administrativeArea>
+        <postalCode>02138</postalCode>
+        <country>US</country>
+    </address>
+    <electronicMailAddress>bhaley@oeb.harvard.edu</electronicMailAddress>
+  </contact>
+</dataset>
+  <additionalMetadata>
+    <metadata>
+      <gbif>
+          <dateStamp>2013-06-03T10:31:35.327-04:00</dateStamp>
+          <hierarchyLevel>dataset</hierarchyLevel>
+          <dc:replaces>http://digir.mcz.harvard.edu/ipt/resource.do?id=mcz_subset_for_scan/v119.xml</dc:replaces>
+      </gbif>
+    </metadata>
+  </additionalMetadata>
+</eml:eml>

@@ -15,16 +15,35 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
+__copyright__ = "Copyright 2015 President and Fellows of Harvard College"
+__version__ = "dwcaterms.py 2015-11-03T17:14:43+01:00"
 
-# The geogkeytermlist contains the terms that make up a distinct geography combination
+# Terms that make up a distinct geography combination
 geogkeytermlist = [
     'continent', 'country', 'stateProvince', 'county', 'municipality', 'waterBody', 
     'islandGroup', 'island']
+
+# Terms expected in the standardized output from the geography vocabulary
+geogvocaboutputlist = [
+    'continent', 'country', 'countrycode', 'stateProvince', 'county', 'municipality', 
+    'waterBody', 'islandGroup', 'island', 'verbatimcontinent', 'verbatimcountry', 
+    'verbatim_countrycode', 'verbatim_stateProvince', 'verbatim_county', 
+    'verbatim_municipality', 'verbatim_waterBody', 'verbatim_islandGroup', 
+    'verbatim_island']
 
 # The taxonkeytermlist contains the terms that make up a distinct taxon name combination
 taxonkeytermlist = [
     'kingdom', 'genus', 'subgenus', 'specificEpithet', 'infraspecificEpithet', 
     'scientificNameAuthorship', 'scientificName']
+
+# Terms that make up a distinct event combination
+eventkeytermlist = [
+    'eventdate', 'verbatimeventdate','year','month','day']
+
+# Terms that make up a distinct coordinates combination
+coordinateskeytermlist = [
+    'decimallatitude', 'decimallongitude', 'verbatimlatitude','verbatimlongitude',
+    'verbatimcoordinates']
 
 # For each term in the controlledtermlist there should be a vocabulary file with the
 # name [term].csv in which there are three columns: verbatim, standard, checked
@@ -36,4 +55,5 @@ controlledtermlist = [
     'identificationVerificationStatus', 'taxonRank', 'nomenclaturalCode', 
     'taxonomicStatus', 'nomenclaturalStatus']	
     
-vocabfieldlist = ['verbatim','standard','checked']
+vocabfieldlist = ['verbatim','standardizedkey', 'checked', 'error','misplaced','incorrectable',
+    'source']
