@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator.py 2015-12-28T13:56-03:00"
+__version__ = "text_file_aggregator.py 2016-01-07T17:27-03:00"
 
 from optparse import OptionParser
 from dwca_utils import read_header
@@ -51,9 +51,15 @@ def text_file_aggregator(inputs_as_json):
     returns JSON string with information about the results."""
     inputs = json.loads(inputs_as_json)
     inputpath = inputs['inputpath']
-#    header = None
-    compositeheader = composite_header(inputpath)
-    print 'composite header:\n%s' % compositeheader
+    inputdialect = inputs['inputdialect']
+    dialect = None
+    if inputdialect == 'tsv':
+        dialect = tsv_dialect()
+    elif inputdialect == 'csv.excel' or inputdialect == 'csv':
+        dialect = csv.excel
+
+    compositeheader = composite_header(inputpath, dialect)
+    print 'composite header:\n%s\ndialect attributes:\n%s' % (compositeheader, dialect_attributes(dialect))
 
     # Open a file to write the aggregated results
     destfile = workspace +'/'+ outputfile
@@ -63,21 +69,16 @@ def text_file_aggregator(inputs_as_json):
         writer.writeheader()
         files = glob.glob(inputpath)
         for file in files:
-            if inputdialect == 'tsv':
-                dialect = tsv_dialect()
-                print 'tsv dialect chosen on command line'
-            elif inputdialect == 'csv.excel':
-                dialect = csv.excel
-            else:
+            if inputdialect is None:
                 dialect = csv_file_dialect(file)
-            print 'inputdialect: %s\nAttributes:\n%s' % (inputdialect, dialect_attributes(dialect))
+                print 'input file %s dialect: %s\nAttributes:\n%s' % (file, inputdialect, dialect_attributes(dialect))
             with open(file, 'rU') as inputfile:
                 reader = csv.DictReader(inputfile, dialect=dialect)
                 for line in reader:
                     try:
                         writer.writerow(line)
                     except:
-                        print 'line:\n%s' % line
+                        print 'unable to write line:\n%s' % line
 
     # Successfully completed the mission
     # Return a dict of important information as a JSON string
@@ -91,30 +92,57 @@ def text_file_aggregator(inputs_as_json):
     return json.dumps(response)
 
 def dialect_attributes(dialect):
-    s = 'lineterminator: ' + dialect.lineterminator
-    s += '\ndelimiter: ' + dialect.delimiter
-    s += '\nescapechar: ' + dialect.escapechar
+    if dialect is None:
+        return 'no dialect given'
+    s = 'lineterminator: ' 
+    if dialect.lineterminator == '\r':
+        s+= '\r'
+    elif dialect.lineterminator == '\n':
+        s+= '\n'
+    elif dialect.lineterminator == '\r\n':
+        s+= '\r\n'
+    else: 
+        s += dialect.lineterminator
+
+    s += '\ndelimiter: '
+    if dialect.delimiter == '\t':
+        s+= '\t'
+    else:
+        s+= dialect.delimiter
+
+    s += '\nescapechar: ' 
+    s += dialect.escapechar
+
+    s += '\ndoublequote: '
     if dialect.doublequote == True:
-        s += '\ndoublequote: True' 
+        s += 'True' 
     else:
-        s += '\ndoublequote: False' 
-    s += '\nquotechar: ' + dialect.quotechar
+        s += 'False' 
+
+    s += '\nquotechar: ' 
+    s += dialect.quotechar
+
+    s += '\nquoting: ' 
     if dialect.quoting == csv.QUOTE_NONE:
-        s += '\nquoting: csv.QUOTE_NONE'
+        s += 'csv.QUOTE_NONE'
     elif dialect.quoting == csv.QUOTE_MINIMAL:
-        s += '\nquoting: csv.QUOTE_MINIMAL'
+        s += 'csv.QUOTE_MINIMAL'
     elif dialect.quoting == csv.QUOTE_NONNUMERIC:
-        s += '\nquoting: csv.QUOTE_NONNUMERIC'
+        s += 'csv.QUOTE_NONNUMERIC'
     elif dialect.quoting == csv.QUOTE_ALL:
-        s += '\nquoting: csv.QUOTE_ALL'
+        s += 'csv.QUOTE_ALL'
+
+    s += '\nskipinitialspace: ' 
     if dialect.skipinitialspace == True:
-        s += '\nskipinitialspace: True'
+        s += 'True'
     else:
-        s += '\nskipinitialspace: False'
+        s += 'False'
+
+    s += '\nstrict: ' 
     if dialect.strict == True:
-        s += '\nstrict: True'
+        s += 'True'
     else:
-        s += '\nstrict: False'
+        s += 'False'
     return s
 
 def _getoptions():
@@ -154,6 +182,7 @@ def main():
     
     inputs = {}
     inputs['inputpath'] = inputpath
+    inputs['inputdialect'] = inputdialect
     
     # Split text file into chucks
     response=json.loads(text_file_aggregator(json.dumps(inputs)))

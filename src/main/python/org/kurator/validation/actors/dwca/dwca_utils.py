@@ -14,12 +14,20 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2015-12-30T20:16-03:00"
+__version__ = "dwca_utils.py 2016-01-07T13:20-03:00"
 
 import os.path
 import csv
 import glob
 import unittest
+
+# This file contains common utility functions for dealing with the content of CSV and
+# TSV data. It is built with unit tests that can be invoked by running the script
+# without any command line parameters.
+#
+# Example:
+#
+# python dwca_utils.py
 
 def tsv_dialect():
     """Get a dialect object with TSV properties.
@@ -405,6 +413,18 @@ class DWCAUtilsTestCase(unittest.TestCase):
 #                         except:
 #                             print 'line:\n%s' % line
 
+    def test_composite_header3(self):
+        testdatapath = self.framework.testdatapath
+        compositeheaderfilepattern = self.framework.compositeheaderfilepattern2
+        tsv = tsv_dialect()
+        f1 = 'test_fims_6e4532.tst'
+        f2 = 'test_fims_6e5432.tst'
+        h1 = read_header(testdatapath + f1)
+        h2 = read_header(testdatapath + f2, tsv)
+        h3 = composite_header(testdatapath + 'test_fims_6e*.tst', tsv_dialect())
+        print 'h1:\n%s' % h1
+        print 'h2:\n%s' % h2
+        print 'h3:\n%s' % h3
 
     def test_composite_header(self):
         testdatapath = self.framework.testdatapath
