@@ -13,7 +13,7 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2015 President and Fellows of Harvard College"
+__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
 __version__ = "dwca_utils.py 2016-01-07T13:20-03:00"
 
 import os.path

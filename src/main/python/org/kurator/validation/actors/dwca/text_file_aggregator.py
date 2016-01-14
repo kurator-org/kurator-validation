@@ -13,7 +13,7 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2015 President and Fellows of Harvard College"
+__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
 __version__ = "text_file_aggregator.py 2016-01-07T17:27-03:00"
 
 from optparse import OptionParser
