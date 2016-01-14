@@ -13,8 +13,8 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "text_file_splitter.py 2015-09-10T17:57:07-07:00"
+__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
+__version__ = "text_file_splitter.py 2016-01-14T12:15-03:00"
 
 from optparse import OptionParser
 from dwca_utils import split_path
@@ -42,11 +42,19 @@ def text_file_splitter(inputs_as_json):
     inputs_as_json - JSON string containing "fullpath", which is the full path to the file to
     split.
     returns JSON string with information about the results."""
-    chunksize=splitterchunksize
-    workspace=splitterworkspace
 
     inputs = json.loads(inputs_as_json)
     fullpath = inputs['fullpath']
+
+    try:
+        chunksize = inputs['chunksize']
+    except:
+        chunksize = splitterchunksize
+
+    try:
+        workspace = inputs['workspace']
+    except:
+        workspace = splitterworkspace
 
     print 'text_file_splitter inputs: %s' % inputs_as_json
         
@@ -89,8 +97,8 @@ def text_file_splitter(inputs_as_json):
     # Successfully completed the mission
     # Return a dict of important information as a JSON string
     response = {}
-    returnvars = ['filepattern', 'fileext', 'chunks', 'rowcount', 'workspace']
-    returnvals = [filepattern, fileext, chunks, rowcount, workspace]
+    returnvars = ['filepattern', 'fileext', 'chunks', 'rowcount', 'workspace', 'chunksize']
+    returnvals = [filepattern, fileext, chunks, rowcount, workspace, chunksize]
     i=0
     for a in returnvars:
         response[a]= returnvals[i] 
@@ -121,13 +129,15 @@ def main():
     if fullpath is None:
         print 'syntax: python text_file_splitter.py -i ../../data/eight_specimen_records.csv -c 5 -w ./workspace'
         return
-    try:
-        splitterchunksize=int(str(options.chunksize))
-    except:
-        splitterchunksize=1000
 
     if splitterworkspace is None:
         splitterworkspace = './'
+
+    try:
+        splitterchunksize = int(str(options.chunksize))
+    except:
+        splitterchunksize = 1000
+
     
     inputs = {}
     inputs['fullpath'] = fullpath

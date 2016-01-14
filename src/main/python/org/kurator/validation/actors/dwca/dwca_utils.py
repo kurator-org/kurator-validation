@@ -13,28 +13,166 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2015-09-10T23:35:32-07:00"
+__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
+__version__ = "dwca_utils.py 2016-01-07T13:20-03:00"
 
 import os.path
-import logging
-from optparse import OptionParser
-
 import csv
+import glob
+import unittest
 
-# Python Darwin Core Archive Reader from 
-# https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
-# pip install python-dwca-reader
-from dwca.read import DwCAReader
-from dwca.read import GBIFResultsReader
-from dwca.darwincore.utils import qualname as qn
-from dwca.darwincore.terms import TERMS
-from dwcaterms import geogkeytermlist
-from dwcaterms import taxonkeytermlist
-from dwcaterms import controlledtermlist
-from dwcaterms import vocabfieldlist
+# This file contains common utility functions for dealing with the content of CSV and
+# TSV data. It is built with unit tests that can be invoked by running the script
+# without any command line parameters.
+#
+# Example:
+#
+# python dwca_utils.py
+
+def tsv_dialect():
+    """Get a dialect object with TSV properties.
+    parameters:
+        None
+    returns:
+        dialect - a csv.dialect object with TSV attributes"""
+    dialect = csv.excel_tab
+    dialect.lineterminator='\r'
+    dialect.delimiter='\t'
+    dialect.escapechar='/'
+    dialect.doublequote=True
+    dialect.quotechar='"'
+    dialect.quoting=csv.QUOTE_NONE
+    dialect.skipinitialspace=True
+    dialect.strict=False
+    return dialect
+    
+def csv_file_dialect(fullpath):
+    """Detect the dialect of a CSV or TXT data file.
+    parameters:
+        fullpath - the full path to the file to process.
+    returns:
+        dialect - a csv.dialect object with the detected attributes"""
+    readto = 4096
+    filesize = os.path.getsize(fullpath)
+    if filesize < readto:
+        readto = filesize
+    with open(fullpath, 'rb') as file:
+        try:
+#            print 'Sniffing %s to %s' % (fullpath, readto)
+            dialect = csv.Sniffer().sniff(file.read(readto))
+        except csv.Error:
+            try:
+                file.seek(0)
+#                print 'Re-sniffing with tab to %s' % (readto)
+                sample_text = ''.join(file.readline() for x in xrange(2,4,1))
+                dialect = csv.Sniffer().sniff(sample_text)
+            except csv.Error:
+#                print 'No dice'
+                return None
+        
+    if dialect.escapechar is None:
+        dialect.escapechar='/'
+    dialect.skipinitialspace=True
+    dialect.strict=False
+    return dialect
+    
+def read_header(fullpath, dialect = None):
+    """Get the header line of a CSV or TXT data file.
+    parameters:
+        fullpath - the full path to the file to process.
+        dialect - a csv.dialect object with the attributes of the input file
+    returns:
+        cleanheader - a list object containing the white-space-free fields in the 
+            original header"""
+    header = None
+    if dialect is None:
+        dialect = csv_file_dialect(fullpath)
+    with open(fullpath, 'rU') as csvfile:
+        reader = csv.DictReader(csvfile, dialect=dialect)
+        # header is the list as returned by the reader
+        header=reader.fieldnames
+
+        # cleanheader is header with any extraneous whitespace in field names removed
+        cleanheader = []
+        for field in header:
+            cleanheader.append(field.strip())
+    return cleanheader
+
+def write_header(fullpath, fieldnames, dialect):
+    """Write the header line of a CSV or TXT data file.
+    parameters:
+        fullpath - the full path to the file to process.
+        fieldnames -  a list object containing the fields in the header
+        dialect - a csv.dialect object with the attributes of the input file
+    returns:
+        success - True is the header was written to file"""
+    success = False
+    with open(fullpath, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
+        writer.writeheader()
+        success = True
+    return success
+
+def compose_header(fullpath, headersofar = None, dialect = None):
+    """Compose a header that includes all of the fields in given header plus the fields 
+       in a given data file.
+    parameters:
+        fullpath - the full path to the file to process. (e.g., '../../data/filewithheader.txt')
+        headersofar - a list containing the fields composed so far
+        dialect - a csv.dialect object with the attributes of the input file.
+    returns:
+        sorted(list(composedheader)) - a list object containing the fields in the 
+            combined header"""
+    if fullpath is None:
+        return headersofar
+    composedheader = set()
+    if headersofar is not None:
+        for field in headersofar:
+            composedheader.add(field)
+        
+    if dialect is None:
+        dialect = csv_file_dialect(fullpath)
+    header = read_header(fullpath, dialect)
+    for field in header:
+        composedheader.add(field)
+    return sorted(list(composedheader))
+
+def composite_header(fullpath, dialect = None):
+    """Get a header line that includes all of the fields in headers of a set of CSV 
+       or TXT data files.
+    parameters:
+        fullpath - the full path to the files to process. (e.g., './*.txt')
+        dialect - a csv.dialect object with the attributes of the input files, which must 
+           all have the same dialect if dialect is given, otherwise it will be detected.
+    returns:
+        sorted(list(compositeheader)) - a list object containing the fields in the 
+            header"""
+    if fullpath is None:
+        return None
+    compositeheader = set()
+    usedialect = dialect
+    files = glob.glob(fullpath)
+    if files is None:
+        return None
+    for file in files:
+        if dialect is None:
+            print 'file: %s dialect: %s' % (file, dialect)
+            usedialect = csv_file_dialect(file)
+        header = read_header(file, usedialect)
+        for field in header:
+            compositeheader.add(field)
+    if '' in compositeheader:
+        compositeheader.remove('')
+    return sorted(list(compositeheader))
 
 def split_path(fullpath):
+    """Parse out the path to, the name of, and the extension for a given file.
+    parameters:
+        fullpath - the full path to the file to process. (e.g., './thefile.txt')
+    returns:
+        path - the path to the file (e.g., './')
+        filext - the extension for the file name (e.g., 'thefile')
+        filepattern - the file name without the path and extension (e.g., 'txt')"""
     if fullpath is None or len(fullpath)==0:
         return None, None, None
     path = fullpath[:fullpath.rfind('/')]
@@ -42,297 +180,284 @@ def split_path(fullpath):
     filepattern = fullpath[fullpath.rfind('/')+1:fullpath.rfind('.')]
     return path, fileext, filepattern
 
-def short_term_names(termlist):
-    """Return a list of term names that are the short versions of the fully qualified ones."""
-    shortnamelist=[]
-    for i in range(len(termlist)):
-        longname=termlist[i]
-        sname=shortname(longname)
-        if sname is None:
-            shortnamelist.append(longname)
-        else:
-            shortnamelist.append(sname)
-    return shortnamelist
-
-def shortname(qualname):
-    """Return a term name from a fully qualified term identifier.
-
-    Example::
-        shortname("http://rs.tdwg.org/dwc/terms/Occurrence")  # => "Occurrence"
-    """
-    for t in TERMS:
-        if t==qualname:
-            return t.rpartition('/')[2]
-    return None
-
-def get_distinct_term_values(dwcareader, term):
-    """Find all the distinct values of a term in an archive and return them in a set."""
-    if dwcareader is None or term is None:
-        return None
-    allvalues=set()
-    for row in dwcareader:
-        termvalue=get_term_value(row.data, term)
-        if termvalue not in allvalues:
-            allvalues.add(termvalue)
-    return sorted(list(allvalues))
-
-def standardize_term_values(dwcareader, changeterm, lookupdict):
-    if dwcareader is None or changeterm is None or lookupdict is None:
-        return None
-        
-    newvalues=set()
-    allvalues=set()
-    for row in dwcareader:
-        shouldbe=None
-        was=get_term_value(row.data, changeterm)
-        if was not in allvalues: # all values encountered in the archive thus far
-            allvalues.add(was)
-            shouldbe=get_standard_value(was, lookupdict)
-#            print 'was: %s shouldbe: %s' % (was, shouldbe)
-            if shouldbe is None:
-                newvalues.add(was)
-            elif was!=shouldbe[0] and shouldbe[1]==1:
-                print 'changing %s to %s' % (was, shouldbe[0])
-                set_term_value(row.data, changeterm, shouldbe[0])
-#    print 'allvalues: %s\nnewvalues: %s' % (allvalues, newvalues)
-    return newvalues
-
-def print_dialect_properties(dialect):
-    print 'delimiter: %s\ndoublequote: %s\nescapechar: %s\nquotechar: %s\nquoting: %s \
-skipinitialspace: %s\nlineterminator: -%s-' % \
-           (dialect.delimiter, dialect.doublequote, dialect.escapechar, 
-           dialect.quotechar, dialect.quoting, dialect.skipinitialspace, 
-           dialect.lineterminator)
-
-def dwca_metadata(dwcareader):
-    """Return metadata from Darwin Core Archive Reader."""
-    if dwcareader is None:
-        return None
-
-    # Pull the metadata from the archive
-    # metadata is a BeautifulSoup object
-    metadata=dwcareader.metadata
-    return metadata
-
-def get_core_rowcount(dwcareader):
-    """Return number of rows in the core file of the Darwin Core Archive."""
-    if dwcareader is None:
-        return None
-
-    rowcount=0
-    # Iterate over the archive core rows to count them
-    for row in dwcareader:
-        # row is an instance of CoreRow
-        # iteration respects the order of appearance in the core file
-        rowcount=rowcount+1
-    return rowcount
-
-def get_term_valueset(dwcareader, term):
-    """Return a set of unique values of a term in the core file of the Darwin Core Archive."""
-    if dwcareader is None:
-        return None
-    if archive_has_core_term(dwcareader, term) == False:
-        return None
-    valueset = set()
-    # Iterate over the archive core rows to count them
-    for row in dwcareader:
-        v = get_term_value(row.data, term)
-        valueset.add(v)
-    return valueset
-
-def get_term_group_key(rowdata, term_list):
-    """Return a constructed key from the concatenated values of a list of terms."""
-    if rowdata is None:
-        return None
-    if term_list is None:
-        return None
-    key = ''
-    for term in term_list:
-        # Try to find the value of the term in the rowdata, even using the fully 
-        # qualified version of the term name.
-        v = get_term_value(rowdata, term)
-        if v is None:
-            # Could not find the term in the rowdata, even using the qualified name.
-            v = ''
-        if key == '':
-            # If this is the first term in the key group.
-            key = v
-        else:
-            # For subsequent terms in the key group
-            key = key + ' | ' + v
-    return key 
-
-def archive_has_core_term(dwcareader, term):
-    """Return True if the core file contains a column for the term name or identifier."""
-    if dwcareader is None or term is None:
-        return False
-    if term in dwcareader.descriptor.core.terms:
-        return True
-    try:
-        q = qn(term)
-    except Exception, e:
-        logging.error('archive_has_core_term(): %s is not a Simple Darwin Core term. The search is case-sensitive.' % (term))
-        return False
-    if q in dwcareader.descriptor.core.terms:
-        return True
-    return False
-
-def get_metadata_element(metadata, element_name):
-    """Return an element from the metadata."""
-    if metadata is None or element_name is None:
-        return None
-    element_value=metadata.find(element_name)
-    if element_value is None:
-        return None
-    return element_value.string
-
-def row_has_term(rowdata, term):
-    """Return True if the row contains the term in its data dictionary by name or identifier."""
-    if rowdata is None:
-        return False
-    if term in rowdata.keys() or qn(term) in rowdata.keys():
-        return True
-    return False
-    
-def row_has_term_value(rowdata, term):
-    """Return True if the row contains a value for the term other than ''."""
-    if rowdata is None:
-        return False
-    if term in rowdata.keys():
-        if rowdata[term]!='':
-            return True
-    elif qn(term) in rowdata.keys():
-        if rowdata[qn(term)]!='':
-            return True
-    return False
-    
-def set_term_value(rowdata, term, value):
-    """Set the value of the term in the given rowdata."""
-    if rowdata is None:
-        return
-    if term in rowdata.keys():
-        rowdata[term]=value
-    elif qn(term) in rowdata.keys():
-        rowdata[qn(term)]=value
-    return
-
-def get_term_value(rowdata, term):
-    """Return the value of the term in the given rowdata."""
-    if rowdata is None:
-        return None
-    if term in rowdata.keys():
-        return rowdata[term]
-    # Try a Darwin Core fully qualified term if it wasn't found as is.
-    try:
-        q=qn(term)
-    except Exception, e:
-        return None
-    if q in rowdata.keys():
-        return rowdata[q]
-    return None
-
 def get_standard_value(was, valuedict):
-    """Return a standard value from the valuedict."""
+    """Get the standard value of a term from a dictionary.
+    parameters:
+        was - the value of the term to standardize
+        valuedict - the dictionary to lookup the standard value
+    returns:
+        valuedict[was] - the standard value of the term, if it exists, else None"""
     if was is None:
         return None
     if was in valuedict.keys():
         return valuedict[was]
     return None
 
-def sorted_short_term_name_list(identifierlist):
-    """Return a sorted list of term names from a list of term identifiers with 
-    fully qualified names.
-    """
-    if identifierlist is None:
-        return None
-    shortlist = []
-    for t in sorted(identifierlist):
-        shortlist.append(shortname(t))
-    return shortlist
+class DWCAUtilsFramework():
+    testdatapath = '../../data/tests/'
+    csvreadheaderfile = 'test_eight_specimen_records.csv'
+    csvwriteheaderfile = 'test_write_header_file.csv'
+    compositeheaderfilepattern = 'test_compositeheader'
+    compositeheaderfilepattern2 = 'test_compositeheader_2'
+    tsvdialecttestfile = 'test_fims_6e4532.txt'
+    fimstest1 = 'test_fims_6e4532.tst'
+    fimstest2 = 'test_fims_6e5432.tst'
+    aggregatetest = 'test_aggregate.txt'
 
-def _getoptions():
-    """Parses command line options and returns them."""
-    parser = OptionParser()
-    parser.add_option("-f", "--dwca_file", dest="dwca_file",
-                      help="Darwin Core Archive file",
-                      default=None)
-    parser.add_option("-v", "--vocab_path", dest="vocab_path",
-                      help="Path to vocabulary files",
-                      default=None)
-    parser.add_option("-t", "--archive_type", dest="archive_type",
-                      help="Darwin Core Archive file type. None or 'gbif'",
-                      default=None)
-    return parser.parse_args()[0]
-
-def main():
-    logging.basicConfig(level=logging.DEBUG)
-    options = _getoptions()
-    if options.dwca_file is None:
-        print 'syntax: dwca_utils.py -f dwca_file [-v vocab_path] [-t archive_type]'
-        return
-    
-    # Make an appropriate reader based on whether the archive is standard or a GBIF
-    # download.
-    dwcareader = None
-    if options.archive_type=='gbif':
-        try:
-            dwcareader = GBIFResultsReader(options.dwca_file)
-        except Exception, e:
-            logging.error('GBIF archive %s has an exception: %s ' % (options.dwca_file, e))
-    else:
-        dwcareader = DwCAReader(options.dwca_file)
-    if dwcareader is None:
-        print 'No viable archive found at %s' % options.dwca_file
-        return
-
-    # Get the number of records in the core file.
-    rowcount = get_core_rowcount(dwcareader)
-    print '\nCore row count:%s' % (rowcount)
-
-
-    # Get metadata out of the archive.
-#     metadata=dwca_metadata(dwcareader)
-#     print 'Metadata:\n%s' % metadata
-
-    # Get a list of fields in the core file.
-#     coretermnames = sorted_short_term_name_list(list(dwcareader.descriptor.core.terms))
-#     print '\nTerms in core:\n%s' % (coretermnames)
-
-    # Get the distinct values of a term from the archive and add any new ones to the 
-    # vocabulary file as not vetted.
-#     term='establishmentMeans'
-#     termvalues=get_distinct_term_values(dwcareader, term)
-#     vocabfile='%s/%s.csv' % (options.vocab_path,term)
-#     append_to_vocab(vocabfile, termvalues)
-
-    # Get the distinct value lists for terms that are recommended to be controlled and
-    # add any new ones found to the appropriate vocabulary file.
-#     if options.vocab_path is not None:
-#         for term in controlledtermlist:
-#             termvalues=get_distinct_term_values(dwcareader, term)
-#             vocabfile='%s/%s.csv' % (options.vocab_path,term)
-#             print 'vocabfile: %s term: %s termlist: %s' % (vocabfile, term, termvalues)
-#             append_to_vocab(vocabfile, termvalues)
-#             print '%s values: %s' % (term, termvalues)
+    def dispose(self):
+        testdatapath = self.testdatapath
+        compositeheaderfilepattern = self.compositeheaderfilepattern
+        compositeheaderfilepattern2 = self.compositeheaderfilepattern2
+        csvwriteheaderfile = self.csvwriteheaderfile
+        tsvdialecttestfile = self.tsvdialecttestfile
+        fimstest1 = self.fimstest1
+        fimstest2 = self.fimstest2
+        aggregatetest = self.aggregatetest
         
-#     print '\nGeography keys:'
-#     i = 0
-#     for row in dwcareader:
-#         geogkey = get_term_group_key(row.data, geogkeytermlist)
-#         i = i + 1
-#         print '%s' % (geogkey)
-#     print 'Count=%s' % i
-#     
-#     i = 0
-#     print '\nTaxonomy keys:\n'
-#     for row in dwcareader:
-#         taxonkey = get_term_group_key(row.data, taxonkeytermlist)
-#         i = i + 1
-#         print '%s' % (taxonkey)
-#     print 'Count=%s' % i
+        if os.path.isfile(testdatapath + csvwriteheaderfile):
+            os.remove(testdatapath + csvwriteheaderfile)
+        files = glob.glob(testdatapath + compositeheaderfilepattern + '*')
+        for file in files:
+            os.remove(file)
+        files = glob.glob(testdatapath + compositeheaderfilepattern2 + '*')
+        for file in files:
+            os.remove(file)
+        return True
 
-    dwcareader.close()
+class DWCAUtilsTestCase(unittest.TestCase):
+    def setUp(self):
+        self.framework = DWCAUtilsFramework()
+
+    def tearDown(self):
+        self.framework.dispose()
+        self.framework = None
+
+    def test_tsv_dialect(self):
+        dialect = tsv_dialect()
+        
+        self.assertEqual(dialect.delimiter, '\t',
+            'incorrect delimiter for tsv')
+        self.assertEqual(dialect.lineterminator, '\r',
+            'incorrect lineterminator for tsv')
+        self.assertEqual(dialect.escapechar, '/',
+            'incorrect escapechar for tsv')
+        self.assertEqual(dialect.quotechar, '"',
+            'incorrect quotechar for tsv')
+        self.assertTrue(dialect.doublequote,
+            'doublequote not set to True for tsv')
+        self.assertEqual(dialect.quoting, 3,
+            'quoting not set to csv.QUOTE_NONE for tsv')
+        self.assertTrue(dialect.skipinitialspace,
+            'skipinitialspace not set to True for tsv')
+        self.assertFalse(dialect.strict,
+            'strict not set to False for tsv')
+
+    def test_csv_file_dialect(self):
+        testdatapath = self.framework.testdatapath
+        csvreadheaderfile = self.framework.csvreadheaderfile
+        tsvfile = self.framework.tsvdialecttestfile
+
+        dialect = csv_file_dialect(testdatapath + tsvfile)
+
+        self.assertIsNotNone(dialect, 'unable to detect tsv file dialect')
+
+        dialect = csv_file_dialect(testdatapath + csvreadheaderfile)
+
+        self.assertEqual(dialect.delimiter, ',',
+            'incorrect delimiter detected for csv file')
+        self.assertEqual(dialect.lineterminator, '\r\n',
+            'incorrect lineterminator for csv file')
+        self.assertEqual(dialect.escapechar, '/',
+            'incorrect escapechar for csv file')
+        self.assertEqual(dialect.quotechar, '"',
+            'incorrect quotechar for csv file')
+        self.assertFalse(dialect.doublequote,
+            'doublequote not set to False for csv file')
+        self.assertEqual(dialect.quoting, 0,
+            'quoting not set to csv.QUOTE_MINIMAL for csv file')
+        self.assertTrue(dialect.skipinitialspace,
+            'skipinitialspace not set to True for csv file')
+        self.assertFalse(dialect.strict,
+            'strict not set to False for csv file')
+
+    def test_read_header(self):
+        testdatapath = self.framework.testdatapath
+        csvreadheaderfile = self.framework.csvreadheaderfile
+
+        header = read_header(testdatapath + csvreadheaderfile)
+        modelheader = []
+        modelheader.append('catalogNumber')
+        modelheader.append('recordedBy')
+        modelheader.append('fieldNumber')
+        modelheader.append('year')
+        modelheader.append('month')
+        modelheader.append('day')
+        modelheader.append('decimalLatitude')
+        modelheader.append('decimalLongitude')
+        modelheader.append('geodeticDatum')
+        modelheader.append('country')
+        modelheader.append('stateProvince')
+        modelheader.append('county')
+        modelheader.append('locality')
+        modelheader.append('family')
+        modelheader.append('scientificName')
+        modelheader.append('scientificNameAuthorship')
+        modelheader.append('reproductiveCondition')
+        modelheader.append('InstitutionCode')
+        modelheader.append('CollectionCode')
+        modelheader.append('DatasetName')
+        modelheader.append('Id')
+
+        self.assertEqual(len(header), 21, 'incorrect number of fields in header')
+        self.assertEqual(header, modelheader, 'header not equal to the model header')
+
+    def test_write_header(self):
+        testdatapath = self.framework.testdatapath
+        csvreadheaderfile = self.framework.csvreadheaderfile
+        csvwriteheaderfile = self.framework.csvwriteheaderfile
+
+        header = read_header(testdatapath + csvreadheaderfile)
+        dialect = tsv_dialect()
+
+        self.assertIsNotNone(header, 'model header not found')
+        written = write_header(testdatapath + csvwriteheaderfile, header, dialect)
+
+        self.assertTrue(written, 'header not written to csvwriteheaderfile')
+
+        writtenheader = read_header(testdatapath + csvwriteheaderfile)
+
+        self.assertEqual(len(header), len(writtenheader),
+            'incorrect number of fields in writtenheader')
+
+        self.assertEqual(header, writtenheader,
+            'writtenheader not the same as model header')
+        
+    def test_split_path(self):
+        path, fileext, filepattern = \
+            split_path('../../data/tests/test_eight_specimen_records.csv')
+        self.assertEqual(path, '../../data/tests', 'incorrect path')
+        self.assertEqual(fileext, 'csv', 'incorrect file extension')
+        self.assertEqual(filepattern, 'test_eight_specimen_records', 
+            'incorrect file pattern')
+
+    def test_get_standard_value(self):
+        testdict = { 'm':'male', 'M':'male', 'male':'male', 'f':'female', 'F':'female', 
+            'female':'female'}
+        self.assertIsNone(get_standard_value('unnoewn', testdict), 
+            "lookup 'unnoewn' does not return None")
+        self.assertIsNone(get_standard_value(None, testdict), 
+            'lookup None does not return None')
+        self.assertEqual(get_standard_value('m', testdict), 'male', 
+            "lookup 'm' does not return 'male'")
+        self.assertEqual(get_standard_value('M', testdict), 'male', 
+            "lookup 'M' does not return 'male'")
+        self.assertEqual(get_standard_value('male', testdict), 'male', 
+            "lookup 'male' does not return 'male'")
+        self.assertEqual(get_standard_value('f', testdict), 'female', 
+            "lookup 'f' does not return 'female'")
+        self.assertEqual(get_standard_value('F', testdict), 'female', 
+            "lookup 'F' does not return 'female'")
+        self.assertEqual(get_standard_value('female', testdict), 'female', 
+            "lookup 'female' does not return 'female'")
+
+    def test_compose_header(self):
+        testdatapath = self.framework.testdatapath
+        csvreadheaderfile = self.framework.csvreadheaderfile
+
+        headersofar = ['extrafield1', 'extrafield2']
+
+        composedheader = compose_header(testdatapath + csvreadheaderfile, headersofar)
+
+        self.assertEqual(len(composedheader), 23,
+            'incorrect number of fields in composedheader')
+
+    def test_composite_header2(self):
+        testdatapath = self.framework.testdatapath
+        compositeheaderfilepattern = self.framework.compositeheaderfilepattern2
+        tsv = tsv_dialect()
+        f1 = 'test_fims_6e4532.tst'
+        f2 = 'test_fims_6e5432.tst'
+        h1 = read_header(testdatapath + f1)
+        h2 = read_header(testdatapath + f2, tsv)
+        written = write_header(testdatapath + compositeheaderfilepattern + '1.tsv', 
+            h1, tsv)
+
+        self.assertTrue(written, 'h1 not written')
+
+        written = write_header(testdatapath + compositeheaderfilepattern + '2.tsv', 
+            h2, tsv)
+
+        self.assertTrue(written, 'h2 not written')
+
+        h3 = composite_header(testdatapath + compositeheaderfilepattern + '*')
+        
+        print 'h1:\n%s' % h1
+        print 'h2:\n%s' % h2
+        print 'h3:\n%s' % h3
+
+        destfile = testdatapath + 'test_aggregate.txt'
+        with open(destfile, 'w') as outfile:
+            writer = csv.DictWriter(outfile, dialect=tsv_dialect(), 
+                fieldnames=h3, extrasaction='ignore')
+            writer.writeheader()
+            files = glob.glob(testdatapath + 'test_fims_6e*.tst')
+            for file in files:
+                print 'file: %s' % (file)
+                with open(file, 'rU') as inputfile:
+                    reader = csv.DictReader(inputfile, dialect=tsv_dialect())
+                    for line in reader:
+                        print 'line:\n%s' % line
+                        writer.writerow(line)
+#                         try:
+#                             writer.writerow(line)
+#                         except:
+#                             print 'line:\n%s' % line
+
+    def test_composite_header3(self):
+        testdatapath = self.framework.testdatapath
+        compositeheaderfilepattern = self.framework.compositeheaderfilepattern2
+        tsv = tsv_dialect()
+        f1 = 'test_fims_6e4532.tst'
+        f2 = 'test_fims_6e5432.tst'
+        h1 = read_header(testdatapath + f1)
+        h2 = read_header(testdatapath + f2, tsv)
+        h3 = composite_header(testdatapath + 'test_fims_6e*.tst', tsv_dialect())
+        print 'h1:\n%s' % h1
+        print 'h2:\n%s' % h2
+        print 'h3:\n%s' % h3
+
+    def test_composite_header(self):
+        testdatapath = self.framework.testdatapath
+        compositeheaderfilepattern = self.framework.compositeheaderfilepattern
+        header1 = ['a', 'b', 'c']
+        header2 = ['b', 'c', 'd']
+        header3 = ['a', 'd', 'e']
+        expectedheader = ['a', 'b', 'c', 'd', 'e']
+        
+        dialect1 = tsv_dialect()
+        dialect2 = csv.excel
+        dialect3 = csv.excel_tab
+
+        written = write_header(testdatapath + compositeheaderfilepattern + '1.tsv', 
+            header1, dialect1)
+
+        self.assertTrue(written, 'header1 not written')
+
+        written = write_header(testdatapath + compositeheaderfilepattern + '2.csv', 
+            header2, dialect2)
+
+        self.assertTrue(written, 'header2 not written')
+
+        written = write_header(testdatapath + compositeheaderfilepattern + '3.tsv', 
+            header3, dialect3)
+
+        self.assertTrue(written, 'header3 not written')
+
+        observedheader = composite_header(testdatapath + compositeheaderfilepattern + '*')
+
+        self.assertEqual(expectedheader, observedheader,
+            'observedheader not the same as expected header')
 
 if __name__ == '__main__':
-    """ Demo of dwca_utils functions"""
-    main()
+    """Test of dwca_utils functions"""
+    unittest.main()

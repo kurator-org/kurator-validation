@@ -14,11 +14,10 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "vocab_loader.py 2015-09-13T12:11:52-07:00"
+__version__ = "vocab_loader.py 2015-12-28T15:02-03:00"
 
 from optparse import OptionParser
 from dwca_utils import split_path
-from dwca_utils import print_dialect_properties
 from dwcaterms import vocabfieldlist
 import os.path
 import csv

@@ -46,6 +46,7 @@ from dwca.read import GBIFResultsReader
 dwcafile=None
 tsvoutputfile='./dwcatsvout.tsv'
 archivetype='standard'
+delimiter='\t'
 
 def dwca_core_to_tsv():
     """Save the core of the archive to a csv file with short DwC term names as headers."""
@@ -74,7 +75,7 @@ def dwca_core_to_tsv():
     shorttermnames=short_term_names(termnames)
     dialect = csv.excel
     dialect.lineterminator='\r'
-    dialect.delimiter='\t'
+    dialect.delimiter=delimiter
     with open(fullpath, 'w') as tsvfile:
         writer = csv.DictWriter(tsvfile, dialect=dialect, fieldnames=shorttermnames, 
             quoting=csv.QUOTE_NONE, quotechar='')
@@ -117,6 +118,9 @@ def _getoptions():
     parser.add_option("-o", "--output", dest="outputfile",
                       help="Path for output file",
                       default=None)
+    parser.add_option("-d", "--delimiter", dest="delimiter",
+                      help="Field delimiter for the output file",
+                      default=None)
     parser.add_option("-t", "--type", dest="type",
                       help="Type of Darwin Core archive ('gbif', 'standard')",
                       default=None)
@@ -128,12 +132,15 @@ def main():
     options = _getoptions()
     dwcafile = options.inputfile
     tsvoutputfile = options.outputfile
+    delimiter = options.delimiter
     archivetype = options.type
     if dwcafile is None:
-        print 'syntax: python dwca_core_to_tsv.py -i ../../data/dwca-uwymv_herp.zip -o testout.tsv -t standard'
+        print 'syntax: python dwca_core_to_tsv.py -d , -i ../../data/dwca-uwymv_herp.zip -o testout.tsv -t standard'
         return
     if tsvoutputfile is None:
         tsvoutputfile = 'dwca_core_to_tsv_output.tsv'
+    if delimiter is None:
+        delimiter = '\t'
     if archivetype is None:
         type = 'standard'
 

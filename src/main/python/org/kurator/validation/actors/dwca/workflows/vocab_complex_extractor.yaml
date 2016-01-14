@@ -1,0 +1,46 @@
+# This workflow reads a text file and outputs distinct values of a given combination of fields.
+#
+# Example command-line usage:
+# kurator -f workflows/vocab_complex_extractor.yaml -p p=fullpath -p v=../../data/eight_specimen_records.csv -p c="continent,country,stateProvince,county,municipality,island,islandGroup,waterbody"
+
+imports:
+
+- classpath:/org/kurator/akka/actors.yaml
+- classpath:/org/kurator/validation/actors/dwca/actors.yaml
+
+components:
+
+- id: WorkflowPrimer
+  type: PythonActor
+  properties:
+    script: workflow_primer.py
+    onStart: workflow_primer
+    parameters:
+      outputTypeIsInputType: true
+
+- id: VocabComplexExtractor
+  type: PythonActor
+  properties:
+    script: vocab_complex_extractor.py
+    onData: vocab_complex_extractor
+    listensTo:
+      - !ref WorkflowPrimer
+    parameters:
+      outputTypeIsInputType: true
+
+- id: VocabComplexExtractorWorkflow
+  type: Workflow
+  properties:
+    actors:
+      - !ref WorkflowPrimer
+      - !ref VocabComplexExtractor
+    parameters:
+      p:
+        actor: !ref WorkflowPrimer
+        parameter: wfparameter
+      v:
+        actor: !ref WorkflowPrimer
+        parameter: wfvalue
+      c:
+        actor: !ref VocabComplexExtractor
+        parameter: termcomplex

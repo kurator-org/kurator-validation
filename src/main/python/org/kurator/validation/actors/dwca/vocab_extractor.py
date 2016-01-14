@@ -14,11 +14,10 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2015-09-13T10:48:39-07:00"
+__version__ = "vocab_extractor.py 2015-12-28T15:01-03:00"
 
 from optparse import OptionParser
 from dwca_utils import split_path
-from dwca_utils import print_dialect_properties
 import os.path
 import csv
 import json
@@ -62,15 +61,15 @@ def vocab_extractor(inputs_as_json):
 
     valueset = set()
     dialect=csv.excel
-#    print_dialect_properties(dialect)
     
     # Iterate over the file rows to get the values of the term
     with open(fullpath, 'rU') as csvfile:
         dr = csv.DictReader(csvfile, dialect=dialect)
         header=dr.fieldnames
+        termname = termname.lower()
         i=0
         for t in header:
-            header[i]=header[i].strip()
+            header[i]=header[i].strip().lower()
             i+=1
         if termname not in header:
             return None
