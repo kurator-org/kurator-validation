@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_splitter.py 2016-01-14T12:15-03:00"
+__version__ = "text_file_splitter.py 2016-01-19T09:45-03:00"
 
 from optparse import OptionParser
 from dwca_utils import split_path
@@ -35,7 +35,7 @@ import logging
 # python text_file_splitter.py -i ../../data/eight_specimen_records.csv -c 5 -w ./workspace
 
 splitterchunksize=10000
-splitterworkspace='./'
+splitterworkspace='./workspace'
 
 def text_file_splitter(inputs_as_json):
     """Split a text file into chunks with headers. Put the chunk files in the workspace
@@ -56,8 +56,6 @@ def text_file_splitter(inputs_as_json):
     except:
         workspace = splitterworkspace
 
-    print 'text_file_splitter inputs: %s' % inputs_as_json
-        
     if not os.path.isfile(fullpath):
         return None
 
@@ -131,7 +129,7 @@ def main():
         return
 
     if splitterworkspace is None:
-        splitterworkspace = './'
+        splitterworkspace = './workspace'
 
     try:
         splitterchunksize = int(str(options.chunksize))

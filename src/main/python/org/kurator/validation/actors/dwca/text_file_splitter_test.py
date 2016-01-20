@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_splitter_test.py 2016-01-14T13:29-03:00"
+__version__ = "text_file_splitter_test.py 2016-01-19T11:31-03:00"
 
 from text_file_splitter import text_file_splitter
 from dwca_utils import split_path
@@ -29,10 +29,6 @@ import unittest
 # Example:
 #
 # python text_file_splitter_test.py
-
-# global variables used by text_file_splitter
-splitterchunksize = 10000
-splitterworkspace = './'
 
 class TextFileSplitterFramework():
     """Test framework for the text file splitter."""
@@ -73,10 +69,9 @@ class TextFileSplitterTestCase(unittest.TestCase):
 
     def test_source_file_exists(self):
         csvfile = self.framework.testdatapath + self.framework.csvfile        
-        self.assertTrue(os.path.isfile(csvfile), csvfile + 'does not exist')
+        self.assertTrue(os.path.isfile(csvfile), csvfile + ' does not exist')
 
     def test_split(self):
-        global splitterchunksize, splitterworkspace
         workspace = self.framework.testdatapath
         chunksize = 3
         csvfile = self.framework.testdatapath + self.framework.csvfile        

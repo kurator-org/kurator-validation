@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-01-07T13:20-03:00"
+__version__ = "dwca_utils.py 2016-01-019T20:35-03:00"
 
 import os.path
 import csv
@@ -75,7 +75,61 @@ def csv_file_dialect(fullpath):
     dialect.skipinitialspace=True
     dialect.strict=False
     return dialect
-    
+
+def dialect_attributes(dialect):
+    if dialect is None:
+        return 'no dialect given'
+    s = 'lineterminator: ' 
+    if dialect.lineterminator == '\r':
+        s+= '\r'
+    elif dialect.lineterminator == '\n':
+        s+= '\n'
+    elif dialect.lineterminator == '\r\n':
+        s+= '\r\n'
+    else: 
+        s += dialect.lineterminator
+
+    s += '\ndelimiter: '
+    if dialect.delimiter == '\t':
+        s+= '\t'
+    else:
+        s+= dialect.delimiter
+
+    s += '\nescapechar: ' 
+    s += dialect.escapechar
+
+    s += '\ndoublequote: '
+    if dialect.doublequote == True:
+        s += 'True' 
+    else:
+        s += 'False' 
+
+    s += '\nquotechar: ' 
+    s += dialect.quotechar
+
+    s += '\nquoting: ' 
+    if dialect.quoting == csv.QUOTE_NONE:
+        s += 'csv.QUOTE_NONE'
+    elif dialect.quoting == csv.QUOTE_MINIMAL:
+        s += 'csv.QUOTE_MINIMAL'
+    elif dialect.quoting == csv.QUOTE_NONNUMERIC:
+        s += 'csv.QUOTE_NONNUMERIC'
+    elif dialect.quoting == csv.QUOTE_ALL:
+        s += 'csv.QUOTE_ALL'
+
+    s += '\nskipinitialspace: ' 
+    if dialect.skipinitialspace == True:
+        s += 'True'
+    else:
+        s += 'False'
+
+    s += '\nstrict: ' 
+    if dialect.strict == True:
+        s += 'True'
+    else:
+        s += 'False'
+    return s
+
 def read_header(fullpath, dialect = None):
     """Get the header line of a CSV or TXT data file.
     parameters:
@@ -91,12 +145,12 @@ def read_header(fullpath, dialect = None):
         reader = csv.DictReader(csvfile, dialect=dialect)
         # header is the list as returned by the reader
         header=reader.fieldnames
-
-        # cleanheader is header with any extraneous whitespace in field names removed
-        cleanheader = []
-        for field in header:
-            cleanheader.append(field.strip())
-    return cleanheader
+    return header
+#        # cleanheader is header with any extraneous whitespace in field names removed
+#         cleanheader = []
+#         for field in header:
+#             cleanheader.append(field.strip())
+#     return cleanheader
 
 def write_header(fullpath, fieldnames, dialect):
     """Write the header line of a CSV or TXT data file.
@@ -113,57 +167,23 @@ def write_header(fullpath, fieldnames, dialect):
         success = True
     return success
 
-def compose_header(fullpath, headersofar = None, dialect = None):
-    """Compose a header that includes all of the fields in given header plus the fields 
-       in a given data file.
-    parameters:
-        fullpath - the full path to the file to process. (e.g., '../../data/filewithheader.txt')
-        headersofar - a list containing the fields composed so far
-        dialect - a csv.dialect object with the attributes of the input file.
-    returns:
-        sorted(list(composedheader)) - a list object containing the fields in the 
-            combined header"""
-    if fullpath is None:
-        return headersofar
+def merge_headers(headersofar, headertoadd = None):
     composedheader = set()
+    if headersofar is None and headertoadd is None:
+        return None
     if headersofar is not None:
         for field in headersofar:
-            composedheader.add(field)
-        
-    if dialect is None:
-        dialect = csv_file_dialect(fullpath)
-    header = read_header(fullpath, dialect)
-    for field in header:
-        composedheader.add(field)
+            addme = field.strip()
+            if len(addme) > 0:
+                composedheader.add(addme)
+    if headertoadd is not None:
+        for field in headertoadd:
+            addme = field.strip()
+            if len(addme) > 0:
+                composedheader.add(addme)
+    if len(composedheader) == 0:
+        return None
     return sorted(list(composedheader))
-
-def composite_header(fullpath, dialect = None):
-    """Get a header line that includes all of the fields in headers of a set of CSV 
-       or TXT data files.
-    parameters:
-        fullpath - the full path to the files to process. (e.g., './*.txt')
-        dialect - a csv.dialect object with the attributes of the input files, which must 
-           all have the same dialect if dialect is given, otherwise it will be detected.
-    returns:
-        sorted(list(compositeheader)) - a list object containing the fields in the 
-            header"""
-    if fullpath is None:
-        return None
-    compositeheader = set()
-    usedialect = dialect
-    files = glob.glob(fullpath)
-    if files is None:
-        return None
-    for file in files:
-        if dialect is None:
-            print 'file: %s dialect: %s' % (file, dialect)
-            usedialect = csv_file_dialect(file)
-        header = read_header(file, usedialect)
-        for field in header:
-            compositeheader.add(field)
-    if '' in compositeheader:
-        compositeheader.remove('')
-    return sorted(list(compositeheader))
 
 def split_path(fullpath):
     """Parse out the path to, the name of, and the extension for a given file.
@@ -194,34 +214,24 @@ def get_standard_value(was, valuedict):
     return None
 
 class DWCAUtilsFramework():
+    # testdatapath is the location of the files to test with
     testdatapath = '../../data/tests/'
-    csvreadheaderfile = 'test_eight_specimen_records.csv'
-    csvwriteheaderfile = 'test_write_header_file.csv'
-    compositeheaderfilepattern = 'test_compositeheader'
-    compositeheaderfilepattern2 = 'test_compositeheader_2'
-    tsvdialecttestfile = 'test_fims_6e4532.txt'
-    fimstest1 = 'test_fims_6e4532.tst'
-    fimstest2 = 'test_fims_6e5432.tst'
-    aggregatetest = 'test_aggregate.txt'
+
+    # following are files used as input during the tests, don't remove these
+    csvreadheaderfile = testdatapath + 'test_eight_specimen_records.csv'
+    tsvreadheaderfile = testdatapath + 'test_three_specimen_records.txt'
+    tsvtest1 = testdatapath + 'test_tsv_1.txt'
+    tsvtest2 = testdatapath + 'test_tsv_2.txt'
+    csvtest1 = testdatapath + 'test_csv_1.csv'
+    csvtest2 = testdatapath + 'test_csv_2.csv'
+
+    # following are files output during the tests, remove these in dispose()
+    csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
 
     def dispose(self):
-        testdatapath = self.testdatapath
-        compositeheaderfilepattern = self.compositeheaderfilepattern
-        compositeheaderfilepattern2 = self.compositeheaderfilepattern2
         csvwriteheaderfile = self.csvwriteheaderfile
-        tsvdialecttestfile = self.tsvdialecttestfile
-        fimstest1 = self.fimstest1
-        fimstest2 = self.fimstest2
-        aggregatetest = self.aggregatetest
-        
-        if os.path.isfile(testdatapath + csvwriteheaderfile):
-            os.remove(testdatapath + csvwriteheaderfile)
-        files = glob.glob(testdatapath + compositeheaderfilepattern + '*')
-        for file in files:
-            os.remove(file)
-        files = glob.glob(testdatapath + compositeheaderfilepattern2 + '*')
-        for file in files:
-            os.remove(file)
+        if os.path.isfile(csvwriteheaderfile):
+            os.remove(csvwriteheaderfile)
         return True
 
 class DWCAUtilsTestCase(unittest.TestCase):
@@ -234,7 +244,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
 
     def test_tsv_dialect(self):
         dialect = tsv_dialect()
-        
         self.assertEqual(dialect.delimiter, '\t',
             'incorrect delimiter for tsv')
         self.assertEqual(dialect.lineterminator, '\r',
@@ -253,16 +262,10 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'strict not set to False for tsv')
 
     def test_csv_file_dialect(self):
-        testdatapath = self.framework.testdatapath
         csvreadheaderfile = self.framework.csvreadheaderfile
-        tsvfile = self.framework.tsvdialecttestfile
-
-        dialect = csv_file_dialect(testdatapath + tsvfile)
-
-        self.assertIsNotNone(dialect, 'unable to detect tsv file dialect')
-
-        dialect = csv_file_dialect(testdatapath + csvreadheaderfile)
-
+        dialect = csv_file_dialect(csvreadheaderfile)
+#        print 'dialect:\n%s' % dialect_attributes(dialect)
+        self.assertIsNotNone(dialect, 'unable to detect csv file dialect')
         self.assertEqual(dialect.delimiter, ',',
             'incorrect delimiter detected for csv file')
         self.assertEqual(dialect.lineterminator, '\r\n',
@@ -280,51 +283,122 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertFalse(dialect.strict,
             'strict not set to False for csv file')
 
-    def test_read_header(self):
-        testdatapath = self.framework.testdatapath
-        csvreadheaderfile = self.framework.csvreadheaderfile
+    def test_tsv_file_dialect(self):
+        tsvreadheaderfile = self.framework.tsvreadheaderfile
+        dialect = csv_file_dialect(tsvreadheaderfile)
+#        print 'dialect:\n%s' % dialect_attributes(dialect)
+        self.assertIsNotNone(dialect, 'unable to detect tsv file dialect')
+        self.assertEqual(dialect.delimiter, '\t',
+            'incorrect delimiter detected for csv file')
+        self.assertEqual(dialect.lineterminator, '\r\n',
+            'incorrect lineterminator for csv file')
+        self.assertEqual(dialect.escapechar, '/',
+            'incorrect escapechar for csv file')
+        self.assertEqual(dialect.quotechar, '"',
+            'incorrect quotechar for csv file')
+        self.assertFalse(dialect.doublequote,
+            'doublequote not set to False for csv file')
+        self.assertEqual(dialect.quoting, 0,
+            'quoting not set to csv.QUOTE_MINIMAL for csv file')
+        self.assertTrue(dialect.skipinitialspace,
+            'skipinitialspace not set to True for csv file')
+        self.assertFalse(dialect.strict,
+            'strict not set to False for csv file')
 
-        header = read_header(testdatapath + csvreadheaderfile)
+    def test_read_header1(self):
+        csvreadheaderfile = self.framework.csvreadheaderfile
+        header = read_header(csvreadheaderfile)
         modelheader = []
-        modelheader.append('catalogNumber')
+        modelheader.append('catalogNumber ')
         modelheader.append('recordedBy')
-        modelheader.append('fieldNumber')
+        modelheader.append('fieldNumber ')
         modelheader.append('year')
         modelheader.append('month')
         modelheader.append('day')
-        modelheader.append('decimalLatitude')
-        modelheader.append('decimalLongitude')
-        modelheader.append('geodeticDatum')
+        modelheader.append('decimalLatitude ')
+        modelheader.append('decimalLongitude ')
+        modelheader.append('geodeticDatum ')
         modelheader.append('country')
         modelheader.append('stateProvince')
         modelheader.append('county')
         modelheader.append('locality')
-        modelheader.append('family')
-        modelheader.append('scientificName')
-        modelheader.append('scientificNameAuthorship')
-        modelheader.append('reproductiveCondition')
-        modelheader.append('InstitutionCode')
-        modelheader.append('CollectionCode')
-        modelheader.append('DatasetName')
+        modelheader.append('family ')
+        modelheader.append('scientificName ')
+        modelheader.append('scientificNameAuthorship ')
+        modelheader.append('reproductiveCondition ')
+        modelheader.append('InstitutionCode ')
+        modelheader.append('CollectionCode ')
+        modelheader.append('DatasetName ')
         modelheader.append('Id')
-
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 21, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
+    def test_read_header2(self):
+        tsvheaderfile = self.framework.tsvtest1
+        header = read_header(tsvheaderfile)
+        modelheader = []
+        modelheader.append('materialSampleID')
+        modelheader.append('principalInvestigator')
+        modelheader.append('locality')
+        modelheader.append('phylum')
+        modelheader.append('')
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
+        self.assertEqual(len(header), 5, 'incorrect number of fields in header')
+        self.assertEqual(header, modelheader, 'header not equal to the model header')
+
+    def test_read_header3(self):
+        csvheaderfile = self.framework.csvtest1
+        header = read_header(csvheaderfile)
+        modelheader = []
+        modelheader.append('materialSampleID')
+        modelheader.append('principalInvestigator')
+        modelheader.append('locality')
+        modelheader.append('phylum')
+        modelheader.append('')
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
+        self.assertEqual(len(header), 5, 'incorrect number of fields in header')
+        self.assertEqual(header, modelheader, 'header not equal to the model header')
+
+    def test_read_header4(self):
+        tsvheaderfile = self.framework.tsvtest2
+        header = read_header(tsvheaderfile)
+        modelheader = []
+        modelheader.append('materialSampleID')
+        modelheader.append('principalInvestigator')
+        modelheader.append('locality')
+        modelheader.append('phylum')
+        modelheader.append('decimalLatitude')
+        modelheader.append('decimalLongitude')
+#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n%s' % (len(header), len(modelheader), header, modelheader)
+        self.assertEqual(len(header), 6, 'incorrect number of fields in header')
+        self.assertEqual(header, modelheader, 'header not equal to the model header')
+
+    def test_read_header5(self):
+        csvheaderfile = self.framework.csvtest2
+        header = read_header(csvheaderfile)
+        modelheader = []
+        modelheader.append('materialSampleID')
+        modelheader.append('principalInvestigator')
+        modelheader.append('locality')
+        modelheader.append('phylum')
+        modelheader.append('decimalLatitude')
+        modelheader.append('decimalLongitude')
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
+        self.assertEqual(len(header), 6, 'incorrect number of fields in header')
+        self.assertEqual(header, modelheader, 'header not equal to the model header')
+
     def test_write_header(self):
-        testdatapath = self.framework.testdatapath
         csvreadheaderfile = self.framework.csvreadheaderfile
         csvwriteheaderfile = self.framework.csvwriteheaderfile
-
-        header = read_header(testdatapath + csvreadheaderfile)
+        header = read_header(csvreadheaderfile)
         dialect = tsv_dialect()
-
         self.assertIsNotNone(header, 'model header not found')
-        written = write_header(testdatapath + csvwriteheaderfile, header, dialect)
 
+        written = write_header(csvwriteheaderfile, header, dialect)
         self.assertTrue(written, 'header not written to csvwriteheaderfile')
 
-        writtenheader = read_header(testdatapath + csvwriteheaderfile)
+        writtenheader = read_header(csvwriteheaderfile)
 
         self.assertEqual(len(header), len(writtenheader),
             'incorrect number of fields in writtenheader')
@@ -360,103 +434,55 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(get_standard_value('female', testdict), 'female', 
             "lookup 'female' does not return 'female'")
 
-    def test_compose_header(self):
-        testdatapath = self.framework.testdatapath
-        csvreadheaderfile = self.framework.csvreadheaderfile
+    def test_merge_headers(self):
+        header1 = ['b', 'a', 'c']
+        header2 = ['b', 'c ', 'd']
+        header3 = ['e', 'd	', 'a']
+        header4 = []
+        header5 = ['']
+        header6 = [' ']
+        header7 = ['	']
+        header8 = ['b', 'a', 'c', '  ']
 
-        headersofar = ['extrafield1', 'extrafield2']
+        result = merge_headers(None)
+        self.assertIsNone(result, 'merging without header makes a header when it should not')
 
-        composedheader = compose_header(testdatapath + csvreadheaderfile, headersofar)
+        result = merge_headers(header4)
+        self.assertIsNone(result, 'merging an empty header makes a header when it should not')
 
-        self.assertEqual(len(composedheader), 23,
-            'incorrect number of fields in composedheader')
+        result = merge_headers(header5)
+        self.assertIsNone(result, 'merging a header with only a blank field makes a header when it should not')
 
-    def test_composite_header2(self):
-        testdatapath = self.framework.testdatapath
-        compositeheaderfilepattern = self.framework.compositeheaderfilepattern2
-        tsv = tsv_dialect()
-        f1 = 'test_fims_6e4532.tst'
-        f2 = 'test_fims_6e5432.tst'
-        h1 = read_header(testdatapath + f1)
-        h2 = read_header(testdatapath + f2, tsv)
-        written = write_header(testdatapath + compositeheaderfilepattern + '1.tsv', 
-            h1, tsv)
+        result = merge_headers(header6)
+        self.assertIsNone(result, 'merging a header with only one field composed of a space makes a header when it should not')
 
-        self.assertTrue(written, 'h1 not written')
+        result = merge_headers(header7)
+        self.assertIsNone(result, 'merging a header with only one field composed of a tab character makes a header when it should not')
 
-        written = write_header(testdatapath + compositeheaderfilepattern + '2.tsv', 
-            h2, tsv)
+        result = merge_headers(None, header1)
+        self.assertEqual(result, ['a', 'b', 'c'],
+            'merged new header did not sort')
 
-        self.assertTrue(written, 'h2 not written')
+        result = merge_headers(header1)
+        self.assertEqual(result, ['a', 'b', 'c'],
+            'merged existing header did not sort')
 
-        h3 = composite_header(testdatapath + compositeheaderfilepattern + '*')
-        
-        print 'h1:\n%s' % h1
-        print 'h2:\n%s' % h2
-        print 'h3:\n%s' % h3
+        result = merge_headers(header1, header1)
+        self.assertEqual(result, ['a', 'b', 'c'],
+            'redundant header merge failed')
 
-        destfile = testdatapath + 'test_aggregate.txt'
-        with open(destfile, 'w') as outfile:
-            writer = csv.DictWriter(outfile, dialect=tsv_dialect(), 
-                fieldnames=h3, extrasaction='ignore')
-            writer.writeheader()
-            files = glob.glob(testdatapath + 'test_fims_6e*.tst')
-            for file in files:
-                print 'file: %s' % (file)
-                with open(file, 'rU') as inputfile:
-                    reader = csv.DictReader(inputfile, dialect=tsv_dialect())
-                    for line in reader:
-                        print 'line:\n%s' % line
-                        writer.writerow(line)
-#                         try:
-#                             writer.writerow(line)
-#                         except:
-#                             print 'line:\n%s' % line
+        result = merge_headers(header1, header2)
+        self.assertEqual(result, ['a', 'b', 'c', 'd'],
+            'bac-bcd header merge failed')
 
-    def test_composite_header3(self):
-        testdatapath = self.framework.testdatapath
-        compositeheaderfilepattern = self.framework.compositeheaderfilepattern2
-        tsv = tsv_dialect()
-        f1 = 'test_fims_6e4532.tst'
-        f2 = 'test_fims_6e5432.tst'
-        h1 = read_header(testdatapath + f1)
-        h2 = read_header(testdatapath + f2, tsv)
-        h3 = composite_header(testdatapath + 'test_fims_6e*.tst', tsv_dialect())
-        print 'h1:\n%s' % h1
-        print 'h2:\n%s' % h2
-        print 'h3:\n%s' % h3
+        result = merge_headers(header1, header2)
+        result = merge_headers(result, header3)
+        self.assertEqual(result, ['a', 'b', 'c', 'd', 'e'],
+            'bac-bcd-eda header merge failed')
 
-    def test_composite_header(self):
-        testdatapath = self.framework.testdatapath
-        compositeheaderfilepattern = self.framework.compositeheaderfilepattern
-        header1 = ['a', 'b', 'c']
-        header2 = ['b', 'c', 'd']
-        header3 = ['a', 'd', 'e']
-        expectedheader = ['a', 'b', 'c', 'd', 'e']
-        
-        dialect1 = tsv_dialect()
-        dialect2 = csv.excel
-        dialect3 = csv.excel_tab
-
-        written = write_header(testdatapath + compositeheaderfilepattern + '1.tsv', 
-            header1, dialect1)
-
-        self.assertTrue(written, 'header1 not written')
-
-        written = write_header(testdatapath + compositeheaderfilepattern + '2.csv', 
-            header2, dialect2)
-
-        self.assertTrue(written, 'header2 not written')
-
-        written = write_header(testdatapath + compositeheaderfilepattern + '3.tsv', 
-            header3, dialect3)
-
-        self.assertTrue(written, 'header3 not written')
-
-        observedheader = composite_header(testdatapath + compositeheaderfilepattern + '*')
-
-        self.assertEqual(expectedheader, observedheader,
-            'observedheader not the same as expected header')
+        result = merge_headers(header7, header8)
+        self.assertEqual(result, ['a', 'b', 'c'],
+            'headers with whitespace merge failed')
 
 if __name__ == '__main__':
     """Test of dwca_utils functions"""

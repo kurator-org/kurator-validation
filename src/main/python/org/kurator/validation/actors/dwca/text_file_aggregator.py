@@ -14,13 +14,13 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator.py 2016-01-07T17:27-03:00"
+__version__ = "text_file_aggregator.py 2016-01-19T20:02-03:00"
 
 from optparse import OptionParser
-from dwca_utils import read_header
 from dwca_utils import composite_header
 from dwca_utils import csv_file_dialect
 from dwca_utils import tsv_dialect
+from dwca_utils import dialect_attributes
 import os
 import glob
 import csv
@@ -90,60 +90,6 @@ def text_file_aggregator(inputs_as_json):
         response[a]= returnvals[i] 
         i+=1
     return json.dumps(response)
-
-def dialect_attributes(dialect):
-    if dialect is None:
-        return 'no dialect given'
-    s = 'lineterminator: ' 
-    if dialect.lineterminator == '\r':
-        s+= '\r'
-    elif dialect.lineterminator == '\n':
-        s+= '\n'
-    elif dialect.lineterminator == '\r\n':
-        s+= '\r\n'
-    else: 
-        s += dialect.lineterminator
-
-    s += '\ndelimiter: '
-    if dialect.delimiter == '\t':
-        s+= '\t'
-    else:
-        s+= dialect.delimiter
-
-    s += '\nescapechar: ' 
-    s += dialect.escapechar
-
-    s += '\ndoublequote: '
-    if dialect.doublequote == True:
-        s += 'True' 
-    else:
-        s += 'False' 
-
-    s += '\nquotechar: ' 
-    s += dialect.quotechar
-
-    s += '\nquoting: ' 
-    if dialect.quoting == csv.QUOTE_NONE:
-        s += 'csv.QUOTE_NONE'
-    elif dialect.quoting == csv.QUOTE_MINIMAL:
-        s += 'csv.QUOTE_MINIMAL'
-    elif dialect.quoting == csv.QUOTE_NONNUMERIC:
-        s += 'csv.QUOTE_NONNUMERIC'
-    elif dialect.quoting == csv.QUOTE_ALL:
-        s += 'csv.QUOTE_ALL'
-
-    s += '\nskipinitialspace: ' 
-    if dialect.skipinitialspace == True:
-        s += 'True'
-    else:
-        s += 'False'
-
-    s += '\nstrict: ' 
-    if dialect.strict == True:
-        s += 'True'
-    else:
-        s += 'False'
-    return s
 
 def _getoptions():
     """Parses command line options and returns them."""
