@@ -13,7 +13,7 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2015 President and Fellows of Harvard College"
+__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
 __version__ = "dwca_core_extractor.py 2015-11-06T15:32:15+01:00"
 
 from optparse import OptionParser

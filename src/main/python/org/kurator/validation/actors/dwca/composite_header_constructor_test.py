@@ -14,7 +14,13 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor_test.py 2016-01-20T00:22-03:00"
+__version__ = "composite_header_constructor_test.py 2016-01-21T13:57-03:00"
+
+# This file contains unit test for the composite_header_constructor function.
+#
+# Example:
+#
+# python composite_header_constructor_test.py
 
 from composite_header_constructor import composite_header_constructor
 from dwca_utils import read_header
@@ -24,12 +30,6 @@ import csv
 import glob
 import json
 import unittest
-
-# This file contains unit test for the composite_header_constructor function.
-#
-# Example:
-#
-# python composite_header_constructor_test.py
 
 class CompositeHeaderConstructorFramework():
     """Test framework for the composite header constructor."""
@@ -44,18 +44,17 @@ class CompositeHeaderConstructorFramework():
     csvtest2 = testdatapath + 'test_csv_2.csv'
 
     # output data files from tests, remove these in dispose()
-    composedheaderfile = 'test_composed_header.tsv'
+    composedheaderfile = 'test_composed_header.txt'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-        # remove the composited header file
         removeme = self.workspace + '/'+ self.composedheaderfile
         if os.path.isfile(removeme):
             os.remove(removeme)
         return True
 
 class CompositeHeaderConstructorTestCase(unittest.TestCase):
-    """Unit tests for the composite header constructor."""
+    """Unit tests."""
     def setUp(self):
         self.framework = CompositeHeaderConstructorFramework()
 
@@ -146,5 +145,4 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         self.assertEqual(len(response['compositeheader']), 6, 'incorrect number of columns in composite')
 
 if __name__ == '__main__':
-    """Test of dwca_utils functions"""
     unittest.main()

@@ -14,12 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-01-019T20:35-03:00"
-
-import os.path
-import csv
-import glob
-import unittest
+__version__ = "dwca_utils.py 2016-01-21T12:34-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -28,6 +23,19 @@ import unittest
 # Example:
 #
 # python dwca_utils.py
+
+from collections import namedtuple
+import os.path
+import glob
+import unittest
+try:
+    # need to install unicodecsv for this to be used
+    # pip install unicodecsv
+    import unicodecsv as csv
+except ImportError:
+    import warnings
+    warnings.warn("can't import `unicodecsv` encoding errors may occur")
+    import csv
 
 def tsv_dialect():
     """Get a dialect object with TSV properties.
@@ -146,11 +154,6 @@ def read_header(fullpath, dialect = None):
         # header is the list as returned by the reader
         header=reader.fieldnames
     return header
-#        # cleanheader is header with any extraneous whitespace in field names removed
-#         cleanheader = []
-#         for field in header:
-#             cleanheader.append(field.strip())
-#     return cleanheader
 
 def write_header(fullpath, fieldnames, dialect):
     """Write the header line of a CSV or TXT data file.
@@ -184,6 +187,54 @@ def merge_headers(headersofar, headertoadd = None):
     if len(composedheader) == 0:
         return None
     return sorted(list(composedheader))
+
+def csv_to_tsv(inputfile, outputfile):
+    """Convert an arbitrary csv file into a standardized tsv file.
+    parameters:
+        inputfile - the full path to the file to convert. (e.g., './infile.txt')
+        outputfile - the full path to the converted file. (e.g., './outfile.txt')
+    returns:
+        True if finished successfully
+    """
+    if inputfile is None or len(inputfile) == 0:
+        return None
+    if outputfile is None or len(outputfile) == 0:
+        return None
+    if os.path.isfile(inputfile) == False:
+        return None
+    # discern the dialect of the input file
+    inputdialect = csv_file_dialect(inputfile)
+    inputheader = read_header(inputfile,inputdialect)
+    with open(outputfile, 'a') as tsvfile:
+        writer = csv.DictWriter(tsvfile, dialect=tsv_dialect(), fieldnames=inputheader)
+        writer.writeheader()
+#        for row in read_csv_row_tuple(inputfile, inputdialect):
+        for row in read_csv_row(inputfile, inputdialect):
+            writer.writerow(row)
+    return True
+
+def header_as_tuple(header):
+    header_tuple = ()
+    for field in header:
+        field_as_tuple = (field,)
+        header_tuple = header_tuple + field_as_tuple
+    return header_tuple
+
+# def read_csv_row_tuple(path, dialect):
+#     header = read_header(path, dialect)
+#     fields = header_as_tuple(header)
+#     Record = namedtuple('Record', fields)
+#     with open(path, 'rU') as data:
+#         data.readline()            # Skip the header
+#         reader = csv.reader(data, dialect)  # Create a regular tuple reader
+#         for row in map(Record._make, reader):
+#             yield row
+
+def read_csv_row(path, dialect):
+    with open(path, 'rU') as data:
+        reader = csv.DictReader(data, dialect=dialect)
+        for row in reader:
+            yield row
 
 def split_path(fullpath):
     """Parse out the path to, the name of, and the extension for a given file.
@@ -224,14 +275,24 @@ class DWCAUtilsFramework():
     tsvtest2 = testdatapath + 'test_tsv_2.txt'
     csvtest1 = testdatapath + 'test_csv_1.csv'
     csvtest2 = testdatapath + 'test_csv_2.csv'
+    csvtotsvfile1 = testdatapath + 'test_csv_1.csv'
+    csvtotsvfile2 = testdatapath + 'test_csv_2.csv'
 
     # following are files output during the tests, remove these in dispose()
     csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
+    tsvfromcsvfile1 = testdatapath + 'test_tsv_from_csv_1.txt'
+    tsvfromcsvfile2 = testdatapath + 'test_tsv_from_csv_2.txt'
 
     def dispose(self):
         csvwriteheaderfile = self.csvwriteheaderfile
+        tsvfromcsvfile1 = self.tsvfromcsvfile1
+        tsvfromcsvfile2 = self.tsvfromcsvfile2
         if os.path.isfile(csvwriteheaderfile):
             os.remove(csvwriteheaderfile)
+        if os.path.isfile(tsvfromcsvfile1):
+            os.remove(tsvfromcsvfile1)
+        if os.path.isfile(tsvfromcsvfile2):
+            os.remove(tsvfromcsvfile2)
         return True
 
 class DWCAUtilsTestCase(unittest.TestCase):
@@ -260,6 +321,13 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'skipinitialspace not set to True for tsv')
         self.assertFalse(dialect.strict,
             'strict not set to False for tsv')
+
+    def test_header_as_tuple(self):
+        header=['a', 'b', 'c']
+        ht = header_as_tuple(header)
+        self.assertEqual(ht[0], 'a', 'tuple construction from header list failed')
+        self.assertEqual(ht[1], 'b', 'tuple construction from header list failed')
+        self.assertEqual(ht[2], 'c', 'tuple construction from header list failed')
 
     def test_csv_file_dialect(self):
         csvreadheaderfile = self.framework.csvreadheaderfile
@@ -330,7 +398,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('CollectionCode ')
         modelheader.append('DatasetName ')
         modelheader.append('Id')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 21, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -343,7 +411,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('locality')
         modelheader.append('phylum')
         modelheader.append('')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -356,7 +424,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('locality')
         modelheader.append('phylum')
         modelheader.append('')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -370,7 +438,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('phylum')
         modelheader.append('decimalLatitude')
         modelheader.append('decimalLongitude')
-#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -384,7 +452,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('phylum')
         modelheader.append('decimalLatitude')
         modelheader.append('decimalLongitude')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -405,7 +473,46 @@ class DWCAUtilsTestCase(unittest.TestCase):
 
         self.assertEqual(header, writtenheader,
             'writtenheader not the same as model header')
-        
+
+    def test_csv_to_tsv1(self):
+        csvfile = self.framework.csvtotsvfile1
+        tsvfile = self.framework.tsvfromcsvfile1
+
+        csv_to_tsv(csvfile, tsvfile)
+        written = os.path.isfile(tsvfile)
+        self.assertTrue(written, 'tsv not written')
+
+        header = read_header(tsvfile)
+        modelheader = []
+        modelheader.append('materialSampleID')
+        modelheader.append('principalInvestigator')
+        modelheader.append('locality')
+        modelheader.append('phylum')
+        modelheader.append('')
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' % (len(header), len(modelheader), header, modelheader)
+        self.assertEqual(len(header), 5, 'incorrect number of fields in header')
+        self.assertEqual(header, modelheader, 'header not equal to the model header')
+
+    def test_csv_to_tsv2(self):
+        csvfile = self.framework.csvtotsvfile2
+        tsvfile = self.framework.tsvfromcsvfile2
+
+        csv_to_tsv(csvfile, tsvfile)
+        written = os.path.isfile(tsvfile)
+        self.assertTrue(written, 'tsv not written')
+
+        header = read_header(tsvfile, tsv_dialect())
+        modelheader = []
+        modelheader.append('materialSampleID')
+        modelheader.append('principalInvestigator')
+        modelheader.append('locality')
+        modelheader.append('phylum')
+        modelheader.append('decimalLatitude')
+        modelheader.append('decimalLongitude')
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' % (len(header), len(modelheader), header, modelheader)
+        self.assertEqual(len(header), 6, 'incorrect number of fields in header')
+        self.assertEqual(header, modelheader, 'header not equal to the model header')
+
     def test_split_path(self):
         path, fileext, filepattern = \
             split_path('../../data/tests/test_eight_specimen_records.csv')

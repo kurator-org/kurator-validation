@@ -13,17 +13,27 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2015-09-10T17:57:41s-07:00"
+__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
+__version__ = "dwca_core_to_tsv.py 2016-01-21T13:33-03:00"
+
+# For now, use global variables to capture parameters sent at the command line in 
+# a workflow
+# Example: 
+#
+# kurator -f workflows/dwca_core_to_tsv.yaml -p dwcafile=../../data/dwca-uwymv_herp.zip -p tsvoutputfile=./workspace/dwcatsvout.txt -p archivetype=standard
+#
+# or as a command-line script.
+# Example:
+#
+# python dwca_core_to_tsv.py -i ../../data/dwca-uwymv_herp.zip -o ./workspace/dwcatsvout.txt -t standard
 
 from optparse import OptionParser
-from dwca_utils import short_term_names
-from dwca_utils import get_core_rowcount
+from dwcareader_utils import short_term_names
+from dwca_utils import tsv_dialect
 import json
 import csv
 import os.path
 import logging
-import text_file_splitter
 
 # Python Darwin Core Archive Reader from 
 # https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
@@ -32,26 +42,31 @@ import text_file_splitter
 from dwca.read import DwCAReader
 from dwca.read import GBIFResultsReader
 
-# For now, use global variables to capture parameters sent at the command line in 
-# a workflow
-# Example: 
-#
-# kurator -f workflows/dwca_core_to_tsv.yaml -p dwcafile=../../data/dwca-uwymv_herp.zip -p tsvoutputfile=./workspace/dwcatsvout.tsv -p archivetype=standard
-#
-# or as a command-line script.
-# Example:
-#
-# python dwca_core_to_tsv.py -i ../../data/dwca-uwymv_herp.zip -o ./workspace/dwcatsvout.tsv -t standard  
+tsvfile = './dwcatotsv.txt'
+archivetype = 'standard'
 
-dwcafile=None
-tsvoutputfile='./dwcatsvout.tsv'
-archivetype='standard'
-delimiter='\t'
+def dwca_core_to_tsv(inputs_as_json):
+    """Save the core of the archive to a tsv file with short DwC term names as headers.
+    inputs_as_json - JSON string containing "dwcafile", which is the full path to the 
+    Darwin Core archive file to process, "tsvfile", which is the tsv output file
+    returns JSON string with information about the results."""
 
-def dwca_core_to_tsv():
-    """Save the core of the archive to a csv file with short DwC term names as headers."""
-    inputfile = dwcafile
-    fullpath = tsvoutputfile
+    inputs = json.loads(inputs_as_json)
+    inputfile = inputs['dwcafile']
+
+    # try to get the variable from inputs_as_json
+    try:
+        tsvfilename = inputs['tsvfile']
+    # otherwise get it from the global variable
+    except:
+        tsvfilename = tsvfile
+
+    # try to get the variable from inputs_as_json
+    try:
+        type = inputs['archivetype']
+    # otherwise get it from the global variable
+    except:
+        type = archivetype
 
     if not os.path.isfile(inputfile):
         return None
@@ -73,27 +88,19 @@ def dwca_core_to_tsv():
 
     termnames=list(dwcareader.descriptor.core.terms)
     shorttermnames=short_term_names(termnames)
-    dialect = csv.excel
-    dialect.lineterminator='\r'
-    dialect.delimiter=delimiter
-    with open(fullpath, 'w') as tsvfile:
-        writer = csv.DictWriter(tsvfile, dialect=dialect, fieldnames=shorttermnames, 
-            quoting=csv.QUOTE_NONE, quotechar='')
+    dialect = tsv_dialect()
+    with open(tsvfilename, 'w') as thefile:
+        writer = csv.DictWriter(thefile, dialect=dialect, fieldnames=shorttermnames)
         writer.writeheader()
  
     rowcount = 0
-    with open(fullpath, 'a') as tsvfile:
-        writer = csv.DictWriter(tsvfile, dialect=dialect, fieldnames=termnames,
-            quoting=csv.QUOTE_NONE, quotechar='')
+    with open(tsvfilename, 'a') as thefile:
+        writer = csv.DictWriter(thefile, dialect=dialect, fieldnames=termnames)
         for row in dwcareader:
-#            print 'Row %s:\n%s' % (rowcount,row.data)
             for f in row.data:
                 row.data[f]=row.data[f].encode("utf-8")
             writer.writerow(row.data)
             rowcount += 1
-
-    # Get the number of records in the core file.
-#    rowcount = get_core_rowcount(dwcareader)
 
     # Close the archive    
     dwcareader.close()
@@ -101,8 +108,8 @@ def dwca_core_to_tsv():
     # Successfully completed the mission
     # Return a dict of important information as a JSON string
     response = {}
-    returnvars = ['fullpath', 'rowcount']
-    returnvals = [fullpath, rowcount]
+    returnvars = ['tsvfile', 'rowcount']
+    returnvals = [tsvfilename, rowcount]
     i=0
     for a in returnvars:
         response[a]= returnvals[i] 
@@ -118,37 +125,39 @@ def _getoptions():
     parser.add_option("-o", "--output", dest="outputfile",
                       help="Path for output file",
                       default=None)
-    parser.add_option("-d", "--delimiter", dest="delimiter",
-                      help="Field delimiter for the output file",
-                      default=None)
     parser.add_option("-t", "--type", dest="type",
                       help="Type of Darwin Core archive ('gbif', 'standard')",
                       default=None)
     return parser.parse_args()[0]
 
 def main():
-    global dwcafile, tsvoutputfile, archivetype
+    global tsvfile, archivetype
     logging.basicConfig(level=logging.DEBUG)
     options = _getoptions()
     dwcafile = options.inputfile
-    tsvoutputfile = options.outputfile
-    delimiter = options.delimiter
+    tsvfile = options.outputfile
     archivetype = options.type
+
     if dwcafile is None:
-        print 'syntax: python dwca_core_to_tsv.py -d , -i ../../data/dwca-uwymv_herp.zip -o testout.tsv -t standard'
+        print 'syntax: python dwca_core_to_tsv.py -i ../../data/dwca-uwymv_herp.zip -o testout.txt -t standard'
         return
-    if tsvoutputfile is None:
-        tsvoutputfile = 'dwca_core_to_tsv_output.tsv'
-    if delimiter is None:
-        delimiter = '\t'
+
+    if tsvfile is None:
+        tsvfile = './dwcatotsv.txt'
+
     if archivetype is None:
-        type = 'standard'
+        archivetype = 'standard'
+
+    inputs = {}
+    inputs['dwcafile'] = dwcafile
+    inputs['tsvfile'] = tsvfile
+    inputs['archivetype'] = archivetype
 
     # Write the core to a tsv file at the specified location
-    response = json.loads(dwca_core_to_tsv())
+    response = json.loads(dwca_core_to_tsv(json.dumps(inputs)))
     
     print 'TSV file %s with %s rows extracted from core of archive %s (type %s).' \
-        % (response['fullpath'], response['rowcount'], dwcafile, archivetype)
+        % (response['tsvfile'], response['rowcount'], dwcafile, archivetype)
     print 'Response: %s' % response
 
 if __name__ == '__main__':

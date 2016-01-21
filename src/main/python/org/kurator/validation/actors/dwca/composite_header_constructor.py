@@ -14,20 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor.py 2016-01-20T00:22-03:00"
-
-from optparse import OptionParser
-from dwca_utils import read_header
-from dwca_utils import write_header
-#from dwca_utils import composite_header
-from dwca_utils import merge_headers
-#from dwca_utils import csv_file_dialect
-from dwca_utils import tsv_dialect
-import os
-import glob
-import csv
-import json
-import logging
+__version__ = "composite_header_constructor.py 2016-01-21T12:41-03:00"
 
 # For now, use global variables to capture parameters sent at the command line in 
 # a workflow
@@ -39,6 +26,17 @@ import logging
 # Example:
 #
 # python composite_header_constructor.py -1 "../../data/tests/test_tsv_1.txt" -2 "../../data/tests/test_tsv_2.txt" -w ./workspace -o compositeheader.txt'
+
+from optparse import OptionParser
+from dwca_utils import read_header
+from dwca_utils import write_header
+from dwca_utils import merge_headers
+from dwca_utils import tsv_dialect
+import os
+import glob
+import csv
+import json
+import logging
 
 compositeheaderworkspace = './workspace'
 compositeheaderfilename = 'compositeheader.tsv'

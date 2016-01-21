@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_splitter_test.py 2016-01-19T11:31-03:00"
+__version__ = "text_file_splitter_test.py 2016-01-21T13:57-03:00"
 
 from text_file_splitter import text_file_splitter
 from dwca_utils import split_path
@@ -59,7 +59,7 @@ class TextFileSplitterFramework():
         return True
 
 class TextFileSplitterTestCase(unittest.TestCase):
-    """Unit tests for the text file splitter."""
+    """Unit tests."""
     def setUp(self):
         self.framework = TextFileSplitterFramework()
 
@@ -92,5 +92,4 @@ class TextFileSplitterTestCase(unittest.TestCase):
         self.assertEqual(splitfilecount, 3, 'incorrect number of chunk files')
 
 if __name__ == '__main__':
-    """Test of dwca_utils functions"""
     unittest.main()
