@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv_test.py 2016-01-21T14:30-03:00"
+__version__ = "dwca_core_to_tsv_test.py 2016-01-22T12:40-03:00"
 
 # This file contains unit test for the dwca_core_to_tsv function.
 #
@@ -47,7 +47,7 @@ class DwcaCoreToTsvFramework():
     def dispose(self):
         """Remove any output files created as a result of testing"""
         removeme = self.testdatapath + '/'+ self.tsvfile
-        print 'removeme: %s' % removeme
+#        print 'removeme: %s' % removeme
         if os.path.isfile(removeme):
             os.remove(removeme)
         return True

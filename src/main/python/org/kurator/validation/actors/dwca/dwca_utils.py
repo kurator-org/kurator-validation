@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-01-21T12:34-03:00"
+__version__ = "dwca_utils.py 2016-01-22T08:44-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -155,6 +155,30 @@ def read_header(fullpath, dialect = None):
         header=reader.fieldnames
     return header
 
+def composite_header(fullpath, dialect = None):
+    """Get a header that includes all of the fields in headers of a set file in the given
+       path.
+    parameters:
+        fullpath - the full path to the files to process. (e.g., './*.txt')
+        dialect - a csv.dialect object with the attributes of the input files, which must
+           all have the same dialect if dialect is given, otherwise it will be detected.
+    returns:
+        compositeheader - a list object containing the fields in the
+            header"""
+    if fullpath is None:
+          return None
+    compositeheader = None
+    usedialect = dialect
+    files = glob.glob(fullpath)
+    if files is None:
+        return None
+    for file in files:
+        if dialect is None:
+            usedialect = csv_file_dialect(file)
+        header = read_header(file, usedialect)
+        compositeheader = merge_headers(compositeheader, header)
+    return compositeheader
+
 def write_header(fullpath, fieldnames, dialect):
     """Write the header line of a CSV or TXT data file.
     parameters:
@@ -277,6 +301,9 @@ class DWCAUtilsFramework():
     csvtest2 = testdatapath + 'test_csv_2.csv'
     csvtotsvfile1 = testdatapath + 'test_csv_1.csv'
     csvtotsvfile2 = testdatapath + 'test_csv_2.csv'
+    csvcompositepath = testdatapath + 'test_csv*.csv'
+    tsvcompositepath = testdatapath + 'test_tsv*.txt'
+    mixedcompositepath = testdatapath + 'test_*_specimen_records.*'
 
     # following are files output during the tests, remove these in dispose()
     csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
@@ -454,6 +481,110 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('decimalLongitude')
 #        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
+        self.assertEqual(header, modelheader, 'header not equal to the model header')
+
+    def test_composite_header1(self):
+        csvcompositepath = self.framework.csvcompositepath
+        tsvcompositepath = self.framework.tsvcompositepath
+        mixedcompositepath = self.framework.mixedcompositepath
+        header = composite_header(csvcompositepath)
+        modelheader = []
+        modelheader.append('decimalLatitude')
+        modelheader.append('decimalLongitude')
+        modelheader.append('locality')
+        modelheader.append('materialSampleID')
+        modelheader.append('phylum')
+        modelheader.append('principalInvestigator')
+#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
+        self.assertEqual(len(header), 6, 'incorrect number of fields in header')
+        self.assertEqual(header, modelheader, 'header not equal to the model header')
+
+        header = composite_header(tsvcompositepath)
+#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
+        self.assertEqual(len(header), 6, 'incorrect number of fields in header')
+        self.assertEqual(header, modelheader, 'header not equal to the model header')
+
+        header = composite_header(mixedcompositepath)
+        modelheader = []
+        modelheader.append('BCID')
+        modelheader.append('CollectionCode')
+        modelheader.append('DatasetName')
+        modelheader.append('Id')
+        modelheader.append('InstitutionCode')
+        modelheader.append('associatedMedia')
+        modelheader.append('associatedReferences')
+        modelheader.append('associatedSequences')
+        modelheader.append('associatedTaxa')
+        modelheader.append('basisOfIdentification')
+        modelheader.append('catalogNumber')
+        modelheader.append('class')
+        modelheader.append('coordinateUncertaintyInMeters')
+        modelheader.append('country')
+        modelheader.append('county')
+        modelheader.append('day')
+        modelheader.append('dayCollected')
+        modelheader.append('dayIdentified')
+        modelheader.append('decimalLatitude')
+        modelheader.append('decimalLongitude')
+        modelheader.append('establishmentMeans')
+        modelheader.append('eventRemarks')
+        modelheader.append('extractionID')
+        modelheader.append('family')
+        modelheader.append('fieldNotes')
+        modelheader.append('fieldNumber')
+        modelheader.append('fundingSource')
+        modelheader.append('geneticTissueType')
+        modelheader.append('genus')
+        modelheader.append('geodeticDatum')
+        modelheader.append('georeferenceProtocol')
+        modelheader.append('habitat')
+        modelheader.append('identifiedBy')
+        modelheader.append('island')
+        modelheader.append('islandGroup')
+        modelheader.append('length')
+        modelheader.append('lifeStage')
+        modelheader.append('locality')
+        modelheader.append('materialSampleID')
+        modelheader.append('maximumDepthInMeters')
+        modelheader.append('maximumDistanceAboveSurfaceInMeters')
+        modelheader.append('microHabitat')
+        modelheader.append('minimumDepthInMeters')
+        modelheader.append('minimumDistanceAboveSurfaceInMeters')
+        modelheader.append('month')
+        modelheader.append('monthCollected')
+        modelheader.append('monthIdentified')
+        modelheader.append('occurrenceID')
+        modelheader.append('occurrenceRemarks')
+        modelheader.append('order')
+        modelheader.append('permitInformation')
+        modelheader.append('phylum')
+        modelheader.append('plateID')
+        modelheader.append('preservative')
+        modelheader.append('previousIdentifications')
+        modelheader.append('previousTissueID')
+        modelheader.append('principalInvestigator')
+        modelheader.append('recordedBy')
+        modelheader.append('reproductiveCondition')
+        modelheader.append('sampleOwnerInstitutionCode')
+        modelheader.append('samplingProtocol')
+        modelheader.append('scientificName')
+        modelheader.append('scientificNameAuthorship')
+        modelheader.append('sex')
+        modelheader.append('species')
+        modelheader.append('stateProvince')
+        modelheader.append('subSpecies')
+        modelheader.append('substratum')
+        modelheader.append('taxonRemarks')
+        modelheader.append('tissueStorageID')
+        modelheader.append('vernacularName')
+        modelheader.append('weight')
+        modelheader.append('wellID')
+        modelheader.append('wormsID')
+        modelheader.append('year')
+        modelheader.append('yearCollected')
+        modelheader.append('yearIdentified')
+#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
+        self.assertEqual(len(header),77, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
     def test_write_header(self):

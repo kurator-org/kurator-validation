@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_splitter_test.py 2016-01-21T13:57-03:00"
+__version__ = "text_file_splitter_test.py 2016-01-22T15:22-03:00"
 
 from text_file_splitter import text_file_splitter
 from dwca_utils import split_path
@@ -75,11 +75,14 @@ class TextFileSplitterTestCase(unittest.TestCase):
         workspace = self.framework.testdatapath
         chunksize = 3
         csvfile = self.framework.testdatapath + self.framework.csvfile        
+
         inputs = {}
-        inputs['fullpath'] = csvfile
+        inputs['inputpath'] = csvfile
         inputs['workspace'] = workspace
         inputs['chunksize'] = chunksize
 
+        print 'inputs:\n%s' % inputs
+        print 'json-inputs:\n%s' % json.dumps(inputs)
         # Split text file into chucks
         response=json.loads(text_file_splitter(json.dumps(inputs)))
 
@@ -88,7 +91,7 @@ class TextFileSplitterTestCase(unittest.TestCase):
         splitfilecount = len(files)-1
 
         self.assertEqual(response['chunks'], 3, 'incorrect number of chunks')
-        self.assertEqual(response['rowcount'], 8, 'incorrect number of rows')
+        self.assertEqual(response['splitrowcount'], 8, 'incorrect number of rows')
         self.assertEqual(splitfilecount, 3, 'incorrect number of chunk files')
 
 if __name__ == '__main__':

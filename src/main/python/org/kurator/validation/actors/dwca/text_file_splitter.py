@@ -14,7 +14,18 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_splitter.py 2016-01-19T09:45-03:00"
+__version__ = "text_file_splitter.py 2016-01-22T15:22-03:00"
+
+# For now, use global variables to capture parameters sent at the command line in 
+# a workflow
+# Example: 
+#
+# kurator -f workflows/text_file_splitter.yaml -p p=inputpath -p v=../../data/eight_specimen_records.csv  -p c=5 -p w=./workspace
+#
+# or as a command-line script.
+# Example:
+#
+# python text_file_splitter.py -i ../../data/eight_specimen_records.csv -c 5 -w ./workspace
 
 from optparse import OptionParser
 from dwca_utils import split_path
@@ -23,46 +34,42 @@ import json
 import uuid
 import logging
 
-# For now, use global variables to capture parameters sent at the command line in 
-# a workflow
-# Example: 
-#
-# kurator -f workflows/text_file_splitter.yaml -p p=fullpath -p v=../../data/eight_specimen_records.csv  -p c=5 -p w=./workspace
-#
-# or as a command-line script.
-# Example:
-#
-# python text_file_splitter.py -i ../../data/eight_specimen_records.csv -c 5 -w ./workspace
-
-splitterchunksize=10000
 splitterworkspace='./workspace'
+splitterchunksize=10000
 
 def text_file_splitter(inputs_as_json):
     """Split a text file into chunks with headers. Put the chunk files in the workspace
-    inputs_as_json - JSON string containing "fullpath", which is the full path to the file to
-    split.
-    returns JSON string with information about the results."""
+    inputs_as_json - JSON string containing inputs
+        inputpath - full path to the input
+        workspace - the directory in which the output will be written
+        chunksize - the maximum number of records in an output file
+    returns JSON string with information about the results
+        success - True if process completed successfully, otherwise False
+        splitrowcount - the number of rows in the file that was split, not counting header
+        chunks - the number of files created from the split
+        splitfilepattern - the pattern for the split file names
+        splitfileext - the extension for the split file names
+    """
 
     inputs = json.loads(inputs_as_json)
-    fullpath = inputs['fullpath']
-
-    try:
-        chunksize = inputs['chunksize']
-    except:
-        chunksize = splitterchunksize
+    inputpath = inputs['inputpath']
+    if not os.path.isfile(inputpath):
+        return None
 
     try:
         workspace = inputs['workspace']
     except:
         workspace = splitterworkspace
 
-    if not os.path.isfile(fullpath):
-        return None
+    try:
+        chunksize = inputs['chunksize']
+    except:
+        chunksize = splitterchunksize
 
     # Open the file in universal mode
-    input = open(fullpath, 'rU')
+    input = open(inputpath, 'rU')
 
-    path, fileext, filepattern = split_path(fullpath)
+    path, fileext, filepattern = split_path(inputpath)
     
     # Get the first line of the file as the header
     header=input.next()
@@ -95,8 +102,8 @@ def text_file_splitter(inputs_as_json):
     # Successfully completed the mission
     # Return a dict of important information as a JSON string
     response = {}
-    returnvars = ['filepattern', 'fileext', 'chunks', 'rowcount', 'workspace', 'chunksize']
-    returnvals = [filepattern, fileext, chunks, rowcount, workspace, chunksize]
+    returnvars = ['splitfilepattern', 'splitfileext', 'chunks', 'splitrowcount', 'success']
+    returnvals = [filepattern, fileext, chunks, rowcount, True]
     i=0
     for a in returnvars:
         response[a]= returnvals[i] 
@@ -121,10 +128,10 @@ def main():
     global splitterchunksize, splitterworkspace
     logging.basicConfig(level=logging.DEBUG)
     options = _getoptions()
-    fullpath = options.inputfile
+    inputpath = options.inputfile
     splitterworkspace = options.workspace
 
-    if fullpath is None:
+    if inputpath is None:
         print 'syntax: python text_file_splitter.py -i ../../data/eight_specimen_records.csv -c 5 -w ./workspace'
         return
 
@@ -135,16 +142,18 @@ def main():
         splitterchunksize = int(str(options.chunksize))
     except:
         splitterchunksize = 1000
-
     
     inputs = {}
-    inputs['fullpath'] = fullpath
-    
+    inputs['inputpath'] = inputpath
+    inputs['workspace'] = splitterworkspace
+    inputs['chunksize'] = splitterchunksize
+
     # Split text file into chucks
     response=json.loads(text_file_splitter(json.dumps(inputs)))
 
+    returnvars = ['splitfilepattern', 'splitfileext', 'chunks', 'splitrowcount', 'success']
     print 'File %s with %s records chunked into %s chunks of %s or less rows in %s.' \
-        % (fullpath, response['rowcount'], response['chunks'], splitterchunksize, response['workspace'])
+        % (inputpath, response['splitrowcount'], response['chunks'], splitterchunksize, splitterworkspace)
     print 'Response: %s' % response
 
 if __name__ == '__main__':
