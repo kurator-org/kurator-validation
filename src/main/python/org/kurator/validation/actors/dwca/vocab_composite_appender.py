@@ -13,13 +13,13 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "vocab_composite_appender.py 2015-12-28T14:59-03:00"
+__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
+__version__ = "vocab_composite_appender.py 2016-01-28T13:31-03:00"
 
 from optparse import OptionParser
 from dwca_utils import split_path
 from vocab_loader import vocab_loader
-from dwcaterms import vocabfieldlist
+from dwca_terms import vocabfieldlist
 import os.path
 import csv
 import json
