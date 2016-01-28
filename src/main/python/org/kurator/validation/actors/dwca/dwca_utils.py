@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-01-22T08:44-03:00"
+__version__ = "dwca_utils.py 2016-01-23T11:48-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -723,5 +723,4 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'headers with whitespace merge failed')
 
 if __name__ == '__main__':
-    """Test of dwca_utils functions"""
     unittest.main()
