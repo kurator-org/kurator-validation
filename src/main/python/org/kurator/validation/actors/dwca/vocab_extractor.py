@@ -13,13 +13,13 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2015-12-28T15:01-03:00"
+__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
+__version__ = "vocab_extractor.py 2016-01-30T13:48-03:00"
 
 from optparse import OptionParser
 from dwca_utils import split_path
+from dwca_utils import distinct_term_values_from_file
 import os.path
-import csv
 import json
 import logging
 
@@ -27,7 +27,7 @@ import logging
 # a workflow
 # Example: 
 #
-# kurator -f workflows/vocab_extractor.yaml -p p=fullpath -p v=../../data/eight_specimen_records.csv -p t=country
+# kurator -f workflows/vocab_extractor.yaml -p p=inputfile -p v=../../data/eight_specimen_records.csv -p t=year
 #
 # or as a command-line script.
 # Example:
@@ -35,61 +35,61 @@ import logging
 # python vocab_extractor.py -i ../../data/eight_specimen_records.csv -t country
 
 # The name of the term for which the distinct values are sought
-termname = None
+extracttermname = None
 
 def vocab_extractor(inputs_as_json):
     """Extract a list of the distinct values of a given term in a text file.
-    inputs_as_json - {'fullpath':'[p]', 'termname':'[t]'} where:
-    p is the full path to the file from which to extract
-    t is the name of the term for which to extract values
-    
-    returns JSON string with information about the results."""
-    
-    global termname
+    inputs_as_json - JSON string containing inputs
+        inputfile - full path to the input file
+        termname - the name of the term for which to find distinct values
+    returns JSON string with information about the results
+        success - True if process completed successfully, otherwise False
+        extractedvalues - a list of distinct values of the term in the inputfile
+    """
+
+    global extracttermname
     inputs = json.loads(inputs_as_json)
-    fullpath = inputs['fullpath']
+    inputfile = inputs['inputfile']
+
     # Use the termname from the input JSON, if it exists
     try:
         termname = inputs['termname']
     except:
         # Otherwise use the global value, if it exists
-        if termname is None:
-            return None
+        termname = extracttermname
+    if termname is None:
+        s = 'No term name given'
+        return fail_response(s)
+        
+    if not os.path.isfile(inputfile):
+        s = 'Input file %s not found' % inputfile
+        return fail_response(s)
 
-    if not os.path.isfile(fullpath):
-        return None
-
-    valueset = set()
-    dialect=csv.excel
-    
-    # Iterate over the file rows to get the values of the term
-    with open(fullpath, 'rU') as csvfile:
-        dr = csv.DictReader(csvfile, dialect=dialect)
-        header=dr.fieldnames
-        termname = termname.lower()
-        i=0
-        for t in header:
-            header[i]=header[i].strip().lower()
-            i+=1
-        if termname not in header:
-            return None
-        for row in dr:
-            v=row[termname]
-            valueset.add(v)
+    extractedvalues = distinct_term_values_from_file(inputfile, termname)
 
     # Successfully completed the mission
     # Return a dict of important information as a JSON string
     response = {}
-    returnvars = ['valueset']
-    returnvals = [list(valueset)]
+    returnvars = ['extractedvalues', 'success']
+    returnvals = [extractedvalues, True]
     i=0
     for a in returnvars:
         response[a]= returnvals[i] 
         i+=1
 
     # Reset global variables to None
-    termname = None
+    extracttermname = None
 
+    return json.dumps(response)
+
+def fail_response(error):
+    response = {}
+    returnvars = ['extractedvalues', 'success', 'error']
+    returnvals = [None, False, error]
+    i=0
+    for a in returnvars:
+        response[a]= returnvals[i] 
+        i+=1
     return json.dumps(response)
     
 def _getoptions():
@@ -101,33 +101,26 @@ def _getoptions():
     parser.add_option("-t", "--termname", dest="termname",
                       help="Name of the term for which distinct values are sought",
                       default=None)
-    parser.add_option("-l", "--loglevel", dest="loglevel",
-                      help="The level at which to log",
-                      default='INFO')
     return parser.parse_args()[0]
 
 def main():
     options = _getoptions()
-    loglevel = options.loglevel
-    logging.basicConfig(level=getattr(logging, loglevel.upper()))
-    fullpath = options.inputfile
-    local_termname = options.termname
+    inputfile = options.inputfile
+    termname = options.termname
 
-    if fullpath is None or local_termname is None:
-        print 'syntax: python vocab_extractor.py -i ../../data/eight_specimen_records.csv -t basisOfRecord'
+    if inputfile is None or termname is None:
+        print 'syntax: python vocab_extractor.py -i ../../data/eight_specimen_records.csv -t year'
         return
-    
+
     inputs = {}
-    inputs['fullpath'] = fullpath
-    inputs['termname'] = local_termname
-    
+    inputs['inputfile'] = inputfile
+    inputs['termname'] = termname
+
     # Get distinct values of termname from inputfile
     response=json.loads(vocab_extractor(json.dumps(inputs)))
-
-#    print 'Response: %s' % response
-    logging.info('File %s mined for values of %s. Results: %s' %
-        (fullpath, local_termname, response['valueset']) )
+    print 'response: %s' % response
+    logging.debug('File %s mined for values of %s. Results: %s' %
+        (inputfile, termname, response['extractedvalues']) )
 
 if __name__ == '__main__':
-    """ Demo of vocab_extractor"""
     main()

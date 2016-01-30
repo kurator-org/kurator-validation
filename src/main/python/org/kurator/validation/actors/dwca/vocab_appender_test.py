@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender_test.py 2016-01-30T11:56-03:00"
+__version__ = "vocab_appender_test.py 2016-01-30T12:27-03:00"
 
 # This file contains unit test for the vocab_appender function.
 #
@@ -24,7 +24,7 @@ __version__ = "vocab_appender_test.py 2016-01-30T11:56-03:00"
 
 from vocab_appender import vocab_appender
 from dwca_utils import read_header
-from dwca_utils import distinct_vocab_list_from_file
+from dwca_utils import distinct_term_values_from_file
 import os
 import json
 import unittest
@@ -43,7 +43,6 @@ class VocabAppenderFramework():
     def dispose(self):
         """Remove any output files created as a result of testing"""
         testvocabfile = self.testvocabfile
-        print 'Removing testvocabfile %s' % testvocabfile
         if os.path.isfile(testvocabfile):
             os.remove(testvocabfile)
         return True
@@ -93,7 +92,7 @@ class VocabAppenderTestCase(unittest.TestCase):
         self.assertEqual(writtenlist, ['5', 'MAY', 'May', 'v'],
             'values not written to new testvocabfile')
 
-        months = distinct_vocab_list_from_file(testvocabfile)
+        months = distinct_term_values_from_file(testvocabfile, 'verbatim')
         self.assertEqual(len(months), 4, 
             'the number of distinct verbatim values does not match expectation')
         self.assertEqual(months, ['5', 'MAY', 'May', 'v'],
@@ -110,7 +109,7 @@ class VocabAppenderTestCase(unittest.TestCase):
         self.assertEqual(writtenlist, ['6', 'JUNE', 'June', 'vi'],
             'new values not written to existing testvocabfile')
 
-        months = distinct_vocab_list_from_file(testvocabfile)
+        months = distinct_term_values_from_file(testvocabfile, 'verbatim')
         self.assertEqual(len(months), 8, 
             'the number of distinct verbatim values does not match expectation after additions')
         self.assertEqual(months, ['5', '6', 'JUNE', 'June', 'MAY', 'May', 'v', 'vi'],

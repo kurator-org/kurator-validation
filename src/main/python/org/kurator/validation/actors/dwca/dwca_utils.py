@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-01-29T17:42-03:00"
+__version__ = "dwca_utils.py 2016-01-30T14:36-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -162,8 +162,8 @@ def read_header(fullpath, dialect = None):
         fullpath - the full path to the file to process.
         dialect - a csv.dialect object with the attributes of the input file
     returns:
-        cleanheader - a list object containing the white-space-free fields in the 
-            original header"""
+        header - a list containing the fields in the original header
+    """
     header = None
     if dialect is None:
         dialect = csv_file_dialect(fullpath)
@@ -181,8 +181,8 @@ def composite_header(fullpath, dialect = None):
         dialect - a csv.dialect object with the attributes of the input files, which must
            all have the same dialect if dialect is given, otherwise it will be detected.
     returns:
-        compositeheader - a list object containing the fields in the
-            header"""
+        compositeheader - a list containing the fields in the header
+    """
     if fullpath is None:
           return None
     compositeheader = None
@@ -201,7 +201,7 @@ def write_header(fullpath, fieldnames, dialect):
     """Write the header line of a CSV or TXT data file.
     parameters:
         fullpath - the full path to the file to process.
-        fieldnames -  a list object containing the fields in the header
+        fieldnames -  a list containing the fields in the header
         dialect - a csv.dialect object with the attributes of the input file
     returns:
         success - True is the header was written to file"""
@@ -212,7 +212,24 @@ def write_header(fullpath, fieldnames, dialect):
         success = True
     return success
 
+def clean_header(header):
+    """Construct a header from the white-space-stripped field names in a header.
+    parameters:
+        header - the header clean
+    returns:
+        merge_headers(header) - a sorted list of the header after white space has been
+            stripped from field names
+    """
+    return merge_headers(header)
+    
 def merge_headers(headersofar, headertoadd = None):
+    """Construct a header from the distinct white-space-stripped fields in two headers.
+    parameters:
+        headersofar - the first header from which to build the composite
+        headertoadd -  a header to merge with the first header
+    returns:
+        sorted(list(composedheader)) - a sorted list of the combined header
+    """
     composedheader = set()
     if headersofar is None and headertoadd is None:
         return None
@@ -306,27 +323,57 @@ def get_standard_value(was, valuedict):
         return valuedict[was]
     return None
 
-def distinct_vocab_list_from_file(vocabfile, dialect=None):
-    """Get the list of distinct verbatim values in an existing vocabulary lookup file.
+# def distinct_vocab_list_from_file(vocabfile, dialect=None):
+#     """Get the list of distinct verbatim values in an existing vocabulary lookup file.
+#     parameters:
+#         vocabfile - the full path to the vocabulary lookup file
+#         dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+#     returns:
+#         sorted(list(values)) - a sorted list of distinct verbatim values in the vocabulary
+#     """
+# #    print 'vocabfile: %s\nvocabfieldlist:%s' % (vocabfile, vocabfieldlist)
+#     if os.path.isfile(vocabfile) == False:
+#         return None
+#     values = set()
+#     if dialect is None:
+#         dialect = vocab_dialect()
+#     with open(vocabfile, 'rU') as csvfile:
+#         dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
+#         i=0
+#         for row in dr:
+#             # Skip the header row.
+#             if i>0:
+#                 values.add(row['verbatim'])
+#             i+=1
+#     return sorted(list(values))
+
+def distinct_term_values_from_file(inputfile, termname, dialect=None):
+    """Get the list of distinct values of a term in a file.
     parameters:
-        vocabfile - the full path to the vocabulary lookup file
+        inputfile - the full path to the input file
+        termname - the field name in the header of the input file to search in
         dialect - a csv.dialect object with the attributes of the vocabulary lookup file
     returns:
-        sorted(list(values)) - a sorted list of distinct verbatim values in the vocabulary
+        sorted(list(values)) - a sorted list of distinct values of the term
     """
-#    print 'vocabfile: %s\nvocabfieldlist:%s' % (vocabfile, vocabfieldlist)
-    if os.path.isfile(vocabfile) == False:
+    if os.path.isfile(inputfile) == False:
         return None
     values = set()
     if dialect is None:
-        dialect = vocab_dialect()
-    with open(vocabfile, 'rU') as csvfile:
-        dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
+#        dialect = vocab_dialect()
+        dialect = csv_file_dialect(inputfile)
+    header = read_header(inputfile, dialect)
+    if header is None:
+        return None
+    if termname not in header:
+        return None
+    with open(inputfile, 'rU') as csvfile:
+        dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=header)
         i=0
         for row in dr:
             # Skip the header row.
             if i>0:
-                values.add(row['verbatim'])
+                values.add(row[termname])
             i+=1
     return sorted(list(values))
 
@@ -359,7 +406,7 @@ def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
         newvaluelist - a sorted list of distinct verbatim values added to the vocabulary
             lookup file
     """
-    vocablist = distinct_vocab_list_from_file(vocabfile, dialect)
+    vocablist = distinct_term_values_from_file(vocabfile, 'verbatim', dialect)
     newvaluelist = not_in_list(vocablist, valuelist)
     if len(newvaluelist) == 0:
         return None
@@ -766,14 +813,28 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(get_standard_value('female', testdict), 'female', 
             "lookup 'female' does not return 'female'")
 
-    def test_distinct_vocab_list_from_file(self):
+#     def test_distinct_vocab_list_from_file(self):
+#         monthvocabfile = self.framework.monthvocabfile
+#         months = distinct_vocab_list_from_file(monthvocabfile)
+# #        print 'months: %s' % months
+#         self.assertEqual(len(months), 6, 
+#             'the number of distinct verbatim month values does not match expectation')
+#         self.assertEqual(months, ['5', 'V', 'VI', 'Vi', 'v', 'vi'],
+#             'verbatim month values do not match expectation')
+
+    def test_distinct_term_values_from_file(self):
         monthvocabfile = self.framework.monthvocabfile
-        months = distinct_vocab_list_from_file(monthvocabfile)
+        months = distinct_term_values_from_file(monthvocabfile, 'verbatim')
 #        print 'months: %s' % months
         self.assertEqual(len(months), 6, 
             'the number of distinct verbatim month values does not match expectation')
         self.assertEqual(months, ['5', 'V', 'VI', 'Vi', 'v', 'vi'],
             'verbatim month values do not match expectation')
+
+    def test_clean_header(self):
+        header = ['b ', ' a', 'c	']
+        result = clean_header(header)
+        self.assertEqual(result, ['a', 'b', 'c'], 'header failed to be cleaned properly')
 
     def test_merge_headers(self):
         header1 = ['b', 'a', 'c']
@@ -851,7 +912,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(writtenlist, ['d', 'e'],
             'new values de for target list not written to testvocabfile')
 
-        fulllist = distinct_vocab_list_from_file(testvocabfile)
+        fulllist = distinct_term_values_from_file(testvocabfile, 'verbatim')
 #        print 'fulllist: %s' % fulllist
         self.assertEqual(fulllist, ['a', 'b', 'c', 'd', 'e'],
             'full values abcde not found in testvocabfile')
