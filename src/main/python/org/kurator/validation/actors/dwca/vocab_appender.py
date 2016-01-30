@@ -14,151 +14,106 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2016-01-28T13:30-03:00"
-
-from optparse import OptionParser
-from dwca_utils import split_path
-from vocab_loader import vocab_loader
-from dwca_terms import vocabfieldlist
-import os.path
-import csv
-import json
-import logging
+__version__ = "vocab_appender.py 2016-01-29T18:01-03:00"
 
 # For now, use global variables to capture parameters sent at the command line in 
 # a workflow
 # Example: 
 #
-# kurator -f workflows/vocab_appender.yaml -p p=fullpath -p v=../../vocabularies/basisOfRecord.csv -p n='a, b, c'
+# kurator -f workflows/vocab_appender.yaml -p v=vocabfile -p v=./workspace/basisOfRecord.csv -p n='preservedspecimen, voucher, fossil'
 #
 # or as a command-line script.
 # Example:
 #
-# python vocab_appender.py -i ../../vocabularies/day.csv -n '33'
+# python vocab_appender.py -v ../../vocabularies/day.csv -n '33'
 
-# Global variable for the list of potentially new values for the term to append to the vocab file
-newvaluelist = None
+from optparse import OptionParser
+from dwca_utils import vocab_dialect
+from dwca_utils import distinct_vocabs_to_file
+from dwca_terms import vocabfieldlist
+import json
+import logging
+
+# Global variable for the list of potentially new values for the term to append to the 
+# vocab file
+checkvaluelist = None
 
 def vocab_appender(inputs_as_json):
     """Given a set of distinct values for a given term, append any not already in the 
     corresponding vocabulary file as new entries.
-    inputs_as_json - {'fullpath':'[p]', 'newvaluelist':'[n]'} where:
-    p is the full path to the vocabulary file
-    n is a list of candidate term values to append
-    
-    returns JSON string with information about the results."""
-
-    global newvaluelist
+    inputs_as_json - JSON string containing inputs
+        vocabfile - full path to the file containing the vocabulary
+        checkvaluelist - a list of candidate term values to append to the vocabulary file
+    returns JSON string with information about the results
+        success - True if process completed successfully, otherwise False
+        addedvalues - new values added to the vocabulary file
+    """
     inputs = json.loads(inputs_as_json)
-    fullpath = inputs['fullpath']
-    print 'inputs: %s fullpath: %s' % (inputs, fullpath)
-    # Use the newvaluelist from the input JSON, if it exists. 
+    vocabfile = inputs['vocabfile']
+
+    # Use the checkvaluelist from the input JSON, if it exists. 
     # If it comes from inputs[], it should be a list. If it comes from the global 
     # variable, it will be a string
-    print 'newvaluelist: %s' % newvaluelist
-    if newvaluelist is None:
-        try:
-            # thelist should be a list
-            newvaluelist = inputs['newvaluelist']
-            print 'try newvaluelist: %s' % newvaluelist
-#            newvaluelist=[subs.strip() for subs in str(thelist).split(',')]
-        except:
-            print 'No newvaluelist given.'
-            return None
-    else:
-        # newvaluelist should be a string
-        thelist = newvaluelist
-        if str(newvaluelist).find(',')>0:
-            newvaluelist=[subs.strip() for subs in thelist.split(',')]
+    # try to get the variable from inputs_as_json
+    try:
+        valuelist = inputs['checkvaluelist']
+    except:
+        theList = checkvaluelist
+        if str(checkvaluelist).find(',')>0:
+            valuelist=[subs.strip() for subs in thelist.split(',')]
         else:
-            newvaluelist=[str(newvaluelist)]
+            valuelist=[str(checkvaluelist)]
 
-    dialect = csv.excel
-    dialect.lineterminator='\r'
-    
-    isfile = os.path.isfile(fullpath)
-    if not isfile:
-        with open(fullpath, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, dialect=dialect, 
-                quoting=csv.QUOTE_ALL, fieldnames=vocabfieldlist)
-            writer.writeheader()
-
-    loader_params = {}
-    loader_params['fullpath'] = fullpath
-    vdict=json.loads(vocab_loader(json.dumps(loader_params)))
-    logging.debug('Extractor response: %s' % dict)
-
-    checklist=[]
-    addedvalues=[]
-    for t in newvaluelist:
-        checklist.append(t)
-    if len(checklist)>0:
-        for t in checklist:
-            if vdict.has_key(t) or t=='':
-                newvaluelist.remove(t)
-
-    with open(fullpath, 'a') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, quoting=csv.QUOTE_ALL, 
-            fieldnames=vocabfieldlist)
-        for term in newvaluelist:
-            if term is not None and term!='':
-                logging.debug('Writing %s to file %s' % (term, fullpath))
-                writer.writerow({'verbatim':term, 'standard':'', 'checked':0 })
+    dialect = vocab_dialect()
+    addedvalues = distinct_vocabs_to_file(vocabfile, valuelist, dialect)
 
     # Successfully completed the mission
     # Return a dict of important information as a JSON string
     response = {}
-    returnvars = ['addedvalues']
-    returnvals = [newvaluelist]
+    returnvars = ['addedvalues', 'success']
+    returnvals = [addedvalues, True]
     i=0
     for a in returnvars:
         response[a]= returnvals[i] 
         i+=1
 
     # Reset global variables to None
-    newvaluelist = None
-
-    print 'Appender response: %s' % response
+    checkvaluelist = None
     return json.dumps(response)
     
 def _getoptions():
     """Parses command line options and returns them."""
     parser = OptionParser()
-    parser.add_option("-i", "--input", dest="inputfile",
+    parser.add_option("-v", "--vocabfile", dest="vocabfile",
                       help="Text file to store vocabs",
                       default=None)
-    parser.add_option("-n", "--newvaluelist", dest="newvaluelist",
+    parser.add_option("-n", "--checkvaluelist", dest="checkvaluelist",
                       help="List of new values to add to the vocab",
                       default=None)
-    parser.add_option("-l", "--loglevel", dest="loglevel",
-                      help="The level at which to log",
-                      default='INFO')
     return parser.parse_args()[0]
 
 def main():
+    global checkvaluelist
     options = _getoptions()
-    loglevel = options.loglevel
-    logging.basicConfig(level=getattr(logging, loglevel.upper()))
-    logging.basicConfig(level=logging.DEBUG)
-    fullpath = options.inputfile
-    thelist=options.newvaluelist
-    newvaluelist=[subs.strip() for subs in str(thelist).split(',')]
-    print 'newvaluelist: %s' % newvaluelist
-    if fullpath is None:
-        print "syntax: python vocab_appender.py -i ../../vocabularies/basisOfRecord.csv -n 'a, b, c'"
+    vocabfile = options.vocabfile
+    thelist=options.checkvaluelist
+    checkvaluelist=[subs.strip() for subs in str(thelist).split(',')]
+    print 'checkvaluelist: %s' % checkvaluelist
+    if vocabfile is None:
+        print "syntax: python vocab_appender.py -v ./workspace/basisOfRecord.csv -n 'preservedspecimen, voucher, fossil'"
         return
     
     inputs = {}
-    inputs['fullpath'] = fullpath
-    inputs['newvaluelist'] = newvaluelist
+    inputs['vocabfile'] = vocabfile
+    inputs['checkvaluelist'] = checkvaluelist
+
     print 'inputs: %s' % inputs
     print 'json.dumps(inputs): %s' % json.dumps(inputs)
+
     # Append distinct values of to vocab file
     response=json.loads(vocab_appender(json.dumps(inputs)))
 
-#    print 'Response: %s' % response
-    logging.info('To file %s, added new values: %s' % (fullpath, response['addedvalues']))
+    logging.debug('To file %s, added new values: %s' % (vocabfile, response['addedvalues']))
 
 if __name__ == '__main__':
-    """ Demo of vocab_appender"""
     main()

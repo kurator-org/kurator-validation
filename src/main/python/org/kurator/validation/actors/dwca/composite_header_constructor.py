@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor.py 2016-01-21T12:41-03:00"
+__version__ = "composite_header_constructor.py 2016-01-28T13:52-03:00"
 
 # For now, use global variables to capture parameters sent at the command line in 
 # a workflow
@@ -104,20 +104,20 @@ def _getoptions():
     return parser.parse_args()[0]
 
 def main():
-    global headerworkspace, compositeheaderfilename
+    global compositeheaderworkspace, compositeheaderfilename
     logging.basicConfig(level=logging.DEBUG)
     options = _getoptions()
     file1 = options.file1
     file2 = options.file2
-    headerworkspace = options.workspace
+    compositeheaderworkspace = options.workspace
     compositeheaderfilename = options.outputfilename
 
     if file1 is None or file2 is None:
         print 'syntax: python composite_header_constructor.py -1 "../../data/tests/composite/test_tsv_1.txt" -2 "../../data/tests/composite/test_tsv_2.txt" -w ./workspace -o compositeheader.txt'
         return
      
-    if headerworkspace is None:
-        headerworkspace = './workspace'
+    if compositeheaderworkspace is None:
+        compositeheaderworkspace = './workspace'
     
     if compositeheaderfilename is None:
         compositeheaderfilename = 'compositeheader.tsv'
@@ -133,5 +133,4 @@ def main():
         % (file1, file2, response['compositeheaderoutputfile'], response['compositeheader']))
 
 if __name__ == '__main__':
-    """ Demo of composite_header_constructor"""
     main()

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-01-23T11:48-03:00"
+__version__ = "dwca_utils.py 2016-01-29T17:42-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -25,6 +25,7 @@ __version__ = "dwca_utils.py 2016-01-23T11:48-03:00"
 # python dwca_utils.py
 
 from collections import namedtuple
+from dwca_terms import vocabfieldlist
 import os.path
 import glob
 import unittest
@@ -54,6 +55,23 @@ def tsv_dialect():
     dialect.strict=False
     return dialect
     
+def vocab_dialect():
+    """Get a dialect object with properties for vocabulary management files.
+    parameters:
+        None
+    returns:
+        dialect - a csv.dialect object with TSV attributes"""
+    dialect = csv.excel
+    dialect.lineterminator='\r'
+    dialect.delimiter=','
+    dialect.escapechar='/'
+    dialect.doublequote=True
+    dialect.quotechar='"'
+    dialect.quoting=csv.QUOTE_MINIMAL
+    dialect.skipinitialspace=True
+    dialect.strict=False
+    return dialect
+
 def csv_file_dialect(fullpath):
     """Detect the dialect of a CSV or TXT data file.
     parameters:
@@ -288,6 +306,77 @@ def get_standard_value(was, valuedict):
         return valuedict[was]
     return None
 
+def distinct_vocab_list_from_file(vocabfile, dialect=None):
+    """Get the list of distinct verbatim values in an existing vocabulary lookup file.
+    parameters:
+        vocabfile - the full path to the vocabulary lookup file
+        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+    returns:
+        sorted(list(values)) - a sorted list of distinct verbatim values in the vocabulary
+    """
+#    print 'vocabfile: %s\nvocabfieldlist:%s' % (vocabfile, vocabfieldlist)
+    if os.path.isfile(vocabfile) == False:
+        return None
+    values = set()
+    if dialect is None:
+        dialect = vocab_dialect()
+    with open(vocabfile, 'rU') as csvfile:
+        dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
+        i=0
+        for row in dr:
+            # Skip the header row.
+            if i>0:
+                values.add(row['verbatim'])
+            i+=1
+    return sorted(list(values))
+
+def not_in_list(targetlist, checklist):
+    """Get the list of distinct values in list that are not in a target list already.
+    parameters:
+        targetlist - the list to check to see if the value already exists there
+        checklist - the list of values to check against the targetlist
+    returns:
+        sorted(list(values)) - a sorted list of distinct new values not in the target list
+    """
+    if targetlist is None:
+        return sorted(checklist)
+    newlist = []
+    for v in checklist:
+        if v not in targetlist:
+            newlist.append(v)
+    if '' in newlist:
+        newlist.remove('')
+    return sorted(newlist)
+
+def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
+    """Add distinct new verbatim values from a valuelist to a vocabulary lookup file.
+    parameters:
+        vocabfile - the full path to the vocabulary lookup file
+        valuelist - the list of values to check and add any new ones to the vocabulary
+            lookup file
+        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+    returns:
+        newvaluelist - a sorted list of distinct verbatim values added to the vocabulary
+            lookup file
+    """
+    vocablist = distinct_vocab_list_from_file(vocabfile, dialect)
+    newvaluelist = not_in_list(vocablist, valuelist)
+    if len(newvaluelist) == 0:
+        return None
+
+    if dialect is None:
+        dialect = vocab_dialect()
+    if not os.path.isfile(vocabfile):
+        with open(vocabfile, 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
+            writer.writeheader()
+
+    with open(vocabfile, 'a') as csvfile:
+        writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
+        for term in newvaluelist:
+            writer.writerow({'verbatim':term })
+    return newvaluelist
+
 class DWCAUtilsFramework():
     # testdatapath is the location of the files to test with
     testdatapath = '../../data/tests/'
@@ -304,22 +393,27 @@ class DWCAUtilsFramework():
     csvcompositepath = testdatapath + 'test_csv*.csv'
     tsvcompositepath = testdatapath + 'test_tsv*.txt'
     mixedcompositepath = testdatapath + 'test_*_specimen_records.*'
+    monthvocabfile = testdatapath + 'test_vocab_month.csv'
 
     # following are files output during the tests, remove these in dispose()
     csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
     tsvfromcsvfile1 = testdatapath + 'test_tsv_from_csv_1.txt'
     tsvfromcsvfile2 = testdatapath + 'test_tsv_from_csv_2.txt'
+    testvocabfile = testdatapath + 'test_vocab_file.csv'
 
     def dispose(self):
         csvwriteheaderfile = self.csvwriteheaderfile
         tsvfromcsvfile1 = self.tsvfromcsvfile1
         tsvfromcsvfile2 = self.tsvfromcsvfile2
+        testvocabfile = self.testvocabfile
         if os.path.isfile(csvwriteheaderfile):
             os.remove(csvwriteheaderfile)
         if os.path.isfile(tsvfromcsvfile1):
             os.remove(tsvfromcsvfile1)
         if os.path.isfile(tsvfromcsvfile2):
             os.remove(tsvfromcsvfile2)
+        if os.path.isfile(testvocabfile):
+            os.remove(testvocabfile)
         return True
 
 class DWCAUtilsTestCase(unittest.TestCase):
@@ -672,6 +766,15 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(get_standard_value('female', testdict), 'female', 
             "lookup 'female' does not return 'female'")
 
+    def test_distinct_vocab_list_from_file(self):
+        monthvocabfile = self.framework.monthvocabfile
+        months = distinct_vocab_list_from_file(monthvocabfile)
+#        print 'months: %s' % months
+        self.assertEqual(len(months), 6, 
+            'the number of distinct verbatim month values does not match expectation')
+        self.assertEqual(months, ['5', 'V', 'VI', 'Vi', 'v', 'vi'],
+            'verbatim month values do not match expectation')
+
     def test_merge_headers(self):
         header1 = ['b', 'a', 'c']
         header2 = ['b', 'c ', 'd']
@@ -721,6 +824,37 @@ class DWCAUtilsTestCase(unittest.TestCase):
         result = merge_headers(header7, header8)
         self.assertEqual(result, ['a', 'b', 'c'],
             'headers with whitespace merge failed')
+
+    def test_not_in_list(self):
+        targetlist = ['b', 'a', 'c']
+        checklist = ['c', 'd', 'a', 'e']
+        newlist = not_in_list(targetlist, checklist)
+#        print 'newlist: %s' % newlist
+        self.assertEqual(newlist, ['d', 'e'],
+            'new values de for target list do not meet expectation')
+        newlist = not_in_list(None, checklist)
+        self.assertEqual(newlist, ['a', 'c', 'd', 'e'],
+            'new values acde for targetlist do not meet expectation')
+
+    def test_distinct_vocabs_to_file(self):
+        testvocabfile = self.framework.testvocabfile
+
+        valuelist = ['b', 'a', 'c']
+        writtenlist = distinct_vocabs_to_file(testvocabfile, valuelist)
+#        print 'writtenlist1: %s' % writtenlist
+        self.assertEqual(writtenlist, ['a', 'b', 'c'],
+            'new values abc for target list not written to testvocabfile')
+
+        checklist = ['c', 'd', 'a', 'e']
+        writtenlist = distinct_vocabs_to_file(testvocabfile, checklist)
+#        print 'writtenlist2: %s' % writtenlist
+        self.assertEqual(writtenlist, ['d', 'e'],
+            'new values de for target list not written to testvocabfile')
+
+        fulllist = distinct_vocab_list_from_file(testvocabfile)
+#        print 'fulllist: %s' % fulllist
+        self.assertEqual(fulllist, ['a', 'b', 'c', 'd', 'e'],
+            'full values abcde not found in testvocabfile')
 
 if __name__ == '__main__':
     unittest.main()

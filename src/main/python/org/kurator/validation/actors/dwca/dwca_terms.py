@@ -16,7 +16,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_terms.py 2016-01-28T13:27:-03:00"
+__version__ = "dwca_terms.py 2016-01-29T12:54-03:00"
 
 # This file contains definitions of standard lists of terms to be used in composite term
 # processing.
@@ -58,5 +58,5 @@ controlledtermlist = [
     'identificationVerificationStatus', 'taxonRank', 'nomenclaturalCode', 
     'taxonomicStatus', 'nomenclaturalStatus']	
     
-vocabfieldlist = ['verbatim','standardizedkey', 'checked', 'error','misplaced','incorrectable',
-    'source']
+vocabfieldlist = ['verbatim', 'standard', 'checked', 'error', 'misplaced',
+    'incorrectable', 'source']

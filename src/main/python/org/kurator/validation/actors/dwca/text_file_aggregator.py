@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator.py 2016-01-22T18:09-03:00"
+__version__ = "text_file_aggregator.py 2016-01-29T16:29-03:00"
 
 # For now, use global variables to capture parameters sent at the command line in 
 # a workflow
@@ -110,8 +110,8 @@ def text_file_aggregator(inputs_as_json):
     # Successfully completed the mission
     # Return a dict of important information as a JSON string
     response = {}
-    returnvars = ['aggregaterowcount', 'aggregateheader']
-    returnvals = [aggregaterowcount, list(aggregateheader)]
+    returnvars = ['aggregaterowcount', 'aggregateheader', 'success']
+    returnvals = [aggregaterowcount, list(aggregateheader), True]
     i=0
     for a in returnvars:
         response[a]= returnvals[i] 
