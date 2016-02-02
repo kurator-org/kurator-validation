@@ -14,11 +14,11 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-01-30T13:48-03:00"
+__version__ = "vocab_extractor.py 2016-02-02T12:30-03:00"
 
 from optparse import OptionParser
 from dwca_utils import split_path
-from dwca_utils import distinct_term_values_from_file
+from dwca_vocab_utils import distinct_term_values_from_file
 import os.path
 import json
 import logging

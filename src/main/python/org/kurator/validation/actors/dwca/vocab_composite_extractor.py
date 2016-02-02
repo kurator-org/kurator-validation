@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_composite_extractor.py 2016-02-02T11:25-03:00"
+__version__ = "vocab_composite_extractor.py 2016-02-02T12:31-03:00"
 
 # For now, use global variables to capture parameters sent at the command line in 
 # a workflow
@@ -29,8 +29,8 @@ __version__ = "vocab_composite_extractor.py 2016-02-02T11:25-03:00"
 
 from optparse import OptionParser
 from dwca_utils import split_path
-from dwca_utils import compose_key_from_list
-from dwca_utils import distinct_composite_term_values_from_file
+from dwca_vocab_utils import compose_key_from_list
+from dwca_vocab_utils import distinct_composite_term_values_from_file
 import os.path
 import csv
 import json

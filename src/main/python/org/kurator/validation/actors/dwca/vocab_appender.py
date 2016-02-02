@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2016-02-01T19:37-03:00"
+__version__ = "vocab_appender.py 2016-02-02T12:31-03:00"
 
 # For now, use global variables to capture parameters sent at the command line in 
 # a workflow
@@ -28,8 +28,8 @@ __version__ = "vocab_appender.py 2016-02-01T19:37-03:00"
 # python vocab_appender.py -v ../../vocabularies/day.csv -n '33'
 
 from optparse import OptionParser
-from dwca_utils import vocab_dialect
-from dwca_utils import distinct_vocabs_to_file
+from dwca_vocab_utils import vocab_dialect
+from dwca_vocab_utils import distinct_vocabs_to_file
 from dwca_terms import vocabfieldlist
 import json
 import logging

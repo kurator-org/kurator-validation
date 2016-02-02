@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-02-01T21:37-03:00"
+__version__ = "dwca_utils.py 2016-02-02T12:314-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -24,8 +24,8 @@ __version__ = "dwca_utils.py 2016-02-01T21:37-03:00"
 #
 # python dwca_utils.py
 
-from collections import namedtuple
-from dwca_terms import vocabfieldlist
+#from collections import namedtuple
+#from dwca_terms import vocabfieldlist
 import os.path
 import glob
 import unittest
@@ -38,24 +38,22 @@ except ImportError:
     warnings.warn("can't import `unicodecsv` encoding errors may occur")
     import csv
 
-
-def compose_key_from_list(alist, separator='|'):
-# Content cannot contain the VALUE_SEPARATOR - '|' by default.
-    """Get a string consisting of the values in a list, separated by separator value.
-    parameters:
-        alist - the list of value to compose into a string.
-        separator - the string to use as the value separator in the string
-    returns:
-        key - the composed string with values separated by separator
-    """
-    n=0
-    for value in alist:
-        if n==0:
-            key=value
-        else:
-            key=key+separator+value
-        n+=1
-    return key
+# def compose_key_from_list(alist, separator='|'):
+#     """Get a string consisting of the values in a list, separated by separator value.
+#     parameters:
+#         alist - the list of value to compose into a string.
+#         separator - the string to use as the value separator in the string
+#     returns:
+#         key - the composed string with values separated by separator
+#     """
+#     n=0
+#     for value in alist:
+#         if n==0:
+#             key=value
+#         else:
+#             key=key+separator+value
+#         n+=1
+#     return key
 
 def tsv_dialect():
     """Get a dialect object with TSV properties.
@@ -74,22 +72,22 @@ def tsv_dialect():
     dialect.strict=False
     return dialect
     
-def vocab_dialect():
-    """Get a dialect object with properties for vocabulary management files.
-    parameters:
-        None
-    returns:
-        dialect - a csv.dialect object with TSV attributes"""
-    dialect = csv.excel
-    dialect.lineterminator='\r'
-    dialect.delimiter=','
-    dialect.escapechar='/'
-    dialect.doublequote=True
-    dialect.quotechar='"'
-    dialect.quoting=csv.QUOTE_MINIMAL
-    dialect.skipinitialspace=True
-    dialect.strict=False
-    return dialect
+# def vocab_dialect():
+#     """Get a dialect object with properties for vocabulary management files.
+#     parameters:
+#         None
+#     returns:
+#         dialect - a csv.dialect object with TSV attributes"""
+#     dialect = csv.excel
+#     dialect.lineterminator='\r'
+#     dialect.delimiter=','
+#     dialect.escapechar='/'
+#     dialect.doublequote=True
+#     dialect.quotechar='"'
+#     dialect.quoting=csv.QUOTE_MINIMAL
+#     dialect.skipinitialspace=True
+#     dialect.strict=False
+#     return dialect
 
 def csv_file_dialect(fullpath):
     """Detect the dialect of a CSV or TXT data file.
@@ -193,8 +191,8 @@ def read_header(fullpath, dialect = None):
     return header
 
 def composite_header(fullpath, dialect = None):
-    """Get a header that includes all of the fields in headers of a set file in the given
-       path.
+    """Get a header that includes all of the fields in headers of a set of files in the 
+       given path.
     parameters:
         fullpath - the full path to the files to process. (e.g., './*.txt')
         dialect - a csv.dialect object with the attributes of the input files, which must
@@ -291,12 +289,12 @@ def csv_to_tsv(inputfile, outputfile):
             writer.writerow(row)
     return True
 
-def header_as_tuple(header):
-    header_tuple = ()
-    for field in header:
-        field_as_tuple = (field,)
-        header_tuple = header_tuple + field_as_tuple
-    return header_tuple
+# def header_as_tuple(header):
+#     header_tuple = ()
+#     for field in header:
+#         field_as_tuple = (field,)
+#         header_tuple = header_tuple + field_as_tuple
+#     return header_tuple
 
 # def read_csv_row_tuple(path, dialect):
 #     header = read_header(path, dialect)
@@ -329,18 +327,18 @@ def split_path(fullpath):
     filepattern = fullpath[fullpath.rfind('/')+1:fullpath.rfind('.')]
     return path, fileext, filepattern
 
-def get_standard_value(was, valuedict):
-    """Get the standard value of a term from a dictionary.
-    parameters:
-        was - the value of the term to standardize
-        valuedict - the dictionary to lookup the standard value
-    returns:
-        valuedict[was] - the standard value of the term, if it exists, else None"""
-    if was is None:
-        return None
-    if was in valuedict.keys():
-        return valuedict[was]
-    return None
+# def get_standard_value(was, valuedict):
+#     """Get the standard value of a term from a dictionary.
+#     parameters:
+#         was - the value of the term to standardize
+#         valuedict - the dictionary to lookup the standard value
+#     returns:
+#         valuedict[was] - the standard value of the term, if it exists, else None"""
+#     if was is None:
+#         return None
+#     if was in valuedict.keys():
+#         return valuedict[was]
+#     return None
 
 # def distinct_vocab_list_from_file(vocabfile, dialect=None):
 #     """Get the list of distinct verbatim values in an existing vocabulary lookup file.
@@ -366,123 +364,122 @@ def get_standard_value(was, valuedict):
 #             i+=1
 #     return sorted(list(values))
 
-def distinct_composite_term_values_from_file(inputfile, terms, separator = '|', dialect=None):
-    """Get the list of distinct order-specific values of set of terms in a file.
-    parameters:
-        inputfile - the full path to the input file
-        terms - a string containing the field names in the input file to use for the key
-        separator - the string that separates the fieldnames in terms
-        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
-    returns:
-        list(valueset) - a list of distinct values of the composite term
-    """
-    if os.path.isfile(inputfile) == False:
-        return None
-    values = set()
-    if dialect is None:
-        dialect = csv_file_dialect(inputfile)
-    header = read_header(inputfile, dialect)
-    if header is None:
-        return None
+# def distinct_composite_term_values_from_file(inputfile, terms, separator = '|', dialect=None):
+#     """Get the list of distinct order-specific values of set of terms in a file.
+#     parameters:
+#         inputfile - the full path to the input file
+#         terms - a string containing the field names in the input file to use for the key
+#         separator - the string that separates the fieldnames in terms
+#         dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+#     returns:
+#         list(valueset) - a list of distinct values of the composite term
+#     """
+#     if os.path.isfile(inputfile) == False:
+#         return None
+#     values = set()
+#     if dialect is None:
+#         dialect = csv_file_dialect(inputfile)
+#     header = read_header(inputfile, dialect)
+#     if header is None:
+#         return None
+# 
+#     termlist = terms.split(separator)
+#     # Iterate over the file rows to get the values of the terms
+#     with open(inputfile, 'rU') as csvfile:
+#         dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=header)
+#         i=0
+#         # Now pull out the values of all the terms in the term composite
+#         # for every row and add the key to the vocabulary with the values of the 
+#         # constituent terms.
+#         for row in dr:
+#             # Skip the header row.
+#             if i>0:
+# 				vallist=[]
+# 				for t in termlist:
+# 					try:
+# 						v=row[t]
+# 						vallist.append(v)
+# 					except:
+# 						vallist.append('')
+# 				values.add(compose_key_from_list(vallist))
+#             i+=1
+#     return list(values)
 
-    termlist = terms.split(separator)
-#    print 'header: %s\ntermlist: %s' % (header, termlist)
-    # Iterate over the file rows to get the values of the terms
-    with open(inputfile, 'rU') as csvfile:
-        dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=header)
-        i=0
-        # Now pull out the values of all the terms in the term composite
-        # for every row and add the key to the vocabulary with the values of the 
-        # constituent terms.
-        for row in dr:
-            # Skip the header row.
-            if i>0:
-				vallist=[]
-				for t in termlist:
-					try:
-						v=row[t]
-						vallist.append(v)
-					except:
-						vallist.append('')
-				values.add(compose_key_from_list(vallist))
-            i+=1
-    return list(values)
+# def distinct_term_values_from_file(inputfile, termname, dialect=None):
+#     """Get the list of distinct values of a term in a file.
+#     parameters:
+#         inputfile - the full path to the input file
+#         termname - the field name in the header of the input file to search in
+#         dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+#     returns:
+#         sorted(list(values)) - a sorted list of distinct values of the term
+#     """
+#     if os.path.isfile(inputfile) == False:
+#         return None
+#     values = set()
+#     if dialect is None:
+#         dialect = csv_file_dialect(inputfile)
+#     header = read_header(inputfile, dialect)
+#     if header is None:
+#         return None
+#     if termname not in header:
+#         return None
+#     with open(inputfile, 'rU') as csvfile:
+#         dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=header)
+#         i=0
+#         for row in dr:
+#             # Skip the header row.
+#             if i>0:
+#                 values.add(row[termname])
+#             i+=1
+#     return sorted(list(values))
 
-def distinct_term_values_from_file(inputfile, termname, dialect=None):
-    """Get the list of distinct values of a term in a file.
-    parameters:
-        inputfile - the full path to the input file
-        termname - the field name in the header of the input file to search in
-        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
-    returns:
-        sorted(list(values)) - a sorted list of distinct values of the term
-    """
-    if os.path.isfile(inputfile) == False:
-        return None
-    values = set()
-    if dialect is None:
-        dialect = csv_file_dialect(inputfile)
-    header = read_header(inputfile, dialect)
-    if header is None:
-        return None
-    if termname not in header:
-        return None
-    with open(inputfile, 'rU') as csvfile:
-        dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=header)
-        i=0
-        for row in dr:
-            # Skip the header row.
-            if i>0:
-                values.add(row[termname])
-            i+=1
-    return sorted(list(values))
+# def not_in_list(targetlist, checklist):
+#     """Get the list of distinct values in list that are not in a target list already.
+#     parameters:
+#         targetlist - the list to check to see if the value already exists there
+#         checklist - the list of values to check against the targetlist
+#     returns:
+#         sorted(list(values)) - a sorted list of distinct new values not in the target list
+#     """
+#     if targetlist is None:
+#         return sorted(checklist)
+#     newlist = []
+#     for v in checklist:
+#         if v not in targetlist:
+#             newlist.append(v)
+#     if '' in newlist:
+#         newlist.remove('')
+#     return sorted(newlist)
 
-def not_in_list(targetlist, checklist):
-    """Get the list of distinct values in list that are not in a target list already.
-    parameters:
-        targetlist - the list to check to see if the value already exists there
-        checklist - the list of values to check against the targetlist
-    returns:
-        sorted(list(values)) - a sorted list of distinct new values not in the target list
-    """
-    if targetlist is None:
-        return sorted(checklist)
-    newlist = []
-    for v in checklist:
-        if v not in targetlist:
-            newlist.append(v)
-    if '' in newlist:
-        newlist.remove('')
-    return sorted(newlist)
-
-def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
-    """Add distinct new verbatim values from a valuelist to a vocabulary lookup file.
-    parameters:
-        vocabfile - the full path to the vocabulary lookup file
-        valuelist - the list of values to check and add any new ones to the vocabulary
-            lookup file
-        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
-    returns:
-        newvaluelist - a sorted list of distinct verbatim values added to the vocabulary
-            lookup file
-    """
-    vocablist = distinct_term_values_from_file(vocabfile, 'verbatim', dialect)
-    newvaluelist = not_in_list(vocablist, valuelist)
-    if len(newvaluelist) == 0:
-        return None
-
-    if dialect is None:
-        dialect = vocab_dialect()
-    if not os.path.isfile(vocabfile):
-        with open(vocabfile, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
-            writer.writeheader()
-
-    with open(vocabfile, 'a') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
-        for term in newvaluelist:
-            writer.writerow({'verbatim':term })
-    return newvaluelist
+# def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
+#     """Add distinct new verbatim values from a valuelist to a vocabulary lookup file.
+#     parameters:
+#         vocabfile - the full path to the vocabulary lookup file
+#         valuelist - the list of values to check and add any new ones to the vocabulary
+#             lookup file
+#         dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+#     returns:
+#         newvaluelist - a sorted list of distinct verbatim values added to the vocabulary
+#             lookup file
+#     """
+#     vocablist = distinct_term_values_from_file(vocabfile, 'verbatim', dialect)
+#     newvaluelist = not_in_list(vocablist, valuelist)
+#     if len(newvaluelist) == 0:
+#         return None
+# 
+#     if dialect is None:
+#         dialect = vocab_dialect()
+#     if not os.path.isfile(vocabfile):
+#         with open(vocabfile, 'w') as csvfile:
+#             writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
+#             writer.writeheader()
+# 
+#     with open(vocabfile, 'a') as csvfile:
+#         writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
+#         for term in newvaluelist:
+#             writer.writerow({'verbatim':term })
+#     return newvaluelist
 
 class DWCAUtilsFramework():
     # testdatapath is the location of the files to test with
@@ -552,12 +549,12 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertFalse(dialect.strict,
             'strict not set to False for tsv')
 
-    def test_header_as_tuple(self):
-        header=['a', 'b', 'c']
-        ht = header_as_tuple(header)
-        self.assertEqual(ht[0], 'a', 'tuple construction from header list failed')
-        self.assertEqual(ht[1], 'b', 'tuple construction from header list failed')
-        self.assertEqual(ht[2], 'c', 'tuple construction from header list failed')
+#     def test_header_as_tuple(self):
+#         header=['a', 'b', 'c']
+#         ht = header_as_tuple(header)
+#         self.assertEqual(ht[0], 'a', 'tuple construction from header list failed')
+#         self.assertEqual(ht[1], 'b', 'tuple construction from header list failed')
+#         self.assertEqual(ht[2], 'c', 'tuple construction from header list failed')
 
     def test_csv_file_dialect(self):
         csvreadheaderfile = self.framework.csvreadheaderfile
@@ -855,25 +852,25 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(filepattern, 'test_eight_specimen_records', 
             'incorrect file pattern')
 
-    def test_get_standard_value(self):
-        testdict = { 'm':'male', 'M':'male', 'male':'male', 'f':'female', 'F':'female', 
-            'female':'female'}
-        self.assertIsNone(get_standard_value('unnoewn', testdict), 
-            "lookup 'unnoewn' does not return None")
-        self.assertIsNone(get_standard_value(None, testdict), 
-            'lookup None does not return None')
-        self.assertEqual(get_standard_value('m', testdict), 'male', 
-            "lookup 'm' does not return 'male'")
-        self.assertEqual(get_standard_value('M', testdict), 'male', 
-            "lookup 'M' does not return 'male'")
-        self.assertEqual(get_standard_value('male', testdict), 'male', 
-            "lookup 'male' does not return 'male'")
-        self.assertEqual(get_standard_value('f', testdict), 'female', 
-            "lookup 'f' does not return 'female'")
-        self.assertEqual(get_standard_value('F', testdict), 'female', 
-            "lookup 'F' does not return 'female'")
-        self.assertEqual(get_standard_value('female', testdict), 'female', 
-            "lookup 'female' does not return 'female'")
+#     def test_get_standard_value(self):
+#         testdict = { 'm':'male', 'M':'male', 'male':'male', 'f':'female', 'F':'female', 
+#             'female':'female'}
+#         self.assertIsNone(get_standard_value('unnoewn', testdict), 
+#             "lookup 'unnoewn' does not return None")
+#         self.assertIsNone(get_standard_value(None, testdict), 
+#             'lookup None does not return None')
+#         self.assertEqual(get_standard_value('m', testdict), 'male', 
+#             "lookup 'm' does not return 'male'")
+#         self.assertEqual(get_standard_value('M', testdict), 'male', 
+#             "lookup 'M' does not return 'male'")
+#         self.assertEqual(get_standard_value('male', testdict), 'male', 
+#             "lookup 'male' does not return 'male'")
+#         self.assertEqual(get_standard_value('f', testdict), 'female', 
+#             "lookup 'f' does not return 'female'")
+#         self.assertEqual(get_standard_value('F', testdict), 'female', 
+#             "lookup 'F' does not return 'female'")
+#         self.assertEqual(get_standard_value('female', testdict), 'female', 
+#             "lookup 'female' does not return 'female'")
 
 #     def test_distinct_vocab_list_from_file(self):
 #         monthvocabfile = self.framework.monthvocabfile
@@ -884,41 +881,41 @@ class DWCAUtilsTestCase(unittest.TestCase):
 #         self.assertEqual(months, ['5', 'V', 'VI', 'Vi', 'v', 'vi'],
 #             'verbatim month values do not match expectation')
 
-    def test_distinct_term_values_from_file(self):
-        monthvocabfile = self.framework.monthvocabfile
-        months = distinct_term_values_from_file(monthvocabfile, 'verbatim')
-#        print 'months: %s' % months
-        self.assertEqual(len(months), 6, 
-            'the number of distinct verbatim month values does not match expectation')
-        self.assertEqual(months, ['5', 'V', 'VI', 'Vi', 'v', 'vi'],
-            'verbatim month values do not match expectation')
+#     def test_distinct_term_values_from_file(self):
+#         monthvocabfile = self.framework.monthvocabfile
+#         months = distinct_term_values_from_file(monthvocabfile, 'verbatim')
+# #        print 'months: %s' % months
+#         self.assertEqual(len(months), 6, 
+#             'the number of distinct verbatim month values does not match expectation')
+#         self.assertEqual(months, ['5', 'V', 'VI', 'Vi', 'v', 'vi'],
+#             'verbatim month values do not match expectation')
 
-    def test_distinct_composite_term_values_from_file(self):
-        testfile = self.framework.compositetestfile
-        geogs = distinct_composite_term_values_from_file(testfile, 
-            'country', '|')
-#        print 'geogs: %s' % geogs
-        self.assertEqual(geogs, ['United States'],
-            'composite geogs country values do not match expectation')
-
-        geogs = distinct_composite_term_values_from_file(testfile, 
-            'country|stateProvince', '|')
-#        print 'geogs: %s' % geogs
-        self.assertEqual(geogs, ['United States|Colorado', 'United States|California', 
-            'United States|Washington', 'United States|Hawaii'],
-            'composite geogs country values do not match expectation')
-
-        geogs = distinct_composite_term_values_from_file(testfile, 
-            'country|stateprovince|county', '|')
-#        print 'geogs: %s' % geogs
-        self.assertEqual(geogs, ['United States||San Bernardino', 'United States||Honolulu', 'United States||', 'United States||Kern', 'United States||Chelan'],
-            'composite geogs values do not match expectation')
-
-        geogs = distinct_composite_term_values_from_file(testfile, 
-            'country|stateProvince|county', '|')
-#        print 'geogs: %s' % geogs
-        self.assertEqual(geogs, ['United States|Colorado|', 'United States|California|', 'United States|Washington|Chelan', 'United States|Hawaii|Honolulu', 'United States|California|San Bernardino', 'United States|California|Kern'],
-            'composite geogs values do not match expectation')
+#     def test_distinct_composite_term_values_from_file(self):
+#         testfile = self.framework.compositetestfile
+#         geogs = distinct_composite_term_values_from_file(testfile, 
+#             'country', '|')
+# #        print 'geogs: %s' % geogs
+#         self.assertEqual(geogs, ['United States'],
+#             'composite geogs country values do not match expectation')
+# 
+#         geogs = distinct_composite_term_values_from_file(testfile, 
+#             'country|stateProvince', '|')
+# #        print 'geogs: %s' % geogs
+#         self.assertEqual(geogs, ['United States|Colorado', 'United States|California', 
+#             'United States|Washington', 'United States|Hawaii'],
+#             'composite geogs country values do not match expectation')
+# 
+#         geogs = distinct_composite_term_values_from_file(testfile, 
+#             'country|stateprovince|county', '|')
+# #        print 'geogs: %s' % geogs
+#         self.assertEqual(geogs, ['United States||San Bernardino', 'United States||Honolulu', 'United States||', 'United States||Kern', 'United States||Chelan'],
+#             'composite geogs values do not match expectation')
+# 
+#         geogs = distinct_composite_term_values_from_file(testfile, 
+#             'country|stateProvince|county', '|')
+# #        print 'geogs: %s' % geogs
+#         self.assertEqual(geogs, ['United States|Colorado|', 'United States|California|', 'United States|Washington|Chelan', 'United States|Hawaii|Honolulu', 'United States|California|San Bernardino', 'United States|California|Kern'],
+#             'composite geogs values do not match expectation')
 
     def test_clean_header(self):
         header = ['b ', ' a', 'c	']
@@ -975,43 +972,43 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(result, ['a', 'b', 'c'],
             'headers with whitespace merge failed')
 
-    def test_not_in_list(self):
-        targetlist = ['b', 'a', 'c']
-        checklist = ['c', 'd', 'a', 'e']
-        newlist = not_in_list(targetlist, checklist)
-#        print 'newlist: %s' % newlist
-        self.assertEqual(newlist, ['d', 'e'],
-            'new values de for target list do not meet expectation')
-        newlist = not_in_list(None, checklist)
-        self.assertEqual(newlist, ['a', 'c', 'd', 'e'],
-            'new values acde for targetlist do not meet expectation')
+#     def test_not_in_list(self):
+#         targetlist = ['b', 'a', 'c']
+#         checklist = ['c', 'd', 'a', 'e']
+#         newlist = not_in_list(targetlist, checklist)
+# #        print 'newlist: %s' % newlist
+#         self.assertEqual(newlist, ['d', 'e'],
+#             'new values de for target list do not meet expectation')
+#         newlist = not_in_list(None, checklist)
+#         self.assertEqual(newlist, ['a', 'c', 'd', 'e'],
+#             'new values acde for targetlist do not meet expectation')
 
-    def test_distinct_vocabs_to_file(self):
-        testvocabfile = self.framework.testvocabfile
+#     def test_distinct_vocabs_to_file(self):
+#         testvocabfile = self.framework.testvocabfile
+# 
+#         valuelist = ['b', 'a', 'c']
+#         writtenlist = distinct_vocabs_to_file(testvocabfile, valuelist)
+# #        print 'writtenlist1: %s' % writtenlist
+#         self.assertEqual(writtenlist, ['a', 'b', 'c'],
+#             'new values abc for target list not written to testvocabfile')
+# 
+#         checklist = ['c', 'd', 'a', 'e']
+#         writtenlist = distinct_vocabs_to_file(testvocabfile, checklist)
+# #        print 'writtenlist2: %s' % writtenlist
+#         self.assertEqual(writtenlist, ['d', 'e'],
+#             'new values de for target list not written to testvocabfile')
+# 
+#         fulllist = distinct_term_values_from_file(testvocabfile, 'verbatim')
+# #        print 'fulllist: %s' % fulllist
+#         self.assertEqual(fulllist, ['a', 'b', 'c', 'd', 'e'],
+#             'full values abcde not found in testvocabfile')
 
-        valuelist = ['b', 'a', 'c']
-        writtenlist = distinct_vocabs_to_file(testvocabfile, valuelist)
-#        print 'writtenlist1: %s' % writtenlist
-        self.assertEqual(writtenlist, ['a', 'b', 'c'],
-            'new values abc for target list not written to testvocabfile')
-
-        checklist = ['c', 'd', 'a', 'e']
-        writtenlist = distinct_vocabs_to_file(testvocabfile, checklist)
-#        print 'writtenlist2: %s' % writtenlist
-        self.assertEqual(writtenlist, ['d', 'e'],
-            'new values de for target list not written to testvocabfile')
-
-        fulllist = distinct_term_values_from_file(testvocabfile, 'verbatim')
-#        print 'fulllist: %s' % fulllist
-        self.assertEqual(fulllist, ['a', 'b', 'c', 'd', 'e'],
-            'full values abcde not found in testvocabfile')
-
-    def test_compose_key_from_list(self):
-        valuelist = ['a', 'b', 'c']
-        key = compose_key_from_list(valuelist)
-        expected = 'a|b|c'
-        self.assertEqual(key, expected, 
-            'key value' + key + 'not as expected: ' + expected)
+#     def test_compose_key_from_list(self):
+#         valuelist = ['a', 'b', 'c']
+#         key = compose_key_from_list(valuelist)
+#         expected = 'a|b|c'
+#         self.assertEqual(key, expected, 
+#             'key value' + key + 'not as expected: ' + expected)
 
 if __name__ == '__main__':
     unittest.main()

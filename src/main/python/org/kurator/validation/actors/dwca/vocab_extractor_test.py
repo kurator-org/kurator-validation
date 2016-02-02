@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor_test.py 2016-01-30T14:46-03:00"
+__version__ = "vocab_extractor_test.py 2016-02-02T12:32-03:00"
 
 # This file contains unit test for the vocab_extractor function.
 #
@@ -24,7 +24,7 @@ __version__ = "vocab_extractor_test.py 2016-01-30T14:46-03:00"
 
 from vocab_extractor import vocab_extractor
 from dwca_utils import read_header
-from dwca_utils import distinct_term_values_from_file
+from dwca_vocab_utils import distinct_term_values_from_file
 import os
 import json
 import unittest
