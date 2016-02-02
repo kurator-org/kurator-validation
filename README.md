@@ -319,9 +319,9 @@ To run this workflow at the command prompt one must first do three things:
 
 1.  Set up the Kurator-Akka runtime environment as described in [Setting up Kurator-Akka](https://github.com/kurator-org/kurator-akka#setting-up-kurator-akka) such that the `ka` command invokes the **Kurator-Akka** system.
 
-2.  Follow the instructions for [Developing new python actors](https://github.com/kurator-org/kurator-akka#developing-new-python-actors).  Make sure that the `KURATOR_LOCAL_PYTHON_LIB` environment variable refers to the Lib subdirectory of a local Jython installation, e.g.:
+2.  Follow the instructions for [Developing new python actors](https://github.com/kurator-org/kurator-akka#developing-new-python-actors).  Make sure that the `JYTHON_HOME` environment variable refers to a directory containing the local Jython installation, e.g.:
 
-        export KURATOR_LOCAL_PYTHON_LIB=$HOME/jython2.7.0/Lib/
+        export JYTHON_HOME=$HOME/jython2.7.0/
 
 3.  Set the environment variable `KURATOR_LOCAL_PACKAGES` to refer to the directory containing the root of the `org.kurator.validation` python package.  For example,
 
