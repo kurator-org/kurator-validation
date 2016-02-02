@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_splitter_test.py 2016-01-22T15:22-03:00"
+__version__ = "text_file_splitter_test.py 2016-01-30T14:43-03:00"
 
 from text_file_splitter import text_file_splitter
 from dwca_utils import split_path
@@ -81,8 +81,8 @@ class TextFileSplitterTestCase(unittest.TestCase):
         inputs['workspace'] = workspace
         inputs['chunksize'] = chunksize
 
-        print 'inputs:\n%s' % inputs
-        print 'json-inputs:\n%s' % json.dumps(inputs)
+#        print 'inputs:\n%s' % inputs
+#        print 'json-inputs:\n%s' % json.dumps(inputs)
         # Split text file into chucks
         response=json.loads(text_file_splitter(json.dumps(inputs)))
 

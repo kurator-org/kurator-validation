@@ -13,117 +13,88 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2015 President and Fellows of Harvard College"
-__version__ = "vocab_composite_extractor.py 2015-12-28T15:00-03:00"
-
-from optparse import OptionParser
-from dwca_utils import split_path
-import os.path
-import csv
-import json
-import logging
+__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
+__version__ = "vocab_composite_extractor.py 2016-02-02T11:25-03:00"
 
 # For now, use global variables to capture parameters sent at the command line in 
 # a workflow
 # Example: 
 #
-# kurator -f workflows/vocab_composite_extractor.yaml -p p=fullpath -p v=../../data/eight_specimen_records.csv -p c="continent,country,stateProvince,county,municipality,island,islandGroup,waterbody"
+# kurator -f workflows/vocab_composite_extractor.yaml -p p=inputfile -p v=../../data/eight_specimen_records.csv -p c="continent,country,stateProvince,county,municipality,island,islandGroup,waterbody"
 #
 # or as a command-line script.
 # Example:
 #
 # python vocab_composite_extractor.py -i ../../data/eight_specimen_records.csv -c "continent,country,stateProvince,county,municipality,island,islandGroup,waterbody"
 
-# The order-dependent, comma-separated string of term names in the term composite for which 
-# the distinct values are sought. Term names may not contain commas. Content can. 
+from optparse import OptionParser
+from dwca_utils import split_path
+from dwca_utils import compose_key_from_list
+from dwca_utils import distinct_composite_term_values_from_file
+import os.path
+import csv
+import json
+import logging
+
+# The order-dependent, separator-separated string of term names in the term composite for 
+# which the distinct values are sought. Term names may not contain the separator, but 
+# content may.
 termcomposite = None
 
-# Content cannot contain the VALUE_SEPARATOR - '|' by default.
-VALUE_SEPARATOR = '|'
-
-def make_key(alist):
-    """Given a list of values, return a string consisting of the values in the 
-    list separated by VALUE_SEPARATOR characters."""
-    n=0
-    for i in alist:
-        if n==0:
-            key=i
-        else:
-            key=key+VALUE_SEPARATOR+i
-        n+=1
-    return key
-    
 def vocab_composite_extractor(inputs_as_json):
-    """Extract a list of the distinct values of a given termcomposite in a text file.
-    inputs_as_json - {'fullpath':'[p]', 'termcomposite':'[c]'} where:
-    p is the full path to the file from which to extract
-    c is the ordered list of terms in the term composite for which to extract values
-    
-    Example for a geography key: 
-    
-    c "continent,country,stateprovince,county,municipality,island,islandgroup,waterbody"
-    
-    returns JSON string with information about the results."""
-    
+    """Extract a list of the distinct values of a given termcomposite in a text file.    
+    inputs_as_json - JSON string containing inputs
+        inputfile - full path to the file containing the distinct values to extract
+        termcomposite - an ordered-dependent list of terms for which to extract values. 
+            Example for a geography key: 
+    "continent|country|stateprovince|county|municipality|island|islandgroup|waterbody"
+
+    returns JSON string with information about the results
+        success - True if process completed successfully, otherwise False
+        list(valueset) - a list of distinct values of the temcomposite in the file
+    """
     global termcomposite
-    
-    
     inputs = json.loads(inputs_as_json)
-    fullpath = inputs['fullpath']
-    logging.debug('fullpath: %s\ntermcomposite: %s' % (fullpath, termcomposite))
+    inputfile = inputs['inputfile']
+
     # Use the termcomposite from the input JSON, if it exists
     try:
-        termcomposite = inputs['termcomposite']
+        compositekey = inputs['termcomposite']
     except:
         # Otherwise use the global value, if it exists
-        if termcomposite is None:
-            return None
+        compositekey = termcomposite
 
-    if not os.path.isfile(fullpath):
-        return None
+    if compositekey is None:
+        s = 'No composite term given'
+        return fail_response(s)
+        
+    if not os.path.isfile(inputfile):
+        s = 'Input file %s not found' % inputfile
+        return fail_response(s)
 
-    valueset = set()
-    dialect=csv.excel
-
-    termlist = termcomposite.lower().split(',')
-    logging.debug('termlist: %s' % termlist)
-    
-    # Iterate over the file rows to get the values of the term
-    with open(fullpath, 'rU') as csvfile:
-        dr = csv.DictReader(csvfile, dialect=dialect)
-        header=dr.fieldnames
-        logging.debug('header: %s' % header)
-        i=0
-        for t in header:
-            header[i]=header[i].strip().lower()
-            i+=1
-
-        # Header list ready. Now pull out the values of all the terms in the term composite
-        # for every row and add the key to the vocabulary with the values of the 
-        # constituent terms.
-        for row in dr:
-            vallist=[]
-            for t in termlist:
-                try:
-                    v=row[t]
-                    vallist.append(v)
-                except:
-                    vallist.append('')
-            valueset.add(make_key(vallist))
+    values = distinct_composite_term_values_from_file(inputfile, compositekey,'|')
+#    print 'values: %s' % values
 
     # Successfully completed the mission
     # Return a dict of important information as a JSON string
     response = {}
-    returnvars = ['valueset']
-    returnvals = [list(valueset)]
+    returnvars = ['valueset', 'success']
+    returnvals = [values, True]
     i=0
     for a in returnvars:
         response[a]= returnvals[i] 
         i+=1
 
-    # Reset global variables to None
-    termcomposite = None
-
+    return json.dumps(response)
+    
+def fail_response(error):
+    response = {}
+    returnvars = ['valueset', 'success', 'error']
+    returnvals = [None, False, error]
+    i=0
+    for a in returnvars:
+        response[a]= returnvals[i] 
+        i+=1
     return json.dumps(response)
     
 def _getoptions():
@@ -135,34 +106,29 @@ def _getoptions():
     parser.add_option("-c", "--termcomposite", dest="termcomposite",
                       help="Name of the term for which distinct values are sought",
                       default=None)
-    parser.add_option("-l", "--loglevel", dest="loglevel",
-                      help="The level at which to log",
-                      default='INFO')
     return parser.parse_args()[0]
 
 def main():
+    global termcomposite
     options = _getoptions()
-    loglevel = options.loglevel
-    logging.basicConfig(level=getattr(logging, loglevel.upper()))
-    fullpath = options.inputfile
+    inputfile = options.inputfile
     local_termcomposite = options.termcomposite
 
-    if fullpath is None or local_termcomposite is None:
-        print 'syntax: python vocab_composite_extractor.py -i ../../data/eight_specimen_records.csv -c "continent,country,stateprovince,county,municipality,island,islandgroup,waterbody"'
+    if inputfile is None or local_termcomposite is None:
+        print 'syntax: python vocab_composite_extractor.py -i ../../data/eight_specimen_records.csv -c "continent|country|stateprovince|county|municipality|island|islandgroup|waterbody"'
         return
     
     inputs = {}
-    inputs['fullpath'] = fullpath
+    inputs['inputfile'] = inputfile
     inputs['termcomposite'] = local_termcomposite
     
     # Get distinct values of termcomposite from inputfile
     response=json.loads(vocab_composite_extractor(json.dumps(inputs)))
 
 #    print 'Response: %s' % response
-    logging.info('File %s mined for values of\n%s.' % (fullpath,local_termcomposite))
+    logging.info('File %s mined for values of\n%s.' % (inputfile,local_termcomposite))
     for r in response['valueset']:
         logging.info('%s' % (r) )
 
 if __name__ == '__main__':
-    """ Demo of vocab_extractor_composite"""
     main()

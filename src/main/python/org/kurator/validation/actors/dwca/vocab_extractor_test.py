@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor_test.py 2016-01-30T14:36-03:00"
+__version__ = "vocab_extractor_test.py 2016-01-30T14:46-03:00"
 
 # This file contains unit test for the vocab_extractor function.
 #
@@ -116,7 +116,6 @@ class VocabExtractorTestCase(unittest.TestCase):
 #        print 'values of term %s: %s' % (term, values)
         s = 'values of term %s not extracted correctly from %s' % (term, testfile)
         self.assertEqual(values, ['5', 'V', 'VI', 'Vi', 'v', 'vi'], s)
-
 
 if __name__ == '__main__':
     unittest.main()

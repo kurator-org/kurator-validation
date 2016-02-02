@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2016-01-29T18:01-03:00"
+__version__ = "vocab_appender.py 2016-02-01T19:37-03:00"
 
 # For now, use global variables to capture parameters sent at the command line in 
 # a workflow
@@ -48,6 +48,7 @@ def vocab_appender(inputs_as_json):
         success - True if process completed successfully, otherwise False
         addedvalues - new values added to the vocabulary file
     """
+    global checkvaluelist
     inputs = json.loads(inputs_as_json)
     vocabfile = inputs['vocabfile']
 

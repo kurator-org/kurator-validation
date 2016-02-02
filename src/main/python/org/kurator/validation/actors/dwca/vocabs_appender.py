@@ -14,14 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocabs_appender.py 2016-01-28T13:32-03:00"
-
-from optparse import OptionParser
-from vocab_extractor import vocab_extractor
-from vocab_appender import vocab_appender
-from dwca_terms import controlledtermlist as dwc_controlledtermlist
-import json
-import logging
+__version__ = "vocabs_appender.py 2016-02-01T18:06-03:00"
 
 # For now, use global variables to capture parameters sent at the command line in 
 # a workflow
@@ -33,6 +26,13 @@ import logging
 # Example:
 #
 # python vocabs_appender.py -i ../../data/eight_specimen_records.csv -v ../../data/vocabularies -t 'basisOfRecord, sex'
+
+from optparse import OptionParser
+from vocab_extractor import vocab_extractor
+from vocab_appender import vocab_appender
+from dwca_terms import controlledtermlist as dwc_controlledtermlist
+import json
+import logging
 
 # Global variable for the path to the directory in which to find the vocab files
 vocabs_path = None

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-01-30T14:36-03:00"
+__version__ = "dwca_utils.py 2016-02-01T21:37-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -37,6 +37,25 @@ except ImportError:
     import warnings
     warnings.warn("can't import `unicodecsv` encoding errors may occur")
     import csv
+
+
+def compose_key_from_list(alist, separator='|'):
+# Content cannot contain the VALUE_SEPARATOR - '|' by default.
+    """Get a string consisting of the values in a list, separated by separator value.
+    parameters:
+        alist - the list of value to compose into a string.
+        separator - the string to use as the value separator in the string
+    returns:
+        key - the composed string with values separated by separator
+    """
+    n=0
+    for value in alist:
+        if n==0:
+            key=value
+        else:
+            key=key+separator+value
+        n+=1
+    return key
 
 def tsv_dialect():
     """Get a dialect object with TSV properties.
@@ -347,6 +366,48 @@ def get_standard_value(was, valuedict):
 #             i+=1
 #     return sorted(list(values))
 
+def distinct_composite_term_values_from_file(inputfile, terms, separator = '|', dialect=None):
+    """Get the list of distinct order-specific values of set of terms in a file.
+    parameters:
+        inputfile - the full path to the input file
+        terms - a string containing the field names in the input file to use for the key
+        separator - the string that separates the fieldnames in terms
+        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+    returns:
+        list(valueset) - a list of distinct values of the composite term
+    """
+    if os.path.isfile(inputfile) == False:
+        return None
+    values = set()
+    if dialect is None:
+        dialect = csv_file_dialect(inputfile)
+    header = read_header(inputfile, dialect)
+    if header is None:
+        return None
+
+    termlist = terms.split(separator)
+#    print 'header: %s\ntermlist: %s' % (header, termlist)
+    # Iterate over the file rows to get the values of the terms
+    with open(inputfile, 'rU') as csvfile:
+        dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=header)
+        i=0
+        # Now pull out the values of all the terms in the term composite
+        # for every row and add the key to the vocabulary with the values of the 
+        # constituent terms.
+        for row in dr:
+            # Skip the header row.
+            if i>0:
+				vallist=[]
+				for t in termlist:
+					try:
+						v=row[t]
+						vallist.append(v)
+					except:
+						vallist.append('')
+				values.add(compose_key_from_list(vallist))
+            i+=1
+    return list(values)
+
 def distinct_term_values_from_file(inputfile, termname, dialect=None):
     """Get the list of distinct values of a term in a file.
     parameters:
@@ -360,7 +421,6 @@ def distinct_term_values_from_file(inputfile, termname, dialect=None):
         return None
     values = set()
     if dialect is None:
-#        dialect = vocab_dialect()
         dialect = csv_file_dialect(inputfile)
     header = read_header(inputfile, dialect)
     if header is None:
@@ -441,6 +501,8 @@ class DWCAUtilsFramework():
     tsvcompositepath = testdatapath + 'test_tsv*.txt'
     mixedcompositepath = testdatapath + 'test_*_specimen_records.*'
     monthvocabfile = testdatapath + 'test_vocab_month.csv'
+    geogvocabfile = testdatapath + 'test_dwcgeography.csv'
+    compositetestfile = testdatapath + 'test_eight_specimen_records.csv'
 
     # following are files output during the tests, remove these in dispose()
     csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
@@ -831,6 +893,33 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(months, ['5', 'V', 'VI', 'Vi', 'v', 'vi'],
             'verbatim month values do not match expectation')
 
+    def test_distinct_composite_term_values_from_file(self):
+        testfile = self.framework.compositetestfile
+        geogs = distinct_composite_term_values_from_file(testfile, 
+            'country', '|')
+#        print 'geogs: %s' % geogs
+        self.assertEqual(geogs, ['United States'],
+            'composite geogs country values do not match expectation')
+
+        geogs = distinct_composite_term_values_from_file(testfile, 
+            'country|stateProvince', '|')
+#        print 'geogs: %s' % geogs
+        self.assertEqual(geogs, ['United States|Colorado', 'United States|California', 
+            'United States|Washington', 'United States|Hawaii'],
+            'composite geogs country values do not match expectation')
+
+        geogs = distinct_composite_term_values_from_file(testfile, 
+            'country|stateprovince|county', '|')
+#        print 'geogs: %s' % geogs
+        self.assertEqual(geogs, ['United States||San Bernardino', 'United States||Honolulu', 'United States||', 'United States||Kern', 'United States||Chelan'],
+            'composite geogs values do not match expectation')
+
+        geogs = distinct_composite_term_values_from_file(testfile, 
+            'country|stateProvince|county', '|')
+#        print 'geogs: %s' % geogs
+        self.assertEqual(geogs, ['United States|Colorado|', 'United States|California|', 'United States|Washington|Chelan', 'United States|Hawaii|Honolulu', 'United States|California|San Bernardino', 'United States|California|Kern'],
+            'composite geogs values do not match expectation')
+
     def test_clean_header(self):
         header = ['b ', ' a', 'c	']
         result = clean_header(header)
@@ -916,6 +1005,13 @@ class DWCAUtilsTestCase(unittest.TestCase):
 #        print 'fulllist: %s' % fulllist
         self.assertEqual(fulllist, ['a', 'b', 'c', 'd', 'e'],
             'full values abcde not found in testvocabfile')
+
+    def test_compose_key_from_list(self):
+        valuelist = ['a', 'b', 'c']
+        key = compose_key_from_list(valuelist)
+        expected = 'a|b|c'
+        self.assertEqual(key, expected, 
+            'key value' + key + 'not as expected: ' + expected)
 
 if __name__ == '__main__':
     unittest.main()

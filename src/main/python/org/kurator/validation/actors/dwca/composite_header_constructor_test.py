@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor_test.py 2016-01-21T13:57-03:00"
+__version__ = "composite_header_constructor_test.py 2016-01-30T14:47-03:00"
 
 # This file contains unit test for the composite_header_constructor function.
 #
@@ -139,9 +139,7 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         inputs['headerfilename'] = composedheaderfile
 
         response=json.loads(composite_header_constructor(json.dumps(inputs)))
-
-        print 'composite header:\n%s\ncompositeheaderoutputfile: %s' % (response['compositeheader'], response['compositeheaderoutputfile'])
-
+#        print 'composite header:\n%s\ncompositeheaderoutputfile: %s' % (response['compositeheader'], response['compositeheaderoutputfile'])
         self.assertEqual(len(response['compositeheader']), 6, 'incorrect number of columns in composite')
 
 if __name__ == '__main__':

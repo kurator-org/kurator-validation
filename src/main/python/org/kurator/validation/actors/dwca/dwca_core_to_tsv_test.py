@@ -77,8 +77,8 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
 
         response=json.loads(dwca_core_to_tsv(json.dumps(inputs)))
 
-        print 'TSV file %s with %s rows extracted from core of archive %s (type %s).' \
-            % (response['tsvfile'], response['rowcount'], dwca, archivetype)
+#        print 'TSV file %s with %s rows extracted from core of archive %s (type %s).' \
+#            % (response['tsvfile'], response['rowcount'], dwca, archivetype)
 
         self.assertEqual(response['rowcount'], 8, 'incorrect number of rows in output')
 
