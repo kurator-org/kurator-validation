@@ -16,10 +16,55 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_terms.py 2016-01-29T12:54-03:00"
+__version__ = "dwca_terms.py 2016-02-05T14:38-03:00"
 
-# This file contains definitions of standard lists of terms to be used in composite term
-# processing.
+# This file contains definitions of standard sets of Darwin Core terms.
+
+# Terms that make up the current Simple Darwin Core
+simpledwctermlist = [
+    'type','modified','language','license','rightsHolder','accessRights',
+    'bibliographicCitation','references','institutionID','collectionID','datasetID',
+    'institutionCode','collectionCode','datasetName','ownerInstitutionCode',
+    'basisOfRecord','informationWithheld','dataGeneralizations','dynamicProperties',
+    'occurrenceID','catalogNumber','recordNumber','recordedBy','individualCount',
+    'organismQuantity','organismQuantityType','sex','lifeStage','reproductiveCondition',
+    'behavior','establishmentMeans','occurrenceStatus','preparations','disposition',
+    'associatedMedia','associatedReferences','associatedSequences','associatedTaxa',
+    'otherCatalogNumbers','occurrenceRemarks','organismID','organismName',
+    'organismScope','associatedOccurrences','associatedOrganisms',
+    'previousIdentifications','organismRemarks','materialSampleID',
+    'eventID','parentEventID','fieldNumber','eventDate','eventTime','startDayOfYear',
+    'endDayOfYear','year','month','day','verbatimEventDate','habitat','samplingProtocol',
+    'samplingEffort','sampleSizeValue','sampleSizeUnit','fieldNotes','eventRemarks',
+    'locationID','higherGeographyID','higherGeography','continent','waterBody',
+    'islandGroup','island','country','countryCode','stateProvince','county',
+    'municipality','locality','verbatimLocality','minimumElevationInMeters',
+    'maximumElevationInMeters','verbatimElevation','minimumDepthInMeters',
+    'maximumDepthInMeters','verbatimDepth','minimumDistanceAboveSurfaceInMeters',
+    'maximumDistanceAboveSurfaceInMeters','locationAccordingTo','locationRemarks',
+    'decimalLatitude','decimalLongitude','geodeticDatum','coordinateUncertaintyInMeters',
+    'coordinatePrecision','pointRadiusSpatialFit','verbatimCoordinates',
+    'verbatimLatitude','verbatimLongitude','verbatimCoordinateSystem','verbatimSRS',
+    'footprintWKT','footprintSRS','footprintSpatialFit','georeferencedBy',
+    'georeferencedDate','georeferenceProtocol','georeferenceSources',
+    'georeferenceVerificationStatus','georeferenceRemarks',
+    'geologicalContextID','earliestEonOrLowestEonothem','latestEonOrHighestEonothem',
+    'earliestEraOrLowestErathem','latestEraOrHighestErathem',
+    'earliestPeriodOrLowestSystem','latestPeriodOrHighestSystem',
+    'earliestEpochOrLowestSeries','latestEpochOrHighestSeries','earliestAgeOrLowestStage',
+    'latestAgeOrHighestStage','lowestBiostratigraphicZone','highestBiostratigraphicZone',
+    'lithostratigraphicTerms','group','formation','member','bed',
+    'identificationID','identificationQualifier','typeStatus','identifiedBy',
+    'dateIdentified','identificationReferences','identificationVerificationStatus',
+    'identificationRemarks',
+    'taxonID','scientificNameID','acceptedNameUsageID','parentNameUsageID',
+    'originalNameUsageID','nameAccordingToID','namePublishedInID','taxonConceptID',
+    'scientificName','acceptedNameUsage','parentNameUsage','originalNameUsage',
+    'nameAccordingTo','namePublishedIn','namePublishedInYear','higherClassification',
+    'kingdom','phylum','class','order','family','genus','subgenus','specificEpithet',
+    'infraspecificEpithet','taxonRank','verbatimTaxonRank','scientificNameAuthorship',
+    'vernacularName','nomenclaturalCode','taxonomicStatus','nomenclaturalStatus',
+    'taxonRemarks']
 
 # Terms that make up a distinct geography combination
 geogkeytermlist = [
@@ -39,7 +84,7 @@ taxonkeytermlist = [
     'kingdom', 'genus', 'subgenus', 'specificEpithet', 'infraspecificEpithet', 
     'scientificNameAuthorship', 'scientificName']
 
-# Terms that make up a distinct event combination
+# Terms that make up a distinct event date combination
 eventkeytermlist = [
     'eventdate', 'verbatimeventdate','year','month','day']
 
@@ -48,8 +93,7 @@ coordinateskeytermlist = [
     'decimallatitude', 'decimallongitude', 'verbatimlatitude','verbatimlongitude',
     'verbatimcoordinates']
 
-# For each term in the controlledtermlist there should be a vocabulary file with the
-# name [term].csv in which there are three columns: verbatim, standard, checked
+# Terms that are recommended comply with a controlled vocabulary
 controlledtermlist = [
     'type', 'language', 'license', 'basisOfRecord', 'sex', 'lifeStage', 
     'reproductiveCondition', 'establishmentMeans', 'occurrenceStatus', 'preparations', 
@@ -57,6 +101,13 @@ controlledtermlist = [
     'georeferenceVerificationStatus', 'identificationQualifier', 'typeStatus', 
     'identificationVerificationStatus', 'taxonRank', 'nomenclaturalCode', 
     'taxonomicStatus', 'nomenclaturalStatus']	
-    
+
+# Fields in the header of a vocabulary lookup file
 vocabfieldlist = ['verbatim', 'standard', 'checked', 'error', 'misplaced',
-    'incorrectable', 'source']
+    'incorrectable', 'source', 'comment']
+
+
+# Darwin Cloud terms - concepts commonly found in source data that can be processed into 
+# Darwin Core
+darwincloudterms = [
+    ]

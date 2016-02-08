@@ -118,7 +118,7 @@ def main():
 
     # Get distinct values of termname from inputfile
     response=json.loads(vocab_extractor(json.dumps(inputs)))
-    print 'response: %s' % response
+#    print 'response: %s' % response
     logging.debug('File %s mined for values of %s. Results: %s' %
         (inputfile, termname, response['extractedvalues']) )
 

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwcareader_utils.py 2016-01-28T13:17-03:00"
+__version__ = "dwcareader_utils.py 2016-02-05T17:26-03:00"
 
 # This file contains common utility functions for dealing with the content of a Darwin
 # Core archive. It is built with unit tests that can be invoked by running the script
@@ -35,6 +35,10 @@ import os.path
 import glob
 import xml.etree.ElementTree as ET
 import unittest
+
+# HTTP requests package
+# pip install requests
+import requests
 
 def dwca_metadata(dwcareader):
     """Return metadata from Darwin Core Archive Reader."""
@@ -116,7 +120,8 @@ def shortname(qualname):
             (e.g., 'http://rs.tdwg.org/dwc/terms/catalogNumber')
     returns:
         qualname.rpartition('/')[2] - the term name part of the identifier 
-            (e.g., 'catalogNumber')"""
+            (e.g., 'catalogNumber')
+    """
     for t in TERMS:
         if t==qualname:
             return t.rpartition('/')[2]
@@ -130,7 +135,8 @@ def short_term_names(termlist):
             (e.g., 'http://rs.tdwg.org/dwc/terms/catalogNumber')
     returns:
         shortnamelist - a list of terms names without qualifications 
-            (e.g., 'catalogNumber')"""
+            (e.g., 'catalogNumber')
+    """
     shortnamelist=[]
     for i in range(len(termlist)):
         longname=termlist[i]
@@ -140,6 +146,25 @@ def short_term_names(termlist):
         else:
             shortnamelist.append(sname)
     return shortnamelist
+
+def download_file(url, outputfile):
+    """Get a file from a URL.
+    parameters:
+        url - the url to download from
+            (e.g., 'http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals')
+        outputfile - the full path to the location for the output file
+    returns:
+        success - True if the file was downloaded, False if the request was unsuccessful
+    """
+    # Example: 'testccber.zip'
+    # Example: 
+    with open(outputfile, 'wb') as handle:
+        r = requests.get(url, stream=True)
+        if not r.ok:
+            return False
+        for block in r.iter_content(1024):
+            handle.write(block)
+    return True
 
 class DWCAUtilsReaderFramework():
     # testdatapath is the location of the files to test with

@@ -108,12 +108,11 @@ def main():
     inputs['vocabfile'] = vocabfile
     inputs['checkvaluelist'] = checkvaluelist
 
-    print 'inputs: %s' % inputs
-    print 'json.dumps(inputs): %s' % json.dumps(inputs)
+#    print 'inputs: %s' % inputs
 
-    # Append distinct values of to vocab file
+    # Append distinct values of term to vocab file
     response=json.loads(vocab_appender(json.dumps(inputs)))
-
+#    print 'response: %s' % response
     logging.debug('To file %s, added new values: %s' % (vocabfile, response['addedvalues']))
 
 if __name__ == '__main__':

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-02-02T12:28-03:00"
+__version__ = "dwca_vocab_utils.py 2016-02-05T16:54-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -26,6 +26,7 @@ __version__ = "dwca_vocab_utils.py 2016-02-02T12:28-03:00"
 from dwca_terms import vocabfieldlist
 from dwca_utils import csv_file_dialect
 from dwca_utils import read_header
+from dwca_terms import simpledwctermlist
 import os.path
 import glob
 import unittest
@@ -181,6 +182,15 @@ def distinct_term_values_from_file(inputfile, termname, dialect=None):
             i+=1
     return sorted(list(values))
 
+def terms_not_in_dwc(checklist):
+    """From a list of terms, get those that are not Darwin Core terms.
+    parameters:
+        checklist - the list of values to check against the targetlist
+    returns:
+        sorted(list(values)) - a sorted list of non-Darwin Core terms from the checklist
+    """
+    return not_in_list(simpledwctermlist, checklist)
+
 def not_in_list(targetlist, checklist):
     """Get the list of distinct values in list that are not in a target list already.
     parameters:
@@ -191,6 +201,8 @@ def not_in_list(targetlist, checklist):
     """
     if targetlist is None:
         return sorted(checklist)
+    if checklist is None:
+        return None
     newlist = []
     for v in checklist:
         if v not in targetlist:
@@ -212,7 +224,7 @@ def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
     """
     vocablist = distinct_term_values_from_file(vocabfile, 'verbatim', dialect)
     newvaluelist = not_in_list(vocablist, valuelist)
-    if len(newvaluelist) == 0:
+    if newvaluelist is None or len(newvaluelist) == 0:
         return None
 
     if dialect is None:
@@ -341,6 +353,19 @@ class DWCAUtilsTestCase(unittest.TestCase):
 #        print 'geogs: %s' % geogs
         self.assertEqual(geogs, ['United States|Colorado|', 'United States|California|', 'United States|Washington|Chelan', 'United States|Hawaii|Honolulu', 'United States|California|San Bernardino', 'United States|California|Kern'],
             'composite geogs values do not match expectation')
+
+    def test_terms_not_in_dwc(self):
+        checklist = ['eventDate', 'verbatimEventDate', 'year', 'month', 'day', 
+        'earliestDateCollected', '', 'latestDateCollected']
+        notdwc = terms_not_in_dwc(checklist)
+        expectedlist = ['earliestDateCollected', 'latestDateCollected']
+        self.assertEqual(notdwc, expectedlist, 'non-dwc terms do not meet expectation')
+
+        checklist = ['catalogNumber','catalognumber']
+        notdwc = terms_not_in_dwc(checklist)
+        expectedlist = ['catalognumber']
+#        print 'notdwc: %s\nexpected: %s' % (notdwc, expectedlist)
+        self.assertEqual(notdwc, expectedlist, 'catalogNumber DwC test failed')
 
     def test_not_in_list(self):
         targetlist = ['b', 'a', 'c']
