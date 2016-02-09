@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-02-05T16:54-03:00"
+__version__ = "dwca_utils.py 2016-02-08T20:59-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -260,6 +260,40 @@ def csv_to_tsv(inputfile, outputfile):
             writer.writerow(row)
     return True
 
+# def csv_field_checker(inputfile):
+#     """Determine if every row in a csv file has the same number of fields as the header.
+#     parameters:
+#         inputfile - the full path to the file to convert. (e.g., './infile.txt')
+#     returns:
+#         row - index of the first row that has a different number of fields. 1 is the first
+#             row after the header.
+#     """
+#     if inputfile is None or len(inputfile) == 0:
+#         return None
+#     if os.path.isfile(inputfile) == False:
+#         return None
+#     # discern the dialect of the input file
+#     inputdialect = csv_file_dialect(inputfile)
+#     header = read_header(inputfile,inputdialect)
+#     if header is None:
+#         return None
+#     fieldcount = len(header)
+#     print 'header: %s fields\n%s' % (fieldcount, header)
+#     with open(inputfile, 'rU') as csvfile:
+#         reader = csv.DictReader(csvfile, dialect=inputdialect)
+#         i=0
+#         try:
+#             for row in reader:
+#                 if len(row) != fieldcount:
+#                     print 'row: %s fields\n%s' % (len(row), row)
+#                     return i
+#                 i+=1
+#         except Exception, e:
+#             print 'exception: %s ' % e
+#             return i
+#     print 'last row: %s fields\n%s' % (len(row), row)
+#     return None
+
 # def header_as_tuple(header):
 #     header_tuple = ()
 #     for field in header:
@@ -317,6 +351,8 @@ class DWCAUtilsFramework():
     monthvocabfile = testdatapath + 'test_vocab_month.csv'
     geogvocabfile = testdatapath + 'test_dwcgeography.csv'
     compositetestfile = testdatapath + 'test_eight_specimen_records.csv'
+    fieldcountestfile1 = testdatapath + 'test_fieldcount.csv'
+    fieldcountestfile2 = testdatapath + 'test_eight_specimen_records.csv'
 
     # following are files output during the tests, remove these in dispose()
     csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
@@ -723,6 +759,18 @@ class DWCAUtilsTestCase(unittest.TestCase):
         result = merge_headers(header7, header8)
         self.assertEqual(result, ['a', 'b', 'c'],
             'headers with whitespace merge failed')
+
+#     def test_csv_field_checker(self):
+#         csvfile = self.framework.fieldcountestfile2
+#         firstbadrow = csv_field_checker(csvfile)
+#         print 'first bad row index: %s' % firstbadrow
+#         s = 'field checker found mismatched fields in %s when it should not' % csvfile
+#         self.assertIsNone(firstbadrow,s)
+#         
+#         csvfile = self.framework.fieldcountestfile1
+#         firstbadrow = csv_field_checker(csvfile)
+#         s = 'field checker found first mismatched field in %s at index %s'  % (csvfile, firstbadrow)
+#         self.assertEqual(firstbadrow,3,s)
 
 if __name__ == '__main__':
     unittest.main()

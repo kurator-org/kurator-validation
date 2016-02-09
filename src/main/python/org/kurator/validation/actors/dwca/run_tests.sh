@@ -1,4 +1,5 @@
 python darwin_cloud_collector_test.py
+python downloader_test.py
 python dwca_utils.py
 python dwca_vocab_utils.py
 python dwcareader_utils.py
