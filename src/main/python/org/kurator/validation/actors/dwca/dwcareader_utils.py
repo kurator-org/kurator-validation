@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwcareader_utils.py 2016-02-05T17:26-03:00"
+__version__ = "dwcareader_utils.py 2016-02-12T12:15-03:00"
 
 # This file contains common utility functions for dealing with the content of a Darwin
 # Core archive. It is built with unit tests that can be invoked by running the script
@@ -197,10 +197,12 @@ class DWCAUtilsReaderTestCase(unittest.TestCase):
         self.framework = None
 
     def test_source_files_exist(self):
+        print 'testing source_files_exist'
         dwca = self.framework.dwca
         self.assertTrue(os.path.isfile(dwca), dwca + ' does not exist')
 
     def test_source_is_dwca(self):
+        print 'testing source_is_dwca'
         dwca = self.framework.dwca
         dwcareader = None
         try:
@@ -211,11 +213,13 @@ class DWCAUtilsReaderTestCase(unittest.TestCase):
         self.assertIsNotNone(dwcareader, s)
 
     def test_dwca_core_row_count(self):
+        print 'testing dwca_core_row_count'
         dwca = self.framework.dwca
         rowcount = get_core_rowcount_from_file(dwca)
         self.assertEqual(rowcount, 8, 'incorrect number of rows in archive core file')
 
     def test_metadata(self):
+        print 'testing metadata'
         inputfile = self.framework.dwca
         metadata = dwca_metadata_from_file(inputfile)
         title = metadata.find("./dataset/title").text

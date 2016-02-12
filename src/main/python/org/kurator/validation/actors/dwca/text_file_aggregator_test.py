@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator_test.py 2016-01-22T18:25-03:00"
+__version__ = "text_file_aggregator_test.py 2016-02-12T12:26-03:00"
 
 from text_file_aggregator import text_file_aggregator
 from dwca_utils import split_path
@@ -39,7 +39,7 @@ class TextFileAggregatorFramework():
     mixedcompositepath = testdatapath + 'test_*_specimen_records.*'
 
     # test file for aggregation
-    tsvfile = 'aggregatedfile.txt'
+    tsvfile = testdatapath + 'aggregatedfile.txt'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
@@ -58,11 +58,12 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         self.framework = None
 
     def test_aggregate_tsvs(self):
-        tsvfile = self.framework.testdatapath+self.framework.tsvfile
+        print 'testing aggregate_tsvs'
+        tsvfile = self.framework.tsvfile
         tsvcompositepath = self.framework.tsvcompositepath
         inputs = {}
         inputs['inputpath'] = tsvcompositepath
-        inputs['aggregatedfile'] = self.framework.tsvfile
+        inputs['aggregatedfile'] = tsvfile
         inputs['inputdialect'] = 'tsv'
         inputs['workspace'] = self.framework.testdatapath
 
@@ -85,6 +86,7 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
     def test_aggregate_csvs(self):
+        print 'testing aggregate_csvs'
         tsvfile = self.framework.testdatapath+self.framework.tsvfile
         csvcompositepath = self.framework.csvcompositepath
         inputs = {}
@@ -112,7 +114,8 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
     def test_aggregate_mix(self):
-        tsvfile = self.framework.testdatapath+self.framework.tsvfile
+        print 'testing aggregate_mix'
+        tsvfile = self.framework.tsvfile
         mixedcompositepath = self.framework.mixedcompositepath
         inputs = {}
         inputs['inputpath'] = mixedcompositepath

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor_test.py 2016-01-30T14:47-03:00"
+__version__ = "composite_header_constructor_test.py 2016-02-12T11:58-03:00"
 
 # This file contains unit test for the composite_header_constructor function.
 #
@@ -63,6 +63,7 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         self.framework = None
 
     def test_source_files_exist(self):
+        print 'testing source_files_exist'
         tsvfile1 = self.framework.tsvtest1
         tsvfile2 = self.framework.tsvtest2
         csvfile1 = self.framework.csvtest1
@@ -73,6 +74,7 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(csvfile2), csvfile2 + ' does not exist')
 
     def test_source_headers_correct(self):
+        print 'testing source_headers_correct'
         tsvfile1 = self.framework.tsvtest1
         tsvfile2 = self.framework.tsvtest2
         csvfile1 = self.framework.csvtest1
@@ -125,6 +127,7 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
     def test_compose(self):
+        print 'testing compose'
         workspace = self.framework.workspace
         tsvfile1 = self.framework.tsvtest1
         tsvfile2 = self.framework.tsvtest2

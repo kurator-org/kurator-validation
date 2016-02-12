@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-02-10T15:24-03:00"
+__version__ = "dwca_utils.py 2016-02-12T11:47-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -382,6 +382,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.framework = None
 
     def test_tsv_dialect(self):
+        print 'testing tsv_dialect'
         dialect = tsv_dialect()
         self.assertEqual(dialect.delimiter, '\t',
             'incorrect delimiter for tsv')
@@ -400,14 +401,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertFalse(dialect.strict,
             'strict not set to False for tsv')
 
-#     def test_header_as_tuple(self):
-#         header=['a', 'b', 'c']
-#         ht = header_as_tuple(header)
-#         self.assertEqual(ht[0], 'a', 'tuple construction from header list failed')
-#         self.assertEqual(ht[1], 'b', 'tuple construction from header list failed')
-#         self.assertEqual(ht[2], 'c', 'tuple construction from header list failed')
-
     def test_csv_file_dialect(self):
+        print 'testing csv_file_dialect'
         csvreadheaderfile = self.framework.csvreadheaderfile
         dialect = csv_file_dialect(csvreadheaderfile)
 #        print 'dialect:\n%s' % dialect_attributes(dialect)
@@ -430,6 +425,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'strict not set to False for csv file')
 
     def test_tsv_file_dialect(self):
+        print 'testing tsv_file_dialect'
         tsvreadheaderfile = self.framework.tsvreadheaderfile
         dialect = csv_file_dialect(tsvreadheaderfile)
 #        print 'dialect:\n%s' % dialect_attributes(dialect)
@@ -452,6 +448,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'strict not set to False for csv file')
 
     def test_read_header1(self):
+        print 'testing read_header1'
         csvreadheaderfile = self.framework.csvreadheaderfile
         header = read_header(csvreadheaderfile)
         modelheader = []
@@ -482,6 +479,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
     def test_read_header2(self):
+        print 'testing read_header2'
         tsvheaderfile = self.framework.tsvtest1
         header = read_header(tsvheaderfile)
         modelheader = []
@@ -496,6 +494,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
     def test_read_header3(self):
+        print 'testing read_header3'
         csvheaderfile = self.framework.csvtest1
         header = read_header(csvheaderfile)
         modelheader = []
@@ -510,6 +509,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
     def test_read_header4(self):
+        print 'testing read_header4'
         tsvheaderfile = self.framework.tsvtest2
         header = read_header(tsvheaderfile)
         modelheader = []
@@ -525,6 +525,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
     def test_read_header5(self):
+        print 'testing read_header5'
         csvheaderfile = self.framework.csvtest2
         header = read_header(csvheaderfile)
         modelheader = []
@@ -539,7 +540,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
-    def test_composite_header1(self):
+    def test_composite_header(self):
+        print 'testing composite_header'
         csvcompositepath = self.framework.csvcompositepath
         tsvcompositepath = self.framework.tsvcompositepath
         mixedcompositepath = self.framework.mixedcompositepath
@@ -647,6 +649,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
     def test_write_header(self):
+        print 'testing write_header'
         csvreadheaderfile = self.framework.csvreadheaderfile
         csvwriteheaderfile = self.framework.csvwriteheaderfile
         header = read_header(csvreadheaderfile)
@@ -665,6 +668,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'writtenheader not the same as model header')
 
     def test_csv_to_tsv1(self):
+        print 'testing csv_to_tsv1'
         csvfile = self.framework.csvtotsvfile1
         tsvfile = self.framework.tsvfromcsvfile1
 
@@ -685,6 +689,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
     def test_csv_to_tsv2(self):
+        print 'testing csv_to_tsv2'
         csvfile = self.framework.csvtotsvfile2
         tsvfile = self.framework.tsvfromcsvfile2
 
@@ -706,6 +711,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
     def test_split_path(self):
+        print 'testing split_path'
         path, fileext, filepattern = \
             split_path('../../data/tests/test_eight_specimen_records.csv')
         self.assertEqual(path, '../../data/tests', 'incorrect path')
@@ -714,11 +720,13 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'incorrect file pattern')
 
     def test_clean_header(self):
+        print 'testing clean_header'
         header = ['b ', ' a', 'c	']
         result = clean_header(header)
         self.assertEqual(result, ['a', 'b', 'c'], 'header failed to be cleaned properly')
 
     def test_merge_headers(self):
+        print 'testing merge_headers'
         header1 = ['b', 'a', 'c']
         header2 = ['b', 'c ', 'd']
         header3 = ['e', 'd	', 'a']
@@ -772,6 +780,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'headers with whitespace merge failed')
 
     def test_csv_field_checker(self):
+        print 'testing csv_field_checker'
         csvfile = self.framework.fieldcountestfile2
         result = csv_field_checker(csvfile)
         s = 'field checker found mismatched fields in %s when it should not' % csvfile

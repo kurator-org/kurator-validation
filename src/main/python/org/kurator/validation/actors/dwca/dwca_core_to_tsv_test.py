@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv_test.py 2016-01-22T12:40-03:00"
+__version__ = "dwca_core_to_tsv_test.py 2016-02-12T12:13-03:00"
 
 # This file contains unit test for the dwca_core_to_tsv function.
 #
@@ -62,10 +62,12 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         self.framework = None
 
     def test_source_files_exist(self):
+        print 'testing source_files_exist'
         dwca = self.framework.dwca
         self.assertTrue(os.path.isfile(dwca), dwca + ' does not exist')
 
     def test_convert(self):
+        print 'testing convert'
         dwca = self.framework.dwca
         tsvfile = self.framework.tsvfile
         archivetype = self.framework.archivetype
@@ -83,6 +85,7 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         self.assertEqual(response['rowcount'], 8, 'incorrect number of rows in output')
 
     def test_source_headers_correct(self):
+        print 'testing source_headers_correct'
         dwca = self.framework.dwca
         tsvfile = self.framework.tsvfile
         archivetype = self.framework.archivetype

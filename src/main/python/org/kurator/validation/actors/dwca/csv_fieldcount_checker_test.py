@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_fieldcount_checker_test.py 2016-02-09T11:11-03:00"
+__version__ = "csv_fieldcount_checker_test.py 2016-02-12T12:03-03:00"
 
 # This file contains unit test for the csv_fieldcount_checker function.
 #
@@ -57,6 +57,7 @@ class CsvFieldcountCheckerTestCase(unittest.TestCase):
         self.framework = None
 
     def test_source_files_exist(self):
+        print 'testing source_files_exist'
         testfile = self.framework.testfile1
         self.assertTrue(os.path.isfile(testfile), testfile + ' does not exist')
         testfile = self.framework.testfile2
@@ -65,6 +66,7 @@ class CsvFieldcountCheckerTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(testfile), testfile + ' does not exist')
 
     def test_csv_fieldcount_checker(self):
+        print 'testing csv_fieldcount_checker'
         testfile1 = self.framework.testfile1
         testfile2 = self.framework.testfile2
         testfile3 = self.framework.testfile3
@@ -89,7 +91,7 @@ class CsvFieldcountCheckerTestCase(unittest.TestCase):
             % (testfile2, response['firstbadrowindex'], response['row'])
         self.assertEqual(firstbadrowindex, 3, s)
 
-        inputs['inputfile'] = testfile2
+        inputs['inputfile'] = testfile3
         response=json.loads(csv_fieldcount_checker(json.dumps(inputs)))
         s = 'No bad row found for file %s' % (testfile3)
         self.assertIsNotNone(response, s)
@@ -98,9 +100,6 @@ class CsvFieldcountCheckerTestCase(unittest.TestCase):
         s = 'File %s, first bad row: %s\nrow:\n%s' \
             % (testfile3, response['firstbadrowindex'], response['row'])
         self.assertEqual(firstbadrowindex, 3, s)
-
-
-test_bad_fieldcount1.txt
 
 if __name__ == '__main__':
     unittest.main()

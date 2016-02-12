@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor_test.py 2016-02-10T15:22-03:00"
+__version__ = "vocab_extractor_test.py 2016-02-12T12:33-03:00"
 
 # This file contains unit test for the vocab_extractor function.
 #
@@ -59,12 +59,14 @@ class VocabExtractorTestCase(unittest.TestCase):
         self.framework = None
 
     def test_source_files_exist(self):
+        print 'testing source_files_exist'
         testfile1 = self.framework.testfile1
         self.assertTrue(os.path.isfile(testfile1), testfile1 + ' does not exist')
         testfile2 = self.framework.testfile2
         self.assertTrue(os.path.isfile(testfile2), testfile2 + ' does not exist')
 
     def test_term_exists(self):
+        print 'testing term_exists'
         testfile = self.framework.testfile1
 
         header = read_header(testfile)
@@ -86,6 +88,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         self.assertTrue(present, s)
 
     def test_vocab_extractor(self):
+        print 'testing vocab_extractor'
         testfile = self.framework.testfile1
         term = 'year'
         

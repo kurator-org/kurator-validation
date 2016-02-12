@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender_test.py 2016-02-10T15:22-03:00"
+__version__ = "vocab_appender_test.py 2016-02-12T12:29-03:00"
 
 # This file contains unit test for the vocab_appender function.
 #
@@ -58,10 +58,12 @@ class VocabAppenderTestCase(unittest.TestCase):
         self.framework = None
 
     def test_source_files_exist(self):
+        print 'testing source_files_exist'
         monthvocabfile = self.framework.monthvocabfile
         self.assertTrue(os.path.isfile(monthvocabfile), monthvocabfile + ' does not exist')
 
     def test_source_headers_correct(self):
+        print 'testing source_headers_correct'
         monthvocabfile = self.framework.monthvocabfile
 
         header = read_header(monthvocabfile)
@@ -78,6 +80,7 @@ class VocabAppenderTestCase(unittest.TestCase):
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
     def test_vocab_appender(self):
+        print 'testing vocab_appender'
         testvocabfile = self.framework.testvocabfile
         checkvaluelist = ['May', 'v', '5', 'MAY']
         

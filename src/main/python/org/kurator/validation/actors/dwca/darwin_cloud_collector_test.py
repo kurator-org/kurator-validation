@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector_test.py 2016-02-09T08:24-03:00"
+__version__ = "darwin_cloud_collector_test.py 2016-02-12T12:08-03:00"
 
 # This file contains unit test for the darwin_cloud_collector function.
 #
@@ -57,12 +57,14 @@ class DarwinCloudCollectorTestCase(unittest.TestCase):
         self.framework = None
 
     def test_source_files_exist(self):
+        print 'testing source_files_exist'
         testfile1 = self.framework.testfile1
         self.assertTrue(os.path.isfile(testfile1), testfile1 + ' does not exist')
         testfile2 = self.framework.testfile2
         self.assertTrue(os.path.isfile(testfile2), testfile2 + ' does not exist')
 
     def test_headers(self):
+        print 'testing headers'
         testfile = self.framework.testfile1
 
         header = read_header(testfile)
@@ -95,6 +97,7 @@ class DarwinCloudCollectorTestCase(unittest.TestCase):
         self.assertEqual(header, expected)
 
     def test_darwin_cloud_collector(self):
+        print 'testing darwin_cloud_collector'
         testfile1 = self.framework.testfile1
         testfile2 = self.framework.testfile2
         outputfile = self.framework.testcollectorfile
