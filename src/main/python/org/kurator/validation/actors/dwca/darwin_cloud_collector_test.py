@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector_test.py 2016-02-08T11:15-03:00"
+__version__ = "darwin_cloud_collector_test.py 2016-02-09T08:24-03:00"
 
 # This file contains unit test for the darwin_cloud_collector function.
 #
@@ -24,7 +24,6 @@ __version__ = "darwin_cloud_collector_test.py 2016-02-08T11:15-03:00"
 
 from darwin_cloud_collector import darwin_cloud_collector
 from dwca_utils import read_header
-from dwca_vocab_utils import distinct_term_values_from_file
 import os
 import json
 import unittest

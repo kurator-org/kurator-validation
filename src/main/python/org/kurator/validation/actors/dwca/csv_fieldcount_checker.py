@@ -14,25 +14,21 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector.py 2016-02-09T09:33-03:00"
+__version__ = "csv_fieldcount_checker.py 2016-02-09T11:11-03:00"
 
 # For now, use global variables to capture parameters sent at the command line in 
 # a workflow
 # Example: 
 #
-# kurator -f workflows/darwin_cloud_collector.yaml -p i=../../data/eight_specimen_records.csv -p o=../../vocabularies/darwincloud.csv
+# kurator -f workflows/csv_fieldcount_checker.yaml -p i=../../data/eight_specimen_records.csv
 #
 # or as a command-line script.
 # Example:
 #
-# python darwin_cloud_collector.py -i ../../data/eight_specimen_records.csv -o ../../vocabularies/darwincloud.csv
+# python csv_fieldcount_checker.py -i ../../data/eight_specimen_records.csv
 
 from optparse import OptionParser
-from dwca_vocab_utils import vocab_dialect
-from dwca_vocab_utils import distinct_vocabs_to_file
-from dwca_vocab_utils import terms_not_in_dwc
-from dwca_utils import read_header
-from dwca_utils import clean_header
+from dwca_utils import csv_field_checker
 import json
 import logging
 
@@ -40,34 +36,32 @@ import logging
 # vocab file
 #checkvaluelist = None
 
-def darwin_cloud_collector(inputs_as_json):
-    """Get field names from inputfile and put any that are not Simple Darwin Core into 
-       outputfile.
+def csv_fieldcount_checker(inputs_as_json):
+    """Get the first row in a csv file where the number of fields is less than the number
+       of fields in the header.
     inputs_as_json - JSON string containing inputs
         inputfile - full path to the input file
-        outputfile - full path to the output file
     returns JSON string with information about the results
         success - True if process completed successfully, otherwise False
-        addedvalues - new values added to the output file
+        rowindex - the line number of the first row in the inputfile where the field
+            count does not match
+        row - the content of the first line in the inputfile where the field count does
+            not match.
     """
     inputs = json.loads(inputs_as_json)
     inputfile = inputs['inputfile']
-    outputfile = inputs['outputfile']
 
-    header = clean_header(read_header(inputfile))
-#    print 'cleaned header: %s\n' % header
-    nondwc = terms_not_in_dwc(header)
-#    print 'nondwc: %s\n' % nondwc
-
-    dialect = vocab_dialect()
-    addedvalues = distinct_vocabs_to_file(outputfile, nondwc, dialect)
-#    print 'addedvalues: %s\n' % addedvalues
-
+    firstbadrowindex = 0
+    row = None
+    result = csv_field_checker(inputfile)
+    if result is not None:
+        firstbadrowindex = result[0]
+        row = result[1]
     # Successfully completed the mission
     # Return a dict of important information as a JSON string
     response = {}
-    returnvars = ['addedvalues', 'success']
-    returnvals = [addedvalues, True]
+    returnvars = ['firstbadrowindex', 'row', 'success']
+    returnvals = [firstbadrowindex, row, True]
     i=0
     for a in returnvars:
         response[a]= returnvals[i] 
@@ -83,28 +77,24 @@ def _getoptions():
     parser.add_option("-i", "--input", dest="inputfile",
                       help="Text file to mine for vocab values",
                       default=None)
-    parser.add_option("-o", "--output", dest="outputfile",
-                      help="Text file to store field names",
-                      default=None)
     return parser.parse_args()[0]
 
 def main():
     options = _getoptions()
     inputfile = options.inputfile
-    outputfile = options.outputfile
 
-    if inputfile is None or outputfile is None:
-        print "syntax: python darwin_cloud_collector.py -i ../../data/eight_specimen_records.csv -o ../../vocabularies/darwincloud.csv"
+    if inputfile is None:
+        print "syntax: python csv_fieldcount_checker.py -i ../../data/eight_specimen_records.csv"
         return
     
     inputs = {}
     inputs['inputfile'] = inputfile
-    inputs['outputfile'] = outputfile
 
     # Append distinct values of to vocab file
-    response=json.loads(darwin_cloud_collector(json.dumps(inputs)))
-#    print 'response: %s' % response
-    logging.debug('To file %s, added new values: %s' % (inputfile, response['addedvalues']))
+    response=json.loads(csv_fieldcount_checker(json.dumps(inputs)))
+    print 'response: %s' % response
+    logging.debug('File %s, first bad row: %s\nrow:\n%s' \
+        % (inputfile, response['firstbadrowindex'], response['row']))
 
 if __name__ == '__main__':
     main()

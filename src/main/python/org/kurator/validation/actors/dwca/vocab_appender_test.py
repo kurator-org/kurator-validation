@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender_test.py 2016-02-02T12:32-03:00"
+__version__ = "vocab_appender_test.py 2016-02-10T15:22-03:00"
 
 # This file contains unit test for the vocab_appender function.
 #
@@ -35,7 +35,8 @@ class VocabAppenderFramework():
     testdatapath = '../../data/tests/'
 
     # input data files to tests, don't remove these
-    monthvocabfile = testdatapath + 'test_vocab_month.csv'
+#    monthvocabfile = testdatapath + 'test_vocab_month.csv'
+    monthvocabfile = testdatapath + 'test_vocab_month.txt'
 
     # output data files from tests, remove these in dispose()
     testvocabfile = testdatapath + 'test_vocab_file.csv'

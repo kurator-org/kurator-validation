@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-02-08T20:59-03:00"
+__version__ = "dwca_utils.py 2016-02-10T15:24-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -260,39 +260,35 @@ def csv_to_tsv(inputfile, outputfile):
             writer.writerow(row)
     return True
 
-# def csv_field_checker(inputfile):
-#     """Determine if every row in a csv file has the same number of fields as the header.
-#     parameters:
-#         inputfile - the full path to the file to convert. (e.g., './infile.txt')
-#     returns:
-#         row - index of the first row that has a different number of fields. 1 is the first
-#             row after the header.
-#     """
-#     if inputfile is None or len(inputfile) == 0:
-#         return None
-#     if os.path.isfile(inputfile) == False:
-#         return None
-#     # discern the dialect of the input file
-#     inputdialect = csv_file_dialect(inputfile)
-#     header = read_header(inputfile,inputdialect)
-#     if header is None:
-#         return None
-#     fieldcount = len(header)
-#     print 'header: %s fields\n%s' % (fieldcount, header)
-#     with open(inputfile, 'rU') as csvfile:
-#         reader = csv.DictReader(csvfile, dialect=inputdialect)
-#         i=0
-#         try:
-#             for row in reader:
-#                 if len(row) != fieldcount:
-#                     print 'row: %s fields\n%s' % (len(row), row)
-#                     return i
-#                 i+=1
-#         except Exception, e:
-#             print 'exception: %s ' % e
-#             return i
-#     print 'last row: %s fields\n%s' % (len(row), row)
-#     return None
+def csv_field_checker(inputfile):
+    """Determine if any row in a csv file has fewer fields than the header.
+    parameters:
+        inputfile - the full path to the file to convert. (e.g., './infile.txt')
+    returns:
+        index, row - a tuple composed of the index of the first row that has a different 
+            number of fields (1 is the first row after the header) and the row string
+    """
+    if inputfile is None or len(inputfile) == 0:
+        return None
+    if os.path.isfile(inputfile) == False:
+        return None
+    # discern the dialect of the input file
+    inputdialect = csv_file_dialect(inputfile)
+    delimiter = inputdialect.delimiter
+    header = read_header(inputfile,inputdialect)
+    if header is None:
+        return None
+    fieldcount = len(header)
+#    print 'header: %s fields\n%s' % (fieldcount, header)
+    with open(inputfile, 'rU') as f:
+        i=0
+        for line in f:
+            delimitercount = line.count(delimiter)
+            if delimitercount < fieldcount-1:
+#                print 'row: %s fields\n%s' % (delimitercount, line)
+                return i, line
+            i+=1
+    return None
 
 # def header_as_tuple(header):
 #     header_tuple = ()
@@ -348,11 +344,13 @@ class DWCAUtilsFramework():
     csvcompositepath = testdatapath + 'test_csv*.csv'
     tsvcompositepath = testdatapath + 'test_tsv*.txt'
     mixedcompositepath = testdatapath + 'test_*_specimen_records.*'
-    monthvocabfile = testdatapath + 'test_vocab_month.csv'
+#    monthvocabfile = testdatapath + 'test_vocab_month.csv'
+    monthvocabfile = testdatapath + 'test_vocab_month.txt'
     geogvocabfile = testdatapath + 'test_dwcgeography.csv'
     compositetestfile = testdatapath + 'test_eight_specimen_records.csv'
     fieldcountestfile1 = testdatapath + 'test_fieldcount.csv'
     fieldcountestfile2 = testdatapath + 'test_eight_specimen_records.csv'
+    fieldcountestfile3 = testdatapath + 'test_bad_fieldcount1.txt'
 
     # following are files output during the tests, remove these in dispose()
     csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
@@ -478,7 +476,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('CollectionCode ')
         modelheader.append('DatasetName ')
         modelheader.append('Id')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
+#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 21, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -491,7 +490,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('locality')
         modelheader.append('phylum')
         modelheader.append('')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
+#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -504,7 +504,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('locality')
         modelheader.append('phylum')
         modelheader.append('')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
+#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -518,7 +519,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('phylum')
         modelheader.append('decimalLatitude')
         modelheader.append('decimalLongitude')
-#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' \
+#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -532,7 +534,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('phylum')
         modelheader.append('decimalLatitude')
         modelheader.append('decimalLongitude')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
+#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -548,12 +551,14 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('materialSampleID')
         modelheader.append('phylum')
         modelheader.append('principalInvestigator')
-#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' \
+#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
         header = composite_header(tsvcompositepath)
-#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' \
+#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -636,7 +641,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('year')
         modelheader.append('yearCollected')
         modelheader.append('yearIdentified')
-#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' \
+#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header),77, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -673,7 +679,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('locality')
         modelheader.append('phylum')
         modelheader.append('')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
+#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -693,7 +700,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
         modelheader.append('phylum')
         modelheader.append('decimalLatitude')
         modelheader.append('decimalLongitude')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' % (len(header), len(modelheader), header, modelheader)
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
+#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -721,35 +729,38 @@ class DWCAUtilsTestCase(unittest.TestCase):
         header8 = ['b', 'a', 'c', '  ']
 
         result = merge_headers(None)
-        self.assertIsNone(result, 'merging without header makes a header when it should not')
+        s = 'merging without header makes a header when it should not'
+        self.assertIsNone(result, )
 
         result = merge_headers(header4)
-        self.assertIsNone(result, 'merging an empty header makes a header when it should not')
+        s = 'merging an empty header makes a header when it should not'
+        self.assertIsNone(result, s)
 
         result = merge_headers(header5)
-        self.assertIsNone(result, 'merging a header with only a blank field makes a header when it should not')
+        s = 'merging a header with only a blank field makes a header when it should not'
+        self.assertIsNone(result, s)
 
         result = merge_headers(header6)
-        self.assertIsNone(result, 'merging a header with only one field composed of a space makes a header when it should not')
+        s = 'merging header with only one field composed of a space character makes a '
+        s += 'header when it should not'
+        self.assertIsNone(result, s)
 
         result = merge_headers(header7)
-        self.assertIsNone(result, 'merging a header with only one field composed of a tab character makes a header when it should not')
+        s = 'merging header with only one field composed of a tab character makes a '
+        s += 'header when it should not'
+        self.assertIsNone(result, s)
 
         result = merge_headers(None, header1)
-        self.assertEqual(result, ['a', 'b', 'c'],
-            'merged new header did not sort')
+        self.assertEqual(result, ['a', 'b', 'c'], 'merged new header did not sort')
 
         result = merge_headers(header1)
-        self.assertEqual(result, ['a', 'b', 'c'],
-            'merged existing header did not sort')
+        self.assertEqual(result, ['a', 'b', 'c'], 'merged existing header did not sort')
 
         result = merge_headers(header1, header1)
-        self.assertEqual(result, ['a', 'b', 'c'],
-            'redundant header merge failed')
+        self.assertEqual(result, ['a', 'b', 'c'], 'redundant header merge failed')
 
         result = merge_headers(header1, header2)
-        self.assertEqual(result, ['a', 'b', 'c', 'd'],
-            'bac-bcd header merge failed')
+        self.assertEqual(result, ['a', 'b', 'c', 'd'], 'bac-bcd header merge failed')
 
         result = merge_headers(header1, header2)
         result = merge_headers(result, header3)
@@ -760,17 +771,25 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(result, ['a', 'b', 'c'],
             'headers with whitespace merge failed')
 
-#     def test_csv_field_checker(self):
-#         csvfile = self.framework.fieldcountestfile2
-#         firstbadrow = csv_field_checker(csvfile)
-#         print 'first bad row index: %s' % firstbadrow
-#         s = 'field checker found mismatched fields in %s when it should not' % csvfile
-#         self.assertIsNone(firstbadrow,s)
-#         
-#         csvfile = self.framework.fieldcountestfile1
-#         firstbadrow = csv_field_checker(csvfile)
-#         s = 'field checker found first mismatched field in %s at index %s'  % (csvfile, firstbadrow)
-#         self.assertEqual(firstbadrow,3,s)
+    def test_csv_field_checker(self):
+        csvfile = self.framework.fieldcountestfile2
+        result = csv_field_checker(csvfile)
+        s = 'field checker found mismatched fields in %s when it should not' % csvfile
+        self.assertIsNone(result,s)
+        
+        csvfile = self.framework.fieldcountestfile1
+        result = csv_field_checker(csvfile)
+        firstbadrow = result[0]
+        s = 'field checker found first mismatched field in %s at row index %s'  \
+            % (csvfile, firstbadrow)
+        self.assertEqual(firstbadrow,3,s)
+
+        csvfile = self.framework.fieldcountestfile3
+        result = csv_field_checker(csvfile)
+        firstbadrow = result[0]
+        s = 'field checker found first mismatched field in %s at row index %s'  \
+            % (csvfile, firstbadrow)
+        self.assertEqual(firstbadrow,3,s)
 
 if __name__ == '__main__':
     unittest.main()

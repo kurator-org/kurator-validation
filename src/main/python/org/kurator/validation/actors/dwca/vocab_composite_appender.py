@@ -14,16 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_composite_appender.py 2016-01-28T13:31-03:00"
-
-from optparse import OptionParser
-from dwca_utils import split_path
-from vocab_loader import vocab_loader
-from dwca_terms import vocabfieldlist
-import os.path
-import csv
-import json
-import logging
+__version__ = "vocab_composite_appender.py 2016-02-10T17:00-03:00"
 
 # For now, use global variables to capture parameters sent at the command line in 
 # a workflow
@@ -36,49 +27,63 @@ import logging
 #
 # python vocab_composite_appender.py -i ../../vocabularies/day.csv -n '33'
 
+from optparse import OptionParser
+from dwca_utils import split_path
+from dwca_utils import read_header
+from dwca_vocab_utils import distinct_vocabs_to_file
+from dwca_vocab_utils import makevocabheader
+from dwca_vocab_utils import writevocabheader
+#from dwca_vocab_utils import readvocabheader
+from vocab_loader import vocab_loader
+from dwca_terms import vocabfieldlist
+import os.path
+import csv
+import json
+import logging
+
 # Global variable for the list of potentially new values for the term to append to the vocab file
 newvaluelist = None
 
-def makevocabheader(keyfields):
-	# Construct the header row for this vocabulary. Begin with a field name
-	# equal to the keyfields variable, then add the remaining field names after
-	# the first one from the standard vocabfieldlist.
-	# Example:
-	# if keyfields = 'country|stateprovince|county'
-	# and
-	# vocabfieldlist = ['verbatim','standard','checked']
-	# then the header will end up as 
-	# 'country|stateprovince|county','standard','checked'
-    fieldnames=[]
-
-    # Set the first field to be the string of concatenated field names.
-    fieldnames.append(keyfields.replace(' ',''))
-    firstfield = True
-
-    # Then add the remaining standard vocab fields.
-    for f in vocabfieldlist:
-        # in the case of composite key vocabualaries, do not use the first vocab
-        # field 'verbatim'. It is being replaced with the keyfields string.
-        if firstfield==True:
-            firstfield = False
-        else:
-            fieldnames.append(f)
-    return fieldnames
-
-def writevocabheader(fullpath, fieldnames, dialect):
-    with open(fullpath, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, 
-            quoting=csv.QUOTE_ALL, fieldnames=fieldnames)
-        writer.writeheader()
-
-def readvocabheader(fullpath, dialect):
-    header = None
-    with open(fullpath, 'rU') as csvfile:
-        reader = csv.DictReader(csvfile, dialect=dialect, 
-            quoting=csv.QUOTE_ALL, skipinitialspace=True)
-        header=reader.fieldnames
-    return header
-
+# def makevocabheader(keyfields):
+# 	# Construct the header row for this vocabulary. Begin with a field name
+# 	# equal to the keyfields variable, then add the remaining field names after
+# 	# the first one from the standard vocabfieldlist.
+# 	# Example:
+# 	# if keyfields = 'country|stateprovince|county'
+# 	# and
+# 	# vocabfieldlist = ['verbatim','standard','checked']
+# 	# then the header will end up as 
+# 	# 'country|stateprovince|county','standard','checked'
+#     fieldnames=[]
+# 
+#     # Set the first field to be the string of concatenated field names.
+#     fieldnames.append(keyfields.replace(' ',''))
+#     firstfield = True
+# 
+#     # Then add the remaining standard vocab fields.
+#     for f in vocabfieldlist:
+#         # in the case of composite key vocabualaries, do not use the first vocab
+#         # field 'verbatim'. It is being replaced with the keyfields string.
+#         if firstfield==True:
+#             firstfield = False
+#         else:
+#             fieldnames.append(f)
+#     return fieldnames
+# 
+# def writevocabheader(fullpath, fieldnames, dialect):
+#     with open(fullpath, 'w') as csvfile:
+#         writer = csv.DictWriter(csvfile, dialect=dialect, 
+#             quoting=csv.QUOTE_ALL, fieldnames=fieldnames)
+#         writer.writeheader()
+# 
+# def readvocabheader(fullpath, dialect):
+#     header = None
+#     with open(fullpath, 'rU') as csvfile:
+#         reader = csv.DictReader(csvfile, dialect=dialect, 
+#             quoting=csv.QUOTE_ALL, skipinitialspace=True)
+#         header=reader.fieldnames
+#     return header
+# 
 def vocab_composite_appender(inputs_as_json):
     """Given a set of distinct key values for a given term composite, append any not already 
     in the corresponding vocabulary file as new entries.
@@ -131,7 +136,8 @@ def vocab_composite_appender(inputs_as_json):
         writevocabheader(fullpath, fieldnames, dialect)
 
     # Now we should have a vocab file with a header at least
-    header = readvocabheader(fullpath, dialect)
+#    header = readvocabheader(fullpath, dialect)
+    header = read_header(fullpath, dialect)
     logging.debug('fieldnames: %s \nheader: %s' % (fieldnames, header))
 
     # The header for the values we are trying to add has to match the header for the 
@@ -213,7 +219,7 @@ def main():
     # Default separator is ','
     # For the purpose of demonstration, allow the command line to pass a 
     # user-defined-delimiter-separated list of values to add to the vocabulary. 
-    separator = ','
+    separator = '\t' # TAB character
     if options.separator is not None:
         separator = options.separator
     newvaluelist=[subs.strip() for subs in str(thelist).split(separator)]
@@ -221,7 +227,7 @@ def main():
 
     if fullpath is None or thelist is None or keyfields is None:
         i = '../../vocabularies/dwcgeography.csv'
-        s = ','
+        s = '\t'
         k = '"continent|country|countrycode|stateprovince|county|municipality|waterbody|islandgroup|island"'
         n = '"Oceania|United States|US|Hawaii|Honolulu|Honolulu|North Pacific Ocean|Hawaiian Islands|Oahu, |United States||WA|Chelan Co.||||"'
         l = "DEBUG"
@@ -244,5 +250,4 @@ def main():
     logging.info('To file %s, added new values: %s' % (fullpath, response['addedvalues']))
 
 if __name__ == '__main__':
-    """ Demo of vocab_composite_appender"""
     main()

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-02-05T16:54-03:00"
+__version__ = "dwca_vocab_utils.py 2016-02-11T09:17-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -27,6 +27,7 @@ from dwca_terms import vocabfieldlist
 from dwca_utils import csv_file_dialect
 from dwca_utils import read_header
 from dwca_terms import simpledwctermlist
+from dwca_terms import vocabfieldlist
 import os.path
 import glob
 import unittest
@@ -38,6 +39,44 @@ except ImportError:
     import warnings
     warnings.warn("can't import `unicodecsv` encoding errors may occur")
     import csv
+
+def makevocabheader(keyfields):
+	# Construct the header row for this vocabulary. Begin with a field name
+	# equal to the keyfields variable, then add the remaining field names after
+	# the first one from the standard vocabfieldlist.
+	# Example:
+	# if keyfields = 'country|stateprovince|county'
+	# and
+	# vocabfieldlist = ['verbatim','standard','checked']
+	# then the header will end up as 
+	# 'country|stateprovince|county','standard','checked'
+    fieldnames=[]
+
+    # Set the first field to be the string of concatenated field names.
+    fieldnames.append(keyfields.replace(' ',''))
+    firstfield = True
+
+    # Then add the remaining standard vocab fields.
+    for f in vocabfieldlist:
+        # in the case of composite key vocabualaries, do not use the first vocab
+        # field 'verbatim'. It is being replaced with the keyfields string.
+        if firstfield==True:
+            firstfield = False
+        else:
+            fieldnames.append(f)
+    return fieldnames
+
+def writevocabheader(fullpath, fieldnames, dialect):
+    if fullpath is None or fieldnames is None or len(fullpath) == 0 or \
+        len(fieldnames) == 0:
+        return False
+    with open(fullpath, 'w') as csvfile:
+        try:
+            writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
+            writer.writeheader()
+        except:
+            return False
+    return True
 
 def compose_key_from_list(alist, separator='|'):
     """Get a string consisting of the values in a list, separated by separator value.
@@ -256,6 +295,7 @@ class DWCAUtilsFramework():
     csvcompositepath = testdatapath + 'test_csv*.csv'
     tsvcompositepath = testdatapath + 'test_tsv*.txt'
     mixedcompositepath = testdatapath + 'test_*_specimen_records.*'
+#    monthvocabfile = testdatapath + 'test_vocab_month.txt'
     monthvocabfile = testdatapath + 'test_vocab_month.csv'
     geogvocabfile = testdatapath + 'test_dwcgeography.csv'
     compositetestfile = testdatapath + 'test_eight_specimen_records.csv'
@@ -265,6 +305,7 @@ class DWCAUtilsFramework():
     tsvfromcsvfile1 = testdatapath + 'test_tsv_from_csv_1.txt'
     tsvfromcsvfile2 = testdatapath + 'test_tsv_from_csv_2.txt'
     testvocabfile = testdatapath + 'test_vocab_file.csv'
+    writevocabheadertestfile = testdatapath + 'test_write_vocabheader.txt'
 
     def dispose(self):
         csvwriteheaderfile = self.csvwriteheaderfile
@@ -290,6 +331,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.framework = None
 
     def test_get_standard_value(self):
+        print 'testing get_standard_value'
         testdict = { 'm':'male', 'M':'male', 'male':'male', 'f':'female', 'F':'female', 
             'female':'female'}
         self.assertIsNone(get_standard_value('unnoewn', testdict), 
@@ -310,6 +352,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
             "lookup 'female' does not return 'female'")
 
     def test_distinct_vocab_list_from_file(self):
+        print 'testing distinct_vocab_list_from_file'
         monthvocabfile = self.framework.monthvocabfile
         months = distinct_vocab_list_from_file(monthvocabfile)
 #        print 'months: %s' % months
@@ -319,6 +362,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'verbatim month values do not match expectation')
 
     def test_distinct_term_values_from_file(self):
+        print 'testing distinct_term_values_from_file'
         monthvocabfile = self.framework.monthvocabfile
         months = distinct_term_values_from_file(monthvocabfile, 'verbatim')
 #        print 'months: %s' % months
@@ -328,6 +372,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'verbatim month values do not match expectation')
 
     def test_distinct_composite_term_values_from_file(self):
+        print 'testing distinct_composite_term_values_from_file'
         testfile = self.framework.compositetestfile
         geogs = distinct_composite_term_values_from_file(testfile, 
             'country', '|')
@@ -345,16 +390,21 @@ class DWCAUtilsTestCase(unittest.TestCase):
         geogs = distinct_composite_term_values_from_file(testfile, 
             'country|stateprovince|county', '|')
 #        print 'geogs: %s' % geogs
-        self.assertEqual(geogs, ['United States||San Bernardino', 'United States||Honolulu', 'United States||', 'United States||Kern', 'United States||Chelan'],
+        self.assertEqual(geogs, ['United States||San Bernardino', 
+            'United States||Honolulu', 'United States||', 'United States||Kern', 
+            'United States||Chelan'],
             'composite geogs values do not match expectation')
 
         geogs = distinct_composite_term_values_from_file(testfile, 
             'country|stateProvince|county', '|')
 #        print 'geogs: %s' % geogs
-        self.assertEqual(geogs, ['United States|Colorado|', 'United States|California|', 'United States|Washington|Chelan', 'United States|Hawaii|Honolulu', 'United States|California|San Bernardino', 'United States|California|Kern'],
+        self.assertEqual(geogs, ['United States|Colorado|', 'United States|California|', 
+        'United States|Washington|Chelan', 'United States|Hawaii|Honolulu', 
+        'United States|California|San Bernardino', 'United States|California|Kern'],
             'composite geogs values do not match expectation')
 
     def test_terms_not_in_dwc(self):
+        print 'testing terms_not_in_dwc'
         checklist = ['eventDate', 'verbatimEventDate', 'year', 'month', 'day', 
         'earliestDateCollected', '', 'latestDateCollected']
         notdwc = terms_not_in_dwc(checklist)
@@ -368,6 +418,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(notdwc, expectedlist, 'catalogNumber DwC test failed')
 
     def test_not_in_list(self):
+        print 'testing not_in_list'
         targetlist = ['b', 'a', 'c']
         checklist = ['c', 'd', 'a', 'e']
         newlist = not_in_list(targetlist, checklist)
@@ -379,6 +430,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'new values acde for targetlist do not meet expectation')
 
     def test_distinct_vocabs_to_file(self):
+        print 'testing distinct_vocabs_to_file'
         testvocabfile = self.framework.testvocabfile
 
         valuelist = ['b', 'a', 'c']
@@ -399,11 +451,45 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'full values abcde not found in testvocabfile')
 
     def test_compose_key_from_list(self):
+        print 'testing compose_key_from_list'
         valuelist = ['a', 'b', 'c']
         key = compose_key_from_list(valuelist)
         expected = 'a|b|c'
         self.assertEqual(key, expected, 
             'key value' + key + 'not as expected: ' + expected)
 
+    def test_makevocabheader(self):
+        print 'testing makevocabheader'
+        # Example:
+        # if keyfields = 'country|stateprovince|county'
+        # and
+        # vocabfieldlist = ['verbatim','standard','checked']
+        # then the header will end up as 
+        # 'country|stateprovince|county','standard','checked'
+        keyfields = 'country|stateprovince|county'
+        header = makevocabheader(keyfields)
+#        print 'vocabheader:\n%s' % header
+        expected = ['country|stateprovince|county', 'standard', 'checked', 'error', 
+            'misplaced', 'incorrectable', 'source', 'comment']
+        s = 'header:\n%s\nnot as expected:\n%s' % (header,expected)
+        self.assertEqual(header, expected, s)
+
+    def test_writevocabheader(self):
+        print 'testing writevocabheader'
+        writevocabheadertestfile = self.framework.writevocabheadertestfile
+        fieldnames = ['country|stateprovince|county', 'standard', 'checked', 'error', 
+            'misplaced', 'incorrectable', 'source', 'comment']
+        dialect = vocab_dialect()
+        success = writevocabheader(writevocabheadertestfile, fieldnames, dialect)
+        self.assertTrue(success,'vocab header not written')
+        
+        header = read_header(writevocabheadertestfile)
+        expected = ['country|stateprovince|county', 'standard', 'checked', 'error', 
+            'misplaced', 'incorrectable', 'source', 'comment']
+        s = 'header:\n%s\nfrom file: %s\nnot as expected:\n%s' \
+            % (header,writevocabheadertestfile,expected)
+
+        self.assertEqual(header, expected, s)
+        
 if __name__ == '__main__':
     unittest.main()

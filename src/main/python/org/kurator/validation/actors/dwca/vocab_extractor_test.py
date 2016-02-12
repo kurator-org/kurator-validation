@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor_test.py 2016-02-02T12:32-03:00"
+__version__ = "vocab_extractor_test.py 2016-02-10T15:22-03:00"
 
 # This file contains unit test for the vocab_extractor function.
 #
@@ -36,7 +36,8 @@ class VocabExtractorFramework():
 
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_eight_specimen_records.csv'
-    testfile2 = testdatapath + 'test_vocab_month.csv'
+#    testfile2 = testdatapath + 'test_vocab_month.csv'
+    testfile2 = testdatapath + 'test_vocab_month.txt'
 
     # output data files from tests, remove these in dispose()
 #    testvocabfile = testdatapath + 'test_vocab_file.csv'

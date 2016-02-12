@@ -23,8 +23,6 @@ __version__ = "downloader_test.py 2016-02-08T12:59-03:00"
 # python downloader_test.py
 
 from downloader import downloader
-from dwca_utils import read_header
-from dwca_vocab_utils import distinct_term_values_from_file
 import os
 import json
 import unittest
