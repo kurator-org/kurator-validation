@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-02-12T11:47-03:00"
+__version__ = "dwca_utils.py 2016-02-18T17:13-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -344,9 +344,8 @@ class DWCAUtilsFramework():
     csvcompositepath = testdatapath + 'test_csv*.csv'
     tsvcompositepath = testdatapath + 'test_tsv*.txt'
     mixedcompositepath = testdatapath + 'test_*_specimen_records.*'
-#    monthvocabfile = testdatapath + 'test_vocab_month.csv'
     monthvocabfile = testdatapath + 'test_vocab_month.txt'
-    geogvocabfile = testdatapath + 'test_dwcgeography.csv'
+    geogvocabfile = testdatapath + 'test_dwcgeography.txt'
     compositetestfile = testdatapath + 'test_eight_specimen_records.csv'
     fieldcountestfile1 = testdatapath + 'test_fieldcount.csv'
     fieldcountestfile2 = testdatapath + 'test_eight_specimen_records.csv'
@@ -380,6 +379,38 @@ class DWCAUtilsTestCase(unittest.TestCase):
     def tearDown(self):
         self.framework.dispose()
         self.framework = None
+
+    def test_source_files_exist(self):
+        print 'testing source_files_exist'
+        csvreadheaderfile = self.framework.csvreadheaderfile
+        tsvreadheaderfile = self.framework.tsvreadheaderfile
+        tsvtest1 = self.framework.tsvtest1
+        tsvtest2 = self.framework.tsvtest2
+        csvtest1 = self.framework.csvtest1
+        csvtest2 = self.framework.csvtest2
+        csvtotsvfile1 = self.framework.csvtotsvfile1
+        csvtotsvfile2 = self.framework.csvtotsvfile2
+        geogvocabfile = self.framework.geogvocabfile
+        compositetestfile = self.framework.compositetestfile
+        fieldcountestfile1 = self.framework.fieldcountestfile1
+        fieldcountestfile2 = self.framework.fieldcountestfile2
+        fieldcountestfile3 = self.framework.fieldcountestfile3
+        monthvocabfile = self.framework.monthvocabfile
+
+        self.assertTrue(os.path.isfile(csvreadheaderfile), csvreadheaderfile + ' does not exist')
+        self.assertTrue(os.path.isfile(tsvreadheaderfile), tsvreadheaderfile + ' does not exist')
+        self.assertTrue(os.path.isfile(tsvtest1), tsvtest1 + ' does not exist')
+        self.assertTrue(os.path.isfile(tsvtest2), tsvtest2 + ' does not exist')
+        self.assertTrue(os.path.isfile(csvtest1), csvtest1 + ' does not exist')
+        self.assertTrue(os.path.isfile(csvtest2), csvtest2 + ' does not exist')
+        self.assertTrue(os.path.isfile(csvtotsvfile1), csvtotsvfile1 + ' does not exist')
+        self.assertTrue(os.path.isfile(csvtotsvfile2), csvtotsvfile2 + ' does not exist')
+        self.assertTrue(os.path.isfile(monthvocabfile), monthvocabfile + ' does not exist')
+        self.assertTrue(os.path.isfile(geogvocabfile), geogvocabfile + ' does not exist')
+        self.assertTrue(os.path.isfile(compositetestfile), compositetestfile + ' does not exist')
+        self.assertTrue(os.path.isfile(fieldcountestfile1), fieldcountestfile1 + ' does not exist')
+        self.assertTrue(os.path.isfile(fieldcountestfile2), fieldcountestfile2 + ' does not exist')
+        self.assertTrue(os.path.isfile(fieldcountestfile3), fieldcountestfile3 + ' does not exist')
 
     def test_tsv_dialect(self):
         print 'testing tsv_dialect'

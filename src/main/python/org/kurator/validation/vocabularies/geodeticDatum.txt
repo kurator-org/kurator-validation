@@ -1,0 +1,1 @@
+verbatim	standard	checked	error	misplaced	incorrectable	source	commentWGS84	WGS84	1					World Geodetic System 1984	WGS84	1					

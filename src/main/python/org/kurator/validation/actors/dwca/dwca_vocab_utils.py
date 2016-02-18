@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-02-11T09:17-03:00"
+__version__ = "dwca_vocab_utils.py 2016-02-18T17:27-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -23,11 +23,12 @@ __version__ = "dwca_vocab_utils.py 2016-02-11T09:17-03:00"
 #
 # python dwca_vocab_utils.py
 
-from dwca_terms import vocabfieldlist
 from dwca_utils import csv_file_dialect
 from dwca_utils import read_header
+from dwca_utils import tsv_dialect
 from dwca_terms import simpledwctermlist
 from dwca_terms import vocabfieldlist
+from dwca_terms import controlledtermlist
 import os.path
 import glob
 import unittest
@@ -102,16 +103,17 @@ def vocab_dialect():
         None
     returns:
         dialect - a csv.dialect object with TSV attributes"""
-    dialect = csv.excel
-    dialect.lineterminator='\r'
-    dialect.delimiter=','
-    dialect.escapechar='/'
-    dialect.doublequote=True
-    dialect.quotechar='"'
-    dialect.quoting=csv.QUOTE_MINIMAL
-    dialect.skipinitialspace=True
-    dialect.strict=False
-    return dialect
+#     dialect = csv.excel
+#     dialect.lineterminator='\r'
+#     dialect.delimiter=','
+#     dialect.escapechar='/'
+#     dialect.doublequote=True
+#     dialect.quotechar='"'
+#     dialect.quoting=csv.QUOTE_MINIMAL
+#     dialect.skipinitialspace=True
+#     dialect.strict=False
+#     return dialect
+    return tsv_dialect()
 
 def get_standard_value(was, valuedict):
     """Get the standard value of a term from a dictionary.
@@ -279,26 +281,16 @@ def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
             writer.writerow({'verbatim':term })
     return newvaluelist
 
-class DWCAUtilsFramework():
-    # testdatapath is the location of the files to test with
+class DWCAVocabUtilsFramework():
+    # testdatapath is the location of example files to test with
     testdatapath = '../../data/tests/'
+    # vocabpath is the location of vocabulary files to test with
+    vocabpath = '../../vocabularies/'
 
     # following are files used as input during the tests, don't remove these
-    csvreadheaderfile = testdatapath + 'test_eight_specimen_records.csv'
-    tsvreadheaderfile = testdatapath + 'test_three_specimen_records.txt'
-    tsvtest1 = testdatapath + 'test_tsv_1.txt'
-    tsvtest2 = testdatapath + 'test_tsv_2.txt'
-    csvtest1 = testdatapath + 'test_csv_1.csv'
-    csvtest2 = testdatapath + 'test_csv_2.csv'
-    csvtotsvfile1 = testdatapath + 'test_csv_1.csv'
-    csvtotsvfile2 = testdatapath + 'test_csv_2.csv'
-    csvcompositepath = testdatapath + 'test_csv*.csv'
-    tsvcompositepath = testdatapath + 'test_tsv*.txt'
-    mixedcompositepath = testdatapath + 'test_*_specimen_records.*'
-#    monthvocabfile = testdatapath + 'test_vocab_month.txt'
-    monthvocabfile = testdatapath + 'test_vocab_month.csv'
-    geogvocabfile = testdatapath + 'test_dwcgeography.csv'
     compositetestfile = testdatapath + 'test_eight_specimen_records.csv'
+    monthvocabfile = testdatapath + 'test_vocab_month.txt'
+    geogvocabfile = vocabpath + 'dwcgeography.txt'
 
     # following are files output during the tests, remove these in dispose()
     csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
@@ -322,13 +314,71 @@ class DWCAUtilsFramework():
             os.remove(testvocabfile)
         return True
 
-class DWCAUtilsTestCase(unittest.TestCase):
+class DWCAVocabUtilsTestCase(unittest.TestCase):
     def setUp(self):
-        self.framework = DWCAUtilsFramework()
+        self.framework = DWCAVocabUtilsFramework()
 
     def tearDown(self):
         self.framework.dispose()
         self.framework = None
+
+    def test_source_files_exist(self):
+        print 'testing source_files_exist'
+        vocabpath = self.framework.vocabpath
+        testdatapath = self.framework.testdatapath
+        compositetestfile = self.framework.compositetestfile
+        monthvocabfile = self.framework.monthvocabfile
+        geogvocabfile = self.framework.geogvocabfile
+        dialect = vocab_dialect()
+        
+        for field in controlledtermlist:
+            vocabfile = vocabpath + field + '.txt'
+            if not os.path.isfile(vocabfile):
+                success = writevocabheader(vocabfile, vocabfieldlist, dialect)
+            self.assertTrue(os.path.isfile(vocabfile), vocabfile + ' does not exist')
+
+        self.assertTrue(os.path.isfile(geogvocabfile), geogvocabfile + ' does not exist')
+        self.assertTrue(os.path.isfile(compositetestfile), compositetestfile + ' does not exist')
+
+    def test_vocab_headers_correct(self):
+        print 'testing vocab_headers_correct'
+        vocabpath = self.framework.vocabpath
+        dialect = vocab_dialect()
+        for field in controlledtermlist:
+            vocabfile = vocabpath + field + '.txt'
+            if not os.path.isfile(vocabfile):
+                success = writevocabheader(vocabfile, vocabfieldlist, dialect)
+            header = read_header(vocabfile,dialect)
+            self.assertEqual(header, vocabfieldlist, vocabfile + ' header not correct')
+
+    def test_read_vocab_header(self):
+        print 'testing read_vocab_header'
+        dialect = vocab_dialect()
+        monthvocabfile = self.framework.monthvocabfile
+        header = read_header(monthvocabfile, dialect)
+#        print 'len(header)=%s len(model)=%s\nheader:\n%s\nmodel:\n%s' \
+#            % (len(header), len(vocabfieldlist), header, vocabfieldlist)
+        self.assertEqual(len(header), 8, 'incorrect number of fields in header')
+        self.assertEqual(header, vocabfieldlist, 'header not equal to the model header')
+
+    def test_read_geog_header(self):
+        print 'testing read_geog_header'
+        dialect = vocab_dialect()
+        geogvocabfile = self.framework.geogvocabfile
+        header = read_header(geogvocabfile, dialect)
+        modelheader = []
+        modelheader.append('continent|country|countrycode|stateprovince|county|municipality|waterbody|islandgroup|island')
+        modelheader.append('standard')
+        modelheader.append('checked')
+        modelheader.append('error')
+        modelheader.append('misplaced')
+        modelheader.append('incorrectable')
+        modelheader.append('source')
+        modelheader.append('comment')
+#        print 'len(header)=%s len(model)=%s\nheader:\n%s\nmodel:\n%s' \
+#            % (len(header), len(modelheader), header, modelheader)
+        self.assertEqual(len(header), 8, 'incorrect number of fields in header')
+        self.assertEqual(header, modelheader, 'geog header not equal to the model header')
 
     def test_get_standard_value(self):
         print 'testing get_standard_value'

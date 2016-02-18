@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender_test.py 2016-02-12T12:29-03:00"
+__version__ = "vocab_appender_test.py 2016-02-18T18:14-03:00"
 
 # This file contains unit test for the vocab_appender function.
 #
@@ -35,7 +35,6 @@ class VocabAppenderFramework():
     testdatapath = '../../data/tests/'
 
     # input data files to tests, don't remove these
-#    monthvocabfile = testdatapath + 'test_vocab_month.csv'
     monthvocabfile = testdatapath + 'test_vocab_month.txt'
 
     # output data files from tests, remove these in dispose()
@@ -75,8 +74,9 @@ class VocabAppenderTestCase(unittest.TestCase):
         modelheader.append('misplaced')
         modelheader.append('incorrectable')
         modelheader.append('source')
+        modelheader.append('comment')
 #        print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
-        self.assertEqual(len(header), 7, 'incorrect number of fields in header')
+        self.assertEqual(len(header), 8, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
     def test_vocab_appender(self):

@@ -1,0 +1,1 @@
+verbatim	standard	checked	error	misplaced	incorrectable	source	commentPhysicalObject	PhysicalObject	1					StillImage	StillImage	1					MovingImage	MovingImage	1					Sound	Sound	1					Text	Text	1					Event	Event	1					

@@ -1,0 +1,1 @@
+verbatim	standard	checked	error	misplaced	incorrectable	source	commentinvasive	invasive	1					managed	managed	1					native	native	1					unknown	unknown	1					?	unknown	1					captive	managed	1					cultivated	managed	1					domestic	managed	1					domesticated	managed	1					wild caught	native	1					
