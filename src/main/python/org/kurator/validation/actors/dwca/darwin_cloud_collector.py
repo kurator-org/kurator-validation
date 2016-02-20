@@ -14,18 +14,18 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector.py 2016-02-09T09:33-03:00"
+__version__ = "darwin_cloud_collector.py 2016-02-19T17:25-03:00"
 
 # For now, use global variables to capture parameters sent at the command line in 
 # a workflow
 # Example: 
 #
-# kurator -f workflows/darwin_cloud_collector.yaml -p i=../../data/eight_specimen_records.csv -p o=../../vocabularies/darwincloud.csv
+# kurator -f workflows/darwin_cloud_collector.yaml -p i=../../data/eight_specimen_records.csv -p o=../../vocabularies/dwc_cloud.txt
 #
 # or as a command-line script.
 # Example:
 #
-# python darwin_cloud_collector.py -i ../../data/eight_specimen_records.csv -o ../../vocabularies/darwincloud.csv
+# python darwin_cloud_collector.py -i ../../data/eight_specimen_records.csv -o ../../vocabularies/dwc_cloud.txt
 
 from optparse import OptionParser
 from dwca_vocab_utils import vocab_dialect
@@ -94,7 +94,7 @@ def main():
     outputfile = options.outputfile
 
     if inputfile is None or outputfile is None:
-        print "syntax: python darwin_cloud_collector.py -i ../../data/eight_specimen_records.csv -o ../../vocabularies/darwincloud.csv"
+        print "syntax: python darwin_cloud_collector.py -i ../../data/eight_specimen_records.csv -o ../../vocabularies/dwc_cloud.txt"
         return
     
     inputs = {}

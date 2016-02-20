@@ -16,7 +16,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_terms.py 2016-02-05T14:38-03:00"
+__version__ = "dwca_terms.py 2016-02-18T21:06-03:00"
 
 # This file contains definitions of standard sets of Darwin Core terms.
 
@@ -68,16 +68,11 @@ simpledwctermlist = [
 
 # Terms that make up a distinct geography combination
 geogkeytermlist = [
-    'continent', 'country', 'stateProvince', 'county', 'municipality', 'waterBody', 
-    'islandGroup', 'island']
+    'continent', 'country', 'countryCode', 'stateProvince', 'county', 'municipality', 
+    'waterBody', 'islandGroup', 'island']
 
-# Terms expected in the standardized output from the geography vocabulary
-geogvocaboutputlist = [
-    'continent', 'country', 'countrycode', 'stateProvince', 'county', 'municipality', 
-    'waterBody', 'islandGroup', 'island', 'verbatimcontinent', 'verbatimcountry', 
-    'verbatim_countrycode', 'verbatim_stateProvince', 'verbatim_county', 
-    'verbatim_municipality', 'verbatim_waterBody', 'verbatim_islandGroup', 
-    'verbatim_island']
+# Extra terms expected in the standardized geography vocabulary
+geogvocabextrafieldlist = ['notHigherGeography']
 
 # The taxonkeytermlist contains the terms that make up a distinct taxon name combination
 taxonkeytermlist = [

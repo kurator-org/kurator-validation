@@ -2,6 +2,7 @@ python composite_header_constructor_test.py
 python csv_fieldcount_checker_test.py
 python darwin_cloud_collector_test.py
 python downloader_test.py
+python dwc_geog_collector_test.py
 python dwca_core_to_tsv_test.py
 python dwca_utils.py
 python dwca_vocab_utils.py

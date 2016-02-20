@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_composite_appender.py 2016-02-18T17:02-03:00"
+__version__ = "vocab_composite_appender.py 2016-02-19T22:33-03:00"
 
 # For now, use global variables to capture parameters sent at the command line in 
 # a workflow
@@ -33,6 +33,8 @@ from vocab_extractor import vocab_extractor
 from dwca_vocab_utils import makevocabheader
 from dwca_vocab_utils import writevocabheader
 from dwca_vocab_utils import vocab_dialect
+from dwca_vocab_utils import distinct_term_values_from_file
+from dwca_vocab_utils import not_in_list
 from dwca_terms import vocabfieldlist
 import os.path
 import csv
@@ -97,20 +99,9 @@ def vocab_composite_appender(inputs_as_json):
         return None
     if keyfields != header[0]:
         return None
-        
-    loader_params = {}
-    loader_params['inputfile'] = vocabfile
-    loader_params['termname'] = keyfields
-#    print 'Extractor response with parameters:\ninputfile: %s termname: %s' % (vocabfile, keyfields)
-    vdict=json.loads(vocab_extractor(json.dumps(loader_params)))
-#    print 'vdict:\n%s' % (vdict)
 
-    existingvalues = vdict['extractedvalues']
-    addedvalues=[]
-    for t in newvaluelist:
-        if t not in existingvalues:
-            addedvalues.append(t)
-#            print 'added:\n%s' % t
+    existingvalues = distinct_term_values_from_file(vocabfile, keyfields)        
+    addedvalues = not_in_list(existingvalues, newvaluelist)
 #     print 'existingvalues:\n%s' % existingvalues
 #     print 'newvaluelist:\n%s' % newvaluelist
 #     print 'addedvalues:\n%s' % addedvalues

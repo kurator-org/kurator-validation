@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-02-18T17:27-03:00"
+__version__ = "dwca_vocab_utils.py 2016-02-19T22:41-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -29,6 +29,8 @@ from dwca_utils import tsv_dialect
 from dwca_terms import simpledwctermlist
 from dwca_terms import vocabfieldlist
 from dwca_terms import controlledtermlist
+from dwca_terms import geogkeytermlist
+from dwca_terms import geogvocabextrafieldlist
 import os.path
 import glob
 import unittest
@@ -40,6 +42,14 @@ except ImportError:
     import warnings
     warnings.warn("can't import `unicodecsv` encoding errors may occur")
     import csv
+
+def geogvocabheader():
+	# Construct the header row for the geog vocabulary.
+    geogkey = compose_key_from_list(geogkeytermlist)
+    fieldnames = makevocabheader(geogkey)
+    for f in geogvocabextrafieldlist:
+        fieldnames.append(f)
+    return fieldnames
 
 def makevocabheader(keyfields):
 	# Construct the header row for this vocabulary. Begin with a field name
@@ -278,7 +288,7 @@ def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
     with open(vocabfile, 'a') as csvfile:
         writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
         for term in newvaluelist:
-            writer.writerow({'verbatim':term })
+            writer.writerow({'verbatim':term, 'standard':'', 'checked':0 })
     return newvaluelist
 
 class DWCAVocabUtilsFramework():
@@ -290,7 +300,7 @@ class DWCAVocabUtilsFramework():
     # following are files used as input during the tests, don't remove these
     compositetestfile = testdatapath + 'test_eight_specimen_records.csv'
     monthvocabfile = testdatapath + 'test_vocab_month.txt'
-    geogvocabfile = vocabpath + 'dwcgeography.txt'
+    geogvocabfile = vocabpath + 'dwc_geography.txt'
 
     # following are files output during the tests, remove these in dispose()
     csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
@@ -367,17 +377,16 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         geogvocabfile = self.framework.geogvocabfile
         header = read_header(geogvocabfile, dialect)
         modelheader = []
-        modelheader.append('continent|country|countrycode|stateprovince|county|municipality|waterbody|islandgroup|island')
-        modelheader.append('standard')
-        modelheader.append('checked')
-        modelheader.append('error')
-        modelheader.append('misplaced')
-        modelheader.append('incorrectable')
-        modelheader.append('source')
-        modelheader.append('comment')
+        modelheader.append('continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island')
+        for f in vocabfieldlist:
+            if f != 'verbatim':
+                modelheader.append(f)
+        for f in geogvocabextrafieldlist:
+            modelheader.append(f)
 #        print 'len(header)=%s len(model)=%s\nheader:\n%s\nmodel:\n%s' \
 #            % (len(header), len(modelheader), header, modelheader)
-        self.assertEqual(len(header), 8, 'incorrect number of fields in header')
+        self.assertEqual(len(header), len(vocabfieldlist) + len(geogvocabextrafieldlist), 
+            'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'geog header not equal to the model header')
 
     def test_get_standard_value(self):
@@ -507,6 +516,10 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         expected = 'a|b|c'
         self.assertEqual(key, expected, 
             'key value' + key + 'not as expected: ' + expected)
+        key = compose_key_from_list(geogkeytermlist)
+        expected = 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
+        self.assertEqual(key, expected, 
+            'geog key value:\n' + key + '\nnot as expected:\n' + expected)
 
     def test_makevocabheader(self):
         print 'testing makevocabheader'
@@ -538,8 +551,18 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
             'misplaced', 'incorrectable', 'source', 'comment']
         s = 'header:\n%s\nfrom file: %s\nnot as expected:\n%s' \
             % (header,writevocabheadertestfile,expected)
-
         self.assertEqual(header, expected, s)
-        
+
+    def test_geogvocabheader(self):
+        print 'testing geogvocabheader'
+        header = geogvocabheader()
+        expected = [
+            'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island',
+            'standard', 'checked', 'error', 'misplaced', 'incorrectable', 'source', 
+            'comment', 'notHigherGeography']
+        s = 'geog header:\n%s\nnot as expected:\n%s' \
+            % (header, expected)
+        self.assertEqual(header, expected, s)
+
 if __name__ == '__main__':
     unittest.main()

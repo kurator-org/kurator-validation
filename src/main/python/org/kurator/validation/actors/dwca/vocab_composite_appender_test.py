@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_composite_appender_test.py 2016-02-18T14:40-03:00"
+__version__ = "vocab_composite_appender_test.py 2016-02-19T22:34-03:00"
 
 # This file contains unit test for the vocab_composite_appender function.
 #
@@ -25,6 +25,8 @@ __version__ = "vocab_composite_appender_test.py 2016-02-18T14:40-03:00"
 from vocab_composite_appender import vocab_composite_appender
 from dwca_utils import read_header
 from dwca_vocab_utils import distinct_term_values_from_file
+from dwca_vocab_utils import compose_key_from_list
+from dwca_terms import geogkeytermlist
 import os
 import json
 import unittest
@@ -65,15 +67,15 @@ class VocabAppenderTestCase(unittest.TestCase):
         print 'testing vocab_composite_appender'
         testvocabfile = self.framework.testvocabfile
 
-        k = 'continent|country|countrycode|stateprovince|county|municipality|waterbody|islandgroup|island'
+        geogkey = compose_key_from_list(geogkeytermlist)
         n = [
-            '|United States||WA|Chelan Co.||||',
-            'Oceania|United States|US|Hawaii|Honolulu|Honolulu|North Pacific Ocean|Hawaiian Islands|Oahu'
+            'Oceania|United States|US|Hawaii|Honolulu|Honolulu|North Pacific Ocean|Hawaiian Islands|Oahu',
+            '|United States||WA|Chelan Co.||||'
             ]
 
         inputs = {}
         inputs['vocabfile'] = testvocabfile
-        inputs['keyfields'] = k
+        inputs['keyfields'] = geogkey
         inputs['newvaluelist'] = n
 
         # Add new vocab to new vocab file
@@ -88,11 +90,11 @@ class VocabAppenderTestCase(unittest.TestCase):
         
         writtenlist = response['addedvalues']
 #        print 'writtenlist2: %s' % writtenlist
-        self.assertEquals(len(writtenlist), 0, 'duplicate values written to testvocabfile')
+        self.assertEquals(len(writtenlist), 0, 'duplicate value written to testvocabfile')
         
         header = read_header(testvocabfile)
 #        print 'vocab file header:\n%s' % header
-        self.assertEquals(header[0], k, 'key field not correct in testvocabfile')
+        self.assertEquals(header[0], geogkey, 'key field not correct in testvocabfile')
 
 if __name__ == '__main__':
     unittest.main()
