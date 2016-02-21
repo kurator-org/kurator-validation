@@ -14,10 +14,11 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader.py 2016-02-08T17:27-03:00"
+__version__ = "downloader.py 2016-02-21T16:36-03:00"
 
-# For now, use global variables to capture parameters sent at the command line in 
-# a workflow
+# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
+# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
+#
 # Example: 
 #
 # kurator -f workflows/downloader.yaml -p u=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals -p o=test_ccber_archive.zip
@@ -29,12 +30,9 @@ __version__ = "downloader.py 2016-02-08T17:27-03:00"
 
 from optparse import OptionParser
 from dwcareader_utils import download_file
+from dwca_utils import response
 import json
 import logging
-
-# Global variable for the list of potentially new values for the term to append to the 
-# vocab file
-#checkvaluelist = None
 
 def downloader(inputs_as_json):
     """Download a file from a URL.
@@ -43,26 +41,33 @@ def downloader(inputs_as_json):
         outputfile - full path to the output file
     returns JSON string with information about the results
         success - True if process completed successfully, otherwise False
+        message - an explanation of the reason if success=False
     """
-    inputs = json.loads(inputs_as_json)
-    url = inputs['url']
-    outputfile = inputs['outputfile']
+    # Make a list for the response
+    returnvars = ['success', 'message']
 
-    success = download_file(url,outputfile)
+    # outputs
+    success = False
+    message = None
 
-    # Successfully completed the mission
-    # Return a dict of important information as a JSON string
-    response = {}
-    returnvars = ['success']
-    returnvals = [success]
-    i=0
-    for a in returnvars:
-        response[a]= returnvals[i] 
-        i+=1
+    # inputs
+    try:
+        url = inputs['url']
+    except:
+        url = None
+    try:
+        outputfile = inputs['outputfile']
+    except:
+        outputfile = None
 
-    # Reset global variables to None
- #   checkvaluelist = None
-    return json.dumps(response)
+    if outputfile is None:
+        message = 'No output file given'
+        returnvals = [success, message]
+        return response(returnvars, returnvals)
+
+    success = download_file(url, outputfile)
+    returnvals = [success, message]
+    return response(returnvars, returnvals)
     
 def _getoptions():
     """Parses command line options and returns them."""

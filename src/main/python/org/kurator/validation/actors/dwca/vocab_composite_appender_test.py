@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_composite_appender_test.py 2016-02-19T22:34-03:00"
+__version__ = "vocab_composite_appender_test.py 2016-02-21T20:11-03:00"
 
 # This file contains unit test for the vocab_composite_appender function.
 #
@@ -37,7 +37,7 @@ class VocabAppenderFramework():
     testdatapath = '../../data/tests/'
 
     # input data files to tests, don't remove these
-#    monthvocabfile = testdatapath + 'test_vocab_month.txt'
+    geogvocabfile = testdatapath + 'test_dwcgeography.txt'
 
     # output data files from tests, remove these in dispose()
     testvocabfile = testdatapath + 'test_composite_vocab.csv'
@@ -63,6 +63,36 @@ class VocabAppenderTestCase(unittest.TestCase):
         testvocabfile = self.framework.testvocabfile
         self.assertFalse(os.path.isfile(testvocabfile), testvocabfile + ' exists. It should not for these tests.')
 
+    def test_missing_parameters(self):
+        print 'testing missing_parameters'
+        geogvocabfile = self.framework.geogvocabfile
+
+        inputs = {}
+        response=json.loads(vocab_composite_appender(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['addedvalues'], \
+            'values added without vocab file')
+        self.assertFalse(response['success'], \
+            'success without vocab file')
+
+        inputs['vocabfile'] = geogvocabfile
+#        print 'inputs:\n%s' % inputs
+        response=json.loads(vocab_composite_appender(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['addedvalues'], \
+            'values added without added value list')
+        self.assertFalse(response['success'], \
+            'success with missing added values list')
+
+        inputs['newvaluelist'] = None
+#        print 'inputs:\n%s' % inputs
+        response=json.loads(vocab_composite_appender(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['addedvalues'], \
+            'values added without empty new values list')
+        self.assertFalse(response['success'], \
+            'no success with empty added values list')
+
     def test_vocab_composite_appender(self):
         print 'testing vocab_composite_appender'
         testvocabfile = self.framework.testvocabfile
@@ -77,9 +107,11 @@ class VocabAppenderTestCase(unittest.TestCase):
         inputs['vocabfile'] = testvocabfile
         inputs['keyfields'] = geogkey
         inputs['newvaluelist'] = n
+#        print 'inputs:\n%s' % inputs
 
         # Add new vocab to new vocab file
         response=json.loads(vocab_composite_appender(json.dumps(inputs)))
+#        print 'response:\n%s' % response
         
         writtenlist = response['addedvalues']
 #        print 'writtenlist1: %s' % writtenlist

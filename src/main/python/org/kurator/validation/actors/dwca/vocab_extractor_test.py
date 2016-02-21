@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor_test.py 2016-02-12T12:33-03:00"
+__version__ = "vocab_extractor_test.py 2016-02-21T14:32-03:00"
 
 # This file contains unit test for the vocab_extractor function.
 #
@@ -36,7 +36,6 @@ class VocabExtractorFramework():
 
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_eight_specimen_records.csv'
-#    testfile2 = testdatapath + 'test_vocab_month.csv'
     testfile2 = testdatapath + 'test_vocab_month.txt'
 
     # output data files from tests, remove these in dispose()
@@ -64,6 +63,27 @@ class VocabExtractorTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(testfile1), testfile1 + ' does not exist')
         testfile2 = self.framework.testfile2
         self.assertTrue(os.path.isfile(testfile2), testfile2 + ' does not exist')
+
+    def test_missing_parameters(self):
+        print 'testing missing_parameters'
+        testfile = self.framework.testfile1
+
+        inputs = {}
+        response=json.loads(vocab_extractor(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['extractedvalues'], \
+            'values extracted without input file')
+        self.assertFalse(response['success'], \
+            'success without input file')
+
+        inputs['inputfile'] = testfile
+#        print 'inputs:\n%s' % inputs
+        response=json.loads(vocab_extractor(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['extractedvalues'], \
+            'values added without term name')
+        self.assertFalse(response['success'], \
+            'success with missing term name')
 
     def test_term_exists(self):
         print 'testing term_exists'
@@ -97,17 +117,19 @@ class VocabExtractorTestCase(unittest.TestCase):
         inputs['termname'] = term
 
         # Extract distinct values of term
+#        print 'inputs:\n%s' % inputs
         response=json.loads(vocab_extractor(json.dumps(inputs)))
+#        print 'response:\n%s' % response
         values = response['extractedvalues']
-#        print '%s values: %s' % (term, values)
         s = 'values of term %s not extracted correctly from %s' % (term, testfile)
         self.assertEqual(values, ['1973', '1990', '2003', '2007'], s)
 
         term = 'fieldNumber '
         inputs['termname'] = term
+#        print 'inputs:\n%s' % inputs
         response=json.loads(vocab_extractor(json.dumps(inputs)))
         values = response['extractedvalues']
-#        print '%s values: %s' % (term, values)
+#        print 'response:\n%s' % response
         s = 'values of term %s not extracted correctly from %s' % (term, testfile)
         self.assertEqual(values, ['107702', '126', '1940', '2503', '2938', '2940', '3000', '606'], s)
 
@@ -115,9 +137,10 @@ class VocabExtractorTestCase(unittest.TestCase):
         term = 'verbatim'
         inputs['inputfile'] = testfile
         inputs['termname'] = term
+#        print 'inputs:\n%s' % inputs
         response=json.loads(vocab_extractor(json.dumps(inputs)))
         values = response['extractedvalues']
-#        print 'values of term %s: %s' % (term, values)
+#        print 'response:\n%s' % response
         s = 'values of term %s not extracted correctly from %s' % (term, testfile)
         self.assertEqual(values, ['5', 'V', 'VI', 'Vi', 'v', 'vi'], s)
 

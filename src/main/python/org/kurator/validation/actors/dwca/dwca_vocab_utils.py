@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-02-19T22:41-03:00"
+__version__ = "dwca_vocab_utils.py 2016-02-21T12:54-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -44,7 +44,7 @@ except ImportError:
     import csv
 
 def geogvocabheader():
-	# Construct the header row for the geog vocabulary.
+    # Construct the header row for the geog vocabulary.
     geogkey = compose_key_from_list(geogkeytermlist)
     fieldnames = makevocabheader(geogkey)
     for f in geogvocabextrafieldlist:
@@ -52,15 +52,18 @@ def geogvocabheader():
     return fieldnames
 
 def makevocabheader(keyfields):
-	# Construct the header row for this vocabulary. Begin with a field name
-	# equal to the keyfields variable, then add the remaining field names after
-	# the first one from the standard vocabfieldlist.
-	# Example:
-	# if keyfields = 'country|stateprovince|county'
-	# and
-	# vocabfieldlist = ['verbatim','standard','checked']
-	# then the header will end up as 
-	# 'country|stateprovince|county','standard','checked'
+    # Construct the header row for this vocabulary. Begin with a field name
+    # equal to the keyfields variable, then add the remaining field names after
+    # the first one from the standard vocabfieldlist.
+    # Example:
+    # if keyfields = 'country|stateprovince|county'
+    # and
+    # vocabfieldlist = ['verbatim','standard','checked']
+    # then the header will end up as 
+    # 'country|stateprovince|county','standard','checked'
+    if keyfields is None:
+        return None
+
     fieldnames=[]
 
     # Set the first field to be the string of concatenated field names.
@@ -172,6 +175,8 @@ def distinct_composite_term_values_from_file(inputfile, terms, separator = '|', 
     returns:
         list(valueset) - a list of distinct values of the composite term
     """
+    if inputfile is None:
+        return None
     if os.path.isfile(inputfile) == False:
         return None
     values = set()
@@ -193,14 +198,14 @@ def distinct_composite_term_values_from_file(inputfile, terms, separator = '|', 
         for row in dr:
             # Skip the header row.
             if i>0:
-				vallist=[]
-				for t in termlist:
-					try:
-						v=row[t]
-						vallist.append(v)
-					except:
-						vallist.append('')
-				values.add(compose_key_from_list(vallist))
+                vallist=[]
+                for t in termlist:
+                    try:
+                        v=row[t]
+                        vallist.append(v)
+                    except:
+                        vallist.append('')
+                values.add(compose_key_from_list(vallist))
             i+=1
     return list(values)
 
@@ -213,6 +218,8 @@ def distinct_term_values_from_file(inputfile, termname, dialect=None):
     returns:
         sorted(list(values)) - a sorted list of distinct values of the term
     """
+    if inputfile is None:
+        return None
     if os.path.isfile(inputfile) == False:
         return None
     values = set()
@@ -250,10 +257,10 @@ def not_in_list(targetlist, checklist):
     returns:
         sorted(list(values)) - a sorted list of distinct new values not in the target list
     """
-    if targetlist is None:
-        return sorted(checklist)
     if checklist is None:
         return None
+    if targetlist is None:
+        return sorted(checklist)
     newlist = []
     for v in checklist:
         if v not in targetlist:
@@ -273,6 +280,8 @@ def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
         newvaluelist - a sorted list of distinct verbatim values added to the vocabulary
             lookup file
     """
+    if vocabfile is None:
+        return None
     vocablist = distinct_term_values_from_file(vocabfile, 'verbatim', dialect)
     newvaluelist = not_in_list(vocablist, valuelist)
     if newvaluelist is None or len(newvaluelist) == 0:

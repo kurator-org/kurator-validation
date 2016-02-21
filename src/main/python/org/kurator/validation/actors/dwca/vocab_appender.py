@@ -14,10 +14,11 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2016-02-02T12:31-03:00"
+__version__ = "vocab_appender.py 2016-02-21T19:59-03:00"
 
-# For now, use global variables to capture parameters sent at the command line in 
-# a workflow
+# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
+# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
+#
 # Example: 
 #
 # kurator -f workflows/vocab_appender.yaml -p v=vocabfile -p v=./workspace/basisOfRecord.csv -p n='preservedspecimen, voucher, fossil'
@@ -28,15 +29,13 @@ __version__ = "vocab_appender.py 2016-02-02T12:31-03:00"
 # python vocab_appender.py -v ../../vocabularies/day.csv -n '33'
 
 from optparse import OptionParser
+from dwca_utils import response
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
 from dwca_terms import vocabfieldlist
+import os
 import json
 import logging
-
-# Global variable for the list of potentially new values for the term to append to the 
-# vocab file
-checkvaluelist = None
 
 def vocab_appender(inputs_as_json):
     """Given a set of distinct values for a given term, append any not already in the 
@@ -45,42 +44,40 @@ def vocab_appender(inputs_as_json):
         vocabfile - full path to the file containing the vocabulary
         checkvaluelist - a list of candidate term values to append to the vocabulary file
     returns JSON string with information about the results
-        success - True if process completed successfully, otherwise False
         addedvalues - new values added to the vocabulary file
+        success - True if process completed successfully, otherwise False
+        message - an explanation of the reason if success=False
     """
-    global checkvaluelist
+    # Make a list for the response
+    returnvars = ['addedvalues', 'success', 'message']
+
+    # outputs
+    addedvalues = None
+    success = False
+    message = None
+
+    # inputs
     inputs = json.loads(inputs_as_json)
-    vocabfile = inputs['vocabfile']
-
-    # Use the checkvaluelist from the input JSON, if it exists. 
-    # If it comes from inputs[], it should be a list. If it comes from the global 
-    # variable, it will be a string
-    # try to get the variable from inputs_as_json
     try:
-        valuelist = inputs['checkvaluelist']
+        vocabfile = inputs['vocabfile']
     except:
-        theList = checkvaluelist
-        if str(checkvaluelist).find(',')>0:
-            valuelist=[subs.strip() for subs in thelist.split(',')]
-        else:
-            valuelist=[str(checkvaluelist)]
+        vocabfile = None
+    try:
+        checkvaluelist = inputs['checkvaluelist']
+    except:
+        checkvaluelist = None
 
+    if vocabfile is None:
+        message = 'No vocabfile file given'
+        returnvals = [addedvalues, success, message]
+        return response(returnvars, returnvals)
+    
     dialect = vocab_dialect()
-    addedvalues = distinct_vocabs_to_file(vocabfile, valuelist, dialect)
+    addedvalues = distinct_vocabs_to_file(vocabfile, checkvaluelist, dialect)
+    success = True
 
-    # Successfully completed the mission
-    # Return a dict of important information as a JSON string
-    response = {}
-    returnvars = ['addedvalues', 'success']
-    returnvals = [addedvalues, True]
-    i=0
-    for a in returnvars:
-        response[a]= returnvals[i] 
-        i+=1
-
-    # Reset global variables to None
-    checkvaluelist = None
-    return json.dumps(response)
+    returnvals = [addedvalues, success, message]
+    return response(returnvars, returnvals)
     
 def _getoptions():
     """Parses command line options and returns them."""
@@ -94,12 +91,11 @@ def _getoptions():
     return parser.parse_args()[0]
 
 def main():
-    global checkvaluelist
     options = _getoptions()
     vocabfile = options.vocabfile
     thelist=options.checkvaluelist
     checkvaluelist=[subs.strip() for subs in str(thelist).split(',')]
-    print 'checkvaluelist: %s' % checkvaluelist
+#    print 'checkvaluelist: %s' % checkvaluelist
     if vocabfile is None:
         print "syntax: python vocab_appender.py -v ./workspace/basisOfRecord.csv -n 'preservedspecimen, voucher, fossil'"
         return

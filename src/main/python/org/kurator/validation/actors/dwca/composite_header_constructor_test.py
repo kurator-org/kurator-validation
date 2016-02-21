@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor_test.py 2016-02-12T11:58-03:00"
+__version__ = "composite_header_constructor_test.py 2016-02-21T20:32-03:00"
 
 # This file contains unit test for the composite_header_constructor function.
 #
@@ -44,11 +44,11 @@ class CompositeHeaderConstructorFramework():
     csvtest2 = testdatapath + 'test_csv_2.csv'
 
     # output data files from tests, remove these in dispose()
-    composedheaderfile = 'test_composed_header.txt'
+    composedheaderfile = workspace + '/' + 'test_composed_header.txt'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-        removeme = self.workspace + '/'+ self.composedheaderfile
+        removeme = self.composedheaderfile
         if os.path.isfile(removeme):
             os.remove(removeme)
         return True
@@ -72,6 +72,59 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(tsvfile2), tsvfile2 + ' does not exist')
         self.assertTrue(os.path.isfile(csvfile1), csvfile1 + ' does not exist')
         self.assertTrue(os.path.isfile(csvfile2), csvfile2 + ' does not exist')
+
+    def test_missing_parameters(self):
+        print 'testing missing_parameters'
+        tsvfile1 = self.framework.tsvtest1
+        tsvfile2 = self.framework.tsvtest2
+        composedheaderfile = self.framework.composedheaderfile
+
+        inputs = {}
+        response=json.loads(composite_header_constructor(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['compositeheader'], \
+            'composite_header_constructor created a header without file information')
+        self.assertFalse(response['compositeheader'], \
+            'composite_header_constructor created a header without file information')
+
+        inputs['inputfile1'] = tsvfile1
+        response=json.loads(composite_header_constructor(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['compositeheader'], \
+            'composite_header_constructor created a header with only one input file')
+
+        inputs['inputfile2'] = tsvfile2
+        response=json.loads(composite_header_constructor(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['compositeheader'], \
+            'composite_header_constructor created a header with no output file')
+
+        inputs = {}
+        inputs['inputfile1'] = tsvfile1
+        inputs['outputfile'] = composedheaderfile
+#        print 'inputs:\n%s' % inputs
+        response=json.loads(composite_header_constructor(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        expected = ['locality', 'materialSampleID', 'phylum', 'principalInvestigator']
+        observed = response['compositeheader']
+        self.assertEquals(expected, observed, \
+            'header incorrect with second input file missing')
+        self.assertTrue(response['success'], \
+            'no success with only first input file given')
+
+        inputs = {}
+        inputs['inputfile2'] = tsvfile2
+        inputs['outputfile'] = composedheaderfile
+#        print 'inputs:\n%s' % inputs
+        response=json.loads(composite_header_constructor(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        expected = ['decimalLatitude', 'decimalLongitude', 'locality', 
+            'materialSampleID', 'phylum', 'principalInvestigator']
+        observed = response['compositeheader']
+        self.assertEquals(expected, observed, \
+            'header incorrect with first input file missing')
+        self.assertTrue(response['success'], \
+            'no success with only second input file given')
 
     def test_source_headers_correct(self):
         print 'testing source_headers_correct'
@@ -136,10 +189,9 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         composedheaderfile = self.framework.composedheaderfile
 
         inputs = {}
-        inputs['file1'] = tsvfile1
-        inputs['file2'] = tsvfile2
-        inputs['workspace'] = workspace
-        inputs['headerfilename'] = composedheaderfile
+        inputs['inputfile1'] = tsvfile1
+        inputs['inputfile2'] = tsvfile2
+        inputs['outputfile'] = composedheaderfile
 
         response=json.loads(composite_header_constructor(json.dumps(inputs)))
 #        print 'composite header:\n%s\ncompositeheaderoutputfile: %s' % (response['compositeheader'], response['compositeheaderoutputfile'])

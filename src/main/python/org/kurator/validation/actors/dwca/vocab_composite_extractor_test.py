@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_composite_extractor_test.py 2016-02-12T12:31-03:00"
+__version__ = "vocab_composite_extractor_test.py 2016-02-21T13:34-03:00"
 
 # This file contains unit test for the vocab_composite_extractor function.
 #
@@ -63,6 +63,27 @@ class VocabCompositeExtractorTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(testfile1), testfile1 + ' does not exist')
         testfile2 = self.framework.testfile2
         self.assertTrue(os.path.isfile(testfile2), testfile2 + ' does not exist')
+
+    def test_missing_parameters(self):
+        print 'testing missing_parameters'
+        testfile = self.framework.testfile1
+
+        inputs = {}
+        response=json.loads(vocab_composite_extractor(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['valueset'], \
+            'values extracted without input file')
+        self.assertFalse(response['success'], \
+            'success without input file')
+
+        inputs['inputfile'] = testfile
+#        print 'inputs:\n%s' % inputs
+        response=json.loads(vocab_composite_extractor(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['valueset'], \
+            'values added without key')
+        self.assertFalse(response['success'], \
+            'success with missing key')
 
     def test_vocab_composite_extractor(self):
         print 'testing vocab_composite_extractor'

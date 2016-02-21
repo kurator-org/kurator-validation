@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv_test.py 2016-02-12T12:13-03:00"
+__version__ = "dwca_core_to_tsv_test.py 2016-02-21T17:51-03:00"
 
 # This file contains unit test for the dwca_core_to_tsv function.
 #
@@ -66,6 +66,36 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         dwca = self.framework.dwca
         self.assertTrue(os.path.isfile(dwca), dwca + ' does not exist')
 
+    def test_missing_parameters(self):
+        print 'testing missing_parameters'
+        dwca = self.framework.dwca
+        tsvfile = self.framework.tsvfile
+
+        inputs = {}
+        response=json.loads(dwca_core_to_tsv(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['rowcount'], \
+            'rows added without input file or output file')
+        self.assertFalse(response['success'], \
+            'success without input file or output file')
+
+        inputs['dwcafile'] = dwca
+        response=json.loads(dwca_core_to_tsv(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['rowcount'], \
+            'rows added without output file')
+        self.assertFalse(response['success'], \
+            'success without output file')
+
+        inputs = {}
+        inputs['tsvfile'] = tsvfile
+        response=json.loads(dwca_core_to_tsv(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['rowcount'], \
+            'rows added without input file')
+        self.assertFalse(response['success'], \
+            'success without input file')
+
     def test_convert(self):
         print 'testing convert'
         dwca = self.framework.dwca
@@ -76,13 +106,13 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         inputs['dwcafile'] = dwca
         inputs['tsvfile'] = tsvfile
         inputs['archivetype'] = archivetype
+#        print 'inputs:\n%s' % inputs
 
         response=json.loads(dwca_core_to_tsv(json.dumps(inputs)))
-
-#        print 'TSV file %s with %s rows extracted from core of archive %s (type %s).' \
-#            % (response['tsvfile'], response['rowcount'], dwca, archivetype)
-
+#        print 'response:\n%s' % response
         self.assertEqual(response['rowcount'], 8, 'incorrect number of rows in output')
+        self.assertTrue(response['success'], \
+            'conversion not successful')
 
     def test_source_headers_correct(self):
         print 'testing source_headers_correct'
@@ -96,6 +126,7 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         inputs['archivetype'] = archivetype
 
         response=json.loads(dwca_core_to_tsv(json.dumps(inputs)))
+#        print 'response:\n%s' % response
 
         header = read_header(tsvfile, tsv_dialect())
         modelheader = []
@@ -184,7 +215,12 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         modelheader.append('verbatimCoordinateSystem')
         modelheader.append('waterBody')
         modelheader.append('locality')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
+#         print 'input dwca file: %s' % dwca
+#         print 'output tsvfile: %s' % tsvfile
+#         print 'header:\n%s' % header
+#         print 'len(header)=%s' % len(header)
+#         print 'model:\n%s' % modelheader
+#         print 'len(model)=%s' % len(model)
         self.assertEqual(len(header), 85, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-02-18T17:13-03:00"
+__version__ = "dwca_utils.py 2016-02-21T14:03-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -24,9 +24,8 @@ __version__ = "dwca_utils.py 2016-02-18T17:13-03:00"
 #
 # python dwca_utils.py
 
-#from collections import namedtuple
-#from dwca_terms import vocabfieldlist
 import os.path
+import json
 import glob
 import unittest
 try:
@@ -150,6 +149,8 @@ def read_header(fullpath, dialect = None):
     returns:
         header - a list containing the fields in the original header
     """
+    if fullpath is None:
+        return None
     if os.path.isfile(fullpath) == False:
         return None
     header = None
@@ -193,11 +194,13 @@ def write_header(fullpath, fieldnames, dialect):
         dialect - a csv.dialect object with the attributes of the input file
     returns:
         success - True is the header was written to file"""
-    success = False
+    success = True
     with open(fullpath, 'w') as csvfile:
         writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
-        writer.writeheader()
-        success = True
+        try:
+            writer.writeheader()
+        except:
+            success = false
     return success
 
 def clean_header(header):
@@ -328,6 +331,14 @@ def split_path(fullpath):
     filepattern = fullpath[fullpath.rfind('/')+1:fullpath.rfind('.')]
     return path, fileext, filepattern
 
+def response(returnvars, returnvals):
+    response = {}
+    i=0
+    for a in returnvars:
+        response[a]= returnvals[i] 
+        i+=1
+    return json.dumps(response)
+    
 class DWCAUtilsFramework():
     # testdatapath is the location of the files to test with
     testdatapath = '../../data/tests/'

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_geog_collector_test.py 2016-02-19T22:31-03:00"
+__version__ = "dwc_geog_collector_test.py 2016-02-21T16:53-03:00"
 
 # This file contains unit test for the dwc_geog_collector function.
 #
@@ -67,6 +67,34 @@ class DwcGeogCollectorTestCase(unittest.TestCase):
         testfile2 = self.framework.testfile2
         self.assertTrue(os.path.isfile(testfile2), testfile2 + ' does not exist')
 
+    def test_missing_parameters(self):
+        print 'testing missing_parameters'
+        testfile1 = self.framework.testfile1
+        vocabfile = self.framework.testcollectorfile
+
+        inputs = {}
+        response=json.loads(dwc_geog_collector(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['addedvalues'], \
+            'geog vocab values added without input file or vocabfile')
+        self.assertFalse(response['success'], \
+            'geog vocab addition successful without input file or vocabfile')
+
+        inputs['inputfile'] = testfile1
+        response=json.loads(dwc_geog_collector(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertFalse(response['success'], \
+            'geog vocab addition successful without vocabfile')
+
+        inputs = {}
+        inputs['vocabfile'] = vocabfile
+        response=json.loads(dwc_geog_collector(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['addedvalues'], \
+            'geog vocab values added without inputfile')
+        self.assertFalse(response['success'], \
+            'geog vocab addition successful without inputfile')
+
     def test_headers(self):
         print 'testing headers'
         testfile = self.framework.testfile1
@@ -105,7 +133,7 @@ class DwcGeogCollectorTestCase(unittest.TestCase):
         testfile1 = self.framework.testfile1
         testfile2 = self.framework.testfile2
         vocabfile = self.framework.testcollectorfile
-        
+
         inputs = {}
         inputs['inputfile'] = testfile1
         inputs['vocabfile'] = vocabfile

@@ -14,17 +14,18 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-02-02T12:30-03:00"
+__version__ = "vocab_extractor.py 2016-02-21T15:46-03:00"
 
 from optparse import OptionParser
-from dwca_utils import split_path
+from dwca_utils import response
 from dwca_vocab_utils import distinct_term_values_from_file
 import os.path
 import json
 import logging
 
-# For now, use global variables to capture parameters sent at the command line in 
-# a workflow
+# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
+# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
+#
 # Example: 
 #
 # kurator -f workflows/vocab_extractor.yaml -p p=inputfile -p v=../../data/eight_specimen_records.csv -p t=year
@@ -34,64 +35,55 @@ import logging
 #
 # python vocab_extractor.py -i ../../data/eight_specimen_records.csv -t country
 
-# The name of the term for which the distinct values are sought
-extracttermname = None
-
 def vocab_extractor(inputs_as_json):
     """Extract a list of the distinct values of a given term in a text file.
     inputs_as_json - JSON string containing inputs
         inputfile - full path to the input file
         termname - the name of the term for which to find distinct values
     returns JSON string with information about the results
-        success - True if process completed successfully, otherwise False
         extractedvalues - a list of distinct values of the term in the inputfile
+        success - True if process completed successfully, otherwise False
+        message - an explanation of the reason if success=False
     """
+    # Make a list for the response
+    returnvars = ['extractedvalues', 'success', 'message']
 
-    global extracttermname
+    # outputs
+    extractedvalues = None
+    success = False
+    message = None
+
+    # inputs
     inputs = json.loads(inputs_as_json)
-    inputfile = inputs['inputfile']
-
-    # Use the termname from the input JSON, if it exists
+    try:
+        inputfile = inputs['inputfile']
+    except:
+        inputfile = None
     try:
         termname = inputs['termname']
     except:
-        # Otherwise use the global value, if it exists
-        termname = extracttermname
+        termname = None
+
+    if inputfile is None:
+        message = 'No input file given'
+        returnvals = [extractedvalues, success, message]
+        return response(returnvars, returnvals)
+        
     if termname is None:
-        s = 'No term name given'
-        return fail_response(s)
+        message = 'No term given'
+        returnvals = [extractedvalues, success, message]
+        return response(returnvars, returnvals)
         
     if not os.path.isfile(inputfile):
-        s = 'Input file %s not found' % inputfile
-        return fail_response(s)
+        message = 'Input file %s not found' % inputfile
+        returnvals = [extractedvalues, success, message]
+        return response(returnvars, returnvals)
 
     extractedvalues = distinct_term_values_from_file(inputfile, termname)
+    success = True
+    returnvals = [extractedvalues, success, message]
+    return response(returnvars, returnvals)
 
-    # Successfully completed the mission
-    # Return a dict of important information as a JSON string
-    response = {}
-    returnvars = ['extractedvalues', 'success']
-    returnvals = [extractedvalues, True]
-    i=0
-    for a in returnvars:
-        response[a]= returnvals[i] 
-        i+=1
-
-    # Reset global variables to None
-    extracttermname = None
-
-    return json.dumps(response)
-
-def fail_response(error):
-    response = {}
-    returnvars = ['extractedvalues', 'success', 'error']
-    returnvals = [None, False, error]
-    i=0
-    for a in returnvars:
-        response[a]= returnvals[i] 
-        i+=1
-    return json.dumps(response)
-    
 def _getoptions():
     """Parses command line options and returns them."""
     parser = OptionParser()

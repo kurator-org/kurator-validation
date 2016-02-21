@@ -14,10 +14,11 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_geog_collector.py 2016-02-19T22:18-03:00"
+__version__ = "dwc_geog_collector.py 2016-02-21T16:53-03:00"
 
-# For now, use global variables to capture parameters sent at the command line in 
-# a workflow
+# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
+# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
+#
 # Example: 
 #
 # kurator -f workflows/dwc_geog_collector.yaml -p i=../../data/eight_specimen_records.csv -p o=../../vocabularies/dwc_geography.txt
@@ -40,14 +41,11 @@ from dwca_vocab_utils import geogvocabheader
 from dwca_utils import read_header
 from dwca_utils import clean_header
 from dwca_terms import geogkeytermlist
+from dwca_utils import response
 import os
 import csv
 import json
 import logging
-
-# Global variable for the list of potentially new values for the term to append to the 
-# vocab file
-#checkvaluelist = None
 
 def dwc_geog_collector(inputs_as_json):
     """Get geography unique combinations of geography from the inputfile and put any new 
@@ -56,23 +54,39 @@ def dwc_geog_collector(inputs_as_json):
         inputfile - full path to the input file
         vocabfile - full path to the geography vocabulary file
     returns JSON string with information about the results
-        success - True if process completed successfully, otherwise False
         addedvalues - new values added to the geography vocabulary file
+        success - True if process completed successfully, otherwise False
+        message - an explanation of the reason if success=False
     """
-    # inputs
-    inputs = json.loads(inputs_as_json)
-    inputfile = inputs['inputfile']
-    vocabfile = inputs['vocabfile']
-
-    # outputs
-    success = False
-    addedvalues = None
-    message = None
-
-    # Make a dict for the response
-    response = {}
+    # Make a list for the response
     returnvars = ['addedvalues', 'success', 'comment']
 
+    # outputs
+    addedvalues = None
+    success = False
+    message = None
+
+    # inputs
+    inputs = json.loads(inputs_as_json)
+    try:
+        inputfile = inputs['inputfile']
+    except:
+        inputfile = None
+    try:
+        vocabfile = inputs['vocabfile']
+    except:
+        vocabfile = None
+
+    if inputfile is None:
+        message = 'No input file given'
+        returnvals = [addedvalues, success, message]
+        return response(returnvars, returnvals)
+        
+    if vocabfile is None:
+        message = 'No vocab file given'
+        returnvals = [addedvalues, success, message]
+        return response(returnvars, returnvals)
+        
     dialect = vocab_dialect()
     geogkey = compose_key_from_list(geogkeytermlist)
     potentialgeogs = distinct_composite_term_values_from_file(inputfile, geogkey, '|')
@@ -91,29 +105,23 @@ def dwc_geog_collector(inputs_as_json):
     # Should have a vocab file now
     # If the geog vocab file header does not match
     checkheader = read_header(vocabfile, dialect)
-    if checkheader == geogheader:
-        # Add the new geogs to the geog vocab file
-        with open(vocabfile, 'a') as csvfile:
-            writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=geogheader)
-            for term in addedvalues:
-                writer.writerow({geogkey:term, 'standard':'', 'checked':0 })
-        success = True
-    else:
+    if checkheader != geogheader:
         message = 'header read from ' + vocabfile + 'does not match geogvocabheader'
+        returnvals = [addedvalues, success, message]
+        return response(returnvars, returnvals)
+
+    # Add the new geogs to the geog vocab file
+    with open(vocabfile, 'a') as csvfile:
+        writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=geogheader)
+        for term in addedvalues:
+            writer.writerow({geogkey:term, 'standard':'', 'checked':0 })
+    success = True
 
 #    print 'header from %s:\n%s' % (vocabfile, checkheader)
 #    print 'geog header:\n%s' % geogheader
 
-	# Construct the response
     returnvals = [addedvalues, success, message]
-    i=0
-    for a in returnvars:
-        response[a]= returnvals[i] 
-        i+=1
-
-    # Reset global variables to None
- #   checkvaluelist = None
-    return json.dumps(response)
+    return response(returnvars, returnvals)
     
 def _getoptions():
     """Parses command line options and returns them."""

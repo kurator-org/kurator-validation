@@ -14,10 +14,11 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2016-01-21T13:33-03:00"
+__version__ = "dwca_core_to_tsv.py 2016-02-21T17:51-03:00"
 
-# For now, use global variables to capture parameters sent at the command line in 
-# a workflow
+# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
+# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
+#
 # Example: 
 #
 # kurator -f workflows/dwca_core_to_tsv.yaml -p dwcafile=../../data/dwca-uwymv_herp.zip -p tsvoutputfile=./workspace/dwcatsvout.txt -p archivetype=standard
@@ -30,6 +31,7 @@ __version__ = "dwca_core_to_tsv.py 2016-01-21T13:33-03:00"
 from optparse import OptionParser
 from dwcareader_utils import short_term_names
 from dwca_utils import tsv_dialect
+from dwca_utils import response
 import json
 import csv
 import os.path
@@ -42,49 +44,75 @@ import logging
 from dwca.read import DwCAReader
 from dwca.read import GBIFResultsReader
 
-tsvfile = './dwcatotsv.txt'
-archivetype = 'standard'
-
 def dwca_core_to_tsv(inputs_as_json):
     """Save the core of the archive to a tsv file with short DwC term names as headers.
-    inputs_as_json - JSON string containing "dwcafile", which is the full path to the 
-    Darwin Core archive file to process, "tsvfile", which is the tsv output file
-    returns JSON string with information about the results."""
+    inputs_as_json - JSON string containing inputs
+        dwcafile - full path to the input Darwin Core archive file
+        tsvfile - Full path to the tsv output file
+        archivetype - the archive type ('standard' or 'gbif')
+    returns JSON string with information about the results
+        rowcount - the number of rows in the Darwin Core archive file
+        success - True if process completed successfully, otherwise False
+        message - an explanation of the reason if success=False
+    """
+    # Make a list for the response
+    returnvars = ['rowcount', 'success', 'message']
 
+    # outputs
+    rowcount = None
+    success = False
+    message = None
+
+    # inputs
     inputs = json.loads(inputs_as_json)
-    inputfile = inputs['dwcafile']
-
-    # try to get the variable from inputs_as_json
+    try:
+        inputfile = inputs['dwcafile']
+    except:
+        inputfile = None
     try:
         tsvfilename = inputs['tsvfile']
-    # otherwise get it from the global variable
     except:
-        tsvfilename = tsvfile
-
-    # try to get the variable from inputs_as_json
+        tsvfilename = None
     try:
         type = inputs['archivetype']
-    # otherwise get it from the global variable
     except:
-        type = archivetype
+        type = 'standard'
 
-    if not os.path.isfile(inputfile):
-        return None
+    if inputfile is None:
+        message = 'No input file given'
+        returnvals = [rowcount, success, message]
+        return response(returnvars, returnvals)
+        
+    if tsvfilename is None:
+        message = 'No output file given'
+        returnvals = [rowcount, success, message]
+        return response(returnvars, returnvals)
 
-    # Make an appropriate reader based on whether the archive is standard or a GBIF
-    # download.
+    if os.path.isfile(inputfile) == False:
+        message = 'input file not found'
+        returnvals = [rowcount, success, message]
+        return response(returnvars, returnvals)
+
+    # Make a reader based on whether the archive is standard or a GBIF download.
     dwcareader = None
     if type=='gbif':
         try:
             dwcareader = GBIFResultsReader(inputfile)
         except Exception, e:
-            logging.error('GBIF archive %s has an exception: %s ' % (inputfile, e))
-            pass
-    else:
+            message = 'Error %s reading GBIF archive: %s' % (inputfile, e)
+            returnvals = [rowcount, success, message]
+            return response(returnvars, returnvals)
+    try:
         dwcareader = DwCAReader(inputfile)
+    except Exception, e:
+        message = 'Error %s reading archive: %s' % (inputfile, e)
+        returnvals = [rowcount, success, message]
+        return response(returnvars, returnvals)
+
     if dwcareader is None:
-        print 'No viable archive found at %s' % inputfile
-        return None
+        message = 'No viable archive found at %s' % inputfile
+        returnvals = [rowcount, success, message]
+        return response(returnvars, returnvals)
 
     termnames=list(dwcareader.descriptor.core.terms)
     shorttermnames=short_term_names(termnames)
@@ -92,7 +120,7 @@ def dwca_core_to_tsv(inputs_as_json):
     with open(tsvfilename, 'w') as thefile:
         writer = csv.DictWriter(thefile, dialect=dialect, fieldnames=shorttermnames)
         writer.writeheader()
- 
+
     rowcount = 0
     with open(tsvfilename, 'a') as thefile:
         writer = csv.DictWriter(thefile, dialect=dialect, fieldnames=termnames)
@@ -104,17 +132,10 @@ def dwca_core_to_tsv(inputs_as_json):
 
     # Close the archive    
     dwcareader.close()
+    success = True
     
-    # Successfully completed the mission
-    # Return a dict of important information as a JSON string
-    response = {}
-    returnvars = ['tsvfile', 'rowcount']
-    returnvals = [tsvfilename, rowcount]
-    i=0
-    for a in returnvars:
-        response[a]= returnvals[i] 
-        i+=1
-    return json.dumps(response)
+    returnvals = [rowcount, success, message]
+    return response(returnvars, returnvals)
 
 def _getoptions():
     """Parses command line options and returns them."""
@@ -131,7 +152,6 @@ def _getoptions():
     return parser.parse_args()[0]
 
 def main():
-    global tsvfile, archivetype
     logging.basicConfig(level=logging.DEBUG)
     options = _getoptions()
     dwcafile = options.inputfile

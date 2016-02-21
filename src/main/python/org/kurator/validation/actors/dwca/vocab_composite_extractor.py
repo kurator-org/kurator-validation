@@ -14,10 +14,11 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_composite_extractor.py 2016-02-02T12:31-03:00"
+__version__ = "vocab_composite_extractor.py 2016-02-21T14:21-03:00"
 
-# For now, use global variables to capture parameters sent at the command line in 
-# a workflow
+# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
+# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
+#
 # Example: 
 #
 # kurator -f workflows/vocab_composite_extractor.yaml -p p=inputfile -p v=../../data/eight_specimen_records.csv -p c="continent,country,stateProvince,county,municipality,island,islandGroup,waterbody"
@@ -28,7 +29,7 @@ __version__ = "vocab_composite_extractor.py 2016-02-02T12:31-03:00"
 # python vocab_composite_extractor.py -i ../../data/eight_specimen_records.csv -c "continent,country,stateProvince,county,municipality,island,islandGroup,waterbody"
 
 from optparse import OptionParser
-from dwca_utils import split_path
+from dwca_utils import response
 from dwca_vocab_utils import compose_key_from_list
 from dwca_vocab_utils import distinct_composite_term_values_from_file
 import os.path
@@ -36,67 +37,58 @@ import csv
 import json
 import logging
 
-# The order-dependent, separator-separated string of term names in the term composite for 
-# which the distinct values are sought. Term names may not contain the separator, but 
-# content may.
-termcomposite = None
-
 def vocab_composite_extractor(inputs_as_json):
     """Extract a list of the distinct values of a given termcomposite in a text file.    
     inputs_as_json - JSON string containing inputs
         inputfile - full path to the file containing the distinct values to extract
         termcomposite - an ordered-dependent list of terms for which to extract values. 
             Example for a geography key: 
-    "continent|country|stateprovince|county|municipality|island|islandgroup|waterbody"
+    "continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island"
 
     returns JSON string with information about the results
+        valueset - a list of distinct values of the temcomposite in the file
         success - True if process completed successfully, otherwise False
-        list(valueset) - a list of distinct values of the temcomposite in the file
+        message - an explanation of the reason if success=False
     """
-    global termcomposite
+    # Make a list for the response
+    returnvars = ['valueset', 'success', 'message']
+
+    # outputs
+    valueset = None
+    success = False
+    message = None
+
+    # inputs
     inputs = json.loads(inputs_as_json)
-    inputfile = inputs['inputfile']
-
-    # Use the termcomposite from the input JSON, if it exists
     try:
-        compositekey = inputs['termcomposite']
+        inputfile = inputs['inputfile']
     except:
-        # Otherwise use the global value, if it exists
-        compositekey = termcomposite
+        inputfile = None
+    try:
+        termcomposite = inputs['termcomposite']
+    except:
+        termcomposite = None
 
-    if compositekey is None:
-        s = 'No composite term given'
-        return fail_response(s)
+    if inputfile is None:
+        message = 'No input file given'
+        returnvals = [valueset, success, message]
+        return response(returnvars, returnvals)
+        
+    if termcomposite is None:
+        message = 'No composite term given'
+        returnvals = [valueset, success, message]
+        return response(returnvars, returnvals)
         
     if not os.path.isfile(inputfile):
-        s = 'Input file %s not found' % inputfile
-        return fail_response(s)
+        message = 'Input file %s not found' % inputfile
+        returnvals = [valueset, success, message]
+        return response(returnvars, returnvals)
 
-    values = distinct_composite_term_values_from_file(inputfile, compositekey,'|')
-#    print 'values: %s' % values
+    valueset = distinct_composite_term_values_from_file(inputfile, termcomposite,'|')
 
-    # Successfully completed the mission
-    # Return a dict of important information as a JSON string
-    response = {}
-    returnvars = ['valueset', 'success']
-    returnvals = [values, True]
-    i=0
-    for a in returnvars:
-        response[a]= returnvals[i] 
-        i+=1
+    returnvals = [valueset, success, message]
+    return response(returnvars, returnvals)
 
-    return json.dumps(response)
-    
-def fail_response(error):
-    response = {}
-    returnvars = ['valueset', 'success', 'error']
-    returnvals = [None, False, error]
-    i=0
-    for a in returnvars:
-        response[a]= returnvals[i] 
-        i+=1
-    return json.dumps(response)
-    
 def _getoptions():
     """Parses command line options and returns them."""
     parser = OptionParser()
@@ -109,24 +101,23 @@ def _getoptions():
     return parser.parse_args()[0]
 
 def main():
-    global termcomposite
     options = _getoptions()
     inputfile = options.inputfile
-    local_termcomposite = options.termcomposite
+    termcomposite = options.termcomposite
 
-    if inputfile is None or local_termcomposite is None:
+    if inputfile is None or termcomposite is None:
         print 'syntax: python vocab_composite_extractor.py -i ../../data/eight_specimen_records.csv -c "continent|country|stateprovince|county|municipality|island|islandgroup|waterbody"'
         return
     
     inputs = {}
     inputs['inputfile'] = inputfile
-    inputs['termcomposite'] = local_termcomposite
-    
+    inputs['termcomposite'] = termcomposite
+
     # Get distinct values of termcomposite from inputfile
     response=json.loads(vocab_composite_extractor(json.dumps(inputs)))
 
 #    print 'Response: %s' % response
-    logging.info('File %s mined for values of\n%s.' % (inputfile,local_termcomposite))
+    logging.info('File %s mined for values of\n%s.' % (inputfile,termcomposite))
     for r in response['valueset']:
         logging.info('%s' % (r) )
 

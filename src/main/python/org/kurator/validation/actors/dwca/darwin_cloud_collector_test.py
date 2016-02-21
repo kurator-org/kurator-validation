@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector_test.py 2016-02-12T12:08-03:00"
+__version__ = "darwin_cloud_collector_test.py 2016-02-21T16:13-03:00"
 
 # This file contains unit test for the darwin_cloud_collector function.
 #
@@ -62,6 +62,27 @@ class DarwinCloudCollectorTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(testfile1), testfile1 + ' does not exist')
         testfile2 = self.framework.testfile2
         self.assertTrue(os.path.isfile(testfile2), testfile2 + ' does not exist')
+
+    def test_missing_parameters(self):
+        print 'testing missing_parameters'
+        testfile1 = self.framework.testfile1
+
+        inputs = {}
+        response=json.loads(darwin_cloud_collector(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertEquals(response['addedvalues'], None, \
+            'values added without input file')
+        self.assertFalse(response['success'], \
+            'success without input file')
+
+        inputs['inputfile'] = testfile1
+#        print 'inputs:\n%s' % inputs
+        response=json.loads(darwin_cloud_collector(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertEquals(response['addedvalues'], None, \
+            'values added without output file')
+        self.assertFalse(response['success'], \
+            'success without output file')
 
     def test_headers(self):
         print 'testing headers'

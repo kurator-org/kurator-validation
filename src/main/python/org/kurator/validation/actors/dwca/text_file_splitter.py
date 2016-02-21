@@ -14,13 +14,14 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_splitter.py 2016-01-22T15:22-03:00"
+__version__ = "text_file_splitter.py 2016-02-21T19:38-03:00"
 
-# For now, use global variables to capture parameters sent at the command line in 
-# a workflow
+# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
+# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
+#
 # Example: 
 #
-# kurator -f workflows/text_file_splitter.yaml -p p=inputpath -p v=../../data/eight_specimen_records.csv  -p c=5 -p w=./workspace
+# kurator -f workflows/text_file_splitter.yaml -p p=inputfile -p v=../../data/eight_specimen_records.csv  -p c=5 -p w=./workspace
 #
 # or as a command-line script.
 # Example:
@@ -29,48 +30,69 @@ __version__ = "text_file_splitter.py 2016-01-22T15:22-03:00"
 
 from optparse import OptionParser
 from dwca_utils import split_path
+from dwca_utils import response
 import os.path
 import json
 import uuid
 import logging
 
-splitterworkspace='./workspace'
-splitterchunksize=10000
-
 def text_file_splitter(inputs_as_json):
     """Split a text file into chunks with headers. Put the chunk files in the workspace
     inputs_as_json - JSON string containing inputs
-        inputpath - full path to the input
+        inputfile - full path to the input file
         workspace - the directory in which the output will be written
         chunksize - the maximum number of records in an output file
     returns JSON string with information about the results
-        success - True if process completed successfully, otherwise False
-        splitrowcount - the number of rows in the file that was split, not counting header
+        filepattern - the pattern for the split file names
         chunks - the number of files created from the split
-        splitfilepattern - the pattern for the split file names
-        splitfileext - the extension for the split file names
+        rowcount - the number of rows in the file that was split, not counting header
+        success - True if process completed successfully, otherwise False
+        message - an explanation of the reason if success=False
     """
+    # Make a list for the response
+    returnvars = ['filepattern', 'chunks', 'rowcount', 'success', 'message']
 
+    # outputs
+    filepattern = None
+    chunks = None
+    rowcount = None
+    success = False
+    message = None
+
+    # inputs
     inputs = json.loads(inputs_as_json)
-    inputpath = inputs['inputpath']
-    if not os.path.isfile(inputpath):
-        return None
-
+    try:
+        inputfile = inputs['inputfile']
+    except:
+        inputfile = None
     try:
         workspace = inputs['workspace']
     except:
-        workspace = splitterworkspace
-
+        workspace = './workspace'
     try:
         chunksize = inputs['chunksize']
     except:
-        chunksize = splitterchunksize
+        chunksize = 10000
+
+    # local variables
+    path = None
+    fileext = None
+
+    if inputfile is None:
+        message = 'No input file given'
+        returnvals = [filepattern, chunks, rowcount, success, message]
+        return response(returnvars, returnvals)
+
+    if not os.path.isfile(inputfile):
+        message = 'Input file %s not found' % inputfile
+        returnvals = [filepattern, chunks, rowcount, success, message]
+        return response(returnvars, returnvals)
+
+    path, fileext, filepattern = split_path(inputfile)
 
     # Open the file in universal mode
-    input = open(inputpath, 'rU')
+    input = open(inputfile, 'rU')
 
-    path, fileext, filepattern = split_path(inputpath)
-    
     # Get the first line of the file as the header
     header=input.next()
 
@@ -99,16 +121,17 @@ def text_file_splitter(inputs_as_json):
     if dest:
         dest.close()
 
-    # Successfully completed the mission
-    # Return a dict of important information as a JSON string
-    response = {}
-    returnvars = ['splitfilepattern', 'splitfileext', 'chunks', 'splitrowcount', 'success']
-    returnvals = [filepattern, fileext, chunks, rowcount, True]
-    i=0
-    for a in returnvars:
-        response[a]= returnvals[i] 
-        i+=1
-    return json.dumps(response)
+    # Close the last input file
+    if input:
+        input.close()
+
+    outputpattern = None
+    if filepattern is not None and fileext is not None:
+        outputpattern = workspace+'/'+filepattern+'-*.'+fileext
+
+    success = True
+    returnvals = [outputpattern, chunks, rowcount, success, message]
+    return response(returnvars, returnvals)
     
 def _getoptions():
     """Parses command line options and returns them."""
@@ -125,35 +148,34 @@ def _getoptions():
     return parser.parse_args()[0]
 
 def main():
-    global splitterchunksize, splitterworkspace
     logging.basicConfig(level=logging.DEBUG)
     options = _getoptions()
-    inputpath = options.inputfile
-    splitterworkspace = options.workspace
+    inputfile = options.inputfile
+    workspace = options.workspace
 
-    if inputpath is None:
+    if inputfile is None:
         print 'syntax: python text_file_splitter.py -i ../../data/eight_specimen_records.csv -c 5 -w ./workspace'
         return
 
-    if splitterworkspace is None:
-        splitterworkspace = './workspace'
+    if workspace is None:
+        workspace = './workspace'
 
     try:
-        splitterchunksize = int(str(options.chunksize))
+        chunksize = int(str(options.chunksize))
     except:
-        splitterchunksize = 1000
+        chunksize = 10000
     
     inputs = {}
-    inputs['inputpath'] = inputpath
-    inputs['workspace'] = splitterworkspace
-    inputs['chunksize'] = splitterchunksize
+    inputs['inputfile'] = inputfile
+    inputs['workspace'] = workspace
+    inputs['chunksize'] = chunksize
 
     # Split text file into chucks
     response=json.loads(text_file_splitter(json.dumps(inputs)))
-
-    returnvars = ['splitfilepattern', 'splitfileext', 'chunks', 'splitrowcount', 'success']
+    chunks = response['chunks']
+    splitrowcount = response['splitrowcount']
     print 'File %s with %s records chunked into %s chunks of %s or less rows in %s.' \
-        % (inputpath, response['splitrowcount'], response['chunks'], splitterchunksize, splitterworkspace)
+        % (inputfile, splitrowcount, chunks, chunksize, workspace)
     print 'Response: %s' % response
 
 if __name__ == '__main__':

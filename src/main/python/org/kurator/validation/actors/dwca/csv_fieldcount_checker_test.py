@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_fieldcount_checker_test.py 2016-02-12T12:03-03:00"
+__version__ = "csv_fieldcount_checker_test.py 2016-02-21T16:00-03:00"
 
 # This file contains unit test for the csv_fieldcount_checker function.
 #
@@ -64,6 +64,26 @@ class CsvFieldcountCheckerTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(testfile), testfile + ' does not exist')
         testfile = self.framework.testfile3
         self.assertTrue(os.path.isfile(testfile), testfile + ' does not exist')
+
+    def test_missing_parameters(self):
+        print 'testing missing_parameters'
+        testfile1 = self.framework.testfile1
+
+        inputs = {}
+        response=json.loads(csv_fieldcount_checker(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertEquals(response['firstbadrowindex'], 0, \
+            'bad row found without input file')
+        self.assertFalse(response['success'], \
+            'success without input file')
+
+        inputs['inputfile'] = ''
+        response=json.loads(csv_fieldcount_checker(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertEquals(response['firstbadrowindex'], 0, \
+            'bad row found with blank input file')
+        self.assertTrue(response['success'], \
+            'success with blank input file')
 
     def test_csv_fieldcount_checker(self):
         print 'testing csv_fieldcount_checker'

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_splitter_test.py 2016-01-30T14:43-03:00"
+__version__ = "text_file_splitter_test.py 2016-02-21T19:38-03:00"
 
 from text_file_splitter import text_file_splitter
 from dwca_utils import split_path
@@ -68,30 +68,47 @@ class TextFileSplitterTestCase(unittest.TestCase):
         self.framework = None
 
     def test_source_file_exists(self):
+        print 'testing source_file_exists'
         csvfile = self.framework.testdatapath + self.framework.csvfile        
         self.assertTrue(os.path.isfile(csvfile), csvfile + ' does not exist')
 
+    def test_missing_parameters(self):
+        print 'testing missing_parameters'
+        workspace = self.framework.testdatapath
+        csvfile = self.framework.testdatapath + self.framework.csvfile        
+
+        inputs = {}
+        response=json.loads(text_file_splitter(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['rowcount'], \
+            'rows split without input file')
+        self.assertIsNone(response['chunks'], \
+            'chunks resulted without input file')
+        self.assertFalse(response['success'], \
+            'success without input file')
+
     def test_split(self):
+        print 'testing split'
         workspace = self.framework.testdatapath
         chunksize = 3
         csvfile = self.framework.testdatapath + self.framework.csvfile        
 
         inputs = {}
-        inputs['inputpath'] = csvfile
+        inputs['inputfile'] = csvfile
         inputs['workspace'] = workspace
         inputs['chunksize'] = chunksize
-
 #        print 'inputs:\n%s' % inputs
-#        print 'json-inputs:\n%s' % json.dumps(inputs)
+
         # Split text file into chucks
         response=json.loads(text_file_splitter(json.dumps(inputs)))
+#        print 'response:\n%s' % response
 
         path, ext, filename = split_path(workspace+csvfile)
         files = glob.glob(workspace + filename + '*')
         splitfilecount = len(files)-1
 
         self.assertEqual(response['chunks'], 3, 'incorrect number of chunks')
-        self.assertEqual(response['splitrowcount'], 8, 'incorrect number of rows')
+        self.assertEqual(response['rowcount'], 8, 'incorrect number of rows')
         self.assertEqual(splitfilecount, 3, 'incorrect number of chunk files')
 
 if __name__ == '__main__':

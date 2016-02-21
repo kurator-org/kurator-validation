@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender_test.py 2016-02-18T18:14-03:00"
+__version__ = "vocab_appender_test.py 2016-02-21T19:59-03:00"
 
 # This file contains unit test for the vocab_appender function.
 #
@@ -61,6 +61,36 @@ class VocabAppenderTestCase(unittest.TestCase):
         monthvocabfile = self.framework.monthvocabfile
         self.assertTrue(os.path.isfile(monthvocabfile), monthvocabfile + ' does not exist')
 
+    def test_missing_parameters(self):
+        print 'testing missing_parameters'
+        monthvocabfile = self.framework.monthvocabfile
+
+        inputs = {}
+        response=json.loads(vocab_appender(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['addedvalues'], \
+            'values added without vocab file')
+        self.assertFalse(response['success'], \
+            'success without vocab file')
+
+        inputs['vocabfile'] = monthvocabfile
+#        print 'inputs:\n%s' % inputs
+        response=json.loads(vocab_appender(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['addedvalues'], \
+            'values added without values list')
+        self.assertTrue(response['success'], \
+            'no success with missing added values list')
+
+        inputs['checkvaluelist'] = None
+#        print 'inputs:\n%s' % inputs
+        response=json.loads(vocab_appender(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertIsNone(response['addedvalues'], \
+            'values added without empty new values list')
+        self.assertTrue(response['success'], \
+            'no success with empty added values list')
+
     def test_source_headers_correct(self):
         print 'testing source_headers_correct'
         monthvocabfile = self.framework.monthvocabfile
@@ -75,7 +105,10 @@ class VocabAppenderTestCase(unittest.TestCase):
         modelheader.append('incorrectable')
         modelheader.append('source')
         modelheader.append('comment')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
+#         print 'len(header): %s' % len(header)
+#         print 'len(modelheader): %s' % len(modelheader)
+#         print 'header:\n%s' % header
+#         print 'model:\n%s' % modelheader
         self.assertEqual(len(header), 8, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -92,7 +125,7 @@ class VocabAppenderTestCase(unittest.TestCase):
         response=json.loads(vocab_appender(json.dumps(inputs)))
         
         writtenlist = response['addedvalues']
-#        print 'writtenlist1: %s' % writtenlist
+#        print 'response:\n%s' % response
         self.assertEqual(writtenlist, ['5', 'MAY', 'May', 'v'],
             'values not written to new testvocabfile')
 

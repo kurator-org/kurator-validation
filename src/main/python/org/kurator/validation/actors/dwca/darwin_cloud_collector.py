@@ -14,10 +14,11 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector.py 2016-02-19T17:25-03:00"
+__version__ = "darwin_cloud_collector.py 2016-02-21T16:07-03:00"
 
-# For now, use global variables to capture parameters sent at the command line in 
-# a workflow
+# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
+# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
+#
 # Example: 
 #
 # kurator -f workflows/darwin_cloud_collector.yaml -p i=../../data/eight_specimen_records.csv -p o=../../vocabularies/dwc_cloud.txt
@@ -33,12 +34,9 @@ from dwca_vocab_utils import distinct_vocabs_to_file
 from dwca_vocab_utils import terms_not_in_dwc
 from dwca_utils import read_header
 from dwca_utils import clean_header
+from dwca_utils import response
 import json
 import logging
-
-# Global variable for the list of potentially new values for the term to append to the 
-# vocab file
-#checkvaluelist = None
 
 def darwin_cloud_collector(inputs_as_json):
     """Get field names from inputfile and put any that are not Simple Darwin Core into 
@@ -47,12 +45,38 @@ def darwin_cloud_collector(inputs_as_json):
         inputfile - full path to the input file
         outputfile - full path to the output file
     returns JSON string with information about the results
-        success - True if process completed successfully, otherwise False
         addedvalues - new values added to the output file
+        success - True if process completed successfully, otherwise False
+        message - an explanation of the reason if success=False
     """
+    # Make a list for the response
+    returnvars = ['addedvalues', 'success', 'comment']
+
+    # outputs
+    addedvalues = None
+    success = False
+    message = None
+
+    # inputs
     inputs = json.loads(inputs_as_json)
-    inputfile = inputs['inputfile']
-    outputfile = inputs['outputfile']
+    try:
+        inputfile = inputs['inputfile']
+    except:
+        inputfile = None
+    try:
+        outputfile = inputs['outputfile']
+    except:
+        outputfile = None
+
+    if inputfile is None:
+        message = 'No input file given'
+        returnvals = [addedvalues, success, message]
+        return response(returnvars, returnvals)
+
+    if outputfile is None:
+        message = 'No output file given'
+        returnvals = [addedvalues, success, message]
+        return response(returnvars, returnvals)
 
     header = clean_header(read_header(inputfile))
 #    print 'cleaned header: %s\n' % header
@@ -61,21 +85,9 @@ def darwin_cloud_collector(inputs_as_json):
 
     dialect = vocab_dialect()
     addedvalues = distinct_vocabs_to_file(outputfile, nondwc, dialect)
-#    print 'addedvalues: %s\n' % addedvalues
-
-    # Successfully completed the mission
-    # Return a dict of important information as a JSON string
-    response = {}
-    returnvars = ['addedvalues', 'success']
-    returnvals = [addedvalues, True]
-    i=0
-    for a in returnvars:
-        response[a]= returnvals[i] 
-        i+=1
-
-    # Reset global variables to None
- #   checkvaluelist = None
-    return json.dumps(response)
+    success = True
+    returnvals = [addedvalues, success, message]
+    return response(returnvars, returnvals)
     
 def _getoptions():
     """Parses command line options and returns them."""

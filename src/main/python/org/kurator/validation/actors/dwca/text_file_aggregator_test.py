@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator_test.py 2016-02-12T12:26-03:00"
+__version__ = "text_file_aggregator_test.py 2016-02-21T19:05-03:00"
 
 from text_file_aggregator import text_file_aggregator
 from dwca_utils import split_path
@@ -57,6 +57,26 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         self.framework.dispose()
         self.framework = None
 
+    def test_missing_parameters(self):
+        print 'testing missing_parameters'
+        inputpath = self.framework.csvcompositepath
+
+        inputs = {}
+        response=json.loads(text_file_aggregator(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertEquals(response['aggregaterowcount'], None, \
+            'rows written without input path')
+        self.assertFalse(response['success'], \
+            'aggregation successful without input path')
+
+        inputs['inputpath'] = inputpath
+        response=json.loads(text_file_aggregator(json.dumps(inputs)))
+#        print 'response:\n%s' % response
+        self.assertEquals(response['aggregaterowcount'], None, \
+            'rows written without output path')
+        self.assertFalse(response['success'], \
+            'aggregation successful without output path')
+
     def test_aggregate_tsvs(self):
         print 'testing aggregate_tsvs'
         tsvfile = self.framework.tsvfile
@@ -65,7 +85,6 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         inputs['inputpath'] = tsvcompositepath
         inputs['aggregatedfile'] = tsvfile
         inputs['inputdialect'] = 'tsv'
-        inputs['workspace'] = self.framework.testdatapath
 
         # Aggregate text file
         response=json.loads(text_file_aggregator(json.dumps(inputs)))
@@ -93,7 +112,6 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         inputs['inputpath'] = csvcompositepath
         inputs['aggregatedfile'] = self.framework.tsvfile
         inputs['inputdialect'] = 'csv'
-        inputs['workspace'] = self.framework.testdatapath
 
         # Aggregate text file
         response=json.loads(text_file_aggregator(json.dumps(inputs)))
@@ -120,7 +138,6 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         inputs = {}
         inputs['inputpath'] = mixedcompositepath
         inputs['aggregatedfile'] = self.framework.tsvfile
-        inputs['workspace'] = self.framework.testdatapath
 
         # Aggregate text file
         response=json.loads(text_file_aggregator(json.dumps(inputs)))

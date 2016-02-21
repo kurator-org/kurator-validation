@@ -14,10 +14,11 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_fieldcount_checker.py 2016-02-09T11:11-03:00"
+__version__ = "csv_fieldcount_checker.py 2016-02-21T16:00:49-03:00"
 
-# For now, use global variables to capture parameters sent at the command line in 
-# a workflow
+# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
+# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
+#
 # Example: 
 #
 # kurator -f workflows/csv_fieldcount_checker.yaml -p i=../../data/eight_specimen_records.csv
@@ -29,12 +30,9 @@ __version__ = "csv_fieldcount_checker.py 2016-02-09T11:11-03:00"
 
 from optparse import OptionParser
 from dwca_utils import csv_field_checker
+from dwca_utils import response
 import json
 import logging
-
-# Global variable for the list of potentially new values for the term to append to the 
-# vocab file
-#checkvaluelist = None
 
 def csv_fieldcount_checker(inputs_as_json):
     """Get the first row in a csv file where the number of fields is less than the number
@@ -42,35 +40,46 @@ def csv_fieldcount_checker(inputs_as_json):
     inputs_as_json - JSON string containing inputs
         inputfile - full path to the input file
     returns JSON string with information about the results
-        success - True if process completed successfully, otherwise False
-        rowindex - the line number of the first row in the inputfile where the field
+        firstbadrowindex - the line number of the first row in the inputfile where the field
             count does not match
         row - the content of the first line in the inputfile where the field count does
             not match.
+        success - True if process completed successfully, otherwise False
+        message - an explanation of the reason if success=False
     """
-    inputs = json.loads(inputs_as_json)
-    inputfile = inputs['inputfile']
+    # Make a list for the response
+    returnvars = ['firstbadrowindex', 'row', 'success', 'message']
 
+    # outputs
     firstbadrowindex = 0
     row = None
+    success = False
+    message = None
+
+    # inputs
+    inputs = json.loads(inputs_as_json)
+    try:
+        inputfile = inputs['inputfile']
+    except:
+        inputfile = None
+
+    if inputfile is None:
+        message = 'No input file given'
+        returnvals = [firstbadrowindex, row, success, message]
+        return response(returnvars, returnvals)
+
     result = csv_field_checker(inputfile)
     if result is not None:
         firstbadrowindex = result[0]
         row = result[1]
-    # Successfully completed the mission
-    # Return a dict of important information as a JSON string
-    response = {}
-    returnvars = ['firstbadrowindex', 'row', 'success']
-    returnvals = [firstbadrowindex, row, True]
-    i=0
-    for a in returnvars:
-        response[a]= returnvals[i] 
-        i+=1
+        message = 'Row with incorrect number fields found.'
+        returnvals = [firstbadrowindex, row, success, message]
+        return response(returnvars, returnvals)
 
-    # Reset global variables to None
- #   checkvaluelist = None
-    return json.dumps(response)
-    
+    success = True
+    returnvals = [firstbadrowindex, row, success, message]
+    return response(returnvars, returnvals)
+
 def _getoptions():
     """Parses command line options and returns them."""
     parser = OptionParser()
