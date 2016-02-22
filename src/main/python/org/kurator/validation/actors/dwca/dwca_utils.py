@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-02-21T14:03-03:00"
+__version__ = "dwca_utils.py 2016-02-22T16:41-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -263,6 +263,35 @@ def csv_to_tsv(inputfile, outputfile):
             writer.writerow(row)
     return True
 
+def term_rowcount_from_file(inputfile, termname):
+    """Count of the rows that are populated for a given term
+    parameters:
+        inputfile - the full path to the file file to assess
+        termname - the term for which to count rows
+    returns:
+        rowcount - the number of rows with the term populated
+    """
+    if inputfile is None or len(inputfile) == 0:
+        return 0
+    if termname is None or len(termname) == 0:
+        return 0
+    if os.path.isfile(inputfile) == False:
+        return 0
+    # discern the dialect of the input file
+    inputdialect = csv_file_dialect(inputfile)
+    inputheader = read_header(inputfile,inputdialect)
+    if termname not in inputheader:
+        return 0
+    rowcount = 0
+    for row in read_csv_row(inputfile, inputdialect):
+        try:
+            value = row[termname]
+            if value is not None and len(value.strip()) > 0:
+                rowcount += 1
+        except:
+            pass
+    return rowcount
+
 def csv_field_checker(inputfile):
     """Determine if any row in a csv file has fewer fields than the header.
     parameters:
@@ -361,6 +390,8 @@ class DWCAUtilsFramework():
     fieldcountestfile1 = testdatapath + 'test_fieldcount.csv'
     fieldcountestfile2 = testdatapath + 'test_eight_specimen_records.csv'
     fieldcountestfile3 = testdatapath + 'test_bad_fieldcount1.txt'
+    termrowcountfile1 = testdatapath + 'test_eight_specimen_records.csv'
+    termrowcountfile2 = testdatapath + 'test_three_specimen_records.txt'
 
     # following are files output during the tests, remove these in dispose()
     csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
@@ -841,6 +872,30 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'field checker found first mismatched field in %s at row index %s'  \
             % (csvfile, firstbadrow)
         self.assertEqual(firstbadrow,3,s)
+
+    def test_term_rowcount_from_file(self):
+        print 'testing term_rowcount_from_file'
+        termrowcountfile = self.framework.termrowcountfile1
+        rowcount = term_rowcount_from_file(termrowcountfile,'country')
+        expected = 8
+        s = 'rowcount (%s) for country does not match expectation (%s)'  \
+            % (rowcount, expected)
+        self.assertEqual(rowcount,expected,s)
+
+        termrowcountfile = self.framework.termrowcountfile2
+        term = 'country'
+        expected = 3
+        rowcount = term_rowcount_from_file(termrowcountfile,term)
+        s = 'rowcount (%s) for %s does not match expectation (%s) in %s'  \
+            % (rowcount, term, expected, termrowcountfile)
+        self.assertEqual(rowcount,expected,s)
+
+        term = 'island'
+        expected = 1
+        rowcount = term_rowcount_from_file(termrowcountfile,term)
+        s = 'rowcount (%s) for %s does not match expectation (%s) in %s'  \
+            % (rowcount, term, expected, termrowcountfile)
+        self.assertEqual(rowcount,expected,s)
 
 if __name__ == '__main__':
     unittest.main()

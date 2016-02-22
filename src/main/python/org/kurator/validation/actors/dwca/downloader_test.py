@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader_test.py 2016-02-21T16:37-03:00"
+__version__ = "downloader_test.py 2016-02-22T17:30-03:00"
 
 # This file contains unit test for the downloader function.
 #
@@ -80,6 +80,7 @@ class DownloaderTestCase(unittest.TestCase):
         inputs = {}
         inputs['url'] = testurl
         inputs['outputfile'] = outputfile
+#        print 'inputs:\n%s' % inputs
 
         # Collect terms
         response=json.loads(downloader(json.dumps(inputs)))

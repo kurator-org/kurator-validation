@@ -7,6 +7,7 @@ python dwca_core_to_tsv_test.py
 python dwca_utils.py
 python dwca_vocab_utils.py
 python dwcareader_utils.py
+python term_counter_test.py
 python text_file_aggregator_test.py
 python text_file_splitter_test.py
 python vocab_appender_test.py

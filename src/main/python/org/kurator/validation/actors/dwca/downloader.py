@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader.py 2016-02-21T16:36-03:00"
+__version__ = "downloader.py 2016-02-22T17:30-03:00"
 
 # TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
 # OBSOLETE: Use global variables for parameters sent at the command line in a workflow
@@ -51,6 +51,7 @@ def downloader(inputs_as_json):
     message = None
 
     # inputs
+    inputs = json.loads(inputs_as_json)
     try:
         url = inputs['url']
     except:
