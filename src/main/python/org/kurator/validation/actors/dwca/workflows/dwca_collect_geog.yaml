@@ -1,0 +1,108 @@
+# This workflow:
+#    - downloads a Darwin Core Archive from a URL
+#    - converts the core file of the archive to a tab-delimited text file
+#    - collects field names into Darwin Cloud vocabulary file
+#    - collects geography into a geog vocabulary file
+#
+# Example command-line usage:
+# kurator -f workflows/dwca_collect_geog.yaml -p dwcafile=../../data/dwca-uwymv_herp.zip -p tsvoutputfile=./workspace/dwcatsvout.tsv -p archivetype=standard
+
+imports:
+
+- classpath:/org/kurator/akka/actors.yaml
+- classpath:/org/kurator/validation/actors/dwca/actors.yaml
+
+components:
+
+# actor_downloader should wrap downloader.py
+# It is assumed to have a function begin(), which construct the inputs_as_json
+# and invokes the core python function
+#     downloader(inputs_as_json)
+# where inputs_as_json has keys:
+#    'url', 'outputfile'
+# and the function returns a response in json with keys:
+#    'success', 'message'
+- id: Download
+  type: PythonActor
+  properties:
+    script: actor_downloader.py
+    onStart: begin
+    parameters:
+      outputTypeIsInputType: true
+
+# actor_dwca_core_to_tsv should wrap dwca_core_to_tsv.py
+# It is assumed to have a function begin(), which construct the inputs_as_json
+# and invokes the core python function
+#     dwca_core_to_tsv(inputs_as_json)
+# where inputs_as_json has keys:
+#    'dwcafile', 'tsvfile', 'archivetype'
+# and the function returns a response in json with keys:
+#    'rowcount', 'success', 'message'
+- id: DwcaWriteTSV
+  type: PythonActor
+  properties:
+    # actor_downloader does not yet exist, it should wrap downloader.py
+    script: actor_dwca_core_to_tsv.py
+    onData: begin
+    listensTo:
+      - !ref Download
+    parameters:
+      outputTypeIsInputType: true
+
+# actor_darwin_cloud_collector should wrap darwin_cloud_collector.py
+# It is assumed to have a function begin(), which construct the inputs_as_json
+# and invokes the core python function
+#     darwin_cloud_collector(inputs_as_json)
+# where inputs_as_json has keys:
+#    'inputfile', 'outputfile'
+# and the function returns a response in json with keys:
+#    'addedvalues', 'success', 'message'
+- id: DwcCollectDarwinCloud
+  type: PythonActor
+  properties:
+    script: darwin_cloud_collector.py
+    onData: begin
+    listensTo:
+      - !ref DwcaWriteTSV
+    parameters:
+      outputTypeIsInputType: true
+
+# actor_dwca_geog_collector should wrap dwca_geog_collector.py
+# It is assumed to have a function begin(), which construct the inputs_as_json
+# and invokes the core python function
+#     dwca_geog_collector(inputs_as_json)
+# where inputs_as_json has keys:
+#    'inputfile', 'vocabfile'
+# and the function returns a response in json with keys:
+#    'addedvalues', 'success', 'message'
+- id: DwcCollectGeography
+  type: PythonActor
+  properties:
+    script: dwca_geog_collector.py
+    onData: dwca_geog_collector
+    listensTo:
+      - !ref DwcaWriteTSV
+    parameters:
+      outputTypeIsInputType: true
+
+- id: DwcaCollectGeogWorkflow
+  type: Workflow
+  properties:
+    actors:
+      - !ref Download
+      - !ref DwcaWriteTSV
+      - !ref DwcCollectDarwinCloud
+      - !ref DwcCollectGeography
+# The following parameter configuration was from a workflow invoking the core python 
+# with global variables and needs to be modified to the paradigm to pass parameters in
+# a dictionary
+    parameters:
+      dwcafile:
+        actor: !ref DWCAtoTSVWriter
+        parameter: dwcafile
+      tsvoutputfile:
+        actor: !ref DWCAtoTSVWriter
+        parameter: tsvfile
+      archivetype:
+        actor: !ref DWCAtoTSVWriter
+        parameter: archivetype
