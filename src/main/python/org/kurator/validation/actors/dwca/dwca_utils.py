@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-02-22T16:41-03:00"
+__version__ = "dwca_utils.py 2016-03-08T11:27-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -28,6 +28,7 @@ import os.path
 import json
 import glob
 import unittest
+import re
 try:
     # need to install unicodecsv for this to be used
     # pip install unicodecsv
@@ -36,6 +37,8 @@ except ImportError:
     import warnings
     warnings.warn("can't import `unicodecsv` encoding errors may occur")
     import csv
+
+tokenreportfieldlist = ['token', 'rowcount', 'totalcount']
 
 def tsv_dialect():
     """Get a dialect object with TSV properties.
@@ -92,17 +95,17 @@ def dialect_attributes(dialect):
         return 'no dialect given'
     s = 'lineterminator: ' 
     if dialect.lineterminator == '\r':
-        s+= '\r'
+        s+= '{CR}'
     elif dialect.lineterminator == '\n':
-        s+= '\n'
+        s+= '{NL}'
     elif dialect.lineterminator == '\r\n':
-        s+= '\r\n'
+        s+= '{CR}{NL}'
     else: 
         s += dialect.lineterminator
 
     s += '\ndelimiter: '
     if dialect.delimiter == '\t':
-        s+= '\t'
+        s+= '{TAB}'
     else:
         s+= dialect.delimiter
 
@@ -266,7 +269,7 @@ def csv_to_tsv(inputfile, outputfile):
 def term_rowcount_from_file(inputfile, termname):
     """Count of the rows that are populated for a given term
     parameters:
-        inputfile - the full path to the file file to assess
+        inputfile - the full path to the file to assess
         termname - the term for which to count rows
     returns:
         rowcount - the number of rows with the term populated
@@ -291,6 +294,109 @@ def term_rowcount_from_file(inputfile, termname):
         except:
             pass
     return rowcount
+
+def term_token_count_from_file(inputfile, termname):
+    """Make a dictionary of the tokens and their number of occurrences for a given term
+    parameters:
+        inputfile - the full path to the file to assess
+        termname - the term for which to count rows
+    returns:
+        tokens - a dictionary containing the tokens and their statistics
+    """
+    if inputfile is None or len(inputfile) == 0:
+        return 0
+    if termname is None or len(termname) == 0:
+        return 0
+    if os.path.isfile(inputfile) == False:
+        return 0
+    # discern the dialect of the input file
+    inputdialect = csv_file_dialect(inputfile)
+    inputheader = read_header(inputfile,inputdialect)
+    if termname not in inputheader:
+        return None
+    rowcount = 0
+    tokencount = 0
+    populatedrowcount = 0
+    tokens = { 'tokenlist':{} }
+    for row in read_csv_row(inputfile, inputdialect):
+        try:
+            value = row[termname]
+        except:
+            pass
+#        print '%s: %s' % (termname, value)
+        if value is not None and len(value.strip()) > 0:
+            rowdict = {}
+            wordlist = re.sub("[^\w]", " ",  value).split()
+#                print '%s: %s' % (termname, wordlist)
+            for token in wordlist:
+#                    print 'token: %s' % token
+                if token in rowdict:
+                    rowdict[token]['totalcount']=rowdict[token]['totalcount']+1
+                else:
+                    rowdict[token]={}
+                    rowdict[token]['rowcount']=1
+                    rowdict[token]['totalcount']=1
+#                    print 'rowdict: %s' % rowdict
+            populatedrowcount += 1
+            for key, value in rowdict.iteritems():
+                tokenlist = tokens['tokenlist']
+                if key in tokenlist:
+                    tokenlist[key]['rowcount'] = \
+                        tokenlist[key]['rowcount'] + value['rowcount']
+                    tokenlist[key]['totalcount'] = \
+                        tokenlist[key]['totalcount'] + value['totalcount']
+                else:
+                    tokenlist[key] = {}
+                    tokenlist[key]['rowcount'] = value['rowcount']
+                    tokenlist[key]['totalcount'] = value['totalcount']
+#                print 'token: %s\nwordlist: %s\ntokens: %s' % (token, wordlist, tokens)
+        rowcount += 1
+        tokencount += len(wordlist)
+    tokens['rowcount']=rowcount
+    tokens['tokencount']=tokencount
+    tokens['input']=inputfile
+    tokens['term']=termname
+    return tokens
+
+def token_report(reportfile, tokens, dialect=None):
+    """Write a term token report to a file.
+    parameters:
+        reportfile - the full path to the report file
+        tokens - a dictionary of token occurrences (see output from 
+            term_token_count_from_file()
+        dialect - a csv.dialect object with the attributes of the report file
+    returns:
+        success - True if the report was written, else False
+    """
+    if tokens is None or len(tokens)==0:
+        return False
+
+    if dialect is None:
+        dialect = tsv_dialect()
+    
+    if reportfile is not None:
+        with open(reportfile, 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, dialect=dialect, \
+                fieldnames=tokenreportfieldlist)
+            writer.writeheader()
+
+        if os.path.isfile(reportfile) == False:
+            return False
+
+#        print 'tokens: %s' % (tokens)
+        with open(reportfile, 'a') as csvfile:
+            writer = csv.DictWriter(csvfile, dialect=dialect, \
+                fieldnames=tokenreportfieldlist)
+            for key, value in tokens['tokenlist'].iteritems():
+#                print ' key: %s value: %s' % (key, value)
+                writer.writerow({'token':key, 'rowcount':value['rowcount'], \
+                    'totalcount':value['totalcount'] })
+    else:
+        # print the report
+        for key, value in tokens['tokenlist'].iteritems():
+            print 'token: %s rowcount: %s totalcount: %s' % (key, value['rowcount'], \
+                value['totalcount'])
+    return True
 
 def csv_field_checker(inputfile):
     """Determine if any row in a csv file has fewer fields than the header.
@@ -392,18 +498,21 @@ class DWCAUtilsFramework():
     fieldcountestfile3 = testdatapath + 'test_bad_fieldcount1.txt'
     termrowcountfile1 = testdatapath + 'test_eight_specimen_records.csv'
     termrowcountfile2 = testdatapath + 'test_three_specimen_records.txt'
+    termtokenfile = testdatapath + 'test_eight_specimen_records.csv'
 
     # following are files output during the tests, remove these in dispose()
     csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
     tsvfromcsvfile1 = testdatapath + 'test_tsv_from_csv_1.txt'
     tsvfromcsvfile2 = testdatapath + 'test_tsv_from_csv_2.txt'
     testvocabfile = testdatapath + 'test_vocab_file.csv'
+    testtokenreportfile = testdatapath + 'test_token_report_file.txt'
 
     def dispose(self):
         csvwriteheaderfile = self.csvwriteheaderfile
         tsvfromcsvfile1 = self.tsvfromcsvfile1
         tsvfromcsvfile2 = self.tsvfromcsvfile2
         testvocabfile = self.testvocabfile
+        testtokenreportfile = self.testtokenreportfile
         if os.path.isfile(csvwriteheaderfile):
             os.remove(csvwriteheaderfile)
         if os.path.isfile(tsvfromcsvfile1):
@@ -412,6 +521,8 @@ class DWCAUtilsFramework():
             os.remove(tsvfromcsvfile2)
         if os.path.isfile(testvocabfile):
             os.remove(testvocabfile)
+        if os.path.isfile(testtokenreportfile):
+            os.remove(testtokenreportfile)
         return True
 
 class DWCAUtilsTestCase(unittest.TestCase):
@@ -896,6 +1007,106 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'rowcount (%s) for %s does not match expectation (%s) in %s'  \
             % (rowcount, term, expected, termrowcountfile)
         self.assertEqual(rowcount,expected,s)
+
+    def test_term_token_count_from_file(self):
+        print 'testing term_token_count_from_file'
+        termtokenfile = self.framework.termtokenfile
+        termname = 'locality'
+        tokens = term_token_count_from_file(termtokenfile, termname)
+#        print 'tokens:\n%s' % tokens
+        rowcount = 8
+        tokencount = 42
+        s = 'rowcount found (%s) not as expected (%s)' % (tokens['rowcount'], rowcount)
+        self.assertEqual(tokens['rowcount'],rowcount,s)
+        s = 'tokencount found (%s) not as expected (%s)' % (tokens['tokencount'], tokencount)
+        self.assertEqual(tokens['tokencount'],tokencount,s)
+        distincttokencount = 38
+        s = 'disincttokencount found (%s) not as expected (%s)' % \
+            (len(tokens['tokenlist']), distincttokencount)
+        self.assertEqual(len(tokens['tokenlist']),distincttokencount,s)
+
+        value = 'of'
+        totalcount = 3
+        s = 'totalcount (%s) for value "%s" not as expected (%s)' % \
+            (tokens['tokenlist'][value]['totalcount'], value, totalcount)
+        self.assertEqual(tokens['tokenlist'][value]['totalcount'],totalcount,s)
+
+        value = 'National'
+        totalcount = 2
+        s = 'totalcount (%s) for value "%s" not as expected (%s)' % \
+            (tokens['tokenlist'][value]['totalcount'], value, totalcount)
+        self.assertEqual(tokens['tokenlist'][value]['totalcount'],totalcount,s)
+
+        value = 'Ridge'
+        totalcount = 1
+        s = 'totalcount (%s) for value "%s" not as expected (%s)' % \
+            (tokens['tokenlist'][value]['totalcount'], value, totalcount)
+        self.assertEqual(tokens['tokenlist'][value]['totalcount'],totalcount,s)
+
+#         termname = 'reproductiveCondition '
+#         tokens = term_token_count_from_file(termtokenfile, termname)
+#         print 'tokens:\n%s' % tokens
+
+    def test_token_report(self):
+        print 'testing token_report'
+        termtokenfile = self.framework.termtokenfile
+        reportfile = self.framework.testtokenreportfile
+        termname = 'locality'
+        tokens = term_token_count_from_file(termtokenfile, termname)
+        success = token_report(reportfile, tokens)
+        self.assertTrue(success,'token report not written to file')
+
+#        print 'tokens from file:\n%s' % tokens
+
+        dialect = tsv_dialect()
+        tokens = {}
+        with open(reportfile, 'rU') as csvfile:
+            dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=tokenreportfieldlist)
+            i = 0
+            for row in dr:
+                if i==0:
+                    i = 1
+                else:
+                    token = row['token']
+                    rowcount = row['rowcount']
+                    totalcount = row['totalcount']
+                    tokens[token] = { 'rowcount':rowcount, 'totalcount':totalcount }
+        
+#        print 'tokens from report:\n%s' % tokens
+
+        tokencount = 38
+        s = 'tokencount (%s) not as expected (%s)' % (len(tokens), tokencount)
+        self.assertEqual(len(tokens),tokencount,s)
+
+        value = 'of'
+        rowcount = '3'
+        totalcount = '3'
+        s = 'totalcount (%s) for value "%s" not as expected (%s)' % \
+            (tokens[value]['totalcount'], value, totalcount)
+        self.assertEqual(tokens[value]['totalcount'],totalcount,s)
+        s = 'rowcount (%s) for value "%s" not as expected (%s)' % \
+            (tokens[value]['rowcount'], value, rowcount)
+        self.assertEqual(tokens[value]['rowcount'],rowcount,s)
+
+        value = 'National'
+        rowcount = '2'
+        totalcount = '2'
+        s = 'totalcount (%s) for value "%s" not as expected (%s)' % \
+            (tokens[value]['totalcount'], value, totalcount)
+        self.assertEqual(tokens[value]['totalcount'],totalcount,s)
+        s = 'rowcount (%s) for value "%s" not as expected (%s)' % \
+            (tokens[value]['rowcount'], value, rowcount)
+        self.assertEqual(tokens[value]['rowcount'],rowcount,s)
+ 
+        value = 'Ridge'
+        rowcount = '1'
+        totalcount = '1'
+        s = 'totalcount (%s) for value "%s" not as expected (%s)' % \
+            (tokens[value]['totalcount'], value, totalcount)
+        self.assertEqual(tokens[value]['totalcount'],totalcount,s)
+        s = 'rowcount (%s) for value "%s" not as expected (%s)' % \
+            (tokens[value]['rowcount'], value, rowcount)
+        self.assertEqual(tokens[value]['rowcount'],rowcount,s)
 
 if __name__ == '__main__':
     unittest.main()

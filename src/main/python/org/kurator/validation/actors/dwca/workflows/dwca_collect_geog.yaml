@@ -1,3 +1,19 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# __author__ = "John Wieczorek"
+# __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
+# __version__ = "dwca_collect_geog.py 2016-02-25T15:03-03:00"
+
 # This workflow:
 #    - downloads a Darwin Core Archive from a URL
 #    - converts the core file of the archive to a tab-delimited text file
@@ -5,7 +21,10 @@
 #    - collects geography into a geog vocabulary file
 #
 # Example command-line usage:
-# kurator -f workflows/dwca_collect_geog.yaml -p dwcafile=../../data/dwca-uwymv_herp.zip -p tsvoutputfile=./workspace/dwcatsvout.tsv -p archivetype=standard
+# kurator -f workflows/dwca_collect_geog.yaml 
+#         -p dwcafile=../../data/dwca-uwymv_herp.zip 
+#         -p tsvfile=./workspace/dwcatsvout.tsv 
+#         -p archivetype=standard
 
 imports:
 
@@ -14,12 +33,14 @@ imports:
 
 components:
 
+# ACTOR
 # actor_downloader should wrap downloader.py
 # It is assumed to have a function begin(), which construct the inputs_as_json
 # and invokes the core python function
 #     downloader(inputs_as_json)
 # where inputs_as_json has keys:
-#    'url', 'outputfile'
+#    'url' - this is expected to be provided as an input to the workflow
+#    'outputfile' - this is expected to be provided in this yaml file
 # and the function returns a response in json with keys:
 #    'success', 'message'
 - id: Download
@@ -30,18 +51,22 @@ components:
     parameters:
       outputTypeIsInputType: true
 
+# ACTOR
 # actor_dwca_core_to_tsv should wrap dwca_core_to_tsv.py
 # It is assumed to have a function begin(), which construct the inputs_as_json
 # and invokes the core python function
 #     dwca_core_to_tsv(inputs_as_json)
 # where inputs_as_json has keys:
-#    'dwcafile', 'tsvfile', 'archivetype'
+#    'dwcafile' - this is expected to be provided in this yaml file and to be the same
+#        as the outputfile from the Download actor
+#    'tsvfile' - this is expected to be provided in this yaml file
+#    'archivetype' - this can be provided as input to the workflow, but can provide 
+#        a default if not given
 # and the function returns a response in json with keys:
 #    'rowcount', 'success', 'message'
 - id: DwcaWriteTSV
   type: PythonActor
   properties:
-    # actor_downloader does not yet exist, it should wrap downloader.py
     script: actor_dwca_core_to_tsv.py
     onData: begin
     listensTo:
@@ -49,42 +74,49 @@ components:
     parameters:
       outputTypeIsInputType: true
 
+# ACTOR
 # actor_darwin_cloud_collector should wrap darwin_cloud_collector.py
 # It is assumed to have a function begin(), which construct the inputs_as_json
 # and invokes the core python function
 #     darwin_cloud_collector(inputs_as_json)
 # where inputs_as_json has keys:
-#    'inputfile', 'outputfile'
+#    'inputfile' - this is expected to be provided in this yaml file and to be the
+#        same as the tsvfile from the Download actor
+#    'outputfile' - this is expected to be provided in this yaml file
 # and the function returns a response in json with keys:
 #    'addedvalues', 'success', 'message'
 - id: DwcCollectDarwinCloud
   type: PythonActor
   properties:
-    script: darwin_cloud_collector.py
+    script: actor_darwin_cloud_collector.py
     onData: begin
     listensTo:
       - !ref DwcaWriteTSV
     parameters:
       outputTypeIsInputType: true
 
+# ACTOR
 # actor_dwca_geog_collector should wrap dwca_geog_collector.py
 # It is assumed to have a function begin(), which construct the inputs_as_json
 # and invokes the core python function
 #     dwca_geog_collector(inputs_as_json)
 # where inputs_as_json has keys:
-#    'inputfile', 'vocabfile'
+#    'inputfile' - this is expected to be provided in this yaml file and to be the
+#        same as the tsvfile from the Download actor
+#    'vocabfile' - this is expected to be provided in this yaml file
 # and the function returns a response in json with keys:
 #    'addedvalues', 'success', 'message'
 - id: DwcCollectGeography
   type: PythonActor
   properties:
-    script: dwca_geog_collector.py
+    script: actor_dwca_geog_collector.py
     onData: dwca_geog_collector
     listensTo:
       - !ref DwcaWriteTSV
     parameters:
       outputTypeIsInputType: true
 
+# WORKFLOW
 - id: DwcaCollectGeogWorkflow
   type: Workflow
   properties:
@@ -97,12 +129,27 @@ components:
 # with global variables and needs to be modified to the paradigm to pass parameters in
 # a dictionary
     parameters:
+      url:
+        actor: !ref Download
+        parameter: url
       dwcafile:
-        actor: !ref DWCAtoTSVWriter
+        actor: !ref DwcaWriteTSV
         parameter: dwcafile
-      tsvoutputfile:
-        actor: !ref DWCAtoTSVWriter
+      tsvfile:
+        actor: !ref DwcaWriteTSV
         parameter: tsvfile
       archivetype:
-        actor: !ref DWCAtoTSVWriter
+        actor: !ref DwcaWriteTSV
         parameter: archivetype
+      darwincloudinputfile:
+        actor: !ref DwcCollectDarwinCloud
+        parameter: inputfile
+      darwincloudvocabfile:
+        actor: !ref DwcCollectDarwinCloud
+        parameter: outputfile
+      geogcollectorinputfile:
+        actor: !ref DwcCollectDarwinCloud
+        parameter: inputfile
+      geogvocabfile:
+        actor: !ref DwcCollectDarwinCloud
+        parameter: vocabfile
