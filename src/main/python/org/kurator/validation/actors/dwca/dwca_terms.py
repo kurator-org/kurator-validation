@@ -16,7 +16,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_terms.py 2016-02-18T21:06-03:00"
+__version__ = "dwca_terms.py 2016-03-04T11:44-03:00"
 
 # This file contains definitions of standard sets of Darwin Core terms.
 
@@ -100,7 +100,6 @@ controlledtermlist = [
 # Fields in the header of a vocabulary lookup file
 vocabfieldlist = ['verbatim', 'standard', 'checked', 'error', 'misplaced',
     'incorrectable', 'source', 'comment']
-
 
 # Darwin Cloud terms - concepts commonly found in source data that can be processed into 
 # Darwin Core

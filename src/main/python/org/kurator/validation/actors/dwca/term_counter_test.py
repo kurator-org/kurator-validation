@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_counter_test.py 2016-02-22T17:02-03:00"
+__version__ = "term_counter_test.py 2016-03-08T15:33-03:00"
 
 # This file contains unit test for the term_counter function.
 #
@@ -24,13 +24,12 @@ __version__ = "term_counter_test.py 2016-02-22T17:02-03:00"
 
 from term_counter import term_counter
 from dwca_utils import read_header
-from dwca_vocab_utils import distinct_term_values_from_file
 import os
 import json
 import unittest
 
 class TermCounterFramework():
-    """Test framework for the vocab loader."""
+    """Test framework for the term counter."""
     # location for the test inputs and outputs
     testdatapath = '../../data/tests/'
 
@@ -88,11 +87,11 @@ class TermCounterTestCase(unittest.TestCase):
     def test_term_counter(self):
         print 'testing term_counter'
         testfile = self.framework.testfile1
-        term = 'year'
+        termname = 'year'
         
         inputs = {}
         inputs['inputfile'] = testfile
-        inputs['termname'] = term
+        inputs['termname'] = termname
 
         # Extract distinct values of term
 #        print 'inputs:\n%s' % inputs
@@ -100,7 +99,7 @@ class TermCounterTestCase(unittest.TestCase):
 #        print 'response:\n%s' % response
         rowcount = response['rowcount']
         expected = 8
-        s = 'rowcount for term %s not extracted correctly from %s' % (term, testfile)
+        s = 'rowcount for term %s not extracted correctly from %s' % (termname, testfile)
         self.assertEqual(rowcount, expected, s)
 
         testfile = self.framework.testfile2

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-02-21T12:54-03:00"
+__version__ = "dwca_vocab_utils.py 2016-03-08T14:41-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -128,31 +128,103 @@ def vocab_dialect():
 #     return dialect
     return tsv_dialect()
 
-def get_standard_value(was, valuedict):
-    """Get the standard value of a term from a dictionary.
-    parameters:
-        was - the value of the term to standardize
-        valuedict - the dictionary to lookup the standard value
-    returns:
-        valuedict[was] - the standard value of the term, if it exists, else None"""
-    if was is None:
-        return None
-    if was in valuedict.keys():
-        return valuedict[was]
-    return None
+# def get_standard_value(was, valuedict):
+#     """Get the standard value of a term from a dictionary.
+#     parameters:
+#         was - the value of the term to standardize
+#         valuedict - the dictionary to look up the standard value
+#     returns:
+#         valuedict[was] - the standard value of the term, if it exists, else None"""
+#     if was is None:
+#         return None
+#     if was in valuedict.keys():
+#         return valuedict[was]
+#     return None
 
-def distinct_vocab_list_from_file(vocabfile, dialect=None):
-    """Get the list of distinct verbatim values in an existing vocabulary lookup file.
+# def get_checked_standard_value(origvalue, vocabdict):
+#     """Get the checked standard value of a term from a dictionary.
+#     parameters:
+#         origvalue - the value of the term to standardize
+#         vocabdict - the vocab dictionary in which to look up the standard value
+#     returns:
+#         standardvalue - the standard value of the term, if it exists, else None"""
+#     if origvalue is None:
+#         return None
+# #    print 'origvalue: %s\nvocabdict:\n%s' % (origvalue,vocabdict)
+#     try:
+#         vocabrecord = vocabdict[origvalue]
+#         if vocabrecord['checked']=='0':
+#             # value not vetted
+#             return None
+#         standardvalue = vocabrecord['standard']
+#     except:
+#         return None
+#     return standardvalue
+
+# def get_differing_standard_value(origvalue, vocabdict):
+#     """Get the checked standard value of a term from a dictionary.
+#     parameters:
+#         origvalue - the value of the term to standardize
+#         vocabdict - the vocab dictionary in which to look up the standard value
+#     returns:
+#         standardvalue - the standard value of the term, if it exists, else None"""
+#     standardvalue = get_checked_standard_value(origvalue, vocabdict)
+#     if standardvalue is None:
+#         # no standard value found
+#         return None
+#     if origvalue==standardvalue:
+#         # value already standard
+#         return None
+#     return standardvalue
+ 
+# def get_vocab_record(origvalue, vocabdict):
+#     """Get the record from the vocabulary dict matching the origvalue
+#     parameters:
+#         origvalue - the value of the term to standardize
+#         vocabdict - the vocabulary (as a dict) in which to lookup the standard value
+#     returns:
+#         result - None if not found in the vocabulary, otherwise return the full vocabulary 
+#             record"""
+#     vocabrecord = None
+#     try:
+#         vocabrecord = vocabdict[origvalue]
+#     except:
+#         pass
+#     return vocabrecord
+
+def matching_vocab_dict_from_file(checklist, vocabfile, dialect=None):
+    """Given a checklist of values, get matching values from a vocabulary file.
+    parameters:
+        checklist - the list of values to get from the vocabfile
+        vocabfile - the full path to the vocabulary lookup file
+        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+    returns:
+        vocabdict - a dict of complete vocabulary records matching the values in the 
+            checklist
+    """
+    if checklist is None:
+        return None
+    vocabdict = vocab_dict_from_file(vocabfile, dialect)
+    if vocabdict is None or len(vocabdict)==0:
+        return None
+    matchingvocabdict = {}
+#    print 'checklist: %s\nvocabdict:\/%s' % (checklist, vocabdict)
+    for term in checklist:
+        if term in vocabdict:
+            matchingvocabdict[term]=vocabdict[term]
+    return matchingvocabdict
+
+def vocab_dict_from_file(vocabfile, dialect=None):
+    """Get a full vocabulary as a dict.
     parameters:
         vocabfile - the full path to the vocabulary lookup file
         dialect - a csv.dialect object with the attributes of the vocabulary lookup file
     returns:
-        sorted(list(values)) - a sorted list of distinct verbatim values in the vocabulary
+        vocabdict - a dict of complete vocabulary records
     """
-#    print 'vocabfile: %s\nvocabfieldlist:%s' % (vocabfile, vocabfieldlist)
     if os.path.isfile(vocabfile) == False:
         return None
-    values = set()
+    vocabdict = {}
     if dialect is None:
         dialect = vocab_dialect()
     with open(vocabfile, 'rU') as csvfile:
@@ -160,10 +232,118 @@ def distinct_vocab_list_from_file(vocabfile, dialect=None):
         i=0
         for row in dr:
             # Skip the header row.
-            if i>0:
-                values.add(row['verbatim'])
-            i+=1
-    return sorted(list(values))
+#            print 'row: %s' % row
+            if i==0:
+                i=1
+            else:
+                rowdict = {}
+                rowdict['standard']=row['standard']
+                rowdict['checked']=row['checked']
+                rowdict['error']=row['error']
+                rowdict['incorrectable']=row['incorrectable']
+                rowdict['source']=row['source']
+                rowdict['misplaced']=row['misplaced']
+                rowdict['comment']=row['comment']
+                vocabdict[row['verbatim']]=rowdict
+#                print 'rowdict: %s' % rowdict
+#    print 'vocabdict=%s' % vocabdict    
+    return vocabdict
+
+def term_values_recommended(lookupdict):
+    """Get non-standard values and their standard equivalents from a lookupdict
+    parameters:
+        lookupdict - a dictionary of lookup terms from a vocabulary
+    returns:
+        recommended - a dictionary of verbatim values and their recommended 
+            standardized values
+    """
+    if lookupdict is None or len(lookupdict)==0:
+        return None
+    recommended = {}
+    for key, value in lookupdict.iteritems():
+#        print 'key: %s value: %s' % (key, value)
+        if value['checked']=='1':
+            if value['standard'] != key:
+                recommended[key] = value
+    return recommended
+
+def term_recommendation_report(reportfile, recommendationdict, dialect=None):
+    """Write a term recommendation report.
+    parameters:
+        reportfile - the full path to the output report file
+        recommendationdict - a dictionary of term recommendations
+        dialect - a csv.dialect object with the attributes of the report file
+    returns:
+        success - True if the report was written, else False
+    """
+    if recommendationdict is None or len(recommendationdict)==0:
+        return False
+
+    if dialect is None:
+        dialect = tsv_dialect()
+
+    if reportfile is not None:
+        with open(reportfile, 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, dialect=dialect, \
+                fieldnames=vocabfieldlist)
+            writer.writeheader()
+
+        if os.path.isfile(reportfile) == False:
+            print 'reportfile: %s not created' % reportfile
+            return False
+
+#        print 'tokens: %s' % (tokens)
+        with open(reportfile, 'a') as csvfile:
+            writer = csv.DictWriter(csvfile, dialect=dialect, \
+                fieldnames=vocabfieldlist)
+            for key, value in recommendationdict.iteritems():
+#                print ' key: %s value: %s' % (key, value)
+                writer.writerow({'verbatim':key, 
+                    'standard':value['standard'], \
+                    'checked':value['checked'], \
+                    'error':value['error'], \
+                    'misplaced':value['misplaced'], \
+                    'incorrectable':value['incorrectable'], \
+                    'source':value['source'], \
+                    'comment':value['comment'] })
+    else:
+        # print the report
+        print 'verbatim\tstandard\tchecked\terror\tmisplaced\tincorrectable\tsource\tcomment'
+        for key, value in recommendationdict.iteritems():
+            print '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' ( \
+                key,
+                value['standard'], \
+                value['checked'], \
+                value['error'], \
+                value['misplaced'], \
+                value['incorrectable'], \
+                value['source'], \
+                value['comment'])
+    return True
+
+# def distinct_vocab_list_from_file(vocabfile, dialect=None):
+#     """Get the list of distinct verbatim values in an existing vocabulary lookup file.
+#     parameters:
+#         vocabfile - the full path to the vocabulary lookup file
+#         dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+#     returns:
+#         sorted(list(values)) - a sorted list of distinct verbatim values in the vocabulary
+#     """
+# #    print 'vocabfile: %s\nvocabfieldlist:%s' % (vocabfile, vocabfieldlist)
+#     if os.path.isfile(vocabfile) == False:
+#         return None
+#     values = set()
+#     if dialect is None:
+#         dialect = vocab_dialect()
+#     with open(vocabfile, 'rU') as csvfile:
+#         dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
+#         i=0
+#         for row in dr:
+#             # Skip the header row.
+#             if i>0:
+#                 values.add(row['verbatim'])
+#             i+=1
+#     return sorted(list(values))
 
 def distinct_composite_term_values_from_file(inputfile, terms, separator = '|', dialect=None):
     """Get the list of distinct order-specific values of set of terms in a file.
@@ -250,7 +430,7 @@ def terms_not_in_dwc(checklist):
     return not_in_list(simpledwctermlist, checklist)
 
 def not_in_list(targetlist, checklist):
-    """Get the list of distinct values in list that are not in a target list already.
+    """Get the list of distinct values in a checklist that are not in a target list.
     parameters:
         targetlist - the list to check to see if the value already exists there
         checklist - the list of values to check against the targetlist
@@ -268,6 +448,14 @@ def not_in_list(targetlist, checklist):
     if '' in newlist:
         newlist.remove('')
     return sorted(newlist)
+
+def keys_list(sourcedict):
+    if sourcedict is None or len(sourcedict)==0:
+        return None
+    keylist = []
+    for key, value in sourcedict.iteritems():
+        keylist.append(key)
+    return keylist
 
 def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
     """Add distinct new verbatim values from a valuelist to a vocabulary lookup file.
@@ -317,12 +505,14 @@ class DWCAVocabUtilsFramework():
     tsvfromcsvfile2 = testdatapath + 'test_tsv_from_csv_2.txt'
     testvocabfile = testdatapath + 'test_vocab_file.csv'
     writevocabheadertestfile = testdatapath + 'test_write_vocabheader.txt'
+    reporttestfile = testdatapath + 'test_term_recommended_report.txt'
 
     def dispose(self):
         csvwriteheaderfile = self.csvwriteheaderfile
         tsvfromcsvfile1 = self.tsvfromcsvfile1
         tsvfromcsvfile2 = self.tsvfromcsvfile2
         testvocabfile = self.testvocabfile
+        reporttestfile = self.reporttestfile
         if os.path.isfile(csvwriteheaderfile):
             os.remove(csvwriteheaderfile)
         if os.path.isfile(tsvfromcsvfile1):
@@ -331,6 +521,8 @@ class DWCAVocabUtilsFramework():
             os.remove(tsvfromcsvfile2)
         if os.path.isfile(testvocabfile):
             os.remove(testvocabfile)
+        if os.path.isfile(reporttestfile):
+            os.remove(reporttestfile)
         return True
 
 class DWCAVocabUtilsTestCase(unittest.TestCase):
@@ -398,45 +590,277 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
             'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'geog header not equal to the model header')
 
-    def test_get_standard_value(self):
-        print 'testing get_standard_value'
-        testdict = { 'm':'male', 'M':'male', 'male':'male', 'f':'female', 'F':'female', 
-            'female':'female'}
-        self.assertIsNone(get_standard_value('unnoewn', testdict), 
-            "lookup 'unnoewn' does not return None")
-        self.assertIsNone(get_standard_value(None, testdict), 
-            'lookup None does not return None')
-        self.assertEqual(get_standard_value('m', testdict), 'male', 
-            "lookup 'm' does not return 'male'")
-        self.assertEqual(get_standard_value('M', testdict), 'male', 
-            "lookup 'M' does not return 'male'")
-        self.assertEqual(get_standard_value('male', testdict), 'male', 
-            "lookup 'male' does not return 'male'")
-        self.assertEqual(get_standard_value('f', testdict), 'female', 
-            "lookup 'f' does not return 'female'")
-        self.assertEqual(get_standard_value('F', testdict), 'female', 
-            "lookup 'F' does not return 'female'")
-        self.assertEqual(get_standard_value('female', testdict), 'female', 
-            "lookup 'female' does not return 'female'")
+#     def test_get_standard_value(self):
+#         print 'testing get_standard_value'
+#         testdict = { 'm':'male', 'M':'male', 'male':'male', 'f':'female', 'F':'female', 
+#             'female':'female'}
+#         self.assertIsNone(get_standard_value('unnoewn', testdict), 
+#             "lookup 'unnoewn' does not return None")
+#         self.assertIsNone(get_standard_value(None, testdict), 
+#             'lookup None does not return None')
+#         self.assertEqual(get_standard_value('m', testdict), 'male', 
+#             "lookup 'm' does not return 'male'")
+#         self.assertEqual(get_standard_value('M', testdict), 'male', 
+#             "lookup 'M' does not return 'male'")
+#         self.assertEqual(get_standard_value('male', testdict), 'male', 
+#             "lookup 'male' does not return 'male'")
+#         self.assertEqual(get_standard_value('f', testdict), 'female', 
+#             "lookup 'f' does not return 'female'")
+#         self.assertEqual(get_standard_value('F', testdict), 'female', 
+#             "lookup 'F' does not return 'female'")
+#         self.assertEqual(get_standard_value('female', testdict), 'female', 
+#             "lookup 'female' does not return 'female'")
 
-    def test_distinct_vocab_list_from_file(self):
-        print 'testing distinct_vocab_list_from_file'
+#     def test_get_checked_standard_value(self):
+#         print 'testing get_checked_standard_value'
+#         monthvocabfile = self.framework.monthvocabfile
+#         monthdict = vocab_dict_from_file(monthvocabfile)
+# #        print 'monthdict:\n%s' % monthdict
+# 
+#         soughtvalue = '5'
+#         expected = '5'
+#         standardvalue = get_checked_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+# 
+#         soughtvalue = '6'
+#         expected = '6'
+#         standardvalue = get_checked_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+# 
+#         soughtvalue = 'V'
+#         expected = '5'
+#         standardvalue = get_checked_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+# 
+#         soughtvalue = 'v'
+#         expected = '5'
+#         standardvalue = get_checked_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+# 
+#         soughtvalue = 'VI'
+#         expected = None
+#         standardvalue = get_checked_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+# 
+#         soughtvalue = 'Vi'
+#         expected = None
+#         standardvalue = get_checked_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+# 
+#         soughtvalue = 'Vi'
+#         expected = None
+#         standardvalue = get_checked_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+# 
+#         soughtvalue = 'vi'
+#         expected = None
+#         standardvalue = get_checked_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+
+#     def test_get_differing_standard_value(self):
+#         print 'testing get_differing_standard_value'
+#         monthvocabfile = self.framework.monthvocabfile
+#         monthdict = vocab_dict_from_file(monthvocabfile)
+# #        print 'monthdict:\n%s' % monthdict
+#         
+#         soughtvalue = '5'
+#         expected = None
+#         standardvalue = get_differing_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+# 
+#         soughtvalue = '6'
+#         expected = None
+#         standardvalue = get_differing_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+# 
+#         soughtvalue = 'V'
+#         expected = '5'
+#         standardvalue = get_differing_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+# 
+#         soughtvalue = 'v'
+#         expected = '5'
+#         standardvalue = get_differing_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+# 
+#         soughtvalue = 'VI'
+#         expected = None
+#         standardvalue = get_differing_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+# 
+#         soughtvalue = 'Vi'
+#         expected = None
+#         standardvalue = get_differing_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+# 
+#         soughtvalue = 'Vi'
+#         expected = None
+#         standardvalue = get_differing_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+# 
+#         soughtvalue = 'vi'
+#         expected = None
+#         standardvalue = get_differing_standard_value(soughtvalue, monthdict)
+#         s = 'standard value (%s) of %s not as expected (%s) found in %s' % \
+#             (standardvalue, soughtvalue, expected, monthvocabfile)
+#         self.assertEqual(standardvalue, expected, s)
+
+#     def test_get_vocab_record(self):
+#         print 'testing vocab_dict_from_file'
+#         monthvocabfile = self.framework.monthvocabfile
+#         monthdict = vocab_dict_from_file(monthvocabfile)
+#         vocabrecord = get_vocab_record('V', monthdict)
+# #        print 'vocabrecord:\n%s' % vocabrecord
+#         self.assertIsNotNone(vocabrecord, 
+#             "get_vocab_record for value 'V' returns None")
+#         self.assertEqual(vocabrecord['comment'], '', 
+#             "value of 'comment' not equal to '' for vocab value 'V'")
+#         self.assertEqual(vocabrecord['checked'], '1', 
+#             "value of 'checked' not equal to 1 for vocab value 'V'")
+#         self.assertEqual(vocabrecord['standard'], '5', 
+#             "value of 'standard' not equal to '5' for vocab value 'V'")
+#         self.assertEqual(vocabrecord['incorrectable'], '', 
+#             "value of 'incorrectable' not equal to '' for vocab value 'V'")
+#         self.assertEqual(vocabrecord['source'], '', 
+#             "value of 'source' not equal to '' for vocab value 'V'")
+#         self.assertEqual(vocabrecord['error'], '', 
+#             "value of 'error' not equal to '' for vocab value 'V'")
+#         self.assertEqual(vocabrecord['misplaced'], '', 
+#             "value of 'misplaced' not equal to '' for vocab value 'V'")
+
+    def test_vocab_dict_from_file(self):
+        print 'testing vocab_dict_from_file'
         monthvocabfile = self.framework.monthvocabfile
-        months = distinct_vocab_list_from_file(monthvocabfile)
-#        print 'months: %s' % months
-        self.assertEqual(len(months), 6, 
-            'the number of distinct verbatim month values does not match expectation')
-        self.assertEqual(months, ['5', 'V', 'VI', 'Vi', 'v', 'vi'],
-            'verbatim month values do not match expectation')
+        monthdict = vocab_dict_from_file(monthvocabfile)
+        expected = 8
+#        print 'monthdict:\n%s' % monthdict
+        s = 'month vocab at %s has %s items in it instead of %s' % \
+            (monthvocabfile, len(monthdict), expected)
+        self.assertEqual(len(monthdict), expected, s)
+
+        self.assertTrue('vi' in monthdict,"'vi' not found in month dictionary")
+        self.assertEqual(monthdict['vi']['comment'], '', 
+            "value of 'comment' not equal to '' for vocab value 'vi'")
+        self.assertEqual(monthdict['vi']['checked'], '0', 
+            "value of 'checked' not equal to 0 for vocab value 'vi'")
+        self.assertEqual(monthdict['vi']['standard'], '', 
+            "value of 'standard' not equal to '' for vocab value 'vi'")
+        self.assertEqual(monthdict['vi']['incorrectable'], '0', 
+            "value of 'incorrectable' not equal to 0 for vocab value 'vi'")
+        self.assertEqual(monthdict['vi']['source'], '', 
+            "value of 'source' not equal to '' for vocab value 'vi'")
+        self.assertEqual(monthdict['vi']['error'], '', 
+            "value of 'error' not equal to '' for vocab value 'vi'")
+        self.assertEqual(monthdict['vi']['misplaced'], '0', 
+            "value of 'misplaced' not equal to '0' for vocab value 'vi'")
+
+        self.assertTrue('5' in monthdict,"'5' not found in month dictionary")
+        self.assertEqual(monthdict['5']['comment'], '', 
+            "value of 'comment' not equal to '' for vocab value '5'")
+        self.assertEqual(monthdict['5']['checked'], '1', 
+            "value of 'checked' not equal to 1 for vocab value '5'")
+        self.assertEqual(monthdict['5']['standard'], '5', 
+            "value of 'standard' not equal to '5' for vocab value '5'")
+        self.assertEqual(monthdict['5']['incorrectable'], '', 
+            "value of 'incorrectable' not equal to '' for vocab value '5'")
+        self.assertEqual(monthdict['5']['source'], '', 
+            "value of 'source' not equal to '' for vocab value '5'")
+        self.assertEqual(monthdict['5']['error'], '', 
+            "value of 'error' not equal to '' for vocab value '5'")
+        self.assertEqual(monthdict['5']['misplaced'], '', 
+            "value of 'misplaced' not equal to '' for vocab value '5'")
+
+    def test_matching_vocab_dict_from_file(self):
+        print 'testing vocab_dict_from_file'
+        monthvocabfile = self.framework.monthvocabfile
+        checklist = ['vi', '5', 'fdsf']
+        monthdict = matching_vocab_dict_from_file(checklist, monthvocabfile)
+#        print 'matchingmonthdict:\n%s' % monthdict
+        s = 'month vocab at %s does has %s matching items in it instead of 2' % \
+            (monthvocabfile, len(monthdict))
+        self.assertEqual(len(monthdict), 2, s)
+
+        self.assertTrue('vi' in monthdict,"'vi' not found in month dictionary")
+        self.assertEqual(monthdict['vi']['comment'], '', 
+            "value of 'comment' not equal to '' for vocab value 'vi'")
+        self.assertEqual(monthdict['vi']['checked'], '0', 
+            "value of 'checked' not equal to 0 for vocab value 'vi'")
+        self.assertEqual(monthdict['vi']['standard'], '', 
+            "value of 'standard' not equal to '' for vocab value 'vi'")
+        self.assertEqual(monthdict['vi']['incorrectable'], '0', 
+            "value of 'incorrectable' not equal to 0 for vocab value 'vi'")
+        self.assertEqual(monthdict['vi']['source'], '', 
+            "value of 'source' not equal to '' for vocab value 'vi'")
+        self.assertEqual(monthdict['vi']['error'], '', 
+            "value of 'error' not equal to '' for vocab value 'vi'")
+        self.assertEqual(monthdict['vi']['misplaced'], '0', 
+            "value of 'misplaced' not equal to '0' for vocab value 'vi'")
+
+        self.assertTrue('5' in monthdict,"'5' not found in month dictionary")
+        self.assertEqual(monthdict['5']['comment'], '', 
+            "value of 'comment' not equal to '' for vocab value '5'")
+        self.assertEqual(monthdict['5']['checked'], '1', 
+            "value of 'checked' not equal to 1 for vocab value '5'")
+        self.assertEqual(monthdict['5']['standard'], '5', 
+            "value of 'standard' not equal to '5' for vocab value '5'")
+        self.assertEqual(monthdict['5']['incorrectable'], '', 
+            "value of 'incorrectable' not equal to '' for vocab value '5'")
+        self.assertEqual(monthdict['5']['source'], '', 
+            "value of 'source' not equal to '' for vocab value '5'")
+        self.assertEqual(monthdict['5']['error'], '', 
+            "value of 'error' not equal to '' for vocab value '5'")
+        self.assertEqual(monthdict['5']['misplaced'], '', 
+            "value of 'misplaced' not equal to '' for vocab value '5'")
+
+#     def test_distinct_vocab_list_from_file(self):
+#         print 'testing distinct_vocab_list_from_file'
+#         monthvocabfile = self.framework.monthvocabfile
+#         months = distinct_vocab_list_from_file(monthvocabfile)
+# #        print 'months: %s' % months
+#         self.assertEqual(len(months), 8, 
+#             'the number of distinct verbatim month values does not match expectation')
+#         self.assertEqual(months, ['5', '6', 'V', 'VI', 'Vi', 'v', 'vI', 'vi'],
+#             'verbatim month values do not match expectation')
 
     def test_distinct_term_values_from_file(self):
         print 'testing distinct_term_values_from_file'
         monthvocabfile = self.framework.monthvocabfile
         months = distinct_term_values_from_file(monthvocabfile, 'verbatim')
+        expected = 8
 #        print 'months: %s' % months
-        self.assertEqual(len(months), 6, 
+        self.assertEqual(len(months), expected, 
             'the number of distinct verbatim month values does not match expectation')
-        self.assertEqual(months, ['5', 'V', 'VI', 'Vi', 'v', 'vi'],
+        self.assertEqual(months, ['5', '6', 'V', 'VI', 'Vi', 'v', 'vI', 'vi'],
             'verbatim month values do not match expectation')
 
     def test_distinct_composite_term_values_from_file(self):
@@ -572,6 +996,32 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         s = 'geog header:\n%s\nnot as expected:\n%s' \
             % (header, expected)
         self.assertEqual(header, expected, s)
+
+    def test_term_values_recommended(self):
+        print 'testing term_values_recommended'
+        monthvocabfile = self.framework.monthvocabfile
+        monthdict = vocab_dict_from_file(monthvocabfile)
+        recommended = term_values_recommended(monthdict)
+#        print 'monthdict:\n%s\nrecommended:\n%s' % (monthdict, recommended)
+        expected = {
+            'v': {'comment': '', 'checked': '1', 'standard': '5', 
+                'incorrectable': '', 'source': '', 'error': '', 'misplaced': ''},
+            'V': {'comment': '', 'checked': '1', 'standard': '5', 
+                'incorrectable': '', 'source': '', 'error': '', 'misplaced': ''} 
+                }
+        s = 'added_values:\n%s\nnot as expected:\n%s' \
+            % (recommended, expected)
+        self.assertEqual(recommended, expected, s)
+
+    def test_term_recommendation_report(self):
+        print 'testing term_recommendation_report'
+        monthvocabfile = self.framework.monthvocabfile
+        reportfile = self.framework.reporttestfile
+        monthdict = vocab_dict_from_file(monthvocabfile)
+        recommended = term_values_recommended(monthdict)
+        success = term_recommendation_report(reportfile, recommended)
+        s = 'term recommendation report (%s) not written successfully' % reportfile
+        self.assertTrue(success, s)
 
 if __name__ == '__main__':
     unittest.main()

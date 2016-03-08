@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwcareader_utils.py 2016-02-20T19:21-03:00"
+__version__ = "dwcareader_utils.py 2016-03-04T14:17-03:00"
 
 # This file contains common utility functions for dealing with the content of a Darwin
 # Core archive. It is built with unit tests that can be invoked by running the script
@@ -161,11 +161,15 @@ def download_file(url, outputfile):
     if outputfile is None or len(outputfile)==0:
         return False
 
+    try:
+        r = requests.get(url, stream=True)
+    except:
+        return False
+    if not r.ok:
+        return False
+
     # Example file: 'testccber.zip'
     with open(outputfile, 'wb') as handle:
-        r = requests.get(url, stream=True)
-        if not r.ok:
-            return False
         for block in r.iter_content(1024):
             handle.write(block)
     return True

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor_test.py 2016-02-21T14:32-03:00"
+__version__ = "vocab_extractor_test.py 2016-03-01T15:07-03:00"
 
 # This file contains unit test for the vocab_extractor function.
 #
@@ -24,7 +24,6 @@ __version__ = "vocab_extractor_test.py 2016-02-21T14:32-03:00"
 
 from vocab_extractor import vocab_extractor
 from dwca_utils import read_header
-from dwca_vocab_utils import distinct_term_values_from_file
 import os
 import json
 import unittest
@@ -142,7 +141,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         values = response['extractedvalues']
 #        print 'response:\n%s' % response
         s = 'values of term %s not extracted correctly from %s' % (term, testfile)
-        self.assertEqual(values, ['5', 'V', 'VI', 'Vi', 'v', 'vi'], s)
+        self.assertEqual(values, ['5', '6', 'V', 'VI', 'Vi', 'v', 'vI', 'vi'], s)
 
 if __name__ == '__main__':
     unittest.main()
