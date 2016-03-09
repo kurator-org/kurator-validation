@@ -5,3 +5,6 @@ target
 .DS_Store
 *.class
 *.pyc
+*.tar.gz
+*.egg-info
+*.whl
