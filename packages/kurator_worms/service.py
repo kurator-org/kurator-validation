@@ -10,10 +10,10 @@ class WoRMSService(object):
     
     WORMS_APHIA_NAME_SERVICE_URL = 'http://marinespecies.org/aphia.php?p=soap&wsdl=1'
 
-    def __init__(self, marine_only=False):
+    def __init__(self):
         """ Initialize a SOAP client using the WSDL for the WoRMS Aphia names service"""        
         self._client = Client(self.WORMS_APHIA_NAME_SERVICE_URL)
-        self._marine_only = marine_only
+        self._worms = self._client.service
 
     def aphia_record_by_exact_taxon_name(self, name):
         """
@@ -23,26 +23,26 @@ class WoRMSService(object):
         the taxon name.  If exactly one match is returned, this function retrieves the
         Aphia record for that ID and returns it. 
         """        
-        aphia_id = self._client.service.getAphiaID(name, self._marine_only);
+        aphia_id = self._worms.getAphiaID(name);
         if aphia_id is None or aphia_id == -999:         # -999 indicates multiple matches
             return None
         else:
-            return self._client.service.getAphiaRecordByID(aphia_id)
+            return self._worms.getAphiaRecordByID(aphia_id)
 
-    def aphia_record_by_fuzzy_taxon_name(self, name):
+    def aphia_record_by_fuzzy_taxon_name(self, name, marine_only=False):
         """
         Perform fuzzy match search for the input name against the taxon names in WoRMS.
         
         The invoked Aphia names service returns a list of list matches.  This function 
         returns a match only if exactly one match is returned by the AphiaNameService. 
         """        
-        matches = self._client.service.matchAphiaRecordsByNames(name, self._marine_only);
+        matches = self._worms.matchAphiaRecordsByNames(name, marine_only);
         if len(matches) == 1 and len(matches[0]) == 1:
             return matches[0][0]
         else:
             return None
   
-    def aphia_record_by_taxon_name(self, name, fuzzy_match_enabled=True):
+    def aphia_record_by_taxon_name(self, name, fuzzy_match_enabled=True, marine_only=False):
         """
         Perform exact and fuzzy match searches as needed to lookup the input taxon name 
         in WoRMS.
@@ -59,11 +59,11 @@ class WoRMSService(object):
             return True, exact_match_result
         else:
             if fuzzy_match_enabled:
-                fuzzy_match_result = self.aphia_record_by_fuzzy_taxon_name(name)
+                fuzzy_match_result = self.aphia_record_by_fuzzy_taxon_name(name, marine_only)
                 return False, fuzzy_match_result          
             else:
                 return False, None
-                      
+
 if __name__ == '__main__':
     """ Demonstration of class usage"""
 
