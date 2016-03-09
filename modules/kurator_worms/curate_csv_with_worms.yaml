@@ -1,0 +1,86 @@
+####################################################################################
+# curate_csv_with_worms.yaml
+####################################################################################
+#
+# Examples:
+#
+# Clean data provided via standard input and print results to standard output:
+# ka -f curate_csv_with_worms.yaml < test/input.csv
+#
+# Clean data in a named input file and print results to standard output:
+# ka -f curate_csv_with_worms.yaml -p input=test/input.csv
+#
+# Clean data in a named input file and save results to named output file:
+# ka -f curate_csv_with_worms.yaml -p input=test/input.csv -p output=output.csv
+#
+####################################################################################
+
+imports:
+
+- classpath:/org/kurator/akka/types.yaml
+
+components:
+
+- id: ReadInput
+  type: PythonActor
+  properties:
+    code: |
+        import csv
+        import sys
+        def on_start(options):
+          filePath = options.get('inputFile') 
+          f = open(filePath, 'r') if filePath is not None else sys.stdin
+          for record in csv.DictReader(f):
+             yield record
+
+- id: CleanRecords
+  type: PythonClassActor
+  properties:
+    pythonClass: kurator_worms.actor.WoRMSCurator
+    onData: clean_record
+    parameters:
+        taxon_name_field          : 'TaxonName'
+        author_field              : 'Author'
+        original_taxon_name_field : 'OriginalTaxonName'
+        original_author_field     : 'OriginalAuthor'
+        match_type_field          : 'WoRMSMatchType'
+        lsid_field                : 'LSID'
+        fuzzy_match_enabled       : 'True'
+    listensTo:
+      - !ref ReadInput
+
+- id: WriteOutput
+  type: PythonClassActor
+  properties:
+    pythonClass: CsvWriter
+    code: |
+        import csv
+        import sys
+        class CsvWriter(object): 
+          def on_start(self, options):
+            filePath = options.get('outputFile') 
+            self.f = open(filePath, 'w') if filePath is not None else sys.stdout
+            self.dw = csv.DictWriter(self.f, options['fieldnames'])
+            self.dw.writeheader()
+          def on_data(self, record):
+            self.dw.writerow(record)
+            sys.stdout.flush()
+    parameters:
+      fieldnames: [ID,TaxonName,Author,OriginalTaxonName,OriginalAuthor,WoRMSMatchType,LSID]
+    listensTo:
+      - !ref CleanRecords
+
+- id: ValidateNamesWithWoRMSWorkflow
+  type: Workflow
+  properties:
+    actors:
+      - !ref ReadInput
+      - !ref CleanRecords
+      - !ref WriteOutput
+    parameters:
+       input:
+         actor: !ref ReadInput
+         parameter: inputFile
+       output:
+         actor: !ref WriteOutput
+         parameter: outputFile
