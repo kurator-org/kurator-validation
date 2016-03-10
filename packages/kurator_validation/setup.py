@@ -1,6 +1,6 @@
 '''
 This script builds archives (zip files) for distributing and installing the
-kurator_worms python package (services, actors, and example scripts).
+kurator_validation python package (services, actors, and example scripts).
 
 ***** Building a source distribution ****
 
@@ -36,14 +36,14 @@ $ pip install kurator_worms-0.3.1-py2.py3-none-any.whl
 from setuptools import setup, find_packages
 
 setup(
-    name='kurator_worms',
+    name='kurator_validation',
     version='0.1',
     description='Data validation services and actors',
     author='Kurator Project',
     author_email='kurator@lists.illinois.edu',
-    url='https://github.com/kurator-org/kurator-validation/tree/master/packages/kurator_worms',
+    url='https://github.com/kurator-org/kurator-validation/tree/master/packages/kurator_validation',
     packages=find_packages(),
-    install_requires=['suds-jurko'],
+    install_requires=['kurator_worms'],
     license='MIT',
      classifiers=[
         'Development Status :: 3 - Alpha',
