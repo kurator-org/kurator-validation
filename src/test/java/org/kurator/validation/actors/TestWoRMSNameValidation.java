@@ -14,7 +14,7 @@ public class TestWoRMSNameValidation extends KuratorAkkaTestCase {
     private OutputStream outputBuffer;
     PrintStream outPrintStream;
     
-    private final String WORKFLOW_RESOURCE_PATH="src/main/python/org/kurator/validation/workflows";
+    private final String KURATOR_WORMS_PACKAGE_DIR="packages/kurator_worms/";
     
     @Override
     public void setUp() throws Exception {
@@ -26,21 +26,20 @@ public class TestWoRMSNameValidation extends KuratorAkkaTestCase {
 
     public void testWoRMSNameValidation() throws Exception {
 
-        WorkflowRunner wr = new YamlFileWorkflowRunner("file:" + WORKFLOW_RESOURCE_PATH + "/WoRMS_name_validation.yaml");
+        WorkflowRunner wr = new YamlFileWorkflowRunner("file:" + KURATOR_WORMS_PACKAGE_DIR + "workflows/curate_csv_with_worms.yaml");
         wr.outputStream(outPrintStream);
-        wr.apply("ReadInput.filePath", WORKFLOW_RESOURCE_PATH + "/WoRMS_name_validation_input.csv");
-        wr.apply("WriteOutput.quoteCharacter", '\'');
+        wr.apply("input", KURATOR_WORMS_PACKAGE_DIR + "data/five_records.csv");
         wr.run();
 
         String expected =
-            "ID,TaxonName,Author,OriginalName,OriginalAuthor,WoRMsExactMatch,lsid" + EOL +
-            "37929,Architectonica reevei,'(Hanley, 1862)',Architectonica reevi,,false,urn:lsid:marinespecies.org:taxname:588206" + EOL +
-            "37932,Rapana rapiformis,'(Born, 1778)',Rapana rapiformis,'(Von Born, 1778)',true,urn:lsid:marinespecies.org:taxname:140415" + EOL +
-            "180593,Buccinum donomani,'(Linnaeus, 1758)',,,," + EOL +
-            "179963,Codakia paytenorum,'(Iredale, 1937)',Codakia paytenorum,'Iredale, 1937',true,urn:lsid:marinespecies.org:taxname:215841" + EOL;
-//            "0,Rissoa venusta,'Garrett, 1873',Rissoa venusta,,true,urn:lsid:marinespecies.org:taxname:607233" + EOL +
-//            "62156,Rissoa venusta,'Garrett, 1873',Rissoa venusta,Phil.,true,urn:lsid:marinespecies.org:taxname:607233" + EOL;
+            "ID,TaxonName,Author,OriginalTaxonName,OriginalAuthor,WoRMSMatchType,LSID"                                                  + EOL +
+            "37929,Architectonica reevei,'(Hanley, 1862)',Architectonica reevi,,fuzzy match,urn:lsid:marinespecies.org:taxname:588206"  + EOL +
+            "37932,Rapana rapiformis,'(Born, 1778)',Rapana rapiformis,,exact match,urn:lsid:marinespecies.org:taxname:140415"           + EOL +
+            "180593,Buccinum donomani,'(Linnaeus, 1758)',,,no match,"                                                                   + EOL +
+            "179963,Codakia paytenorum,'(Iredale, 1937)',Codakia paytenorum,,exact match,urn:lsid:marinespecies.org:taxname:215841"     + EOL +
+            "62156,Rissoa venusta,Phil.,,,no match,"                                                                                    + EOL;
 
         assertEquals(expected, outputBuffer.toString());
     }
-}
+   
+ }

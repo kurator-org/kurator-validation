@@ -72,7 +72,7 @@ if __name__ == '__main__':
                 'fuzzy_match_enabled'       : True }
     
     curator = RecordCurator()
-    dr = csv.DictReader(open('../data/six_records.csv', 'r'))
+    dr = csv.DictReader(open('data/five_records.csv', 'r'))
     dw = csv.DictWriter(sys.stdout, ['ID', 'TaxonName', 'Author', 'OriginalTaxonName', 
                                      'OriginalAuthor', 'WoRMSMatchType', 'LSID'])
     dw.writeheader()
