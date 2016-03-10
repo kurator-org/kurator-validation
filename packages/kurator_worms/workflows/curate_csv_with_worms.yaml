@@ -1,19 +1,17 @@
-####################################################################################
+#####################################################################################
 # curate_csv_with_worms.yaml
-####################################################################################
-#
-# Examples:
+#####################################################################################
 #
 # Clean data provided via standard input and print results to standard output:
-# ka -f curate_csv_with_worms.yaml < test/input.csv
+# ka curate_csv_with_worms.yaml < ../data/six_records.csv
 #
 # Clean data in a named input file and print results to standard output:
-# ka -f curate_csv_with_worms.yaml -p input=test/input.csv
+# ka curate_csv_with_worms.yaml -p input=../data/six_records.csv
 #
 # Clean data in a named input file and save results to named output file:
-# ka -f curate_csv_with_worms.yaml -p input=test/input.csv -p output=output.csv
+# ka curate_csv_with_worms.yaml -p input=../data/six_records.csv -p output=output.csv
 #
-####################################################################################
+#####################################################################################
 
 imports:
 
@@ -36,7 +34,7 @@ components:
 - id: CleanRecords
   type: PythonClassActor
   properties:
-    pythonClass: kurator_worms.actor.WoRMSCurator
+    pythonClass: kurator_worms.actors.record_curator.RecordCurator
     onData: clean_record
     parameters:
         taxon_name_field          : 'TaxonName'

@@ -1,13 +1,13 @@
 
 from kurator_worms.service import WoRMSService
 
-class WoRMSCurator(object): 
+class RecordCurator(object): 
     """
-    Actor for curating data using the WoRMS taxonomic name database via the AphiaNameService. 
+    Actor for curating specimen records using the WoRMS taxonomic name database via the AphiaNameService. 
     """
 
     def __init__(self):
-        """ Initialize the WoRMS service client """        
+        """ Initialize the WoRMS service client """
         self._worms = WoRMSService()
 
     def clean_record(self, input_record, options):
@@ -59,7 +59,7 @@ def _set_field(record, field, value):
         record[field] = value       
                   
 if __name__ == '__main__':
-    """ Demonstration of class usage"""
+    """ Demonstrate standalone usage """
     import sys
     import csv
     
@@ -71,8 +71,8 @@ if __name__ == '__main__':
                 'lsid_field'                : 'LSID',
                 'fuzzy_match_enabled'       : True }
     
-    curator = WoRMSCurator()
-    dr = csv.DictReader(open('test/input.csv', 'r'))
+    curator = RecordCurator()
+    dr = csv.DictReader(open('../data/six_records.csv', 'r'))
     dw = csv.DictWriter(sys.stdout, ['ID', 'TaxonName', 'Author', 'OriginalTaxonName', 
                                      'OriginalAuthor', 'WoRMSMatchType', 'LSID'])
     dw.writeheader()
