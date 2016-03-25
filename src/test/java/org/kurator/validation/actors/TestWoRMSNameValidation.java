@@ -29,6 +29,7 @@ public class TestWoRMSNameValidation extends KuratorAkkaTestCase {
         WorkflowRunner wr = new YamlFileWorkflowRunner("file:" + KURATOR_WORMS_PACKAGE_DIR + "workflows/curate_csv_with_worms.yaml");
         wr.outputStream(outPrintStream);
         wr.apply("input", KURATOR_WORMS_PACKAGE_DIR + "data/five_records.csv");
+        wr.apply("CleanRecords.fuzzy_match_enabled", "False");
         wr.run();
 
         String expected =
@@ -40,6 +41,5 @@ public class TestWoRMSNameValidation extends KuratorAkkaTestCase {
             "62156,Rissoa venusta,Phil.,,,no match,"                                                                                    + EOL;
 
         assertEquals(expected, outputBuffer.toString());
-    }
-   
+    }    
  }
