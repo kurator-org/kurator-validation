@@ -1,0 +1,86 @@
+#####################################################################################
+# filter_csv_with_worms.yaml
+#####################################################################################
+#
+# Clean data provided via standard input, save results from standard output to a
+# a file and display error messages to the terminal:
+#
+# ka filter_csv_with_worms.yaml < ../data/seven_records.csv  > filtered_records.csv
+#
+# Clean data in a named input file, save results to a named file, and error messages
+# to a different file:
+#
+# ka filter_csv_with_worms.yaml -p input=../data/seven_records.csv  \
+#                               -p output=filtered_records.csv      \
+#                               2> filter.log
+#
+#####################################################################################
+
+imports:
+
+- classpath:/org/kurator/akka/types.yaml
+
+components:
+
+- id: ReadInput
+  type: PythonActor
+  properties:
+    code: |
+        import csv
+        import sys
+        def on_start(options):
+          filePath = options.get('inputFile')
+          f = open(filePath, 'r') if filePath is not None else sys.stdin
+          for record in csv.DictReader(f):
+             yield record
+
+- id: FilterRecords
+  type: PythonActor
+  properties:
+    module: kurator_worms.record_filter
+    onData: discard_records_not_matching_worms
+    parameters:
+        taxon_name_field          : 'TaxonName'
+        author_field              : 'Author'
+    listensTo:
+      - !ref ReadInput
+
+- id: WriteOutput
+  type: PythonClassActor
+  properties:
+    pythonClass: CsvWriter
+    code: |
+        import csv
+        import os
+        import sys
+        class CsvWriter(object):
+          def on_start(self, options):
+            filePath = options.get('outputFile')
+            self.f = open(filePath, 'w') if filePath is not None else sys.stdout
+            self.dw = csv.DictWriter(self.f,
+                                     fieldnames=options['fieldnames'],
+                                     quotechar="'",
+                                     lineterminator=os.linesep)
+            self.dw.writeheader()
+          def on_data(self, record):
+            self.dw.writerow(record)
+            sys.stdout.flush()
+    parameters:
+      fieldnames: [ID,TaxonName,Author,OriginalTaxonName,OriginalAuthor,WoRMSMatchType,LSID]
+    listensTo:
+      - !ref FilterRecords
+
+- id: ValidateNamesWithWoRMSWorkflow
+  type: Workflow
+  properties:
+    actors:
+      - !ref ReadInput
+      - !ref FilterRecords
+      - !ref WriteOutput
+    parameters:
+       input:
+         actor: !ref ReadInput
+         parameter: inputFile
+       output:
+         actor: !ref WriteOutput
+         parameter: outputFile
