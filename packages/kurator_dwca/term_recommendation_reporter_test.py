@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter_test.py 2016-03-08T15:46-03:00"
+__version__ = "term_recommendation_reporter_test.py 2016-04-05T11:43-03:00"
 
 # This file contains unit tests for the term_recommendation_reporter function.
 #
@@ -30,7 +30,7 @@ import unittest
 class TermRecommendationReporterFramework():
     """Test framework for the term recommendation reporter."""
     # location for the test inputs and outputs
-    testdatapath = '../../data/tests/'
+    testdatapath = './data/tests/'
 
     # input data files to tests, don't remove these
 #    testfile1 = testdatapath + 'test_eight_specimen_records.csv'

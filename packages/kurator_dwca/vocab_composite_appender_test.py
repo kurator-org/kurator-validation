@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_composite_appender_test.py 2016-02-21T20:11-03:00"
+__version__ = "vocab_composite_appender_test.py 2016-04-05T14:25-03:00"
 
 # This file contains unit test for the vocab_composite_appender function.
 #
@@ -34,7 +34,7 @@ import unittest
 class VocabAppenderFramework():
     """Test framework for the vocab loader."""
     # location for the test inputs and outputs
-    testdatapath = '../../data/tests/'
+    testdatapath = './data/tests/'
 
     # input data files to tests, don't remove these
     geogvocabfile = testdatapath + 'test_dwcgeography.txt'

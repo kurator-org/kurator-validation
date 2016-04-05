@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_fieldcount_checker_test.py 2016-02-21T16:00-03:00"
+__version__ = "csv_fieldcount_checker_test.py 2016-04-05T10:58-03:00"
 
 # This file contains unit test for the csv_fieldcount_checker function.
 #
@@ -30,7 +30,7 @@ import unittest
 class CsvFieldcountCheckerFramework():
     """Test framework for the Darwin Cloud collector."""
     # location for the test inputs and outputs
-    testdatapath = '../../data/tests/'
+    testdatapath = './data/tests/'
 
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_eight_specimen_records.csv'

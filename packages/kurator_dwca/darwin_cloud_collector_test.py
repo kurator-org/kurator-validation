@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector_test.py 2016-02-21T16:13-03:00"
+__version__ = "darwin_cloud_collector_test.py 2016-04-05T10:59-03:00"
 
 # This file contains unit test for the darwin_cloud_collector function.
 #
@@ -31,7 +31,7 @@ import unittest
 class DarwinCloudCollectorFramework():
     """Test framework for the Darwin Cloud collector."""
     # location for the test inputs and outputs
-    testdatapath = '../../data/tests/'
+    testdatapath = './data/tests/'
 
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_eight_specimen_records.csv'

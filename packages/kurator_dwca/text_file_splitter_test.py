@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_splitter_test.py 2016-02-21T19:38-03:00"
+__version__ = "text_file_splitter_test.py 2016-04-05T14:24-03:00"
 
 from text_file_splitter import text_file_splitter
 from dwca_utils import split_path
@@ -33,7 +33,7 @@ import unittest
 class TextFileSplitterFramework():
     """Test framework for the text file splitter."""
     # location for the test inputs and outputs
-    testdatapath = '../../data/tests/'
+    testdatapath = './data/tests/'
     
     # test file to split
     csvfile = 'test_eight_specimen_records.csv'

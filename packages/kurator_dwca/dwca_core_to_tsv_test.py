@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv_test.py 2016-02-21T17:51-03:00"
+__version__ = "dwca_core_to_tsv_test.py 2016-04-05T14:51-03:00"
 
 # This file contains unit test for the dwca_core_to_tsv function.
 #
@@ -35,7 +35,7 @@ import unittest
 class DwcaCoreToTsvFramework():
     """Test framework for the Darwin Core archive to TSV converter."""
     # location for the test inputs and outputs
-    testdatapath = '../../data/tests/'
+    testdatapath = './data/tests/'
     archivetype = 'standard'
 
     # input data files to tests, don't remove these
@@ -46,7 +46,7 @@ class DwcaCoreToTsvFramework():
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-        removeme = self.testdatapath + '/'+ self.tsvfile
+        removeme = self.tsvfile
 #        print 'removeme: %s' % removeme
         if os.path.isfile(removeme):
             os.remove(removeme)

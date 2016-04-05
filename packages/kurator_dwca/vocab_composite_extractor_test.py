@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_composite_extractor_test.py 2016-03-01T15:11-03:00"
+__version__ = "vocab_composite_extractor_test.py 2016-04-05T14:26-03:00"
 
 # This file contains unit test for the vocab_composite_extractor function.
 #
@@ -31,7 +31,7 @@ import unittest
 class VocabCompositeExtractorFramework():
     """Test framework for the vocab loader."""
     # location for the test inputs and outputs
-    testdatapath = '../../data/tests/'
+    testdatapath = './data/tests/'
 
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_eight_specimen_records.csv'

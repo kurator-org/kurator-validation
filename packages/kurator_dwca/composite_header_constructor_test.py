@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor_test.py 2016-02-21T20:32-03:00"
+__version__ = "composite_header_constructor_test.py 2016-04-05T10:57-03:00"
 
 # This file contains unit test for the composite_header_constructor function.
 #
@@ -34,7 +34,7 @@ import unittest
 class CompositeHeaderConstructorFramework():
     """Test framework for the composite header constructor."""
     # location for the test inputs and outputs
-    testdatapath = '../../data/tests/'
+    testdatapath = './data/tests/'
     workspace = './workspace'
     
     # input data files to tests, don't remove these

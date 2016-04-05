@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwcareader_utils.py 2016-03-04T14:17-03:00"
+__version__ = "dwcareader_utils.py 2016-04-05T11:41-03:00"
 
 # This file contains common utility functions for dealing with the content of a Darwin
 # Core archive. It is built with unit tests that can be invoked by running the script
@@ -176,7 +176,7 @@ def download_file(url, outputfile):
 
 class DWCAUtilsReaderFramework():
     # testdatapath is the location of the files to test with
-    testdatapath = '../../data/tests/'
+    testdatapath = './data/tests/'
     # the archive extraction path is created by the Darwin Core archive reader and
     # should be removed when finished
     archiveextractionpath = './v/'

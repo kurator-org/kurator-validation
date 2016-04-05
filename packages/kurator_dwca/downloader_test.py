@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader_test.py 2016-02-22T17:30-03:00"
+__version__ = "downloader_test.py 2016-04-05T11:00-03:00"
 
 # This file contains unit test for the downloader function.
 #
@@ -30,7 +30,7 @@ import unittest
 class DownloaderFramework():
     """Test framework for the downloader."""
     # location for the test inputs and outputs
-    testdatapath = '../../data/tests/'
+    testdatapath = './data/tests/'
     testurl = 'http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals'
 
     # input data files to tests, don't remove these

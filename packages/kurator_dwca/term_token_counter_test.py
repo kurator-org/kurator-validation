@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_token_counter_test.py 2016-03-08T15:49-03:00"
+__version__ = "term_token_counter_test.py 2016-04-05T14:19-03:00"
 
 # This file contains unit test for the term_token_counter function.
 #
@@ -31,7 +31,7 @@ import unittest
 class TermCounterFramework():
     """Test framework for the term counter."""
     # location for the test inputs and outputs
-    testdatapath = '../../data/tests/'
+    testdatapath = './data/tests/'
 
     # input data files to tests, don't remove these
     termtokenfile = testdatapath + 'test_eight_specimen_records.csv'

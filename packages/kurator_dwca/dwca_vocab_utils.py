@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-03-08T14:41-03:00"
+__version__ = "dwca_vocab_utils.py 2016-04-05T11:39-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -490,9 +490,9 @@ def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
 
 class DWCAVocabUtilsFramework():
     # testdatapath is the location of example files to test with
-    testdatapath = '../../data/tests/'
+    testdatapath = './data/tests/'
     # vocabpath is the location of vocabulary files to test with
-    vocabpath = '../../vocabularies/'
+    vocabpath = './data/vocabularies/'
 
     # following are files used as input during the tests, don't remove these
     compositetestfile = testdatapath + 'test_eight_specimen_records.csv'

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator_test.py 2016-02-21T19:05-03:00"
+__version__ = "text_file_aggregator_test.py 2016-04-05T14:24-03:00"
 
 from text_file_aggregator import text_file_aggregator
 from dwca_utils import split_path
@@ -33,7 +33,7 @@ import unittest
 class TextFileAggregatorFramework():
     """Test framework for the text file aggregator."""
     # location for the test inputs and outputs
-    testdatapath = '../../data/tests/'
+    testdatapath = './data/tests/'
     csvcompositepath = testdatapath + 'test_csv*.csv'
     tsvcompositepath = testdatapath + 'test_tsv*.txt'
     mixedcompositepath = testdatapath + 'test_*_specimen_records.*'
@@ -89,6 +89,7 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         # Aggregate text file
         response=json.loads(text_file_aggregator(json.dumps(inputs)))
 
+#        print 'inputs:\n%s\nresponse:\n%s' % (inputs, response)
         self.assertTrue(os.path.isfile(tsvfile), tsvfile + ' does not exist')
         self.assertEqual(response['aggregaterowcount'], 6, 'incorrect number of rows')
 
@@ -106,7 +107,7 @@ class TextFileAggregatorTestCase(unittest.TestCase):
 
     def test_aggregate_csvs(self):
         print 'testing aggregate_csvs'
-        tsvfile = self.framework.testdatapath+self.framework.tsvfile
+        tsvfile = self.framework.tsvfile
         csvcompositepath = self.framework.csvcompositepath
         inputs = {}
         inputs['inputpath'] = csvcompositepath

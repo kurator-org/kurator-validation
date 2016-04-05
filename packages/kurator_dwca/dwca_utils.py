@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-03-08T11:27-03:00"
+__version__ = "dwca_utils.py 2016-04-05T11:02-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -476,7 +476,7 @@ def response(returnvars, returnvals):
     
 class DWCAUtilsFramework():
     # testdatapath is the location of the files to test with
-    testdatapath = '../../data/tests/'
+    testdatapath = './data/tests/'
 
     # following are files used as input during the tests, don't remove these
     csvreadheaderfile = testdatapath + 'test_eight_specimen_records.csv'
@@ -743,8 +743,12 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
         header = composite_header(tsvcompositepath)
-#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' \
-#            % (len(header), len(modelheader), header, modelheader)
+        s =  'len(header)=%s' % len(header)
+        s += ' len(model)=%s' % len(modelheader)
+        s += '\nheader:\n%s' % header
+        s += '\nmodel:\n%s' % modelheader
+        s += '\ntsvcompositepath: %s' % tsvcompositepath
+#        print '%s' % s
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
