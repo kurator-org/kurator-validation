@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader_test.py 2016-04-05T11:00-03:00"
+__version__ = "downloader_test.py 2016-04-05T20:29-03:00"
 
 # This file contains unit test for the downloader function.
 #
@@ -61,13 +61,14 @@ class DownloaderTestCase(unittest.TestCase):
         outputfile = self.framework.testdownloadfile
         
         inputs = {}
-        response=json.loads(downloader(json.dumps(inputs)))
+#        response=json.loads(downloader(json.dumps(inputs)))
+        response=downloader(inputs)
 #	        print 'response:\n%s' % response
         self.assertFalse(response['success'], \
             'download returned success without url or outputfile')
 
         inputs['url'] = testurl
-        response=json.loads(downloader(json.dumps(inputs)))
+        response=downloader(inputs)
 #        print 'response:\n%s' % response
         self.assertFalse(response['success'], \
             'download returned success outputfile')
@@ -80,11 +81,11 @@ class DownloaderTestCase(unittest.TestCase):
         inputs = {}
         inputs['url'] = testurl
         inputs['outputfile'] = outputfile
-#        print 'inputs:\n%s' % inputs
+#        print 'downloader_test.py: inputs:\n%s' % inputs
 
         # Collect terms
-        response=json.loads(downloader(json.dumps(inputs)))
-#        print 'response:\n%s' % response
+        response=downloader(inputs)
+#        print 'downloader_test.py: response:\n%s' % response
         success = response['success']
         s = 'file not downloaded from %s' % testurl 
         self.assertTrue(success, s)

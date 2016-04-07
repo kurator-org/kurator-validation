@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwcareader_utils.py 2016-04-05T11:41-03:00"
+__version__ = "dwcareader_utils.py 2016-04-06T14:21-03:00"
 
 # This file contains common utility functions for dealing with the content of a Darwin
 # Core archive. It is built with unit tests that can be invoked by running the script
@@ -38,7 +38,7 @@ import unittest
 
 # HTTP requests package
 # pip install requests
-import requests
+#import requests
 
 def dwca_metadata(dwcareader):
     """Return metadata from Darwin Core Archive Reader."""
@@ -147,32 +147,32 @@ def short_term_names(termlist):
             shortnamelist.append(sname)
     return shortnamelist
 
-def download_file(url, outputfile):
-    """Get a file from a URL.
-    parameters:
-        url - the url to download from
-            (e.g., 'http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals')
-        outputfile - the full path to the location for the output file
-    returns:
-        success - True if the file was downloaded, False if the request was unsuccessful
-    """
-    if url is None or len(url)==0:
-        return False
-    if outputfile is None or len(outputfile)==0:
-        return False
-
-    try:
-        r = requests.get(url, stream=True)
-    except:
-        return False
-    if not r.ok:
-        return False
-
-    # Example file: 'testccber.zip'
-    with open(outputfile, 'wb') as handle:
-        for block in r.iter_content(1024):
-            handle.write(block)
-    return True
+# def download_file(url, outputfile):
+#     """Get a file from a URL.
+#     parameters:
+#         url - the url to download from
+#             (e.g., 'http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals')
+#         outputfile - the full path to the location for the output file
+#     returns:
+#         success - True if the file was downloaded, False if the request was unsuccessful
+#     """
+#     if url is None or len(url)==0:
+#         return False
+#     if outputfile is None or len(outputfile)==0:
+#         return False
+# 
+#     try:
+#         r = requests.get(url, stream=True)
+#     except:
+#         return False
+#     if not r.ok:
+#         return False
+# 
+#     # Example file: 'testccber.zip'
+#     with open(outputfile, 'wb') as handle:
+#         for block in r.iter_content(1024):
+#             handle.write(block)
+#     return True
 
 class DWCAUtilsReaderFramework():
     # testdatapath is the location of the files to test with

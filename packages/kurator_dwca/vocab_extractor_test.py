@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor_test.py 2016-04-05T14:27-03:00"
+__version__ = "vocab_extractor_test.py 2016-04-06T19:08-03:00"
 
 # This file contains unit test for the vocab_extractor function.
 #
@@ -25,7 +25,7 @@ __version__ = "vocab_extractor_test.py 2016-04-05T14:27-03:00"
 from vocab_extractor import vocab_extractor
 from dwca_utils import read_header
 import os
-import json
+#import json
 import unittest
 
 class VocabExtractorFramework():
@@ -68,7 +68,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         testfile = self.framework.testfile1
 
         inputs = {}
-        response=json.loads(vocab_extractor(json.dumps(inputs)))
+        response=vocab_extractor(inputs)
 #        print 'response:\n%s' % response
         self.assertIsNone(response['extractedvalues'], \
             'values extracted without input file')
@@ -77,7 +77,7 @@ class VocabExtractorTestCase(unittest.TestCase):
 
         inputs['inputfile'] = testfile
 #        print 'inputs:\n%s' % inputs
-        response=json.loads(vocab_extractor(json.dumps(inputs)))
+        response=vocab_extractor(inputs)
 #        print 'response:\n%s' % response
         self.assertIsNone(response['extractedvalues'], \
             'values added without term name')
@@ -117,7 +117,7 @@ class VocabExtractorTestCase(unittest.TestCase):
 
         # Extract distinct values of term
 #        print 'inputs:\n%s' % inputs
-        response=json.loads(vocab_extractor(json.dumps(inputs)))
+        response=vocab_extractor(inputs)
 #        print 'response:\n%s' % response
         values = response['extractedvalues']
         s = 'values of term %s not extracted correctly from %s' % (term, testfile)
@@ -126,7 +126,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         term = 'fieldNumber '
         inputs['termname'] = term
 #        print 'inputs:\n%s' % inputs
-        response=json.loads(vocab_extractor(json.dumps(inputs)))
+        response=vocab_extractor(inputs)
         values = response['extractedvalues']
 #        print 'response:\n%s' % response
         s = 'values of term %s not extracted correctly from %s' % (term, testfile)
@@ -137,7 +137,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         inputs['inputfile'] = testfile
         inputs['termname'] = term
 #        print 'inputs:\n%s' % inputs
-        response=json.loads(vocab_extractor(json.dumps(inputs)))
+        response=vocab_extractor(inputs)
         values = response['extractedvalues']
 #        print 'response:\n%s' % response
         s = 'values of term %s not extracted correctly from %s' % (term, testfile)

@@ -14,102 +14,119 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "actor_template.py 2016-02-22T16:52-03:00"
+__version__ = "downloader.py 2016-04-06T19:04-03:00"
 
-# Imports
-from optparse import OptionParser
-from dwca_utils import response
-from dwca_utils import term_rowcount_from_file
-import os.path
-import json
-
-# This is a template for a python Kurator actor
-
-# Actor Description
-# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
-# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
-#
 # Example: 
 #
-# kurator -f workflows/term_counter.yaml -p p=inputfile -p v=../../data/eight_specimen_records.csv -p t=year
+# kurator -f downloader.yaml \
+#         -p u=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals 
+#         -p o=./workspace/test_ccber_mammals_dwc_archive.zip
 #
 # or as a command-line script.
 # Example:
 #
-# python term_counter.py -i ../../data/eight_specimen_records.csv -t country
+# python downloader.py \
+#         -u http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals 
+#         -o ./workspace/test_ccber_mammals_dwc_archive.zip
 
-# Functions
-def term_counter(inputs_as_json):
-    """Decription of what actor does
-    inputs_as_json - JSON string containing inputs
-        inputfile - full path to the input file
-    returns JSON string with information about the results
-        output - full path to the input file
+from optparse import OptionParser
+from dwca_utils import response
+
+# Uses the HTTP requests package
+# pip install requests
+# jython pip install requests for use in workflows
+import requests
+
+def downloader(options):
+    """Download a file from a URL.
+    options - a dictionary of parameters
+        url - full path to the file to download
+        outputfile - full path to the output file
+    returns a dictionary with information about the results
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
     # Make a list for the response
-    returnvars = ['output', 'success', 'message']
+    returnvars = ['success', 'message']
 
     # outputs
-    output = None
     success = False
     message = None
 
     # inputs
-    inputs = json.loads(inputs_as_json)
     try:
-        inputfile = inputs['inputfile']
+        url = options['url']
     except:
-        inputfile = None
+        url = None
+    try:
+        outputfile = options['outputfile']
+    except:
+        outputfile = None
 
-    # Check for fail conditions
-    if inputfile is None:
-        message = 'No input file given'
-        returnvals = [output, success, message]
-        return response(returnvars, returnvals)
-        
-    if not os.path.isfile(inputfile):
-        message = 'Input file %s not found' % inputfile
-        returnvals = [output, success, message]
+    if outputfile is None or len(outputfile)==0:
+        message = 'No output file given'
+        returnvals = [success, message]
         return response(returnvars, returnvals)
 
-    # Main body of the actor
-    rowcount = term_rowcount_from_file(inputfile, termname)
-
-    # Construct the response
-    success = True
-    returnvals = [rowcount, success, message]
+    success = download_file(url, outputfile)
+    returnvals = [success, message]
     return response(returnvars, returnvals)
+
+def download_file(url, outputfile):
+    """Get a file from a URL.
+    parameters:
+        url - the url to download from
+            (e.g., 'http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals')
+        outputfile - the full path to the location for the output file
+    returns:
+        success - True if the file was downloaded, False if the request was unsuccessful
+    """
+    if url is None or len(url)==0:
+        return False
+    if outputfile is None or len(outputfile)==0:
+        return False
+
+    try:
+        r = requests.get(url, stream=True)
+    except:
+        return False
+    if not r.ok:
+        return False
+
+    # Example outputfile: './workspace/test_ccber_mammals_dwc_archive.zip'
+    with open(outputfile, 'wb') as handle:
+        for block in r.iter_content(1024):
+            handle.write(block)
+    return True
 
 def _getoptions():
     """Parses command line options and returns them."""
     parser = OptionParser()
-    parser.add_option("-i", "--input", dest="inputfile",
-                      help="Input file description",
+    parser.add_option("-u", "--url", dest="url",
+                      help="URL for the file to download",
                       default=None)
-    parser.add_option("-o", "--output", dest="outputfile",
-                      help="Output file description",
+    parser.add_option("-o", "--outputfile", dest="outputfile",
+                      help="Full path to the output file",
                       default=None)
     return parser.parse_args()[0]
 
 def main():
     options = _getoptions()
-    inputfile = options.inputfile
-    outputfile = options.outputfile
+    optdict = {}
 
-    if inputfile is None or outputfile is None:
-        print 'syntax: python term_counter.py -i ../../data/eight_specimen_records.csv -o ./workspace/outputfile.txt'
+    if options.url is None or options.outputfile is None:
+        s =  'syntax: python downloader.py'
+        s += ' -u http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals'
+        s += ' -o ./workspace/test_ccber_mammals_dwc_archive.zip'
+        print '%s' %s
         return
 
-    # Construct the actor input JSON
-    inputs = {}
-    inputs['inputfile'] = inputfile
-    inputs['outputfile'] = inputfile
+    optdict['url'] = options.url
+    optdict['outputfile'] = options.outputfile
 
-    # Run the actor with the given inputs
-    response=json.loads(term_counter(json.dumps(inputs)))
-#    print 'response: %s' % response
+    # Append distinct values of to vocab file
+    response=downloader(optdict)
+    print 'response: %s' % response
 
 if __name__ == '__main__':
     main()

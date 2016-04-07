@@ -14,33 +14,32 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-02-21T15:46-03:00"
+__version__ = "vocab_extractor.py 2016-04-06T19:21-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
 from dwca_vocab_utils import distinct_term_values_from_file
 import os.path
-import json
-import logging
 
-# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
-# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
-#
 # Example: 
 #
-# kurator -f workflows/vocab_extractor.yaml -p p=inputfile -p v=../../data/eight_specimen_records.csv -p t=year
+# kurator -f vocab_extractor.yaml 
+#         -p i=../data/eight_specimen_records.csv 
+#         -p t=year
 #
 # or as a command-line script.
 # Example:
 #
-# python vocab_extractor.py -i ../../data/eight_specimen_records.csv -t country
+# python vocab_extractor.py 
+#        -i ./data/eight_specimen_records.csv 
+#        -t year
 
-def vocab_extractor(inputs_as_json):
+def vocab_extractor(options):
     """Extract a list of the distinct values of a given term in a text file.
-    inputs_as_json - JSON string containing inputs
+    options - a dictionary of parameters
         inputfile - full path to the input file
         termname - the name of the term for which to find distinct values
-    returns JSON string with information about the results
+    returns a dictionary with information about the results
         extractedvalues - a list of distinct values of the term in the inputfile
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
@@ -54,22 +53,21 @@ def vocab_extractor(inputs_as_json):
     message = None
 
     # inputs
-    inputs = json.loads(inputs_as_json)
     try:
-        inputfile = inputs['inputfile']
+        inputfile = options['inputfile']
     except:
         inputfile = None
     try:
-        termname = inputs['termname']
+        termname = options['termname']
     except:
         termname = None
 
-    if inputfile is None:
+    if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
         returnvals = [extractedvalues, success, message]
         return response(returnvars, returnvals)
         
-    if termname is None:
+    if termname is None or len(termname)==0:
         message = 'No term given'
         returnvals = [extractedvalues, success, message]
         return response(returnvars, returnvals)
@@ -87,7 +85,7 @@ def vocab_extractor(inputs_as_json):
 def _getoptions():
     """Parses command line options and returns them."""
     parser = OptionParser()
-    parser.add_option("-i", "--input", dest="inputfile",
+    parser.add_option("-i", "--inputfile", dest="inputfile",
                       help="Text file to mine for vocab values",
                       default=None)
     parser.add_option("-t", "--termname", dest="termname",
@@ -97,22 +95,22 @@ def _getoptions():
 
 def main():
     options = _getoptions()
-    inputfile = options.inputfile
-    termname = options.termname
+    optdict = {}
 
-    if inputfile is None or termname is None:
-        print 'syntax: python vocab_extractor.py -i ../../data/eight_specimen_records.csv -t year'
+    if options.inputfile is None or len(options.inputfile)==0 or \
+       options.termname is None or len(options.termname)==0:
+        s =  'syntax: python vocab_extractor.py'
+        s += ' -i ./data/eight_specimen_records.csv'
+        s += ' -t year'
+        print '%s' % s
         return
 
-    inputs = {}
-    inputs['inputfile'] = inputfile
-    inputs['termname'] = termname
+    optdict['inputfile'] = options.inputfile
+    optdict['termname'] = options.termname
 
     # Get distinct values of termname from inputfile
-    response=json.loads(vocab_extractor(json.dumps(inputs)))
-#    print 'response: %s' % response
-    logging.debug('File %s mined for values of %s. Results: %s' %
-        (inputfile, termname, response['extractedvalues']) )
+    response=vocab_extractor(optdict)
+    print 'response: %s' % response
 
 if __name__ == '__main__':
     main()

@@ -4,6 +4,14 @@ imports:
 
 types:
 
+- id: Downloader
+  type: PythonActor
+  properties:
+    script: ./downloader.py
+    onStart: downloader
+    defaults:
+      outputTypeIsInputType: true
+
 - id: DarwinCoreArchiveCoreTSVWriter
   type: PythonActor
   properties:

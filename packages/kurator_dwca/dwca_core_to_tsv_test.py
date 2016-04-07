@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv_test.py 2016-04-05T14:51-03:00"
+__version__ = "dwca_core_to_tsv_test.py 2016-04-06T18:50-03:00"
 
 # This file contains unit test for the dwca_core_to_tsv function.
 #
@@ -29,7 +29,7 @@ from dwca_utils import tsv_dialect
 import os
 import csv
 import glob
-import json
+#import json
 import unittest
 
 class DwcaCoreToTsvFramework():
@@ -72,7 +72,7 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         tsvfile = self.framework.tsvfile
 
         inputs = {}
-        response=json.loads(dwca_core_to_tsv(json.dumps(inputs)))
+        response=dwca_core_to_tsv(inputs)
 #        print 'response:\n%s' % response
         self.assertIsNone(response['rowcount'], \
             'rows added without input file or output file')
@@ -80,7 +80,7 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
             'success without input file or output file')
 
         inputs['dwcafile'] = dwca
-        response=json.loads(dwca_core_to_tsv(json.dumps(inputs)))
+        response=dwca_core_to_tsv(inputs)
 #        print 'response:\n%s' % response
         self.assertIsNone(response['rowcount'], \
             'rows added without output file')
@@ -89,7 +89,7 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
 
         inputs = {}
         inputs['tsvfile'] = tsvfile
-        response=json.loads(dwca_core_to_tsv(json.dumps(inputs)))
+        response=dwca_core_to_tsv(inputs)
 #        print 'response:\n%s' % response
         self.assertIsNone(response['rowcount'], \
             'rows added without input file')
@@ -108,7 +108,7 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         inputs['archivetype'] = archivetype
 #        print 'inputs:\n%s' % inputs
 
-        response=json.loads(dwca_core_to_tsv(json.dumps(inputs)))
+        response=dwca_core_to_tsv(inputs)
 #        print 'response:\n%s' % response
         self.assertEqual(response['rowcount'], 8, 'incorrect number of rows in output')
         self.assertTrue(response['success'], \
@@ -125,7 +125,7 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         inputs['tsvfile'] = tsvfile
         inputs['archivetype'] = archivetype
 
-        response=json.loads(dwca_core_to_tsv(json.dumps(inputs)))
+        response=dwca_core_to_tsv(inputs)
 #        print 'response:\n%s' % response
 
         header = read_header(tsvfile, tsv_dialect())

@@ -14,19 +14,22 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2016-02-21T17:51-03:00"
+__version__ = "dwca_core_to_tsv.py 2016-04-06T19:14-03:00"
 
-# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
-# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
-#
 # Example: 
 #
-# kurator -f workflows/dwca_core_to_tsv.yaml -p dwcafile=../../data/dwca-uwymv_herp.zip -p tsvoutputfile=./workspace/dwcatsvout.txt -p archivetype=standard
+# kurator -f dwca_core_to_tsv.yaml \
+#         -p dwcafile=../data/dwca-uwymv_herp.zip \
+#         -p tsvoutputfile=../workspace/dwcatsvout.txt \
+#         -p archivetype=standard
 #
 # or as a command-line script.
 # Example:
 #
-# python dwca_core_to_tsv.py -i ../../data/dwca-uwymv_herp.zip -o ./workspace/dwcatsvout.txt -t standard
+# python dwca_core_to_tsv.py 
+#        -i ./data/dwca-uwymv_herp.zip 
+#        -o ./workspace/dwcatsvout.txt 
+#        -t standard
 
 from optparse import OptionParser
 from dwcareader_utils import short_term_names
@@ -44,9 +47,9 @@ import logging
 from dwca.read import DwCAReader
 from dwca.read import GBIFResultsReader
 
-def dwca_core_to_tsv(inputs_as_json):
+def dwca_core_to_tsv(options):
     """Save the core of the archive to a tsv file with short DwC term names as headers.
-    inputs_as_json - JSON string containing inputs
+    options - a dictionary of parameters
         dwcafile - full path to the input Darwin Core archive file
         tsvfile - Full path to the tsv output file
         archivetype - the archive type ('standard' or 'gbif')
@@ -64,26 +67,25 @@ def dwca_core_to_tsv(inputs_as_json):
     message = None
 
     # inputs
-    inputs = json.loads(inputs_as_json)
     try:
-        inputfile = inputs['dwcafile']
+        inputfile = options['dwcafile']
     except:
         inputfile = None
     try:
-        tsvfilename = inputs['tsvfile']
+        tsvfilename = options['tsvfile']
     except:
         tsvfilename = None
     try:
-        type = inputs['archivetype']
+        type = options['archivetype']
     except:
         type = 'standard'
 
-    if inputfile is None:
+    if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
         returnvals = [rowcount, success, message]
         return response(returnvars, returnvals)
         
-    if tsvfilename is None:
+    if tsvfilename is None or len(tsvfilename)==0:
         message = 'No output file given'
         returnvals = [rowcount, success, message]
         return response(returnvars, returnvals)
@@ -140,10 +142,10 @@ def dwca_core_to_tsv(inputs_as_json):
 def _getoptions():
     """Parses command line options and returns them."""
     parser = OptionParser()
-    parser.add_option("-i", "--input", dest="inputfile",
+    parser.add_option("-i", "--inputfile", dest="inputfile",
                       help="DwC archive to split",
                       default=None)
-    parser.add_option("-o", "--output", dest="outputfile",
+    parser.add_option("-o", "--outputfile", dest="outputfile",
                       help="Path for output file",
                       default=None)
     parser.add_option("-t", "--type", dest="type",
@@ -154,12 +156,17 @@ def _getoptions():
 def main():
     logging.basicConfig(level=logging.DEBUG)
     options = _getoptions()
+    optdict = {}
+
     dwcafile = options.inputfile
     tsvfile = options.outputfile
     archivetype = options.type
 
-    if dwcafile is None:
-        print 'syntax: python dwca_core_to_tsv.py -i ../../data/dwca-uwymv_herp.zip -o testout.txt -t standard'
+    if dwcafile is None or len(dwcafile)==0:
+        s =  'syntax: python dwca_core_to_tsv.py'
+        s += ' -i ../../data/dwca-uwymv_herp.zip'
+        s += ' -o testout.txt -t standard'
+        print '%s' % s
         return
 
     if tsvfile is None:
@@ -168,17 +175,15 @@ def main():
     if archivetype is None:
         archivetype = 'standard'
 
-    inputs = {}
-    inputs['dwcafile'] = dwcafile
-    inputs['tsvfile'] = tsvfile
-    inputs['archivetype'] = archivetype
+    optdict['dwcafile'] = dwcafile
+    optdict['tsvfile'] = tsvfile
+    optdict['archivetype'] = archivetype
 
     # Write the core to a tsv file at the specified location
-    response = json.loads(dwca_core_to_tsv(json.dumps(inputs)))
-    
-    print 'TSV file %s with %s rows extracted from core of archive %s (type %s).' \
-        % (response['tsvfile'], response['rowcount'], dwcafile, archivetype)
-    print 'Response: %s' % response
+    response = dwca_core_to_tsv(optdict)
+    print 'response: %s' % response
+#    print 'TSV file %s with %s rows extracted from core of archive %s (type %s).' \
+#        % (response['tsvfile'], response['rowcount'], dwcafile, archivetype)
 
 if __name__ == '__main__':
     """ Demo of dwca_core_splitter"""
