@@ -1,0 +1,76 @@
+#####################################################################################
+# downloader.yaml
+#####################################################################################
+#
+# This workflow:
+#    - downloads a Darwin Core Archive from a URL
+#
+# Example command-line usage:
+# kurator -f downloader.yaml 
+#         -p url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
+#         -p outputfile=./workspace/test_ccber_archive.zip
+#
+#####################################################################################
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# __author__ = "John Wieczorek"
+# __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
+# __version__ = "downloader.yaml 2016-04-07T10:47-03:00"
+
+imports:
+
+- classpath:/org/kurator/akka/types.yaml
+
+components:
+
+- id: ReadInput
+  type: PythonActor
+  properties:
+    code: |
+        def on_start(options):
+            print 'Started ReadInput'
+            print 'options: %s' % options
+            return 'Good job"
+
+- id: Downloader
+  type: PythonActor
+  properties:
+    module: kurator_dwca.downloader
+    onStart: downloader
+    listensTo:
+      - !ref ReadInput
+
+- id: WriteOutput
+  type: PythonActor
+  properties:
+    code: |
+        def on_data(options):
+            print 'Finished WriteOutput'
+    listensTo:
+      - !ref Downloader
+
+- id: DownloaderWorkflow
+  type: Workflow
+  properties:
+    actors:
+      - !ref ReadInput
+      - !ref Downloader
+      - !ref WriteOutput
+    parameters:
+       url:
+         actor: !ref Downloader
+         parameter: url
+       outputfile:
+         actor: !ref Downloader
+         parameter: outputfile       
+

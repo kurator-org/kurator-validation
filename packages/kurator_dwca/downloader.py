@@ -46,6 +46,8 @@ def downloader(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
+    print 'downloader.options: %s' % options
+
     # Make a list for the response
     returnvars = ['success', 'message']
 
