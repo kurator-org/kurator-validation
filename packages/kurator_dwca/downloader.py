@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader.py 2016-04-06T19:14-03:00"
+__version__ = "downloader.py 2016-04-08T13:01-03:00"
 
 # Example: 
 #
@@ -31,6 +31,7 @@ __version__ = "downloader.py 2016-04-06T19:14-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
+#import logging
 
 # Uses the HTTP requests package
 # pip install requests
@@ -42,11 +43,24 @@ def downloader(options):
     options - a dictionary of parameters
         url - full path to the file to download
         outputfile - full path to the output file
+        loglevel - the level at which to log
     returns a dictionary with information about the results
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
-    print 'downloader.options: %s' % options
+    print 'Started %s' % __version__
+    # Set up logging
+#     try:
+#         loglevel = options['loglevel']
+#     except:
+#         loglevel = None
+#     if loglevel is not None:
+#         if loglevel.upper() == 'DEBUG':
+#             logging.basicConfig(level=logging.DEBUG)
+#         elif loglevel.upper() == 'INFO':        
+#             logging.basicConfig(level=logging.INFO)
+# 
+#     logging.info('Starting %s' % __version__)
 
     # Make a list for the response
     returnvars = ['success', 'message']
@@ -68,10 +82,12 @@ def downloader(options):
     if outputfile is None or len(outputfile)==0:
         message = 'No output file given'
         returnvals = [success, message]
+#        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
     success = download_file(url, outputfile)
     returnvals = [success, message]
+#    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def download_file(url, outputfile):
@@ -110,6 +126,9 @@ def _getoptions():
     parser.add_option("-o", "--outputfile", dest="outputfile",
                       help="Full path to the output file",
                       default=None)
+    parser.add_option("-l", "--loglevel", dest="loglevel",
+                      help="(DEBUG, INFO)",
+                      default=None)
     return parser.parse_args()[0]
 
 def main():
@@ -126,6 +145,7 @@ def main():
 
     optdict['url'] = options.url
     optdict['outputfile'] = options.outputfile
+    optdict['loglevel'] = options.loglevel
 
     # Append distinct values of to vocab file
     response=downloader(optdict)

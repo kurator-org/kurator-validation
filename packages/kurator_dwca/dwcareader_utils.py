@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwcareader_utils.py 2016-04-06T14:21-03:00"
+__version__ = "dwcareader_utils.py 2016-04-07T13:05-03:00"
 
 # This file contains common utility functions for dealing with the content of a Darwin
 # Core archive. It is built with unit tests that can be invoked by running the script
@@ -24,9 +24,14 @@ __version__ = "dwcareader_utils.py 2016-04-06T14:21-03:00"
 #
 # python dwcareader_utils.py
 
-# The Python Darwin Core Archive Reader from is from
+# The Python Darwin Core Archive Reader from is from:
 # https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
+#
+# Install with: 
 # pip install python-dwca-reader
+# pip install py
+# jython pip install python-dwca-reader for use in workflows
+# jython pip install py for use in workflows (python-dwca-reader depends on this)
 
 from dwca.read import DwCAReader
 from dwca.read import GBIFResultsReader
@@ -35,10 +40,6 @@ import os.path
 import glob
 import xml.etree.ElementTree as ET
 import unittest
-
-# HTTP requests package
-# pip install requests
-#import requests
 
 def dwca_metadata(dwcareader):
     """Return metadata from Darwin Core Archive Reader."""
@@ -146,33 +147,6 @@ def short_term_names(termlist):
         else:
             shortnamelist.append(sname)
     return shortnamelist
-
-# def download_file(url, outputfile):
-#     """Get a file from a URL.
-#     parameters:
-#         url - the url to download from
-#             (e.g., 'http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals')
-#         outputfile - the full path to the location for the output file
-#     returns:
-#         success - True if the file was downloaded, False if the request was unsuccessful
-#     """
-#     if url is None or len(url)==0:
-#         return False
-#     if outputfile is None or len(outputfile)==0:
-#         return False
-# 
-#     try:
-#         r = requests.get(url, stream=True)
-#     except:
-#         return False
-#     if not r.ok:
-#         return False
-# 
-#     # Example file: 'testccber.zip'
-#     with open(outputfile, 'wb') as handle:
-#         for block in r.iter_content(1024):
-#             handle.write(block)
-#     return True
 
 class DWCAUtilsReaderFramework():
     # testdatapath is the location of the files to test with

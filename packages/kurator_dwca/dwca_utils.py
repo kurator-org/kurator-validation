@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-04-07T10:38-03:00"
+__version__ = "dwca_utils.py 2016-04-08T12:14-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -73,8 +73,12 @@ def csv_file_dialect(fullpath):
         readto = filesize
     with open(fullpath, 'rb') as file:
         try:
-#            print 'Sniffing %s to %s' % (fullpath, readto)
-            dialect = csv.Sniffer().sniff(file.read(readto))
+            buf = file.read(readto)
+#            print 'buf:\n%s' % buf
+            if buf.find('\t')>0:
+                return tsv_dialect()
+#            dialect = csv.Sniffer().sniff(file.read(readto))
+            dialect = csv.Sniffer().sniff(buf)
         except csv.Error:
             try:
                 file.seek(0)

@@ -159,7 +159,7 @@ The script is used by calling the `clean_data_using_worms()` function defined in
 
 The records successfully cleaned are stored in the file 'demo_cleaned.csv', while those that could not be repaired are stored in `demo_rejected.csv'.
 
-Below is a portion of the logging information sent to the terminal when when running this demonstration :
+Below is a portion of the logging information sent to the terminal when running this demonstration :
 
     2015-07-06 08:34:33  Reading input records from 'demo_input.csv'.
 

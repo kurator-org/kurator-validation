@@ -14,99 +14,106 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader.py 2016-04-06T19:04-03:00"
+__version__ = "actor_template.py 2016-04-08T13:03-03:00"
+
+from optparse import OptionParser
+from dwca_utils import response
+from dwca_vocab_utils import distinct_term_values_from_file
+import os.path
+import logging
 
 # Example: 
 #
-# kurator -f downloader.yaml \
-#         -p u=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals 
-#         -p o=./workspace/test_ccber_mammals_dwc_archive.zip
+# kurator -f actor_template.yaml 
+#         -p i=../data/eight_specimen_records.csv 
+#         -p t=year
 #
 # or as a command-line script.
 # Example:
 #
-# python downloader.py \
-#         -u http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals 
-#         -o ./workspace/test_ccber_mammals_dwc_archive.zip
+# python actor_template.py 
+#        -i ./data/eight_specimen_records.csv 
+#        -t year
 
-from optparse import OptionParser
-from dwca_utils import response
-
-# Uses the HTTP requests package
-# pip install requests
-# jython pip install requests for use in workflows
-import requests
-
-def downloader(options):
-    """Download a file from a URL.
+def actor_template(options):
+    """Extract a list of the distinct values of a given term in a text file.
     options - a dictionary of parameters
-        url - full path to the file to download
-        outputfile - full path to the output file
+        inputfile - full path to the input file
+        termname - the name of the term for which to find distinct values
+        loglevel - the level at which to log
     returns a dictionary with information about the results
+        extractedvalues - a list of distinct values of the term in the inputfile
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
+    # Set up logging
+    try:
+        loglevel = options['loglevel']
+    except:
+        loglevel = None
+    if loglevel is not None:
+        if loglevel.upper() == 'DEBUG':
+            logging.basicConfig(level=logging.DEBUG)
+        elif loglevel.upper() == 'INFO':        
+            logging.basicConfig(level=logging.INFO)
+
+    logging.info('Starting %s' % __version__)
+
     # Make a list for the response
-    returnvars = ['success', 'message']
+    returnvars = ['extractedvalues', 'success', 'message']
 
     # outputs
+    extractedvalues = None
     success = False
     message = None
 
     # inputs
     try:
-        url = options['url']
+        inputfile = options['inputfile']
     except:
-        url = None
+        inputfile = None
     try:
-        outputfile = options['outputfile']
+        termname = options['termname']
     except:
-        outputfile = None
+        termname = None
 
-    if outputfile is None or len(outputfile)==0:
-        message = 'No output file given'
-        returnvals = [success, message]
+    if inputfile is None or len(inputfile)==0:
+        message = 'No input file given'
+        returnvals = [extractedvalues, success, message]
+        logging.debug('message: %s' % message)
+        return response(returnvars, returnvals)
+        
+    if termname is None or len(termname)==0:
+        message = 'No term given'
+        returnvals = [extractedvalues, success, message]
+        logging.debug('message: %s' % message)
+        return response(returnvars, returnvals)
+        
+    if not os.path.isfile(inputfile):
+        message = 'Input file %s not found' % inputfile
+        returnvals = [extractedvalues, success, message]
+        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
-    success = download_file(url, outputfile)
-    returnvals = [success, message]
+    extractedvalues = distinct_term_values_from_file(inputfile, termname)
+    success = True
+    returnvals = [extractedvalues, success, message]
+    options['vocab_extractor_response'] = response(returnvars, returnvals)
+    logging.debug('options:\n%s' % options)
+    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
-
-def download_file(url, outputfile):
-    """Get a file from a URL.
-    parameters:
-        url - the url to download from
-            (e.g., 'http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals')
-        outputfile - the full path to the location for the output file
-    returns:
-        success - True if the file was downloaded, False if the request was unsuccessful
-    """
-    if url is None or len(url)==0:
-        return False
-    if outputfile is None or len(outputfile)==0:
-        return False
-
-    try:
-        r = requests.get(url, stream=True)
-    except:
-        return False
-    if not r.ok:
-        return False
-
-    # Example outputfile: './workspace/test_ccber_mammals_dwc_archive.zip'
-    with open(outputfile, 'wb') as handle:
-        for block in r.iter_content(1024):
-            handle.write(block)
-    return True
 
 def _getoptions():
     """Parses command line options and returns them."""
     parser = OptionParser()
-    parser.add_option("-u", "--url", dest="url",
-                      help="URL for the file to download",
+    parser.add_option("-i", "--inputfile", dest="inputfile",
+                      help="Text file to mine for vocab values",
                       default=None)
-    parser.add_option("-o", "--outputfile", dest="outputfile",
-                      help="Full path to the output file",
+    parser.add_option("-t", "--termname", dest="termname",
+                      help="Name of the term for which distinct values are sought",
+                      default=None)
+    parser.add_option("-l", "--loglevel", dest="loglevel",
+                      help="(DEBUG, INFO)",
                       default=None)
     return parser.parse_args()[0]
 
@@ -114,19 +121,21 @@ def main():
     options = _getoptions()
     optdict = {}
 
-    if options.url is None or options.outputfile is None:
-        s =  'syntax: python downloader.py'
-        s += ' -u http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals'
-        s += ' -o ./workspace/test_ccber_mammals_dwc_archive.zip'
-        print '%s' %s
+    if options.inputfile is None or len(options.inputfile)==0 or \
+       options.termname is None or len(options.termname)==0:
+        s =  'syntax: python vocab_extractor.py'
+        s += ' -i ./data/eight_specimen_records.csv'
+        s += ' -t year'
+        print '%s' % s
         return
 
-    optdict['url'] = options.url
-    optdict['outputfile'] = options.outputfile
+    optdict['inputfile'] = options.inputfile
+    optdict['termname'] = options.termname
+    optdict['loglevel'] = options.loglevel
 
-    # Append distinct values of to vocab file
-    response=downloader(optdict)
-    print 'response: %s' % response
+    # Get distinct values of termname from inputfile
+    response=actor_template(optdict)
+#    print 'response: %s' % response
 
 if __name__ == '__main__':
     main()

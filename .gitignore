@@ -8,3 +8,5 @@ target
 *.tar.gz
 *.egg-info
 *.whl
+packages/kurator_dwca/data/fims/*
+packages/kurator_dwca/workflows/test.yaml

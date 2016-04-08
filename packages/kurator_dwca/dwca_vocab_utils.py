@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-04-05T11:39-03:00"
+__version__ = "dwca_vocab_utils.py 2016-04-08T12:14-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -26,6 +26,7 @@ __version__ = "dwca_vocab_utils.py 2016-04-05T11:39-03:00"
 from dwca_utils import csv_file_dialect
 from dwca_utils import read_header
 from dwca_utils import tsv_dialect
+from dwca_utils import dialect_attributes
 from dwca_terms import simpledwctermlist
 from dwca_terms import vocabfieldlist
 from dwca_terms import controlledtermlist
@@ -406,6 +407,8 @@ def distinct_term_values_from_file(inputfile, termname, dialect=None):
     if dialect is None:
         dialect = csv_file_dialect(inputfile)
     header = read_header(inputfile, dialect)
+#    print 'header:/n%s' % header
+#    print 'dialect:\n%s' % dialect_attributes(dialect)
     if header is None:
         return None
     if termname not in header:
