@@ -5,16 +5,17 @@ import sys
 
 _worms = None
 
-def discard_records_not_matching_worms(input_record, options):
+def discard_records_not_matching_worms(inputs):
 
     # create a static instance of WoRMService if needed
     global _worms
     if (_worms is None):
         _worms = WoRMSService()
 
-    # extra record field names from options
-    taxon_name_field = options.get('taxon_name_field')
-    author_field = options.get('author_field')
+    # extract input record and configured field names from input
+    input_record     = inputs.get('input_record')
+    taxon_name_field = inputs.get('taxon_name_field')
+    author_field     = inputs.get('author_field')
 
     # discard input record if no taxon name was provided
     if taxon_name_field is None or input_record.get(taxon_name_field) is None:
@@ -42,7 +43,7 @@ def discard_records_not_matching_worms(input_record, options):
         return None
 
     # return input record if all above tests passed
-    return input_record
+    return {'worms_matched_record': input_record}
 
 if __name__ == '__main__':
     """ Demonstrate standalone usage. Example:

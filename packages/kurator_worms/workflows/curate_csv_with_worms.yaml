@@ -26,16 +26,18 @@ components:
         import csv
         import sys
         def on_start(options):
-          filePath = options.get('inputFile') 
+          filePath = options.get('inputFile')
           f = open(filePath, 'r') if filePath is not None else sys.stdin
           for record in csv.DictReader(f):
-             yield record
+             yield {'record': record}
 
 - id: CleanRecords
   type: PythonClassActor
   properties:
     pythonClass: kurator_worms.record_curator.RecordCurator
     onData: clean_record
+    inputs:
+        record: input_record
     parameters:
         taxon_name_field          : 'TaxonName'
         author_field              : 'Author'
@@ -51,20 +53,23 @@ components:
   type: PythonClassActor
   properties:
     pythonClass: CsvWriter
+    inputs:
+        worms_curated_record: curated_record
     code: |
         import csv
         import os
         import sys
-        class CsvWriter(object): 
+        class CsvWriter(object):
           def on_start(self, options):
-            filePath = options.get('outputFile') 
+            filePath = options.get('outputFile')
             self.f = open(filePath, 'w') if filePath is not None else sys.stdout
             self.dw = csv.DictWriter(self.f,
                                      fieldnames=options['fieldnames'],
-                                     quotechar="'", 
+                                     quotechar="'",
                                      lineterminator=os.linesep)
             self.dw.writeheader()
-          def on_data(self, record):
+          def on_data(self, inputs):
+            record = inputs['curated_record']
             self.dw.writerow(record)
             sys.stdout.flush()
     parameters:
