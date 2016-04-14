@@ -14,11 +14,18 @@
     </properties>
 
     <repositories>
+        
         <repository>
             <id>ncsa.oss-sonatype</id>
             <name>NCSA OSS-Sonatype Repository</name>
             <url>https://opensource.ncsa.illinois.edu/nexus/content/repositories/releases/</url>
         </repository>
+        
+        <repository>
+            <id>gbif-all</id>
+            <url>http://repository.gbif.org/content/groups/gbif</url>
+        </repository>        
+        
     </repositories>
 
     <dependencies>
@@ -47,6 +54,12 @@
             <version>1.13</version>
             <optional>true</optional>
         </dependency>
+        
+       <dependency>
+            <groupId>org.gbif</groupId>
+            <artifactId>dwca-io</artifactId>
+            <version>1.23</version>
+        </dependency>        
         
     </dependencies>
 
