@@ -32,13 +32,15 @@ components:
           filePath = options.get('inputFile')
           f = open(filePath, 'r') if filePath is not None else sys.stdin
           for record in csv.DictReader(f):
-             yield record
+             yield {'record': record}
 
 - id: FilterRecords
   type: PythonActor
   properties:
     module: kurator_worms.record_filter
     onData: discard_records_not_matching_worms
+    inputs:
+        record: input_record
     parameters:
         taxon_name_field          : 'TaxonName'
         author_field              : 'Author'
@@ -49,6 +51,8 @@ components:
   type: PythonClassActor
   properties:
     pythonClass: CsvWriter
+    inputs:
+        worms_matched_record: accepted_record
     code: |
         import csv
         import os
@@ -62,7 +66,8 @@ components:
                                      quotechar="'",
                                      lineterminator=os.linesep)
             self.dw.writeheader()
-          def on_data(self, record):
+          def on_data(self, inputs):
+            record = inputs['accepted_record']
             self.dw.writerow(record)
             sys.stdout.flush()
     parameters:
