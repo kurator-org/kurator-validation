@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader.py 2016-04-08T13:01-03:00"
+__version__ = "downloader.py 2016-04-08T20:49-03:00"
 
 # Example: 
 #
@@ -31,39 +31,47 @@ __version__ = "downloader.py 2016-04-08T13:01-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
-#import logging
+import logging
+import uuid
 
 # Uses the HTTP requests package
+# Uses the unicodecsv package in dwca_utils
 # pip install requests
-# jython pip install requests for use in workflows
+# pip install unicodecsv
+#
+# For workflows
+# jython pip install requests
+# jython pip install unicodecsv
+
 import requests
 
 def downloader(options):
     """Download a file from a URL.
     options - a dictionary of parameters
         url - full path to the file to download
+        workspace - path to a directory in which to place outputfile
         outputfile - full path to the output file
         loglevel - the level at which to log
     returns a dictionary with information about the results
         success - True if process completed successfully, otherwise False
-        message - an explanation of the reason if success=False
+        message - an explanation of the results
     """
     print 'Started %s' % __version__
     # Set up logging
-#     try:
-#         loglevel = options['loglevel']
-#     except:
-#         loglevel = None
-#     if loglevel is not None:
-#         if loglevel.upper() == 'DEBUG':
-#             logging.basicConfig(level=logging.DEBUG)
-#         elif loglevel.upper() == 'INFO':        
-#             logging.basicConfig(level=logging.INFO)
-# 
-#     logging.info('Starting %s' % __version__)
+    try:
+        loglevel = options['loglevel']
+    except:
+        loglevel = None
+    if loglevel is not None:
+        if loglevel.upper() == 'DEBUG':
+            logging.basicConfig(level=logging.DEBUG)
+        elif loglevel.upper() == 'INFO':        
+            logging.basicConfig(level=logging.INFO)
+
+    logging.info('Starting %s' % __version__)
 
     # Make a list for the response
-    returnvars = ['success', 'message']
+    returnvars = ['outputfile', 'success', 'message']
 
     # outputs
     success = False
@@ -74,20 +82,30 @@ def downloader(options):
         url = options['url']
     except:
         url = None
+
     try:
         outputfile = options['outputfile']
     except:
         outputfile = None
+    if outputfile is None:
+        outputfile='dwca_'+str(uuid.uuid1())+'.zip'
 
-    if outputfile is None or len(outputfile)==0:
-        message = 'No output file given'
-        returnvals = [success, message]
-#        logging.debug('message: %s' % message)
-        return response(returnvars, returnvals)
+    try:
+        workspace = options['workspace']
+    except:
+        workspace = None
+
+    if workspace is None:
+        workspace = './workspace'
+    
+    workspace = workspace.rstrip('/')
+    outputfile = workspace+'/'+outputfile
+
+    print 'options: %s' % options
 
     success = download_file(url, outputfile)
-    returnvals = [success, message]
-#    logging.info('Finishing %s' % __version__)
+    returnvals = [outputfile, success, message]
+    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def download_file(url, outputfile):
@@ -124,7 +142,10 @@ def _getoptions():
                       help="URL for the file to download",
                       default=None)
     parser.add_option("-o", "--outputfile", dest="outputfile",
-                      help="Full path to the output file",
+                      help="Output file name",
+                      default=None)
+    parser.add_option("-w", "--workspace", dest="workspace",
+                      help="Directory for the output file",
                       default=None)
     parser.add_option("-l", "--loglevel", dest="loglevel",
                       help="(DEBUG, INFO)",
@@ -135,17 +156,19 @@ def main():
     options = _getoptions()
     optdict = {}
 
-    if options.url is None or len(options.url)==0 or \
-        options.outputfile is None or len(options.outputfile)==0:
+    if options.url is None or len(options.url)==0:
         s =  'syntax: python downloader.py'
         s += ' -u http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals'
-        s += ' -o ./workspace/test_ccber_mammals_dwc_archive.zip'
+        s += ' -w ./workspace'
+        s += ' -o test_ccber_mammals_dwc_archive.zip'
         print '%s' % s
         return
 
     optdict['url'] = options.url
+    optdict['workspace'] = options.workspace
     optdict['outputfile'] = options.outputfile
     optdict['loglevel'] = options.loglevel
+    print 'optdict: %s' % optdict
 
     # Append distinct values of to vocab file
     response=downloader(optdict)

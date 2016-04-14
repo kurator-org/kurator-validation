@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "actor_template.py 2016-04-08T13:03-03:00"
+__version__ = "actor_template.py 2016-04-08T19:04-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
@@ -40,11 +40,11 @@ def actor_template(options):
     options - a dictionary of parameters
         inputfile - full path to the input file
         termname - the name of the term for which to find distinct values
-        loglevel - the level at which to log
+        loglevel - the level at which to log (DEBUG, INFO, etc.)
     returns a dictionary with information about the results
         extractedvalues - a list of distinct values of the term in the inputfile
         success - True if process completed successfully, otherwise False
-        message - an explanation of the reason if success=False
+        message - an explanation of the results
     """
     # Set up logging
     try:

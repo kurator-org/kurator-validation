@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader_test.py 2016-04-05T20:29-03:00"
+__version__ = "downloader_test.py 2016-04-08T21:09-03:00"
 
 # This file contains unit test for the downloader function.
 #
@@ -30,14 +30,15 @@ import unittest
 class DownloaderFramework():
     """Test framework for the downloader."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
+    workspace = './workspace/'
+    outputfile = 'test_ccber_mammals_download.zip'
     testurl = 'http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals'
 
     # input data files to tests, don't remove these
 #    testfile1 = testdatapath + 'test_eight_specimen_records.csv'
 
     # output data files from tests, remove these in dispose()
-    testdownloadfile = testdatapath + 'test_ccber_mammals_download.zip'
+    testdownloadfile = workspace + outputfile
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
@@ -58,29 +59,25 @@ class DownloaderTestCase(unittest.TestCase):
     def test_missing_parameters(self):
         print 'testing missing_parameters'
         testurl = self.framework.testurl
-        outputfile = self.framework.testdownloadfile
+        outputfile = self.framework.outputfile
+        workspace = self.framework.workspace
         
         inputs = {}
-#        response=json.loads(downloader(json.dumps(inputs)))
         response=downloader(inputs)
 #	        print 'response:\n%s' % response
         self.assertFalse(response['success'], \
-            'download returned success without url or outputfile')
-
-        inputs['url'] = testurl
-        response=downloader(inputs)
-#        print 'response:\n%s' % response
-        self.assertFalse(response['success'], \
-            'download returned success outputfile')
+            'download returned success without url or outputfile or workspace')
 
     def test_downloader(self):
         print 'testing downloader'
         testurl = self.framework.testurl
-        outputfile = self.framework.testdownloadfile
+        outputfile = self.framework.outputfile
+        workspace = self.framework.workspace
         
         inputs = {}
         inputs['url'] = testurl
         inputs['outputfile'] = outputfile
+        inputs['workspace'] = workspace
 #        print 'downloader_test.py: inputs:\n%s' % inputs
 
         # Collect terms

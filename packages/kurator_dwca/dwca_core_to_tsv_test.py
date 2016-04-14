@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv_test.py 2016-04-06T18:50-03:00"
+__version__ = "dwca_core_to_tsv_test.py 2016-04-08T19:05-03:00"
 
 # This file contains unit test for the dwca_core_to_tsv function.
 #
@@ -29,7 +29,6 @@ from dwca_utils import tsv_dialect
 import os
 import csv
 import glob
-#import json
 import unittest
 
 class DwcaCoreToTsvFramework():

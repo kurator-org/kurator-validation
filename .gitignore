@@ -10,3 +10,5 @@ target
 *.whl
 packages/kurator_dwca/data/fims/*
 packages/kurator_dwca/workflows/test.yaml
+packages/kurator_dwca/workspace/*
+packages/kurator_dwca/workflows/workspace/*

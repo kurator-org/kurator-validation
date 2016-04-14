@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2016-04-08T13:02-03:00"
+__version__ = "dwca_core_to_tsv.py 2016-04-14T12:49-03:00"
 
 # Example: 
 #
@@ -60,6 +60,7 @@ def dwca_core_to_tsv(options):
         message - an explanation of the reason if success=False
     """
     print 'Started %s' % __version__
+    print 'options: %s' % options
 
     # Set up logging
 #     try:
@@ -75,7 +76,7 @@ def dwca_core_to_tsv(options):
 #     logging.info('Starting %s' % __version__)
 
     # Make a list for the response
-    returnvars = ['rowcount', 'success', 'message']
+    returnvars = ['tsvfile', 'rowcount', 'success', 'message']
 
     # outputs
     rowcount = None
@@ -88,29 +89,31 @@ def dwca_core_to_tsv(options):
     except:
         inputfile = None
     try:
-        tsvfilename = options['tsvfile']
+        tsvfile = options['tsvfile']
     except:
-        tsvfilename = None
+        # TODO: Create a file name using a GUID
+        tsvfile = './test.tsv'
     try:
         type = options['archivetype']
     except:
         type = 'standard'
 
+    print 'dwcafile: %s\ntsvfile: %s\narchivetype: %s' % (inputfile, tsvfile, type)
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
-        returnvals = [rowcount, success, message]
+        returnvals = [tsvfile, rowcount, success, message]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
         
-    if tsvfilename is None or len(tsvfilename)==0:
+    if tsvfile is None or len(tsvfile)==0:
         message = 'No output file given'
-        returnvals = [rowcount, success, message]
+        returnvals = [tsvfile, rowcount, success, message]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
         message = 'input file not found'
-        returnvals = [rowcount, success, message]
+        returnvals = [tsvfile, rowcount, success, message]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
@@ -121,32 +124,32 @@ def dwca_core_to_tsv(options):
             dwcareader = GBIFResultsReader(inputfile)
         except Exception, e:
             message = 'Error %s reading GBIF archive: %s' % (inputfile, e)
-            returnvals = [rowcount, success, message]
+            returnvals = [tsvfile, rowcount, success, message]
 #            logging.debug('message:\n%s' % message)
             return response(returnvars, returnvals)
     try:
         dwcareader = DwCAReader(inputfile)
     except Exception, e:
         message = 'Error %s reading archive: %s' % (inputfile, e)
-        returnvals = [rowcount, success, message]
+        returnvals = [tsvfile, rowcount, success, message]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if dwcareader is None:
         message = 'No viable archive found at %s' % inputfile
-        returnvals = [rowcount, success, message]
+        returnvals = [tsvfile, rowcount, success, message]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     termnames=list(dwcareader.descriptor.core.terms)
     shorttermnames=short_term_names(termnames)
     dialect = tsv_dialect()
-    with open(tsvfilename, 'w') as thefile:
+    with open(tsvfile, 'w') as thefile:
         writer = csv.DictWriter(thefile, dialect=dialect, fieldnames=shorttermnames)
         writer.writeheader()
 
     rowcount = 0
-    with open(tsvfilename, 'a') as thefile:
+    with open(tsvfile, 'a') as thefile:
         writer = csv.DictWriter(thefile, dialect=dialect, fieldnames=termnames)
         for row in dwcareader:
             for f in row.data:
@@ -156,9 +159,9 @@ def dwca_core_to_tsv(options):
 
     # Close the archive    
     dwcareader.close()
+
     success = True
-    
-    returnvals = [rowcount, success, message]
+    returnvals = [tsvfile, rowcount, success, message]
 #    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
@@ -195,6 +198,7 @@ def main():
         print '%s' % s
         return
 
+    # TODO: remove this when a file name is created automatically in dwca_core_to_tsv()
     if tsvfile is None:
         tsvfile = './dwcatotsv.txt'
 
