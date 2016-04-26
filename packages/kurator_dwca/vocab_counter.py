@@ -14,35 +14,37 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-04-23T14:03-03:00"
+__version__ = "vocab_counter.py 2016-04-23T13:26-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
-from dwca_vocab_utils import distinct_term_values_from_file
+from dwca_vocab_utils import distinct_term_counts_from_file
 import os.path
 import logging
 
 # Example: 
 #
-# kurator -f vocab_extractor.yaml 
+# kurator -f vocab_counter.yaml 
 #         -p i=../data/eight_specimen_records.csv 
 #         -p t=year
 #
 # or as a command-line script.
 # Example:
 #
-# python vocab_extractor.py 
+# python vocab_counter.py 
 #        -i ./data/eight_specimen_records.csv 
 #        -t year
 
-def vocab_extractor(options):
-    """Extract a list of the distinct values of a given term in a text file.
+def vocab_counter(options):
+    """Extract a list of the distinct values of a given term in a text file along with 
+       the number of times each occurs.
     options - a dictionary of parameters
-        inputfile - full path to the input file (required)
-        termname - the name of the term for which to find distinct values (required)
+        inputfile - full path to the input file
+        termname - the name of the term for which to find distinct values
         loglevel - the level at which to log
     returns a dictionary with information about the results
-        extractedvalues - a list of distinct values of the term in the inputfile
+        extractedvalues - a list of distinct values of the term in the inputfile, with a
+           count of the number of times it occurs
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
@@ -74,6 +76,10 @@ def vocab_extractor(options):
         inputfile = options['inputfile']
     except:
         inputfile = None
+    try:
+        termname = options['termname']
+    except:
+        termname = None
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
@@ -93,21 +99,10 @@ def vocab_extractor(options):
 #        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
-    try:
-        termname = options['termname']
-    except:
-        termname = None
-
-    if termname is None or len(termname)==0:
-        message = 'No term given'
-        returnvals = [extractedvalues, success, message]
-#        logging.debug('message: %s' % message)
-        return response(returnvars, returnvals)
-        
-    extractedvalues = distinct_term_values_from_file(inputfile, termname)
+    extractedvalues = distinct_term_counts_from_file(inputfile, termname)
     success = True
     returnvals = [extractedvalues, success, message]
-#    options['vocab_extractor_response'] = response(returnvars, returnvals)
+    options['vocab_counter_response'] = response(returnvars, returnvals)
 #    logging.debug('options:\n%s' % options)
 #    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
@@ -132,7 +127,7 @@ def main():
 
     if options.inputfile is None or len(options.inputfile)==0 or \
        options.termname is None or len(options.termname)==0:
-        s =  'syntax: python vocab_extractor.py'
+        s =  'syntax: python vocab_counter.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -t year'
         print '%s' % s
@@ -143,7 +138,7 @@ def main():
     optdict['loglevel'] = options.loglevel
 
     # Get distinct values of termname from inputfile
-    response=vocab_extractor(optdict)
+    response=vocab_counter(optdict)
     print 'response: %s' % response
 
 if __name__ == '__main__':

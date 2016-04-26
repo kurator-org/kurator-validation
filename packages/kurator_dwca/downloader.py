@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader.py 2016-04-08T20:49-03:00"
+__version__ = "downloader.py 2016-04-23T13:43-03:00"
 
 # Example: 
 #
@@ -48,11 +48,13 @@ import requests
 def downloader(options):
     """Download a file from a URL.
     options - a dictionary of parameters
-        url - full path to the file to download
-        workspace - path to a directory in which to place outputfile
-        outputfile - full path to the output file
-        loglevel - the level at which to log
+        loglevel - level at which to log (e.g., DEBUG) (optional)
+        workspace - path to a directory for the outputfile (optional)
+        outputfile - name of the output file, without path (optional)
+        url - URL to the file to download (required)
     returns a dictionary with information about the results
+        workspace - actual path to the directory where the outputfile was written
+        outputfile - actual full path to the output file
         success - True if process completed successfully, otherwise False
         message - an explanation of the results
     """
@@ -71,7 +73,7 @@ def downloader(options):
     logging.info('Starting %s' % __version__)
 
     # Make a list for the response
-    returnvars = ['outputfile', 'success', 'message']
+    returnvars = ['workspace', 'outputfile', 'success', 'message']
 
     # outputs
     success = False
@@ -79,9 +81,12 @@ def downloader(options):
 
     # inputs
     try:
-        url = options['url']
+        workspace = options['workspace']
     except:
-        url = None
+        workspace = None
+
+    if workspace is None:
+        workspace = './'
 
     try:
         outputfile = options['outputfile']
@@ -91,20 +96,14 @@ def downloader(options):
         outputfile='dwca_'+str(uuid.uuid1())+'.zip'
 
     try:
-        workspace = options['workspace']
+        url = options['url']
     except:
-        workspace = None
-
-    if workspace is None:
-        workspace = './workspace'
-    
-    workspace = workspace.rstrip('/')
-    outputfile = workspace+'/'+outputfile
+        url = None
 
     print 'options: %s' % options
-
-    success = download_file(url, outputfile)
-    returnvals = [outputfile, success, message]
+    artifact = '%s/%s' % (workspace.rstrip('/'), outputfile)
+    success = download_file(url, artifact)
+    returnvals = [workspace, artifact, success, message]
     logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
@@ -139,16 +138,16 @@ def _getoptions():
     """Parses command line options and returns them."""
     parser = OptionParser()
     parser.add_option("-u", "--url", dest="url",
-                      help="URL for the file to download",
+                      help="URL for the file to download (required)",
                       default=None)
     parser.add_option("-o", "--outputfile", dest="outputfile",
-                      help="Output file name",
+                      help="Output file name, no path (optional)",
                       default=None)
     parser.add_option("-w", "--workspace", dest="workspace",
-                      help="Directory for the output file",
+                      help="Directory for the output file (optional)",
                       default=None)
     parser.add_option("-l", "--loglevel", dest="loglevel",
-                      help="(DEBUG, INFO)",
+                      help="(e.g., DEBUG, WARNING, INFO) (optional)",
                       default=None)
     return parser.parse_args()[0]
 
@@ -161,6 +160,7 @@ def main():
         s += ' -u http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals'
         s += ' -w ./workspace'
         s += ' -o test_ccber_mammals_dwc_archive.zip'
+        s += ' -l DEBUG'
         print '%s' % s
         return
 

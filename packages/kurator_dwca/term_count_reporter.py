@@ -14,35 +14,45 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-04-23T14:03-03:00"
+__version__ = "term_count_reporter.py 2016-04-26T11:27-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
-from dwca_vocab_utils import distinct_term_values_from_file
+from dwca_vocab_utils import distinct_term_counts_from_file
+from dwca_vocab_utils import term_count_report
 import os.path
 import logging
+import uuid
 
 # Example: 
 #
-# kurator -f vocab_extractor.yaml 
-#         -p i=../data/eight_specimen_records.csv 
+# kurator -f term_count_reporter.yaml \
+#         -p i=../data/eight_specimen_records.csv \
+#         -p o=../data/eight_specimen_records.csv \
+#         -p workspace=../workspace/ \
 #         -p t=year
 #
 # or as a command-line script.
 # Example:
 #
-# python vocab_extractor.py 
+# python term_count_reporter.py 
 #        -i ./data/eight_specimen_records.csv 
+#        -o termcountreport.txt 
+#        -w ./workspace/
 #        -t year
 
-def vocab_extractor(options):
-    """Extract a list of the distinct values of a given term in a text file.
+def term_count_reporter(options):
+    """Extract a list of the distinct values of a given term in a text file along with 
+       the number of times each occurs.
     options - a dictionary of parameters
+        workspace - path to a directory for the tsvfile (optional)
         inputfile - full path to the input file (required)
+        outputfile - name of the output file, without path (optional)
         termname - the name of the term for which to find distinct values (required)
         loglevel - the level at which to log
     returns a dictionary with information about the results
-        extractedvalues - a list of distinct values of the term in the inputfile
+        workspace - actual path to the directory where the outputfile was written
+        outputfile - actual full path to the output tsv file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
@@ -62,14 +72,23 @@ def vocab_extractor(options):
 #     logging.info('Starting %s' % __version__)
 
     # Make a list for the response
-    returnvars = ['extractedvalues', 'success', 'message']
+    returnvars = ['workspace', 'outputfile', 'success', 'message']
 
     # outputs
-    extractedvalues = None
+    workspace = None
+    outputfile = None
     success = False
     message = None
 
     # inputs
+    try:
+        workspace = options['workspace']
+    except:
+        workspace = None
+
+    if workspace is None:
+        workspace = './'
+
     try:
         inputfile = options['inputfile']
     except:
@@ -77,20 +96,14 @@ def vocab_extractor(options):
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
-        returnvals = [extractedvalues, success, message]
-#        logging.debug('message: %s' % message)
+        returnvals = [workspace, outputfile, success, message]
+#        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
-        
-    if termname is None or len(termname)==0:
-        message = 'No term given'
-        returnvals = [extractedvalues, success, message]
-#        logging.debug('message: %s' % message)
-        return response(returnvars, returnvals)
-        
-    if not os.path.isfile(inputfile):
-        message = 'Input file %s not found' % inputfile
-        returnvals = [extractedvalues, success, message]
-#        logging.debug('message: %s' % message)
+
+    if os.path.isfile(inputfile) == False:
+        message = 'Input file not found'
+        returnvals = [workspace, outputfile, success, message]
+#        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     try:
@@ -100,14 +113,23 @@ def vocab_extractor(options):
 
     if termname is None or len(termname)==0:
         message = 'No term given'
-        returnvals = [extractedvalues, success, message]
+        returnvals = [workspace, outputfile, success, message]
 #        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
-    extractedvalues = distinct_term_values_from_file(inputfile, termname)
-    success = True
-    returnvals = [extractedvalues, success, message]
-#    options['vocab_extractor_response'] = response(returnvars, returnvals)
+    try:
+        outputfile = options['outputfile']
+    except:
+        outputfile = None
+    if outputfile is None:
+        outputfile = '%s/%s_report_%s.txt' % (workspace.rstrip('/'), termname, str(uuid.uuid1()))
+    else:
+        outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
+
+    counts = distinct_term_counts_from_file(inputfile, termname)
+#    print 'counts: %s' % counts
+    success = term_count_report(outputfile, counts)
+    returnvals = [workspace, outputfile, success, message]
 #    logging.debug('options:\n%s' % options)
 #    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
@@ -118,8 +140,14 @@ def _getoptions():
     parser.add_option("-i", "--inputfile", dest="inputfile",
                       help="Text file to mine for vocab values",
                       default=None)
+    parser.add_option("-o", "--outputfile", dest="outputfile",
+                      help="Output file name, no path (optional)",
+                      default=None)
     parser.add_option("-t", "--termname", dest="termname",
                       help="Name of the term for which distinct values are sought",
+                      default=None)
+    parser.add_option("-w", "--workspace", dest="workspace",
+                      help="Directory for the output file",
                       default=None)
     parser.add_option("-l", "--loglevel", dest="loglevel",
                       help="(DEBUG, INFO)",
@@ -132,18 +160,22 @@ def main():
 
     if options.inputfile is None or len(options.inputfile)==0 or \
        options.termname is None or len(options.termname)==0:
-        s =  'syntax: python vocab_extractor.py'
+        s =  'syntax: python term_count_reporter.py'
         s += ' -i ./data/eight_specimen_records.csv'
+        s += ' -o testtermcountout.txt'
+        s += ' -w ./workspace'
         s += ' -t year'
         print '%s' % s
         return
 
     optdict['inputfile'] = options.inputfile
+    optdict['outputfile'] = options.outputfile
     optdict['termname'] = options.termname
+    optdict['workspace'] = options.workspace
     optdict['loglevel'] = options.loglevel
 
     # Get distinct values of termname from inputfile
-    response=vocab_extractor(optdict)
+    response=term_count_reporter(optdict)
     print 'response: %s' % response
 
 if __name__ == '__main__':

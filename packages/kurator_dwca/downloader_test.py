@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader_test.py 2016-04-08T21:09-03:00"
+__version__ = "downloader_test.py 2016-04-21T12:26-03:00"
 
 # This file contains unit test for the downloader function.
 #
@@ -63,10 +63,35 @@ class DownloaderTestCase(unittest.TestCase):
         workspace = self.framework.workspace
         
         inputs = {}
+        # Test with no url, outputfile, or workspace
         response=downloader(inputs)
-#	        print 'response:\n%s' % response
         self.assertFalse(response['success'], \
             'download returned success without url or outputfile or workspace')
+#	        print 'response:\n%s' % response
+
+        # Test with url, but no outputfile or workspace
+        # This test produces a file artifact that must be determined and removed
+        inputs['url'] = testurl
+        response=downloader(inputs)
+        print 'response:\n%s' % response
+        self.assertTrue(response['success'], \
+            'download failed without outputfile or workspace, should have worked')
+
+        # Remove the file artifact created by this test, as the Framework does not know 
+        # about it
+        if os.path.isfile(response['outputfile']):
+            os.remove(response['outputfile'])
+
+        # Test with url and outputfile, but no workspace
+        # This test produces a file artifact that must be determined and removed
+        inputs['url'] = testurl
+        inputs['outputfile'] = outputfile
+        response=downloader(inputs)
+        print 'response:\n%s' % response
+        self.assertTrue(response['success'], \
+            'download failed without workspace, should have worked')
+        if os.path.isfile(response['outputfile']):
+            os.remove(response['outputfile'])
 
     def test_downloader(self):
         print 'testing downloader'

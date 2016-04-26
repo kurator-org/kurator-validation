@@ -5,17 +5,13 @@
 # This workflow:
 #    - downloads a Darwin Core Archive from a URL
 #    - extracts the core file of a Darwin Core Archive to a tab-separated text file
-#    - extracts distinct values of a given field from the text file
+#    - extracts distinct values of a set of fields from the text file
+#    - writes the distinct value lists to report files
 #
 # Example command-line usage:
-# kurator -f vocab_extractor.yaml 
-#         -p url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
-#         -p out=../workspace/test_ccber_archive.zip
-#         -p dwcafile=../workspace/test_ccber_archive.zip
-#         -p tsvoutputfile=../workspace/test_ccber_core.tsv
-#         -p archivetype=standard
-#         -p inputfile=../workspace/test_ccber_core.tsv
-#         -p termname=country
+# kurator -f dwca_term_values.yaml 
+#         -p testinput=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
+#         -l DEBUG (optional)
 #
 # Requires:
 # jython pip install requests
@@ -37,7 +33,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_term_values.yaml 2016-04-14T12:49-03:00"
+# __version__ = "dwca_term_values.yaml 2016-04-26T11:27-03:00"
 
 imports:
 
@@ -45,6 +41,9 @@ imports:
 
 components:
 
+# Inline python actor to demonstrate getting parameters into the workflow upstream of 
+# the actors that need them. Such parameters are passed into the actor via the options
+# dictionary and downstream via the dictionary returned.
 - id: ReadInput
   type: PythonActor
   properties:
@@ -53,8 +52,31 @@ components:
         def on_start(options):
             print 'Started ReadInput'
             print 'ReadInput options: %s' % options
+            options['spurious_added_option']='just for kicks'
             return options
 
+# Inline python actor to demonstrate making a workspace on the fly to use for 
+# writing temporary workflow artifacts. 
+- id: MakeWorkspace
+  type: PythonActor
+  properties:
+    code: |
+        import uuid
+        import os
+        def on_data(options):
+            print 'Started MakeWorkspace'
+            print 'MakeWorkspace options: %s' % options
+            if options.has_key('workspace') == False:
+                options['workspace'] ='./workspace_'+str(uuid.uuid1())
+                if not os.path.exists(options['workspace']):
+                    os.makedirs(options['workspace'])
+            return options
+    inputs:
+        url: url
+    listensTo:
+      - !ref ReadInput
+
+# Download file into workspace from URL given by url parameter.
 - id: Downloader
   type: PythonActor
   properties:
@@ -62,9 +84,11 @@ components:
     onData: downloader
     inputs:
         url: url
+        workspace : workspace
     listensTo:
-      - !ref ReadInput
+      - !ref MakeWorkspace
 
+# Extract core file into a tab-separated value file in workspace from Darwin Core archive.
 - id: DWCAtoTSVWriter
   type: PythonActor
   properties:
@@ -72,41 +96,107 @@ components:
     onData: dwca_core_to_tsv
     inputs:
         outputfile: dwcafile
+        workspace : workspace
     listensTo:
       - !ref Downloader
 
-- id: VocabExtractor
-  type: PythonActor
-  properties:
-    module: kurator_dwca.vocab_extractor
-    onData: vocab_extractor
-    inputs:
-        tsvfile: inputfile
-    listensTo:
-      - !ref DWCAtoTSVWriter
-
-- id: WriteOutput
+# Inline python actor to demonstrate actor iteration. Passes an options dictionary 
+# including the source tsv file and a term to downstream listener for each of a set of
+# terms.
+- id: VocabList
   type: PythonActor
   properties:
     code: |
         def on_data(options):
-            print 'WriteOutput options: %s' % options
-            print 'showthis: %s' % options['showthis']
-            print 'Finished WriteOutput'
+            print 'Started VocabList'
+            print 'VocabList options: %s' % options
+            termlist = ['country', 'stateProvince', 'scientificName']
+            for term in termlist:
+                yield { 'tsvfile':options['tsvfile'], 'termname':term }
     inputs:
-        extractedvalues: showthis
+        tsvfile: tsvfile
     listensTo:
-      - !ref VocabExtractor
+      - !ref DWCAtoTSVWriter
+
+# Extract the distinct values of field given by termname from inputfile.
+#- id: VocabExtractor
+#  type: PythonActor
+#  properties:
+#    module: kurator_dwca.vocab_extractor
+#    onData: vocab_extractor
+#    inputs:
+#        tsvfile: inputfile
+#        termname: termname
+#    listensTo:
+#      - !ref VocabList
+
+# Extract the distinct values of field given by termname, with counts, from inputfile.
+#- id: VocabCounter
+#  type: PythonActor
+#  properties:
+#    module: kurator_dwca.vocab_counter
+#    onData: vocab_counter
+#    inputs:
+#        tsvfile: inputfile
+#        termname: termname
+#    listensTo:
+#      - !ref VocabList
+
+- id: VocabReporter
+  type: PythonActor
+  properties:
+    module: kurator_dwca.term_count_reporter
+    onData: term_count_reporter
+    inputs:
+        tsvfile: inputfile
+        termname: termname
+    parameters:
+        workspace: './workspace/'
+    listensTo:
+      - !ref VocabList
+
+#- id: WriteOutput
+#  type: PythonActor
+#  properties:
+#    code: |
+#        def on_data(options):
+#            print 'WriteOutput options: %s' % options
+#            print 'showthis: %s' % options['showthis']
+#            print 'Finished WriteOutput'
+#    inputs:
+#        extractedvalues: showthis
+#    listensTo:
+#      - !ref VocabReporter
+#      - !ref VocabCounter
+#      - !ref VocabExtractor
+
+- id: WrapUp
+  type: PythonActor
+  properties:
+    code: |
+        def on_data(options):
+            print 'WrapUp options: %s' % options
+            print '### Finished DwCA Term Values Workflow ###'
+    inputs:
+        workspace: workspace
+        outputfile: outputfile
+    listensTo:
+      - !ref VocabReporter
 
 - id: DwCAVocabExtractor
   type: Workflow
   properties:
     actors:
       - !ref ReadInput
+      - !ref MakeWorkspace
       - !ref Downloader
       - !ref DWCAtoTSVWriter
-      - !ref VocabExtractor
-      - !ref WriteOutput
+      - !ref VocabList
+#      - !ref VocabExtractor
+#      - !ref VocabCounter
+      - !ref VocabReporter
+#      - !ref WriteOutput
+      - !ref WrapUp
     parameters:
 #       url:
 #         actor: !ref Downloader
@@ -120,15 +210,15 @@ components:
 #       tsvfile:
 #         actor: !ref DWCAtoTSVWriter
 #         parameter: tsvfile
-       archivetype:
-         actor: !ref DWCAtoTSVWriter
-         parameter: archivetype
+#       archivetype:
+#         actor: !ref DWCAtoTSVWriter
+#         parameter: archivetype
 #       inputfile:
 #         actor: !ref VocabExtractor
 #         parameter: inputfile
-       termname:
-         actor: !ref VocabExtractor
-         parameter: termname
+#       termname:
+#         actor: !ref VocabExtractor
+#         parameter: termname
        testinput:
          actor: !ref ReadInput
          parameter: url

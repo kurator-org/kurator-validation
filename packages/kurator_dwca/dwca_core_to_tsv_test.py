@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv_test.py 2016-04-08T19:05-03:00"
+__version__ = "dwca_core_to_tsv_test.py 2016-04-21T13:49-03:00"
 
 # This file contains unit test for the dwca_core_to_tsv function.
 #
@@ -37,11 +37,12 @@ class DwcaCoreToTsvFramework():
     testdatapath = './data/tests/'
     archivetype = 'standard'
 
-    # input data files to tests, don't remove these
+    # input data files to test, don't remove these
     dwca = testdatapath + 'dwca-uwymv_herp.zip'
 
     # output data files from tests, remove these in dispose()
-    tsvfile = testdatapath + 'test_tsv_from_dwca.txt'
+#    tsvfile = testdatapath + 'test_tsv_from_dwca.txt'
+    tsvfile = 'test_tsv_from_dwca.txt'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
@@ -72,24 +73,50 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
 
         inputs = {}
         response=dwca_core_to_tsv(inputs)
-#        print 'response:\n%s' % response
+#        print 'response1:\n%s' % response
         self.assertIsNone(response['rowcount'], \
             'rows added without input file or output file')
         self.assertFalse(response['success'], \
             'success without input file or output file')
 
+        # Test with dwcafile but no tsvfile or workspace
+        # This test produces a file artifact that must be determined and removed
         inputs['dwcafile'] = dwca
         response=dwca_core_to_tsv(inputs)
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['rowcount'], \
-            'rows added without output file')
-        self.assertFalse(response['success'], \
+#        print 'response2:\n%s' % response
+        self.assertTrue(response['success'], \
+            'success without output file')
+        # Remove the file artifact created by this test, as the Framework does not know 
+        # about it
+        if os.path.isfile(response['tsvfile']):
+            os.remove(response['tsvfile'])
+
+        # Test with dwcafile and tsvfile, but no workspace
+        inputs['tsvfile'] = tsvfile
+        response=dwca_core_to_tsv(inputs)
+#        print 'response3:\n%s' % response
+        self.assertTrue(response['success'], \
             'success without output file')
 
+        # Test with dwcafile but no tsvfile or workspace
+        # This test produces a file artifact that must be determined and removed
+        inputs = {}
+        inputs['dwcafile'] = dwca
+        response=dwca_core_to_tsv(inputs)
+#        print 'response4:\n%s' % response
+        self.assertTrue(response['success'], \
+            'success without output file')
+        # Remove the file artifact created by this test, as the Framework does not know 
+        # about it
+        if os.path.isfile(response['tsvfile']):
+            os.remove(response['tsvfile'])
+
+        # Test with tsvfile, but no dwcafile or workspace
+        # This test produces a file artifact that must be determined and removed
         inputs = {}
         inputs['tsvfile'] = tsvfile
         response=dwca_core_to_tsv(inputs)
-#        print 'response:\n%s' % response
+#        print 'response5:\n%s' % response
         self.assertIsNone(response['rowcount'], \
             'rows added without input file')
         self.assertFalse(response['success'], \
