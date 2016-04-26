@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-04-23T13:24-03:00"
+__version__ = "dwca_vocab_utils.py 2016-04-26T11:38-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -269,7 +269,7 @@ def term_count_report(reportfile, termcountlist, dialect=None):
         success - True if the report was written, else False
     """
     countreportfieldlist = ['term', 'count']
-    print 'termcountlist: %s' % termcountlist
+#    print 'termcountlist: %s' % termcountlist
     if termcountlist is None or len(termcountlist)==0:
         return False
 

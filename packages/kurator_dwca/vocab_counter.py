@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_counter.py 2016-04-23T13:26-03:00"
+__version__ = "vocab_counter.py 2016-04-26T13:53-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
@@ -49,7 +49,7 @@ def vocab_counter(options):
         message - an explanation of the reason if success=False
     """
     print 'Started %s' % __version__
-    print 'options: %s' % options
+#    print 'options: %s' % options
     # Set up logging
 #     try:
 #         loglevel = options['loglevel']

@@ -107,7 +107,7 @@ class TermRecommendationReporterTestCase(unittest.TestCase):
         inputs['outputfile'] = testreportfile
         inputs['vocabfile'] = monthvocabfile
 
-        # Extract create the report
+        # Create the report
 #        print 'inputs:\n%s' % inputs
         response=json.loads(term_recommendation_reporter(json.dumps(inputs)))
 #        print 'response:\n%s' % response
