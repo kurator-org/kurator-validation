@@ -22,13 +22,13 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
     		caught = ex;
     	}
     	assertNotNull(caught);
-		assertEquals("SciNameAssembler requires value for genus", caught.getMessage());
+		assertEquals("SciNameAssembler requires value for genericEpithet", caught.getMessage());
     }
 
 	public void testSciNameAssembler_Genus() throws Exception {
 
 		String assembledName = sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
-				"genus", "Emoia"
+				"genericEpithet", "Emoia"
 		}));
 
 		assertEquals("Emoia", assembledName);
@@ -39,20 +39,20 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
     	Exception caught = null;
     	try {
     		sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
-				"subgenus", "pallidiceps"
+				"subgenus", "Pallidiceps"
 			}));
 			fail("Exception expected");
     	} catch (Exception ex) {
     		caught = ex;
     	}
     	assertNotNull(caught);
-		assertEquals("SciNameAssembler requires value for genus", caught.getMessage());
+		assertEquals("SciNameAssembler requires value for genericEpithet", caught.getMessage());
     }
 
     public void testSciNameAssembler_Genus_SpecificEpithet() throws Exception {
 
 		String assembledName = sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
-				"genus", 			"Emoia",
+				"genericEpithet", 			"Emoia",
 				"specificEpithet", 	"pallidiceps"
 		}));
 
@@ -62,7 +62,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
     public void testSciNameAssembler_Genus_SpecificEpithet_IntraspecificEpithet() throws Exception {
 
 		String assembledName = sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
-				"genus", 				"Hadrurus",
+				"genericEpithet", 				"Hadrurus",
 				"specificEpithet", 		"arizonensis",
 				"infraspecificEpithet", "arizonensis"
 		}));
@@ -75,7 +75,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
     	Exception caught = null;
     	try {
     		sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
-				"genus", 				"Hadrurus",
+				"genericEpithet", 				"Hadrurus",
 				"infraspecificEpithet", "arizonensis"
 			}));
 			fail("Exception expected");
@@ -89,7 +89,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
     public void testSciNameAssembler_Genus_SpecificEpithet_IntraspecificEpithet_TaxonRank() throws Exception {
 
 		String assembledName = sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
-				"genus", 				"Lithobius",
+				"genericEpithet", 				"Lithobius",
 				"specificEpithet", 		"utahensis",
 				"taxonRank",			"var.",
 				"infraspecificEpithet", "tiganus"
@@ -101,7 +101,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
     public void testSciNameAssembler_Genus_SpecificEpithet_IntraspecificEpithet_VerbatimTaxonRank() throws Exception {
 
 		String assembledName = sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
-				"genus", 				"Lithobius",
+				"genericEpithet", 				"Lithobius",
 				"specificEpithet", 		"utahensis",
 				"verbatimTaxonRank",	"var.",
 				"infraspecificEpithet", "tiganus"
@@ -113,7 +113,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
     public void testSciNameAssembler_Genus_SpecificEpithet_IntraspecificEpithet_TaxonRank_Equals_VerbatimTaxonRank() throws Exception {
 
 		String assembledName = sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
-				"genus", 				"Lithobius",
+				"genericEpithet", 				"Lithobius",
 				"specificEpithet", 		"utahensis",
 				"verbatimTaxonRank",	"var.",
 				"taxonRank",			"var.",
@@ -126,7 +126,7 @@ public class TestSciNameAssembler extends KuratorAkkaTestCase {
     public void testSciNameAssembler_Genus_SpecificEpithet_IntraspecificEpithet_TaxonRank_DiffersFrom_VerbatimTaxonRank() throws Exception {
 
 		String assembledName = sciNameAssembler.assembleName(new GenericMapRecord(new String[] {
-				"genus", 				"Lithobius",
+				"genericEpithet", 				"Lithobius",
 				"specificEpithet", 		"utahensis",
 				"verbatimTaxonRank",	"var.verbatim",
 				"taxonRank",			"var.",

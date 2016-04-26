@@ -2,10 +2,10 @@ package org.kurator.validation.actors;
 
 import java.util.Map;
 
+import org.gbif.dwc.terms.DwcTerm;
 import org.kurator.akka.data.SpacedStringBuilder;
 import org.kurator.akka.data.Util;
 import org.kurator.validation.exceptions.MissingFieldException;
-import org.kurator.validation.standards.DarwinCore;
 
 public class SciNameAssembler {
 
@@ -34,12 +34,12 @@ public class SciNameAssembler {
 
     public static SciNameAssembler newDwCSciNameAssembler() {
         return new SciNameAssembler(
-                DarwinCore.FieldNames.GENUS,
-                DarwinCore.FieldNames.SUBGENUS,
-                DarwinCore.FieldNames.SPECIFIC_EPITHET,
-                DarwinCore.FieldNames.VERBATIM_TAXON_RANK,
-                DarwinCore.FieldNames.TAXON_RANK,
-                DarwinCore.FieldNames.INFRASPECIFIC_EPITHET);
+                "genericEpithet",
+                DwcTerm.subgenus.simpleName(),
+                DwcTerm.specificEpithet.simpleName(),
+                DwcTerm.verbatimTaxonRank.simpleName(),
+                DwcTerm.taxonRank.simpleName(),
+                DwcTerm.infraspecificEpithet.simpleName());
     }
 
     public String assembleName(Map<String, String> record) throws Exception {

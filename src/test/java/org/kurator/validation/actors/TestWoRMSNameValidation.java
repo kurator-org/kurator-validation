@@ -4,8 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-import org.kurator.akka.KuratorAkkaCLI;
 import org.kurator.akka.KuratorAkkaTestCase;
+import org.kurator.akka.KuratorCLI;
 import org.kurator.akka.WorkflowRunner;
 import org.kurator.akka.YamlFileWorkflowRunner;
 
@@ -19,14 +19,15 @@ public class TestWoRMSNameValidation extends KuratorAkkaTestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        KuratorAkkaCLI.enableLog4J();
+        KuratorCLI.enableLog4J();
         outputBuffer = new ByteArrayOutputStream();
         outPrintStream = new PrintStream(outputBuffer);
     }
 
     public void testWoRMSNameValidation() throws Exception {
 
-        WorkflowRunner wr = new YamlFileWorkflowRunner("file:" + KURATOR_WORMS_PACKAGE_DIR + "workflows/curate_csv_with_worms.yaml");
+        WorkflowRunner wr = new YamlFileWorkflowRunner()
+                                .yamlFile("file:" + KURATOR_WORMS_PACKAGE_DIR + "workflows/curate_csv_with_worms.yaml");
         wr.outputStream(outPrintStream);
         wr.apply("input", KURATOR_WORMS_PACKAGE_DIR + "data/five_records.csv");
         wr.apply("CleanRecords.fuzzy_match_enabled", "False");
