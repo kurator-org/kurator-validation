@@ -112,9 +112,10 @@ components:
             print 'VocabList options: %s' % options
             termlist = ['country', 'stateProvince', 'scientificName']
             for term in termlist:
-                yield { 'tsvfile':options['tsvfile'], 'termname':term }
+                yield { 'tsvfile':options['tsvfile'], 'workspace':options['workspace'], 'termname':term }
     inputs:
         tsvfile: tsvfile
+        workspace: workspace
     listensTo:
       - !ref DWCAtoTSVWriter
 
@@ -150,8 +151,7 @@ components:
     inputs:
         tsvfile: inputfile
         termname: termname
-    parameters:
-        workspace: './workspace/'
+        workspace: workspace
     listensTo:
       - !ref VocabList
 
