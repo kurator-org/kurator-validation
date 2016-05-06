@@ -14,20 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader.py 2016-04-23T13:43-03:00"
-
-# Example: 
-#
-# kurator -f downloader.yaml \
-#         -p u=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals 
-#         -p o=../workspace/test_ccber_mammals_dwc_archive.zip
-#
-# or as a command-line script.
-# Example:
-#
-# python downloader.py \
-#         -u http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals 
-#         -o ./workspace/test_ccber_mammals_dwc_archive.zip
+__version__ = "downloader.py 2016-05-05T16:09-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
@@ -35,14 +22,13 @@ import logging
 import uuid
 
 # Uses the HTTP requests package
+#   pip install requests
 # Uses the unicodecsv package in dwca_utils
-# pip install requests
-# pip install unicodecsv
+#   pip install unicodecsv
 #
 # For workflows
-# jython pip install requests
-# jython pip install unicodecsv
-
+#   jython pip install requests
+#   jython pip install unicodecsv
 import requests
 
 def downloader(options):
@@ -58,7 +44,9 @@ def downloader(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the results
     """
-    print 'Started %s' % __version__
+#    print 'Started %s' % __version__
+#    print 'options: %s' % options
+
     # Set up logging
     try:
         loglevel = options['loglevel']
@@ -73,7 +61,10 @@ def downloader(options):
     logging.info('Starting %s' % __version__)
 
     # Make a list for the response
-    returnvars = ['workspace', 'outputfile', 'success', 'message']
+    returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
+
+    # Make a dictionary for artifacts left behind
+    artifacts = {}
 
     # outputs
     success = False
@@ -100,10 +91,14 @@ def downloader(options):
     except:
         url = None
 
-    print 'options: %s' % options
-    artifact = '%s/%s' % (workspace.rstrip('/'), outputfile)
-    success = download_file(url, artifact)
-    returnvals = [workspace, artifact, success, message]
+#    print 'options: %s' % options
+    outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
+
+    success = download_file(url, outputfile)
+    if success==True:
+        artifacts['downloaded_file'] = outputfile
+
+    returnvals = [workspace, outputfile, success, message, artifacts]
     logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 

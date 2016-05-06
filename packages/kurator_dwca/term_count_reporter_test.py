@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_count_reporter_test.py 2016-04-26T15:01-03:00"
+__version__ = "term_count_reporter_test.py 2016-05-05T20:44-03:00"
 
 # This file contains unit tests for the term_count_reporter function.
 #
@@ -24,7 +24,6 @@ __version__ = "term_count_reporter_test.py 2016-04-26T15:01-03:00"
 
 from term_count_reporter import term_count_reporter
 import os
-#import json
 import unittest
 
 class TermCountReporterFramework():
@@ -62,19 +61,47 @@ class TermCountReporterTestCase(unittest.TestCase):
     def test_missing_parameters(self):
         print 'testing missing_parameters'
         testinputfile = self.framework.testinputfile
+        testreportfile = self.framework.testreportfile
+        workspace = self.framework.testdatapath
 
+        # Test with missing required inputs
+        # Test with no inputs
         inputs = {}
         response=term_count_reporter(inputs)
-#        print 'response:\n%s' % response
-        self.assertFalse(response['success'], \
-            'success without input file')
+#        print 'response1:\n%s' % response
+        s = 'success without any required inputs'
+        self.assertFalse(response['success'], s)
 
+        # Test with missing termname
         inputs['inputfile'] = testinputfile
-#        print 'inputs:\n%s' % inputs
+        inputs['outputfile'] = testreportfile
+        inputs['workspace'] = workspace
         response=term_count_reporter(inputs)
-#        print 'response:\n%s' % response
-        self.assertFalse(response['success'], \
-            'success with missing term name')
+#        print 'response2:\n%s' % response
+        s = 'success without termname'
+        self.assertFalse(response['success'], s)
+
+        # Test with missing inputfile
+        inputs = {}
+        inputs['termname'] = 'year'
+        inputs['outputfile'] = testreportfile
+        inputs['workspace'] = workspace
+        response=term_count_reporter(inputs)
+#        print 'response3:\n%s' % response
+        s = 'success without input file'
+        self.assertFalse(response['success'], s)
+
+        # Test with missing optional inputs
+        inputs = {}
+        inputs['inputfile'] = testinputfile
+        inputs['termname'] = 'year'
+        response=term_count_reporter(inputs)
+#        print 'response4:\n%s' % response
+        s = 'no output file produced with required inputs'
+        self.assertTrue(response['success'], s)
+        # Remove the file create by this test, as the Framework does not know about it
+        if os.path.isfile(response['outputfile']):
+            os.remove(response['outputfile'])
 
     def test_term_count_reporter(self):
         print 'testing term_count_reporter'
@@ -91,15 +118,15 @@ class TermCountReporterTestCase(unittest.TestCase):
         inputs['outputfile'] = testreportfile
 
         # Create the report
-        print 'inputs:\n%s' % inputs
+#        print 'inputs:\n%s' % inputs
         response=term_count_reporter(inputs)
-        print 'response:\n%s' % response
+#        print 'response:\n%s' % response
         success = response['success']
         s = 'term report failed: %s' % response['message']
         self.assertTrue(success, s)
 
         outputfile = response['outputfile']
-        print 'response:\n%s' % response
+#        print 'response:\n%s' % response
         self.assertTrue(os.path.isfile(outputfile), outputfile + ' does not exist')
 
 if __name__ == '__main__':

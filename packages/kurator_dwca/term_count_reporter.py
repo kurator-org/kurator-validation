@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_count_reporter.py 2016-04-26T11:27-03:00"
+__version__ = "term_count_reporter.py 2016-05-05T19:27-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
@@ -23,23 +23,6 @@ from dwca_vocab_utils import term_count_report
 import os.path
 import logging
 import uuid
-
-# Example: 
-#
-# kurator -f term_count_reporter.yaml \
-#         -p i=../data/eight_specimen_records.csv \
-#         -p o=../data/eight_specimen_records.csv \
-#         -p workspace=../workspace/ \
-#         -p t=year
-#
-# or as a command-line script.
-# Example:
-#
-# python term_count_reporter.py 
-#        -i ./data/eight_specimen_records.csv 
-#        -o termcountreport.txt 
-#        -w ./workspace/
-#        -t year
 
 def term_count_reporter(options):
     """Extract a list of the distinct values of a given term in a text file along with 
@@ -56,8 +39,9 @@ def term_count_reporter(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
-    print 'Started %s' % __version__
-    print 'options: %s' % options
+#    print 'Started %s' % __version__
+#    print 'options: %s' % options
+
     # Set up logging
 #     try:
 #         loglevel = options['loglevel']
@@ -72,7 +56,10 @@ def term_count_reporter(options):
 #     logging.info('Starting %s' % __version__)
 
     # Make a list for the response
-    returnvars = ['workspace', 'outputfile', 'success', 'message']
+    returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
+
+    # Make a dictionary for artifacts left behind
+    artifacts = {}
 
     # outputs
     workspace = None
@@ -96,13 +83,13 @@ def term_count_reporter(options):
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
-        returnvals = [workspace, outputfile, success, message]
+        returnvals = [workspace, outputfile, success, message, artifacts]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
         message = 'Input file not found'
-        returnvals = [workspace, outputfile, success, message]
+        returnvals = [workspace, outputfile, success, message, artifacts]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
@@ -113,7 +100,7 @@ def term_count_reporter(options):
 
     if termname is None or len(termname)==0:
         message = 'No term given'
-        returnvals = [workspace, outputfile, success, message]
+        returnvals = [workspace, outputfile, success, message, artifacts]
 #        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
@@ -121,15 +108,19 @@ def term_count_reporter(options):
         outputfile = options['outputfile']
     except:
         outputfile = None
+
     if outputfile is None:
-        outputfile = '%s/%s_report_%s.txt' % (workspace.rstrip('/'), termname, str(uuid.uuid1()))
-    else:
-        outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
+        outputfile = '%s_count_report_%s.txt' % (termname, str(uuid.uuid1()))
+    
+    outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     counts = distinct_term_counts_from_file(inputfile, termname)
 #    print 'counts: %s' % counts
     success = term_count_report(outputfile, counts)
-    returnvals = [workspace, outputfile, success, message]
+    if success==True:
+        s = '%s_count_report_file' % termname
+        artifacts[s] = outputfile
+        returnvals = [workspace, outputfile, success, message, artifacts]
 #    logging.debug('options:\n%s' % options)
 #    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)

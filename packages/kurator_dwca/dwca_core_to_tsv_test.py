@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv_test.py 2016-04-21T13:49-03:00"
+__version__ = "dwca_core_to_tsv_test.py 2016-05-05T20:10-03:00"
 
 # This file contains unit test for the dwca_core_to_tsv function.
 #
@@ -46,7 +46,7 @@ class DwcaCoreToTsvFramework():
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-        removeme = self.tsvfile
+        removeme = self.testdatapath + self.tsvfile
 #        print 'removeme: %s' % removeme
         if os.path.isfile(removeme):
             os.remove(removeme)
@@ -70,67 +70,46 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         print 'testing missing_parameters'
         dwca = self.framework.dwca
         tsvfile = self.framework.tsvfile
+        workspace = self.framework.testdatapath
 
+        # Test with missing required inputs
+        # Test with no inputs
         inputs = {}
         response=dwca_core_to_tsv(inputs)
 #        print 'response1:\n%s' % response
-        self.assertIsNone(response['rowcount'], \
-            'rows added without input file or output file')
-        self.assertFalse(response['success'], \
-            'success without input file or output file')
+        s = 'success without any required inputs'
+        self.assertFalse(response['success'], s)
 
-        # Test with dwcafile but no tsvfile or workspace
-        # This test produces a file artifact that must be determined and removed
-        inputs['dwcafile'] = dwca
+        # Test with missing dwcafile
+        inputs['tsvfile'] = tsvfile
+        inputs['workspace'] = workspace
         response=dwca_core_to_tsv(inputs)
 #        print 'response2:\n%s' % response
-        self.assertTrue(response['success'], \
-            'success without output file')
-        # Remove the file artifact created by this test, as the Framework does not know 
-        # about it
-        if os.path.isfile(response['tsvfile']):
-            os.remove(response['tsvfile'])
+        s = 'success without dwca file'
+        self.assertFalse(response['success'], s)
 
-        # Test with dwcafile and tsvfile, but no workspace
-        inputs['tsvfile'] = tsvfile
-        response=dwca_core_to_tsv(inputs)
-#        print 'response3:\n%s' % response
-        self.assertTrue(response['success'], \
-            'success without output file')
-
-        # Test with dwcafile but no tsvfile or workspace
-        # This test produces a file artifact that must be determined and removed
+        # Test with missing optional inputs
         inputs = {}
         inputs['dwcafile'] = dwca
         response=dwca_core_to_tsv(inputs)
-#        print 'response4:\n%s' % response
-        self.assertTrue(response['success'], \
-            'success without output file')
-        # Remove the file artifact created by this test, as the Framework does not know 
-        # about it
+#        print 'response3:\n%s' % response
+        s = 'no output file produced with required inputs'
+        self.assertTrue(response['success'], s)
+        # Remove the file create by this test, as the Framework does not know about it
         if os.path.isfile(response['tsvfile']):
             os.remove(response['tsvfile'])
-
-        # Test with tsvfile, but no dwcafile or workspace
-        # This test produces a file artifact that must be determined and removed
-        inputs = {}
-        inputs['tsvfile'] = tsvfile
-        response=dwca_core_to_tsv(inputs)
-#        print 'response5:\n%s' % response
-        self.assertIsNone(response['rowcount'], \
-            'rows added without input file')
-        self.assertFalse(response['success'], \
-            'success without input file')
 
     def test_convert(self):
         print 'testing convert'
         dwca = self.framework.dwca
+        workspace = self.framework.testdatapath
         tsvfile = self.framework.tsvfile
         archivetype = self.framework.archivetype
 
         inputs = {}
         inputs['dwcafile'] = dwca
         inputs['tsvfile'] = tsvfile
+        inputs['workspace'] = workspace
         inputs['archivetype'] = archivetype
 #        print 'inputs:\n%s' % inputs
 
@@ -143,18 +122,21 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
     def test_source_headers_correct(self):
         print 'testing source_headers_correct'
         dwca = self.framework.dwca
+        workspace = self.framework.testdatapath
         tsvfile = self.framework.tsvfile
         archivetype = self.framework.archivetype
 
         inputs = {}
         inputs['dwcafile'] = dwca
         inputs['tsvfile'] = tsvfile
+        inputs['workspace'] = workspace
         inputs['archivetype'] = archivetype
 
         response=dwca_core_to_tsv(inputs)
 #        print 'response:\n%s' % response
 
-        header = read_header(tsvfile, tsv_dialect())
+        tsvfilefullpath = response['tsvfile']
+        header = read_header(tsvfilefullpath, tsv_dialect())
         modelheader = []
         modelheader.append('modified')
         modelheader.append('month')

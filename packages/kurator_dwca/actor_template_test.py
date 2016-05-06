@@ -14,13 +14,13 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader_test.py 2016-05-05T20:29-03:00"
+__version__ = "actor_template_test.py 2016-05-05T20:46-03:00"
 
 # This file contains unit test for the downloader function.
 #
 # Example:
 #
-# python downloader_test.py
+# python actor_template_test.py
 
 from downloader import downloader
 import os
@@ -99,7 +99,7 @@ class DownloaderTestCase(unittest.TestCase):
         inputs['url'] = testurl
         inputs['outputfile'] = outputfile
         inputs['workspace'] = workspace
-#        print 'downloader_test.py: inputs:\n%s' % inputs
+#        print 'actor_template_test.py: inputs:\n%s' % inputs
 
         # Collect terms
         response=downloader(inputs)

@@ -14,39 +14,21 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2016-04-21T13:49-03:00"
-
-# Example: 
-#
-# kurator -f dwca_core_to_tsv.yaml \
-#         -p dwcafile=../data/dwca-uwymv_herp.zip \
-#         -p tsvfile=dwcatsvout.txt \
-#         -p workspace=../workspace/ \
-#         -p archivetype=standard
-#
-# or as a command-line script.
-# Example:
-#
-# python dwca_core_to_tsv.py 
-#        -i ./data/dwca-uwymv_herp.zip 
-#        -o dwcatsvout.txt 
-#        -w ./workspace/
-#        -t standard
+__version__ = "dwca_core_to_tsv.py 2016-05-05T19:28-03:00"
 
 from optparse import OptionParser
 from dwcareader_utils import short_term_names
 from dwca_utils import tsv_dialect
 from dwca_utils import response
-import json
 import csv
 import uuid
 import os.path
-import logging
+#import logging
 
 # Python Darwin Core Archive Reader from 
-# https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
-# pip install python-dwca-reader
-# jython pip install python-dwca-reader for use in workflows
+#   https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
+#   pip install python-dwca-reader
+#   jython pip install python-dwca-reader for use in workflows
 from dwca.read import DwCAReader
 from dwca.read import GBIFResultsReader
 
@@ -58,15 +40,15 @@ def dwca_core_to_tsv(options):
         tsvfile - file name of the tsv output file, no path (optional)
         archivetype - the archive type ('standard' or 'gbif') (optional)
         loglevel - the level at which to log (e.g., DEBUG)
-    returns JSON string with information about the results
+    returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
         tsvfile - actual full path to the output tsv file
         rowcount - the number of rows in the Darwin Core archive file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
-    print 'Started %s' % __version__
-    print 'options: %s' % options
+#    print 'Started %s' % __version__
+#    print 'options: %s' % options
 
     # Set up logging
 #     try:
@@ -82,7 +64,10 @@ def dwca_core_to_tsv(options):
 #     logging.info('Starting %s' % __version__)
 
     # Make a list for the response
-    returnvars = ['workspace', 'tsvfile', 'rowcount', 'success', 'message']
+    returnvars = ['workspace', 'tsvfile', 'rowcount', 'success', 'message', 'artifacts']
+
+    # Make a dictionary for artifacts left behind
+    artifacts = {}
 
     # outputs
     tsvfile = None
@@ -106,13 +91,13 @@ def dwca_core_to_tsv(options):
 
     if dwcafile is None or len(dwcafile)==0:
         message = 'No input dwca file given'
-        returnvals = [workspace, tsvfile, rowcount, success, message]
+        returnvals = [workspace, tsvfile, rowcount, success, message, artifacts]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(dwcafile) == False:
         message = 'Input dwca file not found'
-        returnvals = [workspace, tsvfile, rowcount, success, message]
+        returnvals = [workspace, tsvfile, rowcount, success, message, artifacts]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
@@ -120,8 +105,10 @@ def dwca_core_to_tsv(options):
         tsvfile = options['tsvfile']
     except:
         tsvfile = None
+
     if tsvfile is None:
-        tsvfile = '%s/dwca_%s.tsv' % (workspace.rstrip('/'), str(uuid.uuid1()))
+        tsvfile = 'dwca_%s.tsv' %  str(uuid.uuid1())
+    tsvfile = '%s/%s' % (workspace.rstrip('/'), tsvfile)
 
     try:
         type = options['archivetype']
@@ -136,20 +123,20 @@ def dwca_core_to_tsv(options):
             dwcareader = GBIFResultsReader(dwcafile)
         except Exception, e:
             message = 'Error %s reading GBIF archive: %s' % (dwcafile, e)
-            returnvals = [workspace, tsvfile, rowcount, success, message]
+            returnvals = [workspace, tsvfile, rowcount, success, message, artifacts]
 #            logging.debug('message:\n%s' % message)
             return response(returnvars, returnvals)
     try:
         dwcareader = DwCAReader(dwcafile)
     except Exception, e:
         message = 'Error %s reading archive: %s' % (dwcafile, e)
-        returnvals = [workspace, tsvfile, rowcount, success, message]
+        returnvals = [workspace, tsvfile, rowcount, success, message, artifacts]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if dwcareader is None:
         message = 'No viable archive found at %s' % dwcafile
-        returnvals = [workspace, tsvfile, rowcount, success, message]
+        returnvals = [workspace, tsvfile, rowcount, success, message, artifacts]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
@@ -173,8 +160,11 @@ def dwca_core_to_tsv(options):
     dwcareader.close()
 
     success = True
-    returnvals = [workspace, tsvfile, rowcount, success, message]
-    print 'returnvals: %s' % returnvals
+    if success==True:
+        artifacts['tsvfile'] = tsvfile
+
+    returnvals = [workspace, tsvfile, rowcount, success, message, artifacts]
+#    print 'returnvals: %s' % returnvals
 #    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
@@ -227,7 +217,7 @@ def main():
 
     # Write the core to a tsv file at the specified location
     response = dwca_core_to_tsv(optdict)
-    print 'response: %s' % response
+#    print 'response: %s' % response
 #    print 'TSV file %s with %s rows extracted from core of archive %s (type %s).' \
 #        % (response['tsvfile'], response['rowcount'], dwcafile, archivetype)
 

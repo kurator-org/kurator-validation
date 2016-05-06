@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter.py 2016-03-08T13:00-03:00"
+__version__ = "term_recommendation_reporter.py 2016-04-26T21:06-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
@@ -29,115 +29,178 @@ from dwca_vocab_utils import keys_list
 import os.path
 import json
 import logging
+import uuid
 
-# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
-# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
-#
 # Example: 
 #
-# kurator -f workflows/term_recommendation_reporter.yaml -p p=inputfile -p v=../../data/eight_specimen_records.csv -p t=year
+# kurator -f term_recommendation_reporter.yaml \
+#         -p i=./data/eight_specimen_records.csv \
+#         -p v=./data/vocabularies/month.txt \
+#         -p workspace=../workspace/ \
+#         -p o=monthreport.txt \
+#         -p t=month
 #
 # or as a command-line script.
 # Example:
 #
-# python term_recommendation_reporter.py -i ../../data/eight_specimen_records.csv -v ../../vocabularies/month.txt -o ./workspace/monthreport.txt -t month
+# python term_count_reporter.py 
+#        -i ./data/eight_specimen_records.csv 
+#        -v ./data/vocabularies/month.txt
+#        -w ./workspace/
+#        -o monthreport.txt 
+#        -t month
 
-def term_recommendation_reporter(inputs_as_json):
+def term_recommendation_reporter(options):
     """Report a list of recommended standardizations for the values of a given term in
        an input file.
-    inputs_as_json - JSON string containing inputs
-        inputfile - full path to the input file
-        outputfile - full path to the output file
-        vocabfile - full path to the vocabulary file
-        termname - the name of the term for which to find standardized values
-    returns JSON string with information about the results
-        newvalues - a list of values not found in the vocab file
+    options - a dictionary of parameters
+        workspace - path to a directory for the tsvfile (optional)
+        inputfile - full path to the input file (required)
+        vocabfile - full path to the vocabulary file (required)
+        outputfile - name of the output file, without path (optional)
+        termname - the name of the term for which to find standard values (required)
+        loglevel - the level at which to log
+    returns a dictionary with information about the results
+        workspace - actual path to the directory where the outputfile was written
+        outputfile - actual full path to the output report file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
+    print 'Started %s' % __version__
+    print 'options: %s' % options
+    # Set up logging
+#     try:
+#         loglevel = options['loglevel']
+#     except:
+#         loglevel = None
+#     if loglevel is not None:
+#         if loglevel.upper() == 'DEBUG':
+#             logging.basicConfig(level=logging.DEBUG)
+#         elif loglevel.upper() == 'INFO':        
+#             logging.basicConfig(level=logging.INFO)
+# 
+#     logging.info('Starting %s' % __version__)
+
     # Make a list for the response
-    returnvars = ['newvalues', 'success', 'message']
+    returnvars = ['workspace', 'outputfile', 'success', 'message']
 
     # outputs
-    newvalues = None
+    workspace = None
+    outputfile = None
     success = False
     message = None
 
     # inputs
-    inputs = json.loads(inputs_as_json)
+    # inputs
     try:
-        inputfile = inputs['inputfile']
+        workspace = options['workspace']
+    except:
+        workspace = None
+
+    if workspace is None:
+        workspace = './'
+
+    try:
+        inputfile = options['inputfile']
     except:
         inputfile = None
+
+    if inputfile is None or len(inputfile)==0:
+        message = 'No input file given'
+        returnvals = [workspace, outputfile, success, message]
+#        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    if os.path.isfile(inputfile) == False:
+        message = 'Input file not found'
+        returnvals = [workspace, outputfile, success, message]
+#        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
     try:
-        outputfile = inputs['outputfile']
-    except:
-        outputfile = None
-    try:
-        vocabfile = inputs['vocabfile']
+        vocabfile = options['vocabfile']
     except:
         vocabfile = None
+
+    if vocabfile is None or len(vocabfile)==0:
+        message = 'No input file given'
+        returnvals = [workspace, outputfile, success, message]
+#        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    if os.path.isfile(vocabfile) == False:
+        message = 'Vocab file not found'
+        returnvals = [workspace, outputfile, success, message]
+#        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
     try:
-        termname = inputs['termname']
+        termname = options['termname']
     except:
         termname = None
 
-    if inputfile is None:
-        message = 'No input file given'
-        returnvals = [newvalues, success, message]
-        return response(returnvars, returnvals)
-
-    if vocabfile is None:
-        message = 'No vocab file given'
-        returnvals = [newvalues, success, message]
-        return response(returnvars, returnvals)
-
-    if termname is None:
+    if termname is None or len(termname)==0:
         message = 'No term given'
-        returnvals = [newvalues, success, message]
+        returnvals = [workspace, outputfile, success, message]
+#        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
-
-    if not os.path.isfile(inputfile):
-        message = 'Input file %s not found' % inputfile
-        returnvals = [newvalues, success, message]
-        return response(returnvars, returnvals)
-
-    if not os.path.isfile(vocabfile):
-        message = 'Vocab file %s not found' % vocabfile
-        returnvals = [newvalues, success, message]
-        return response(returnvars, returnvals)
+        
+    try:
+        outputfile = options['outputfile']
+    except:
+        outputfile = None
+    if outputfile is None:
+        outputfile = '%s/%s_standardization_report_%s.txt' % \
+          (workspace.rstrip('/'), termname, str(uuid.uuid1()))
+    else:
+        outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     # Get a list of distinct values of the term in the input file
     dialect = csv_file_dialect(inputfile)
     checklist = distinct_term_values_from_file(inputfile, termname, dialect)
 #    print 'checklist:\n%s' % checklist
 #    print 'dialect:\n%s' % dialect_attributes(dialect)
+    if checklist is None or len(checklist)==0:
+        message = 'No values of %s from %s' % (termname, inputfile)
+        returnvals = [workspace, outputfile, success, message]
+        return response(returnvars, returnvals)
 
     # Get a dictionary of checklist values from the vocabfile
     matchingvocabdict = matching_vocab_dict_from_file(checklist, vocabfile)
 #    print 'matchingvocabdict:\n%s' % matchingvocabdict
+    if matchingvocabdict is None or len(matchingvocabdict)==0:
+        message = 'No matching values of %s from %s found in %s' % \
+            (termname, inputfile, vocabfile)
+        returnvals = [workspace, outputfile, success, message]
+        return response(returnvars, returnvals)
 
     # Get a dictionary of the recommended values from the matchingvocabdict
     recommended = term_values_recommended(matchingvocabdict)
 #    print 'recommended:\n%s' % recommended
 
-    # Create a series of term reports - Use Allan's DQReport framework
+    if recommended is None or len(recommended)==0:
+        message = 'Vocabulary %s has no recommended values for %s from %s' % \
+            (vocabfile, termname, inputfile)
+        returnvals = [workspace, outputfile, success, message]
+        return response(returnvars, returnvals)
+
+    # Create a series of term reports
+    # TODO: Use Allan's DQ report framework
     # Validation, Improvement, Measure
     success = term_recommendation_report(outputfile, recommended)
 
     matchingvocablist = keys_list(matchingvocabdict)
     newvalues = not_in_list(matchingvocablist, checklist)
-#    print 'checklist:\n%s' % checklist
+    print 'checklist:\n%s' % checklist
 #    print 'matchingvocablist:\n%s' % matchingvocablist
 #    print 'newvalueslist:\n%s' % newvalues
 
     if outputfile is not None and not os.path.isfile(outputfile):
-        print 'outputfile: %s\ninputs:\n%s' % (outputfile, inputs)
         message = 'Failed to write results to output file %s' % outputfile
-        returnvals = [newvalues, success, message]
+        returnvals = [workspace, outputfile, success, message]
         return response(returnvars, returnvals)
 
-    returnvals = [newvalues, success, message]
+    returnvals = [workspace, outputfile, success, message]
     return response(returnvars, returnvals)
 
 def _getoptions():
@@ -146,40 +209,51 @@ def _getoptions():
     parser.add_option("-i", "--input", dest="inputfile",
                       help="Input file to report on",
                       default=None)
-    parser.add_option("-o", "--output", dest="outputfile",
-                      help="Outputfile for report",
-                      default=None)
     parser.add_option("-v", "--vocabfile", dest="vocabfile",
                       help="Vocab file to check against",
                       default=None)
+    parser.add_option("-w", "--workspace", dest="workspace",
+                      help="Directory for the output file",
+                      default=None)
+    parser.add_option("-o", "--output", dest="outputfile",
+                      help="Outputfile for report",
+                      default=None)
     parser.add_option("-t", "--termname", dest="termname",
                       help="Name of the term to check",
+                      default=None)
+    parser.add_option("-l", "--loglevel", dest="loglevel",
+                      help="(DEBUG, INFO)",
                       default=None)
     return parser.parse_args()[0]
 
 def main():
     options = _getoptions()
-    inputfile = options.inputfile
-    outputfile = options.outputfile
-    vocabfile = options.vocabfile
-    termname = options.termname
+    optdict = {}
 
-    if inputfile is None or vocabfile is None or termname is None:
-        print 'syntax: python term_recommendation_reporter.py -i ../../data/eight_specimen_records.csv -v ../../vocabularies/month.txt -o ./workspace/monthreport.txt -t month'
+    if options.inputfile is None or len(options.inputfile)==0 or \
+       options.termname is None or len(options.termname)==0 or \
+       options.vocabfile is None or len(options.vocabfile)==0:
+        s =  'syntax: python term_recommendation_reporter.py'
+        s += ' -i ./data/eight_specimen_records.csv'
+        s += ' -v ./data/vocabularies/month.txt'
+        s += ' -w ./workspace'
+        s += ' -o testtermrecommendationout.txt'
+        s += ' -t month'
+        print '%s' % s
         return
 
-    inputs = {}
-    inputs['inputfile'] = inputfile
-    inputs['outputfile'] = outputfile
-    inputs['vocabfile'] = vocabfile
-    inputs['termname'] = termname
+    optdict['inputfile'] = options.inputfile
+    optdict['vocabfile'] = options.vocabfile
+    optdict['workspace'] = options.workspace
+    optdict['outputfile'] = options.outputfile
+    optdict['termname'] = options.termname
+    optdict['loglevel'] = options.loglevel
 
     # Report recommended standardizations for values of a given term from the inputfile
-    response=json.loads(term_recommendation_reporter(json.dumps(inputs)))
-#    print 'response: %s' % response
+    response=term_recommendation_reporter(optdict)
     logging.debug('File %s checked for non-standard values of %s. Results: %s' %
-        (inputfile, termname, response) )
-    print 'response:\n%s' % response
+        (options.inputfile, options.termname, response) )
+    print 'response: %s' % response
 
 if __name__ == '__main__':
     main()

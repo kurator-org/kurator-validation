@@ -94,7 +94,6 @@ class TermCounterTestCase(unittest.TestCase):
         inputs['termname'] = termname
 
         # Extract distinct values of term
-#        print 'inputs:\n%s' % inputs
         response=json.loads(term_counter(json.dumps(inputs)))
 #        print 'response:\n%s' % response
         rowcount = response['rowcount']
@@ -106,7 +105,6 @@ class TermCounterTestCase(unittest.TestCase):
         term = 'island'
         inputs['inputfile'] = testfile
         inputs['termname'] = term
-#        print 'inputs:\n%s' % inputs
         response=json.loads(term_counter(json.dumps(inputs)))
         rowcount = response['rowcount']
 #        print 'response:\n%s' % response

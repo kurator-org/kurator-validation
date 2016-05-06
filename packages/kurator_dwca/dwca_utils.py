@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-04-08T12:14-03:00"
+__version__ = "dwca_utils.py 2016-05-05T09:01-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -61,34 +61,51 @@ def tsv_dialect():
 def csv_file_dialect(fullpath):
     """Detect the dialect of a CSV or TXT data file.
     parameters:
-        fullpath - the full path to the file to process.
+        fullpath - full path to the file to process
     returns:
-        dialect - a csv.dialect object with the detected attributes"""
+        dialect - a csv.dialect object with the detected attributes
+    """
+    # Cannot function without a file
+    if fullpath is None or len(fullpath)==0:
+        return None
+
+    # Cannot function without an actual file where full path points
     if os.path.isfile(fullpath) == False:
         return None
 
+    # Let's look at up to readto bytes from the file
     readto = 4096
     filesize = os.path.getsize(fullpath)
     if filesize < readto:
         readto = filesize
+
     with open(fullpath, 'rb') as file:
+        # Try to read the specified part of the file
         try:
             buf = file.read(readto)
 #            print 'buf:\n%s' % buf
+            # Make a determination based on existence of tabs in the buffer, as the
+            # Sniffer is not particularly good at detecting TSV file formats. So, if the
+            # buffer has a tab in it, let's treat it as a TSV file 
             if buf.find('\t')>0:
                 return tsv_dialect()
 #            dialect = csv.Sniffer().sniff(file.read(readto))
+            # Otherwise let's see what we can find invoking the Sniffer.
             dialect = csv.Sniffer().sniff(buf)
         except csv.Error:
+            # Something went wrong, so let's try to read a few lines from the beginning of 
+            # the file
             try:
                 file.seek(0)
 #                print 'Re-sniffing with tab to %s' % (readto)
                 sample_text = ''.join(file.readline() for x in xrange(2,4,1))
                 dialect = csv.Sniffer().sniff(sample_text)
+            # Sorry, couldn't figure it out
             except csv.Error:
 #                print 'No dice'
                 return None
-        
+    
+    # Fill in some standard values for the remaining dialect attributes        
     if dialect.escapechar is None:
         dialect.escapechar='/'
     dialect.skipinitialspace=True
@@ -152,22 +169,32 @@ def dialect_attributes(dialect):
 def read_header(fullpath, dialect = None):
     """Get the header line of a CSV or TXT data file.
     parameters:
-        fullpath - the full path to the file to process.
+        fullpath - the full path to the file to process
         dialect - a csv.dialect object with the attributes of the input file
     returns:
         header - a list containing the fields in the original header
     """
-    if fullpath is None:
+    # Cannot function without a file
+    if fullpath is None or len(fullpath)==0:
         return None
+
+    # Cannot function without an actual file where full path points
     if os.path.isfile(fullpath) == False:
         return None
+
     header = None
+
+    # If no explicit dialect for the file is given, figure it out from the file
     if dialect is None:
         dialect = csv_file_dialect(fullpath)
+
+    # Open up the file for processing
     with open(fullpath, 'rU') as csvfile:
         reader = csv.DictReader(csvfile, dialect=dialect)
         # header is the list as returned by the reader
         header=reader.fieldnames
+
+    # Return the header from the file
     return header
 
 def composite_header(fullpath, dialect = None):
@@ -211,16 +238,58 @@ def write_header(fullpath, fieldnames, dialect):
             success = false
     return success
 
-def clean_header(header):
-    """Construct a header from the white-space-stripped field names in a header.
+def header_map(header):
+    """Construct a map between a header and a cleaned version of the header.
     parameters:
         header - the header to clean
     returns:
-        merge_headers(header) - a sorted list of the header after white space has been
-            stripped from field names
+        headermap - a map of the keys in the cleaned header to the original field names
     """
-    return merge_headers(header)
+    headermap = {}
+    for field in header:
+        cleanfield = clean_field_name(field)
+        headermap[cleanfield]=field
+    return headermap
+
+def clean_header(header):
+    """Construct a header from the cleaned field names in a header.
+    parameters:
+        header - the header to clean
+    returns:
+        cleanheader - the header after cleaning
+    """
+    # Cannot function without a header
+    if header is None or len(header)==0:
+        return None
+
+    cleanheader = []
+    i=1
+
+    # Clean every field in the header and append it to the cleanheader
+    for field in header:
+        cleanfield = clean_field_name(field)
+        if len(cleanfield)==0:
+            cleanfield = 'field%s' % i
+        cleanheader.append(cleanfield)
+        i+=1
+
+    # Return a version of the header that has been cleaned
+    return cleanheader
     
+def clean_field_name(fieldname):
+    """Construct a clean field name as a lowercase field name stripped of white space.
+    parameters:
+        fieldname - the field name to clean
+    returns:
+        cleanfield - the field name after changing to lower case and stripping white space
+    """
+    # Cannot function without a fieldname
+    if fieldname is None or len(fieldname)==0:
+        return None
+
+    cleanfield = fieldname.strip().lower()
+    return cleanfield
+
 def merge_headers(headersofar, headertoadd = None):
     """Construct a header from the distinct white-space-stripped fields in two headers.
     parameters:
@@ -606,7 +675,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'incorrect quotechar for csv file')
         self.assertFalse(dialect.doublequote,
             'doublequote not set to False for csv file')
-        self.assertEqual(dialect.quoting, 0,
+        self.assertEqual(dialect.quoting, csv.QUOTE_MINIMAL,
             'quoting not set to csv.QUOTE_MINIMAL for csv file')
         self.assertTrue(dialect.skipinitialspace,
             'skipinitialspace not set to True for csv file')
@@ -621,16 +690,16 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertIsNotNone(dialect, 'unable to detect tsv file dialect')
         self.assertEqual(dialect.delimiter, '\t',
             'incorrect delimiter detected for csv file')
-        self.assertEqual(dialect.lineterminator, '\r\n',
+        self.assertEqual(dialect.lineterminator, '\r',
             'incorrect lineterminator for csv file')
         self.assertEqual(dialect.escapechar, '/',
             'incorrect escapechar for csv file')
         self.assertEqual(dialect.quotechar, '"',
             'incorrect quotechar for csv file')
-        self.assertFalse(dialect.doublequote,
+        self.assertTrue(dialect.doublequote,
             'doublequote not set to False for csv file')
-        self.assertEqual(dialect.quoting, 0,
-            'quoting not set to csv.QUOTE_MINIMAL for csv file')
+        self.assertEqual(dialect.quoting, csv.QUOTE_NONE,
+            'quoting not set to csv.QUOTE_NONE for csv file')
         self.assertTrue(dialect.skipinitialspace,
             'skipinitialspace not set to True for csv file')
         self.assertFalse(dialect.strict,
@@ -912,11 +981,18 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(filepattern, 'test_eight_specimen_records', 
             'incorrect file pattern')
 
+    def test_header_map(self):
+        print 'testing header_map'
+        header = ['b ', ' a', 'c	']
+        result = header_map(header)
+        self.assertEqual(result, {'b':'b ', 'a':' a', 'c':'c	'}, \
+            'header failed to be cleaned properly')
+
     def test_clean_header(self):
         print 'testing clean_header'
         header = ['b ', ' a', 'c	']
         result = clean_header(header)
-        self.assertEqual(result, ['a', 'b', 'c'], 'header failed to be cleaned properly')
+        self.assertEqual(result, ['b', 'a', 'c'], 'header failed to be cleaned properly')
 
     def test_merge_headers(self):
         print 'testing merge_headers'

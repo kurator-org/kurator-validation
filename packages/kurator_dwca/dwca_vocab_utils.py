@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-04-26T11:38-03:00"
+__version__ = "dwca_vocab_utils.py 2016-05-05T14:07-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -25,6 +25,7 @@ __version__ = "dwca_vocab_utils.py 2016-04-26T11:38-03:00"
 
 from dwca_utils import csv_file_dialect
 from dwca_utils import read_header
+from dwca_utils import clean_header
 from dwca_utils import tsv_dialect
 from dwca_utils import dialect_attributes
 from dwca_terms import simpledwctermlist
@@ -63,6 +64,7 @@ def makevocabheader(keyfields):
     # vocabfieldlist = ['verbatim','standard','checked']
     # then the header will end up as 
     # 'country|stateprovince|county','standard','checked'
+
     if keyfields is None:
         return None
 
@@ -353,20 +355,35 @@ def distinct_term_values_from_file(inputfile, termname, dialect=None):
     returns:
         sorted(list(values)) - a sorted list of distinct values of the term
     """
-    if inputfile is None:
+    if inputfile is None or len(inputfile)==0:
+        print 'Input file not given for distinct_term_values_from_file()'
         return None
+
     if os.path.isfile(inputfile) == False:
+        # It's actually OK if the file does not exist. Just return None
+#        print 'input file %s not found' % inputfile
         return None
+
     values = set()
+
     if dialect is None:
         dialect = csv_file_dialect(inputfile)
+
     header = read_header(inputfile, dialect)
-#    print 'header:/n%s' % header
+#    print 'header before:\n%s' % header
+
+#    header = clean_header(header)
+#    print 'header after:\n%s' % header
 #    print 'dialect:\n%s' % dialect_attributes(dialect)
+
     if header is None:
+        print 'No header found'
         return None
+
     if termname not in header:
+        print '%s not found in header:\n%s' % (termname, header)
         return None
+
     with open(inputfile, 'rU') as csvfile:
         dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=header)
         i=0
@@ -375,6 +392,7 @@ def distinct_term_values_from_file(inputfile, termname, dialect=None):
             if i>0:
                 values.add(row[termname])
             i+=1
+
     return sorted(list(values))
 
 def distinct_term_counts_from_file(inputfile, termname, dialect=None):
@@ -466,6 +484,7 @@ def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
     """
     if vocabfile is None:
         return None
+#    print 'Getting vocablist in distinct_vocabs_to_file(%s)' % vocabfile
     vocablist = distinct_term_values_from_file(vocabfile, 'verbatim', dialect)
     newvaluelist = not_in_list(vocablist, valuelist)
     if newvaluelist is None or len(newvaluelist) == 0:
@@ -749,17 +768,26 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         testvocabfile = self.framework.testvocabfile
 
         valuelist = ['b', 'a', 'c']
+#        print 'Putting distinct_vocabs_to_file(%s): %s' % (testvocabfile, valuelist)
         writtenlist = distinct_vocabs_to_file(testvocabfile, valuelist)
 #        print 'writtenlist1: %s' % writtenlist
+        # Check that the testvocabfile exists
         self.assertEqual(writtenlist, ['a', 'b', 'c'],
             'new values abc for target list not written to testvocabfile')
+        check = os.path.isfile(testvocabfile)
+        s = 'testvocabfile not written to %s for first checklist' % testvocabfile
+        self.assertTrue(check, s)
 
         checklist = ['c', 'd', 'a', 'e']
         writtenlist = distinct_vocabs_to_file(testvocabfile, checklist)
 #        print 'writtenlist2: %s' % writtenlist
         self.assertEqual(writtenlist, ['d', 'e'],
             'new values de for target list not written to testvocabfile')
+        check = os.path.isfile(testvocabfile)
+        s = 'testvocabfile not written to %s for second checklist' % testvocabfile
+        self.assertTrue(check, s)
 
+#        print 'Getting distinct_term_values_from_file(%s)' % (testvocabfile)
         fulllist = distinct_term_values_from_file(testvocabfile, 'verbatim')
 #        print 'fulllist: %s' % fulllist
         self.assertEqual(fulllist, ['a', 'b', 'c', 'd', 'e'],

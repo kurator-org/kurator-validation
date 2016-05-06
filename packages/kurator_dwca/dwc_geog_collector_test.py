@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_geog_collector_test.py 2016-04-05T11:00-03:00"
+__version__ = "dwc_geog_collector_test.py 2016-05-05T15:30-03:00"
 
 # This file contains unit test for the dwc_geog_collector function.
 #
@@ -29,7 +29,6 @@ from dwca_vocab_utils import distinct_term_values_from_file
 from dwca_utils import read_header
 from dwca_terms import geogkeytermlist
 import os
-import json
 import unittest
 
 class DwcGeogCollectorFramework():
@@ -73,7 +72,7 @@ class DwcGeogCollectorTestCase(unittest.TestCase):
         vocabfile = self.framework.testcollectorfile
 
         inputs = {}
-        response=json.loads(dwc_geog_collector(json.dumps(inputs)))
+        response=dwc_geog_collector(inputs)
 #        print 'response:\n%s' % response
         self.assertIsNone(response['addedvalues'], \
             'geog vocab values added without input file or vocabfile')
@@ -81,14 +80,14 @@ class DwcGeogCollectorTestCase(unittest.TestCase):
             'geog vocab addition successful without input file or vocabfile')
 
         inputs['inputfile'] = testfile1
-        response=json.loads(dwc_geog_collector(json.dumps(inputs)))
+        response=dwc_geog_collector(inputs)
 #        print 'response:\n%s' % response
         self.assertFalse(response['success'], \
             'geog vocab addition successful without vocabfile')
 
         inputs = {}
         inputs['vocabfile'] = vocabfile
-        response=json.loads(dwc_geog_collector(json.dumps(inputs)))
+        response=dwc_geog_collector(inputs)
 #        print 'response:\n%s' % response
         self.assertIsNone(response['addedvalues'], \
             'geog vocab values added without inputfile')
@@ -139,8 +138,8 @@ class DwcGeogCollectorTestCase(unittest.TestCase):
         inputs['vocabfile'] = vocabfile
 
         # Collect terms
-        response=json.loads(dwc_geog_collector(json.dumps(inputs)))
-        values = response['addedvalues']
+        response=dwc_geog_collector(inputs)
+        addedvalues = response['addedvalues']
         expected = [
             '|United States||California|Kern||||', 
             '|United States||California|San Bernardino||||',
@@ -149,27 +148,29 @@ class DwcGeogCollectorTestCase(unittest.TestCase):
             '|United States||Hawaii|Honolulu||||',
             '|United States||Washington|Chelan||||'
         ]
-#        print 'values:\n%s expected: %s' % (values,expected)
+#        print 'addedvalues:\n%s\nexpected: %s' % (addedvalues,expected)
+#        print 'response:\n%s' % response
         s = 'new Darwin Core geography terms %s not added correctly from %s' \
-            % (values, testfile1)
-        self.assertEqual(values, expected, s)
+            % (addedvalues, testfile1)
+        self.assertEqual(addedvalues, expected, s)
 
         inputs['inputfile'] = testfile2
 
         # Collect terms
-        response=json.loads(dwc_geog_collector(json.dumps(inputs)))
+        response=dwc_geog_collector(inputs)
         values = response['addedvalues']
         expected = [
             '|Mozambique||Maputo|||||Inhaca',
             '|South Africa||Kwa-Zulu Natal|||||'
         ]
 #        print 'values:\n%s\nexpected:\n%s' % (values,expected)
-        s = 'new Darwin Core geography terms %s not added correctly from %s' \
+        s = 'new Darwin Core geography terms %s not added correctly from input file %s' \
             % (values, testfile2)
         self.assertEqual(values, expected, s)
         
         dialect = vocab_dialect()
         geogkey = compose_key_from_list(geogkeytermlist)
+#        print 'geogkey: %s' % geogkey
         existinggeogs = distinct_term_values_from_file(vocabfile, geogkey, dialect)
         expected = [
             '|Mozambique||Maputo|||||Inhaca',
@@ -181,8 +182,8 @@ class DwcGeogCollectorTestCase(unittest.TestCase):
             '|United States||Hawaii|Honolulu||||',
             '|United States||Washington|Chelan||||'
         ]
-        s = 'Resulting Darwin Core geography file %s not correct from %s and %s' \
-            % (vocabfile, testfile1, testfile2)
+        s = 'Resulting Darwin Core geography file %s ' % vocabfile
+        s += 'not correct from input file %s and %s\n' % (testfile1, testfile2)
         s += 'Found:\n%s\nShould be:\n%s' % (existinggeogs, expected)
         self.assertEqual(existinggeogs, expected, s)
 

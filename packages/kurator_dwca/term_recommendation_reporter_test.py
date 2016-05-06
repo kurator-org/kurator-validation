@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter_test.py 2016-04-05T11:43-03:00"
+__version__ = "term_recommendation_reporter_test.py 2016-04-28T12:06-03:00"
 
 # This file contains unit tests for the term_recommendation_reporter function.
 #
@@ -24,7 +24,6 @@ __version__ = "term_recommendation_reporter_test.py 2016-04-05T11:43-03:00"
 
 from term_recommendation_reporter import term_recommendation_reporter
 import os
-import json
 import unittest
 
 class TermRecommendationReporterFramework():
@@ -69,7 +68,7 @@ class TermRecommendationReporterTestCase(unittest.TestCase):
         monthvocabfile = self.framework.monthvocabfile
 
         inputs = {}
-        response=json.loads(term_recommendation_reporter(json.dumps(inputs)))
+        response=term_recommendation_reporter(inputs)
 #        print 'response:\n%s' % response
         self.assertIsNone(response['newvalues'], \
             'recommendations reported without input file')
@@ -78,7 +77,7 @@ class TermRecommendationReporterTestCase(unittest.TestCase):
 
         inputs['inputfile'] = testfile
 #        print 'inputs:\n%s' % inputs
-        response=json.loads(term_recommendation_reporter(json.dumps(inputs)))
+        response=term_recommendation_reporter(inputs)
 #        print 'response:\n%s' % response
         self.assertIsNone(response['newvalues'], \
             'recommendations reported without vocab file')
@@ -87,7 +86,7 @@ class TermRecommendationReporterTestCase(unittest.TestCase):
 
         inputs['vocabfile'] = monthvocabfile
 #        print 'inputs:\n%s' % inputs
-        response=json.loads(term_recommendation_reporter(json.dumps(inputs)))
+        response=term_recommendation_reporter(inputs)
 #        print 'response:\n%s' % response
         self.assertIsNone(response['newvalues'], \
             'recommendations reported without term name')
@@ -109,7 +108,7 @@ class TermRecommendationReporterTestCase(unittest.TestCase):
 
         # Create the report
 #        print 'inputs:\n%s' % inputs
-        response=json.loads(term_recommendation_reporter(json.dumps(inputs)))
+        response=term_recommendation_reporter(inputs)
 #        print 'response:\n%s' % response
         success = response['success']
         s = 'term recommendation failed: %s' % response['message']

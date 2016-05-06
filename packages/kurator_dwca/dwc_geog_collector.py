@@ -14,52 +14,65 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_geog_collector.py 2016-02-21T16:53-03:00"
+__version__ = "dwc_geog_collector.py 2016-05-05T15:30-03:00"
 
-# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
-# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
-#
 # Example: 
 #
-# kurator -f workflows/dwc_geog_collector.yaml -p i=../../data/eight_specimen_records.csv -p o=../../vocabularies/dwc_geography.txt
+# kurator -f workflows/dwc_geog_collector.yaml 
+#         -p i=../../data/eight_specimen_records.csv 
+#         -p o=../../vocabularies/dwc_geography.txt
 #
 # or as a command-line script.
 # Example:
 #
-# python dwc_geog_collector.py -i ../../data/eight_specimen_records.csv -o ../../vocabularies/dwc_geography.txt
+# python dwc_geog_collector.py 
+#        -i ../../data/eight_specimen_records.csv 
+#        -o ../../vocabularies/dwc_geography.txt
 
 from optparse import OptionParser
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import writevocabheader
-from dwca_vocab_utils import distinct_vocabs_to_file
-from dwca_vocab_utils import terms_not_in_dwc
 from dwca_vocab_utils import compose_key_from_list
 from dwca_vocab_utils import distinct_term_values_from_file
 from dwca_vocab_utils import distinct_composite_term_values_from_file
 from dwca_vocab_utils import not_in_list
 from dwca_vocab_utils import geogvocabheader
 from dwca_utils import read_header
-from dwca_utils import clean_header
 from dwca_terms import geogkeytermlist
 from dwca_utils import response
 import os
 import csv
-import json
 import logging
 
-def dwc_geog_collector(inputs_as_json):
+def dwc_geog_collector(options):
     """Get geography unique combinations of geography from the inputfile and put any new 
         ones in the geography vocabulary file.
-    inputs_as_json - JSON string containing inputs
-        inputfile - full path to the input file
-        vocabfile - full path to the geography vocabulary file
-    returns JSON string with information about the results
+    options - a dictionary of parameters
+        inputfile - full path to the input file (required)
+        vocabfile - full path to the geography vocabulary file (required)
+    returns a dictionary with information about the results
         addedvalues - new values added to the geography vocabulary file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
+#    print 'Started %s' % __version__
+#    print 'options: %s' % options
+
+    # Set up logging
+#     try:
+#         loglevel = options['loglevel']
+#     except:
+#         loglevel = None
+#     if loglevel is not None:
+#         if loglevel.upper() == 'DEBUG':
+#             logging.basicConfig(level=logging.DEBUG)
+#         elif loglevel.upper() == 'INFO':        
+#             logging.basicConfig(level=logging.INFO)
+# 
+#     logging.info('Starting %s' % __version__)
+
     # Make a list for the response
-    returnvars = ['addedvalues', 'success', 'comment']
+    returnvars = ['addedvalues', 'success', 'message']
 
     # outputs
     addedvalues = None
@@ -67,38 +80,51 @@ def dwc_geog_collector(inputs_as_json):
     message = None
 
     # inputs
-    inputs = json.loads(inputs_as_json)
     try:
-        inputfile = inputs['inputfile']
+        inputfile = options['inputfile']
     except:
         inputfile = None
+
+    if inputfile is None or len(inputfile)==0:
+        message = 'No input dwca file given'
+        returnvals = [addedvalues, success, message]
+#        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    if os.path.isfile(inputfile) == False:
+        message = 'Input file not found'
+        returnvals = [addedvalues, success, message]
+#        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
     try:
-        vocabfile = inputs['vocabfile']
+        vocabfile = options['vocabfile']
     except:
         vocabfile = None
 
-    if inputfile is None:
-        message = 'No input file given'
+    if vocabfile is None or len(vocabfile)==0:
+        message = 'No input vocab file given'
         returnvals = [addedvalues, success, message]
+#        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
-        
-    if vocabfile is None:
-        message = 'No vocab file given'
-        returnvals = [addedvalues, success, message]
-        return response(returnvars, returnvals)
-        
+
     dialect = vocab_dialect()
+
     geogkey = compose_key_from_list(geogkeytermlist)
+
     potentialgeogs = distinct_composite_term_values_from_file(inputfile, geogkey, '|')
 #    print 'potentialgeogs: %s\n' % potentialgeogs
+
     existinggeogs = distinct_term_values_from_file(vocabfile, geogkey, dialect)
 #    print 'existinggeogs: %s\n' % existinggeogs
+
     addedvalues = not_in_list(existinggeogs, potentialgeogs)
 #    print 'added geog values: %s\n' % addedvalues
 
     # Now write the newgeogs to the geog vocab file, which has a distinct header
     # If the geog vocab file does not exist, make it
     geogheader = geogvocabheader()
+
     if not os.path.isfile(vocabfile):
         writevocabheader(vocabfile, geogheader, dialect)
 
@@ -121,36 +147,44 @@ def dwc_geog_collector(inputs_as_json):
 #    print 'geog header:\n%s' % geogheader
 
     returnvals = [addedvalues, success, message]
+#    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
     
 def _getoptions():
     """Parses command line options and returns them."""
     parser = OptionParser()
-    parser.add_option("-i", "--input", dest="inputfile",
-                      help="Text file to mine for geog values",
+    parser.add_option("-i", "--inputfile", dest="inputfile",
+                      help="Text file to mine for geography values",
                       default=None)
-    parser.add_option("-o", "--output", dest="outputfile",
-                      help="Geog vocab file",
+    parser.add_option("-v", "--vocabfile", dest="vocabfile",
+                      help="Geography vocabulary file",
+                      default=None)
+    parser.add_option("-l", "--loglevel", dest="loglevel",
+                      help="(DEBUG, INFO)",
                       default=None)
     return parser.parse_args()[0]
 
 def main():
     options = _getoptions()
-    inputfile = options.inputfile
-    vocabfile = options.outputfile
+    optdict = {}
 
-    if inputfile is None or vocabfile is None:
-        print "syntax: python dwc_geog_collector.py -i ../../data/eight_specimen_records.csv -o ../../vocabularies/dwc_geography.txt"
+    if options.inputfile is None or len(options.inputfile)==0 or \
+        options.vocabfile is None or len(options.vocabfile)==0:
+        s =  'syntax: python downloader.py'
+        s += ' -i ../../data/eight_specimen_records.csv'
+        s += ' -o ../../vocabularies/dwc_geography.txt'
+        s += ' -l DEBUG'
+        print '%s' % s
         return
-    
-    inputs = {}
-    inputs['inputfile'] = inputfile
-    inputs['vocabfile'] = vocabfile
+
+    optdict['inputfile'] = options.inputfile
+    optdict['vocabfile'] = options.vocabfile
+    optdict['loglevel'] = options.loglevel
 
     # Append distinct values of to vocab file
     response=json.loads(dwc_geog_collector(json.dumps(inputs)))
     print 'response: %s' % response
-    logging.debug('To file %s, added new values: %s' % (inputfile, response['addedvalues']))
+#    logging.debug('To file %s, added new values: %s' % (inputfile, response['addedvalues']))
 
 if __name__ == '__main__':
     main()
