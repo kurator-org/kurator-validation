@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_composite_extractor_test.py 2016-04-05T14:26-03:00"
+__version__ = "vocab_composite_extractor_test.py 2016-05-11T22:52-03:00"
 
 # This file contains unit test for the vocab_composite_extractor function.
 #
@@ -23,9 +23,7 @@ __version__ = "vocab_composite_extractor_test.py 2016-04-05T14:26-03:00"
 # python vocab_composite_extractor_test.py
 
 from vocab_composite_extractor import vocab_composite_extractor
-from dwca_utils import read_header
 import os
-import json
 import unittest
 
 class VocabCompositeExtractorFramework():
@@ -67,22 +65,37 @@ class VocabCompositeExtractorTestCase(unittest.TestCase):
         print 'testing missing_parameters'
         testfile = self.framework.testfile1
 
+        # Test with missing required inputs
+        # Test with no inputs
         inputs = {}
-        response=json.loads(vocab_composite_extractor(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['valueset'], \
-            'values extracted without input file')
-        self.assertFalse(response['success'], \
-            'success without input file')
+        response=vocab_composite_extractor(inputs)
+#        print 'response1:\n%s' % response
+        s = 'success without any required inputs'
+        self.assertFalse(response['success'], s)
 
+        # Test with missing inputfile
+        inputs['termcomposite'] = 'year'
+        response=vocab_composite_extractor(inputs)
+#        print 'response2:\n%s' % response
+        s = 'success without inputfile'
+        self.assertFalse(response['success'], s)
+
+        # Test with missing termname
+        inputs = {}
         inputs['inputfile'] = testfile
-#        print 'inputs:\n%s' % inputs
-        response=json.loads(vocab_composite_extractor(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['valueset'], \
-            'values added without key')
-        self.assertFalse(response['success'], \
-            'success with missing key')
+        response=vocab_composite_extractor(inputs)
+#        print 'response3:\n%s' % response
+        s = 'success without inputfile'
+        self.assertFalse(response['success'], s)
+
+        # Test with missing optional inputs
+        inputs = {}
+        inputs['inputfile'] = testfile
+        inputs['termcomposite'] = 'country|stateProvince'
+        response=vocab_composite_extractor(inputs)
+#        print 'response4:\n%s' % response
+        s = 'no output file produced with required inputs'
+        self.assertTrue(response['success'], s)
 
     def test_vocab_composite_extractor(self):
         print 'testing vocab_composite_extractor'
@@ -94,7 +107,7 @@ class VocabCompositeExtractorTestCase(unittest.TestCase):
         inputs['termcomposite'] = terms
 
         # Extract distinct values of term
-        response=json.loads(vocab_composite_extractor(json.dumps(inputs)))
+        response=vocab_composite_extractor(inputs)
         values = response['valueset']
 #        print '%s values: %s' % (term, values)
         s = 'values of key %s not extracted correctly from %s' % (terms, testfile)
@@ -102,7 +115,7 @@ class VocabCompositeExtractorTestCase(unittest.TestCase):
 
         terms = 'country|stateProvince'
         inputs['termcomposite'] = terms
-        response=json.loads(vocab_composite_extractor(json.dumps(inputs)))
+        response=vocab_composite_extractor(inputs)
         s = 'values of key %s not extracted correctly from %s' % (terms, testfile)
         values = response['valueset']
 #        print 'values: %s' % values
@@ -111,7 +124,7 @@ class VocabCompositeExtractorTestCase(unittest.TestCase):
 
         terms = 'family '
         inputs['termcomposite'] = terms
-        response=json.loads(vocab_composite_extractor(json.dumps(inputs)))
+        response=vocab_composite_extractor(inputs)
         s = 'values of key %s not extracted correctly from %s' % (terms, testfile)
         values = response['valueset']
 #        print 'values: %s' % values
@@ -121,11 +134,12 @@ class VocabCompositeExtractorTestCase(unittest.TestCase):
         testfile = self.framework.testfile2
         inputs['inputfile'] = testfile
         inputs['termcomposite'] = terms
-        response=json.loads(vocab_composite_extractor(json.dumps(inputs)))
+        response=vocab_composite_extractor(inputs)
         s = 'values of key %s not extracted correctly from %s' % (terms, testfile)
         values = response['valueset']
 #        print 'values: %s' % values
         self.assertEqual(values, ['Mozambique|Maputo', u'South Africa|Kwa-Zulu Natal'], s)
 
 if __name__ == '__main__':
+    print '=== vocab_composite_extractor_test.py ==='
     unittest.main()

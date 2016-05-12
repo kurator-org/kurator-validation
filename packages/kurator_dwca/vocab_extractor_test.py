@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor_test.py 2016-04-06T19:08-03:00"
+__version__ = "vocab_extractor_test.py 2016-05-11T22:53-03:00"
 
 # This file contains unit test for the vocab_extractor function.
 #
@@ -25,7 +25,6 @@ __version__ = "vocab_extractor_test.py 2016-04-06T19:08-03:00"
 from vocab_extractor import vocab_extractor
 from dwca_utils import read_header
 import os
-#import json
 import unittest
 
 class VocabExtractorFramework():
@@ -67,22 +66,37 @@ class VocabExtractorTestCase(unittest.TestCase):
         print 'testing missing_parameters'
         testfile = self.framework.testfile1
 
+        # Test with missing required inputs
+        # Test with no inputs
         inputs = {}
         response=vocab_extractor(inputs)
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['extractedvalues'], \
-            'values extracted without input file')
-        self.assertFalse(response['success'], \
-            'success without input file')
+#        print 'response1:\n%s' % response
+        s = 'success without any required inputs'
+        self.assertFalse(response['success'], s)
 
-        inputs['inputfile'] = testfile
-#        print 'inputs:\n%s' % inputs
+        # Test with missing inputfile
+        inputs['termname'] = 'year'
         response=vocab_extractor(inputs)
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['extractedvalues'], \
-            'values added without term name')
-        self.assertFalse(response['success'], \
-            'success with missing term name')
+#        print 'response2:\n%s' % response
+        s = 'success without inputfile'
+        self.assertFalse(response['success'], s)
+
+        # Test with missing termname
+        inputs = {}
+        inputs['inputfile'] = testfile
+        response=vocab_extractor(inputs)
+#        print 'response3:\n%s' % response
+        s = 'success without inputfile'
+        self.assertFalse(response['success'], s)
+
+        # Test with missing optional inputs
+        inputs = {}
+        inputs['inputfile'] = testfile
+        inputs['termname'] = 'year'
+        response=vocab_extractor(inputs)
+#        print 'response4:\n%s' % response
+        s = 'no output file produced with required inputs'
+        self.assertTrue(response['success'], s)
 
     def test_term_exists(self):
         print 'testing term_exists'
@@ -130,7 +144,8 @@ class VocabExtractorTestCase(unittest.TestCase):
         values = response['extractedvalues']
 #        print 'response:\n%s' % response
         s = 'values of term %s not extracted correctly from %s' % (term, testfile)
-        self.assertEqual(values, ['107702', '126', '1940', '2503', '2938', '2940', '3000', '606'], s)
+        v = ['107702', '126', '1940', '2503', '2938', '2940', '3000', '606']
+        self.assertEqual(values, v, s)
 
         testfile = self.framework.testfile2
         term = 'verbatim'
@@ -144,4 +159,5 @@ class VocabExtractorTestCase(unittest.TestCase):
         self.assertEqual(values, ['5', '6', 'V', 'VI', 'Vi', 'v', 'vI', 'vi'], s)
 
 if __name__ == '__main__':
+    print '=== vocab_extractor_test.py ==='
     unittest.main()

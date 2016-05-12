@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-05-05T14:07-03:00"
+__version__ = "dwca_vocab_utils.py 2016-05-11T22:45-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -26,6 +26,7 @@ __version__ = "dwca_vocab_utils.py 2016-05-05T14:07-03:00"
 from dwca_utils import csv_file_dialect
 from dwca_utils import read_header
 from dwca_utils import clean_header
+from dwca_utils import slugify
 from dwca_utils import tsv_dialect
 from dwca_utils import dialect_attributes
 from dwca_terms import simpledwctermlist
@@ -743,13 +744,15 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         'earliestDateCollected', '', 'latestDateCollected']
         notdwc = terms_not_in_dwc(checklist)
         expectedlist = ['earliestDateCollected', 'latestDateCollected']
-        self.assertEqual(notdwc, expectedlist, 'non-dwc terms do not meet expectation')
+        s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
+        self.assertEqual(notdwc, expectedlist, s)
 
         checklist = ['catalogNumber','catalognumber']
         notdwc = terms_not_in_dwc(checklist)
         expectedlist = ['catalognumber']
 #        print 'notdwc: %s\nexpected: %s' % (notdwc, expectedlist)
-        self.assertEqual(notdwc, expectedlist, 'catalogNumber DwC test failed')
+        s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
+        self.assertEqual(notdwc, expectedlist, s)
 
     def test_not_in_list(self):
         print 'testing not_in_list'
@@ -885,4 +888,5 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         self.assertTrue(success, s)
 
 if __name__ == '__main__':
+    print '=== dwca_vocab_utils.py ==='
     unittest.main()

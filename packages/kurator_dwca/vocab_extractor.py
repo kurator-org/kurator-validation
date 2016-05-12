@@ -14,40 +14,28 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-04-23T14:03-03:00"
+__version__ = "vocab_extractor.py 2016-05-11T21:18-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
 from dwca_vocab_utils import distinct_term_values_from_file
-import os.path
+import os
 import logging
-
-# Example: 
-#
-# kurator -f vocab_extractor.yaml 
-#         -p i=../data/eight_specimen_records.csv 
-#         -p t=year
-#
-# or as a command-line script.
-# Example:
-#
-# python vocab_extractor.py 
-#        -i ./data/eight_specimen_records.csv 
-#        -t year
 
 def vocab_extractor(options):
     """Extract a list of the distinct values of a given term in a text file.
     options - a dictionary of parameters
+        loglevel - the level at which to log (optional)
         inputfile - full path to the input file (required)
         termname - the name of the term for which to find distinct values (required)
-        loglevel - the level at which to log
     returns a dictionary with information about the results
         extractedvalues - a list of distinct values of the term in the inputfile
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
-    print 'Started %s' % __version__
-    print 'options: %s' % options
+#     print 'Started %s' % __version__
+#     print 'options: %s' % options
+
     # Set up logging
 #     try:
 #         loglevel = options['loglevel']
@@ -81,18 +69,12 @@ def vocab_extractor(options):
 #        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
-    if termname is None or len(termname)==0:
-        message = 'No term given'
-        returnvals = [extractedvalues, success, message]
-#        logging.debug('message: %s' % message)
-        return response(returnvars, returnvals)
-        
     if not os.path.isfile(inputfile):
         message = 'Input file %s not found' % inputfile
         returnvals = [extractedvalues, success, message]
 #        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
-
+        
     try:
         termname = options['termname']
     except:
@@ -107,7 +89,6 @@ def vocab_extractor(options):
     extractedvalues = distinct_term_values_from_file(inputfile, termname)
     success = True
     returnvals = [extractedvalues, success, message]
-#    options['vocab_extractor_response'] = response(returnvars, returnvals)
 #    logging.debug('options:\n%s' % options)
 #    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
@@ -135,12 +116,14 @@ def main():
         s =  'syntax: python vocab_extractor.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -t year'
+        s += ' -l DEBUG'
         print '%s' % s
         return
 
     optdict['inputfile'] = options.inputfile
     optdict['termname'] = options.termname
     optdict['loglevel'] = options.loglevel
+    print 'optdict: %s' % optdict
 
     # Get distinct values of termname from inputfile
     response=vocab_extractor(optdict)

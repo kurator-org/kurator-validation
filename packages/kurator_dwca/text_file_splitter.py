@@ -14,43 +14,47 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_splitter.py 2016-02-21T19:38-03:00"
-
-# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
-# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
-#
-# Example: 
-#
-# kurator -f workflows/text_file_splitter.yaml -p p=inputfile -p v=../../data/eight_specimen_records.csv  -p c=5 -p w=./workspace
-#
-# or as a command-line script.
-# Example:
-#
-# python text_file_splitter.py -i ../../data/eight_specimen_records.csv -c 5 -w ./workspace
+__version__ = "text_file_splitter.py 2016-05-11T16:12-03:00"
 
 from optparse import OptionParser
 from dwca_utils import split_path
 from dwca_utils import response
-import os.path
-import json
+import os
 import uuid
 import logging
 
-def text_file_splitter(inputs_as_json):
+def text_file_splitter(options):
     """Split a text file into chunks with headers. Put the chunk files in the workspace
-    inputs_as_json - JSON string containing inputs
-        inputfile - full path to the input file
-        workspace - the directory in which the output will be written
-        chunksize - the maximum number of records in an output file
-    returns JSON string with information about the results
+    options - a dictionary of parameters
+        inputfile - full path to the input file (required)
+        workspace - the directory in which the output will be written (optional)
+        chunksize - the maximum number of records in an output file (optional)
+    returns a dictionary with information about the results
+        workspace - actual path to the directory where the outputfile was written
         filepattern - the pattern for the split file names
         chunks - the number of files created from the split
         rowcount - the number of rows in the file that was split, not counting header
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
+#    print 'Started %s' % __version__
+#    print 'options: %s' % options
+
+    # Set up logging
+#     try:
+#         loglevel = options['loglevel']
+#     except:
+#         loglevel = None
+#     if loglevel is not None:
+#         if loglevel.upper() == 'DEBUG':
+#             logging.basicConfig(level=logging.DEBUG)
+#         elif loglevel.upper() == 'INFO':        
+#             logging.basicConfig(level=logging.INFO)
+# 
+#     logging.info('Starting %s' % __version__)
+
     # Make a list for the response
-    returnvars = ['filepattern', 'chunks', 'rowcount', 'success', 'message']
+    returnvars = ['workspace', 'filepattern', 'chunks', 'rowcount', 'success', 'message']
 
     # outputs
     filepattern = None
@@ -60,33 +64,39 @@ def text_file_splitter(inputs_as_json):
     message = None
 
     # inputs
-    inputs = json.loads(inputs_as_json)
     try:
-        inputfile = inputs['inputfile']
-    except:
-        inputfile = None
-    try:
-        workspace = inputs['workspace']
-    except:
-        workspace = './workspace'
-    try:
-        chunksize = inputs['chunksize']
+        chunksize = options['chunksize']
     except:
         chunksize = 10000
 
-    # local variables
-    path = None
-    fileext = None
+    try:
+        workspace = options['workspace']
+    except:
+        workspace = None
 
-    if inputfile is None:
+    if workspace is None or len(workspace)==0:
+        workspace = './'
+
+    try:
+        inputfile = options['inputfile']
+    except:
+        inputfile = None
+
+    if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
-        returnvals = [filepattern, chunks, rowcount, success, message]
+        returnvals = [workspace, filepattern, chunks, rowcount, success, message]
+#        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if not os.path.isfile(inputfile):
         message = 'Input file %s not found' % inputfile
-        returnvals = [filepattern, chunks, rowcount, success, message]
+        returnvals = [workspace, filepattern, chunks, rowcount, success, message]
+#        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
+
+    # local variables
+    path = None
+    fileext = None
 
     path, fileext, filepattern = split_path(inputfile)
 
@@ -130,7 +140,11 @@ def text_file_splitter(inputs_as_json):
         outputpattern = workspace+'/'+filepattern+'-*.'+fileext
 
     success = True
-    returnvals = [outputpattern, chunks, rowcount, success, message]
+    
+    # Prepare the response dictionary
+    returnvals = [workspace, filepattern, chunks, rowcount, success, message]
+#    logging.debug('message:\n%s' % message)
+#    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
     
 def _getoptions():
@@ -145,38 +159,38 @@ def _getoptions():
     parser.add_option("-c", "--chunksize", dest="chunksize",
                       help="Maximum number of lines per chunk file",
                       default=None)
+    parser.add_option("-l", "--loglevel", dest="loglevel",
+                      help="(e.g., DEBUG, WARNING, INFO) (optional)",
+                      default=None)
     return parser.parse_args()[0]
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
     options = _getoptions()
-    inputfile = options.inputfile
-    workspace = options.workspace
+    optdict = {}
 
-    if inputfile is None:
-        print 'syntax: python text_file_splitter.py -i ../../data/eight_specimen_records.csv -c 5 -w ./workspace'
+    if options.inputfile is None or len(options.inputfile)==0:
+        s =  'syntax: python text_file_splitter.py'
+        s += ' -i ./data/eight_specimen_records.csv'
+        s += ' -w ./workspace'
+        s += ' -c 5'
+        s += ' -l DEBUG'
+        print '%s' % s
         return
-
-    if workspace is None:
-        workspace = './workspace'
 
     try:
         chunksize = int(str(options.chunksize))
     except:
         chunksize = 10000
-    
-    inputs = {}
-    inputs['inputfile'] = inputfile
-    inputs['workspace'] = workspace
-    inputs['chunksize'] = chunksize
+
+    optdict['inputfile'] = options.inputfile
+    optdict['workspace'] = options.workspace
+    optdict['chunksize'] = chunksize
+    optdict['loglevel'] = options.loglevel
+    print 'optdict: %s' % optdict
 
     # Split text file into chucks
-    response=json.loads(text_file_splitter(json.dumps(inputs)))
-    chunks = response['chunks']
-    splitrowcount = response['splitrowcount']
-    print 'File %s with %s records chunked into %s chunks of %s or less rows in %s.' \
-        % (inputfile, splitrowcount, chunks, chunksize, workspace)
-    print 'Response: %s' % response
+    response=text_file_splitter(optdict)
+    print 'response: %s' % response
 
 if __name__ == '__main__':
     """ Demo of text_file_splitter"""

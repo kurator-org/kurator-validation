@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader_test.py 2016-05-05T20:29-03:00"
+__version__ = "downloader_test.py 2016-05-11T22:41-03:00"
 
 # This file contains unit test for the downloader function.
 #
@@ -31,20 +31,19 @@ class DownloaderFramework():
     """Test framework for the downloader."""
     # location for the test inputs and outputs
     workspace = './workspace/'
-    outputfile = 'test_ccber_mammals_download.zip'
     testurl = 'http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals'
 
     # input data files to tests, don't remove these
 #    testfile1 = testdatapath + 'test_eight_specimen_records.csv'
 
     # output data files from tests, remove these in dispose()
-    testdownloadfile = workspace + outputfile
+    outputfile = 'test_ccber_mammals_download.zip'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-        testdownloadfile = self.testdownloadfile
-        if os.path.isfile(testdownloadfile):
-            os.remove(testdownloadfile)
+        outputfile = self.workspace + self.outputfile
+        if os.path.isfile(outputfile):
+            os.remove(outputfile)
         return True
 
 class DownloaderTestCase(unittest.TestCase):
@@ -109,4 +108,5 @@ class DownloaderTestCase(unittest.TestCase):
         self.assertTrue(success, s)
 
 if __name__ == '__main__':
+    print '=== downloader_test.py ==='
     unittest.main()

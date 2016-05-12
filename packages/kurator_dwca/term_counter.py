@@ -14,37 +14,40 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_counter.py 2016-02-22T16:35-03:00"
+__version__ = "term_counter.py 2016-05-11T16:06-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
 from dwca_utils import term_rowcount_from_file
-import os.path
-import json
+import os
 import logging
 
-# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
-# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
-#
-# Example: 
-#
-# kurator -f workflows/term_counter.yaml -p p=inputfile -p v=../../data/eight_specimen_records.csv -p t=year
-#
-# or as a command-line script.
-# Example:
-#
-# python term_counter.py -i ../../data/eight_specimen_records.csv -t country
-
-def term_counter(inputs_as_json):
+def term_counter(options):
     """Get a count of the rows that are populated for a given term.
-    inputs_as_json - JSON string containing inputs
-        inputfile - full path to the input file
-        termname - the name of the term for which to count rows
-    returns JSON string with information about the results
+    options - a dictionary of parameters
+        inputfile - full path to the input file (required)
+        termname - the name of the term for which to count rows (required)
+    returns a dictionary with information about the results
         rowcount - the number of rows in the inputfile that have a value for the term
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
+#    print 'Started %s' % __version__
+#    print 'options: %s' % options
+
+    # Set up logging
+#     try:
+#         loglevel = options['loglevel']
+#     except:
+#         loglevel = None
+#     if loglevel is not None:
+#         if loglevel.upper() == 'DEBUG':
+#             logging.basicConfig(level=logging.DEBUG)
+#         elif loglevel.upper() == 'INFO':        
+#             logging.basicConfig(level=logging.INFO)
+# 
+#     logging.info('Starting %s' % __version__)
+
     # Make a list for the response
     returnvars = ['rowcount', 'success', 'message']
 
@@ -54,34 +57,39 @@ def term_counter(inputs_as_json):
     message = None
 
     # inputs
-    inputs = json.loads(inputs_as_json)
     try:
-        inputfile = inputs['inputfile']
+        inputfile = options['inputfile']
     except:
         inputfile = None
+
+    if inputfile is None or len(inputfile)==0:
+        message = 'No input file given'
+        returnvals = [rowcount, success, message]
+#        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    if os.path.isfile(inputfile) == False:
+        message = 'Input file not found'
+        returnvals = [rowcount, success, message]
+#        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
     try:
-        termname = inputs['termname']
+        termname = options['termname']
     except:
         termname = None
 
-    if inputfile is None:
-        message = 'No input file given'
-        returnvals = [rowcount, success, message]
-        return response(returnvars, returnvals)
-        
-    if termname is None:
+    if termname is None or len(termname)==0:
         message = 'No term given'
         returnvals = [rowcount, success, message]
-        return response(returnvars, returnvals)
-        
-    if not os.path.isfile(inputfile):
-        message = 'Input file %s not found' % inputfile
-        returnvals = [rowcount, success, message]
+#        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
     rowcount = term_rowcount_from_file(inputfile, termname)
     success = True
     returnvals = [rowcount, success, message]
+#    logging.debug('message:\n%s' % message)
+#    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def _getoptions():
@@ -93,26 +101,31 @@ def _getoptions():
     parser.add_option("-t", "--termname", dest="termname",
                       help="Name of the term for which distinct values are sought",
                       default=None)
+    parser.add_option("-l", "--loglevel", dest="loglevel",
+                      help="(e.g., DEBUG, WARNING, INFO) (optional)",
+                      default=None)
     return parser.parse_args()[0]
 
 def main():
     options = _getoptions()
-    inputfile = options.inputfile
-    termname = options.termname
+    optdict = {}
 
-    if inputfile is None or termname is None:
-        print 'syntax: python term_counter.py -i ../../data/eight_specimen_records.csv -t year'
+    if options.inputfile is None or len(options.inputfile)==0 or \
+       options.termname is None or len(options.termname)==0:
+        s =  'syntax: python term_counter.py'
+        s += ' -i ./data/eight_specimen_records.csv'
+        s += ' -t year'
+        s += ' -l DEBUG'
+        print '%s' % s
         return
 
-    inputs = {}
-    inputs['inputfile'] = inputfile
-    inputs['termname'] = termname
+    optdict['inputfile'] = options.inputfile
+    optdict['termname'] = options.termname
+    print 'optdict: %s' % optdict
 
     # Get distinct values of termname from inputfile
-    response=json.loads(term_counter(json.dumps(inputs)))
-#    print 'response: %s' % response
-    logging.debug('File %s mined for values of %s. Results: %s' %
-        (inputfile, termname, response['rowcount']) )
+    response=term_counter(optdict)
+    print 'response: %s' % response
 
 if __name__ == '__main__':
     main()

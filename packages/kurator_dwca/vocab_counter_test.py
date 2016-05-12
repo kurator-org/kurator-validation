@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_counter_test.py 2016-04-26T13:03-03:00"
+__version__ = "vocab_counter_test.py 2016-05-11T22:52-03:00"
 
 # This file contains unit test for the vocab_counter function.
 #
@@ -25,7 +25,6 @@ __version__ = "vocab_counter_test.py 2016-04-26T13:03-03:00"
 from vocab_counter import vocab_counter
 from dwca_utils import read_header
 import os
-#import json
 import unittest
 
 class VocabCounterFramework():
@@ -67,22 +66,28 @@ class VocabCounterTestCase(unittest.TestCase):
         print 'testing missing_parameters'
         testfile = self.framework.testfile1
 
+        # Test with missing required inputs
+        # Test with no inputs
         inputs = {}
         response=vocab_counter(inputs)
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['extractedvalues'], \
-            'values extracted without input file')
-        self.assertFalse(response['success'], \
-            'success without input file')
+#        print 'response1:\n%s' % response
+        s = 'success without any required inputs'
+        self.assertFalse(response['success'], s)
 
+        # Test with missing termname
         inputs['inputfile'] = testfile
-#        print 'inputs:\n%s' % inputs
         response=vocab_counter(inputs)
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['extractedvalues'], \
-            'values added without term name')
-        self.assertFalse(response['success'], \
-            'success with missing term name')
+#        print 'response2:\n%s' % response
+        s = 'success without termname'
+        self.assertFalse(response['success'], s)
+
+        # Test with missing inputfile
+        inputs = {}
+        inputs['termname'] = 'year'
+        response=vocab_counter(inputs)
+#        print 'response3:\n%s' % response
+        s = 'success without input file'
+        self.assertFalse(response['success'], s)
 
     def test_term_exists(self):
         print 'testing term_exists'
@@ -128,4 +133,5 @@ class VocabCounterTestCase(unittest.TestCase):
         self.assertEqual(c, 5, s)
 
 if __name__ == '__main__':
+    print '=== vocab_counter_test.py ==='
     unittest.main()

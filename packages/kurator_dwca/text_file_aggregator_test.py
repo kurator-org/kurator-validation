@@ -14,14 +14,11 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator_test.py 2016-04-05T14:24-03:00"
+__version__ = "text_file_aggregator_test.py 2016-05-11T22:50-03:00"
 
 from text_file_aggregator import text_file_aggregator
-from dwca_utils import split_path
+from dwca_utils import read_header
 import os
-import csv
-import glob
-import json
 import unittest
 
 # This file contains unit test for the text_file_aggregator function.
@@ -39,7 +36,7 @@ class TextFileAggregatorFramework():
     mixedcompositepath = testdatapath + 'test_*_specimen_records.*'
 
     # test file for aggregation
-    tsvfile = testdatapath + 'aggregatedfile.txt'
+    tsvfile = 'aggregatedfile.txt'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
@@ -61,39 +58,46 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         print 'testing missing_parameters'
         inputpath = self.framework.csvcompositepath
 
+        # Test with missing required inputs
+        # Test with no inputs
         inputs = {}
-        response=json.loads(text_file_aggregator(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertEquals(response['aggregaterowcount'], None, \
-            'rows written without input path')
-        self.assertFalse(response['success'], \
-            'aggregation successful without input path')
+        response=text_file_aggregator(inputs)
+#        print 'response1:\n%s' % response
+        s = 'success without any required inputs'
+        self.assertFalse(response['success'], s)
 
+        # Test with missing optional inputs
+        inputs = {}
         inputs['inputpath'] = inputpath
-        response=json.loads(text_file_aggregator(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertEquals(response['aggregaterowcount'], None, \
-            'rows written without output path')
-        self.assertFalse(response['success'], \
-            'aggregation successful without output path')
+        response=text_file_aggregator(inputs)
+#        print 'response2:\n%s' % response
+        s = 'no output file produced with required inputs'
+        self.assertTrue(response['success'], s)
+        # Remove the file create by this test, as the Framework does not know about it
+        if os.path.isfile(response['outputfile']):
+            os.remove(response['outputfile'])
 
     def test_aggregate_tsvs(self):
         print 'testing aggregate_tsvs'
         tsvfile = self.framework.tsvfile
         tsvcompositepath = self.framework.tsvcompositepath
+        workspace = self.framework.testdatapath
+
         inputs = {}
         inputs['inputpath'] = tsvcompositepath
-        inputs['aggregatedfile'] = tsvfile
+        inputs['outputfile'] = tsvfile
         inputs['inputdialect'] = 'tsv'
+        inputs['workspace'] = workspace
 
         # Aggregate text file
-        response=json.loads(text_file_aggregator(json.dumps(inputs)))
+        response=text_file_aggregator(inputs)
 
 #        print 'inputs:\n%s\nresponse:\n%s' % (inputs, response)
         self.assertTrue(os.path.isfile(tsvfile), tsvfile + ' does not exist')
         self.assertEqual(response['aggregaterowcount'], 6, 'incorrect number of rows')
 
-        header = response['aggregateheader']
+        outputfile = response['outputfile']
+        header = read_header(outputfile)
         modelheader = []
         modelheader.append('decimalLatitude')
         modelheader.append('decimalLongitude')
@@ -109,18 +113,23 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         print 'testing aggregate_csvs'
         tsvfile = self.framework.tsvfile
         csvcompositepath = self.framework.csvcompositepath
+        workspace = self.framework.testdatapath
+        
         inputs = {}
         inputs['inputpath'] = csvcompositepath
-        inputs['aggregatedfile'] = self.framework.tsvfile
+        inputs['outputfile'] = tsvfile
         inputs['inputdialect'] = 'csv'
+        inputs['workspace'] = workspace
 
         # Aggregate text file
-        response=json.loads(text_file_aggregator(json.dumps(inputs)))
+        response=text_file_aggregator(inputs)
 
+#        print 'inputs:\n%s\nresponse:\n%s' % (inputs, response)
         self.assertTrue(os.path.isfile(tsvfile), tsvfile + ' does not exist')
         self.assertEqual(response['aggregaterowcount'], 6, 'incorrect number of rows')
 
-        header = response['aggregateheader']
+        outputfile = response['outputfile']
+        header = read_header(outputfile)
         modelheader = []
         modelheader.append('decimalLatitude')
         modelheader.append('decimalLongitude')
@@ -136,17 +145,19 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         print 'testing aggregate_mix'
         tsvfile = self.framework.tsvfile
         mixedcompositepath = self.framework.mixedcompositepath
+
         inputs = {}
         inputs['inputpath'] = mixedcompositepath
-        inputs['aggregatedfile'] = self.framework.tsvfile
+        inputs['outputfile'] = self.framework.tsvfile
 
         # Aggregate text file
-        response=json.loads(text_file_aggregator(json.dumps(inputs)))
+        response=text_file_aggregator(inputs)
 
         self.assertTrue(os.path.isfile(tsvfile), tsvfile + ' does not exist')
         self.assertEqual(response['aggregaterowcount'], 11, 'incorrect number of rows')
 
-        header = response['aggregateheader']
+        outputfile = response['outputfile']
+        header = read_header(outputfile)
         modelheader = []
         modelheader.append('BCID')
         modelheader.append('CollectionCode')
@@ -230,4 +241,5 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
 if __name__ == '__main__':
+    print '=== text_file_aggregator_test.py ==='
     unittest.main()

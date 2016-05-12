@@ -14,20 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_geog_collector.py 2016-05-05T15:30-03:00"
-
-# Example: 
-#
-# kurator -f workflows/dwc_geog_collector.yaml 
-#         -p i=../../data/eight_specimen_records.csv 
-#         -p o=../../vocabularies/dwc_geography.txt
-#
-# or as a command-line script.
-# Example:
-#
-# python dwc_geog_collector.py 
-#        -i ../../data/eight_specimen_records.csv 
-#        -o ../../vocabularies/dwc_geography.txt
+__version__ = "dwc_geog_collector.py 2016-05-11T16:00-03:00"
 
 from optparse import OptionParser
 from dwca_vocab_utils import vocab_dialect
@@ -134,6 +121,7 @@ def dwc_geog_collector(options):
     if checkheader != geogheader:
         message = 'header read from ' + vocabfile + 'does not match geogvocabheader'
         returnvals = [addedvalues, success, message]
+#        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     # Add the new geogs to the geog vocab file
@@ -147,6 +135,7 @@ def dwc_geog_collector(options):
 #    print 'geog header:\n%s' % geogheader
 
     returnvals = [addedvalues, success, message]
+#        logging.debug('message:\n%s' % message)
 #    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
     
@@ -170,9 +159,9 @@ def main():
 
     if options.inputfile is None or len(options.inputfile)==0 or \
         options.vocabfile is None or len(options.vocabfile)==0:
-        s =  'syntax: python downloader.py'
-        s += ' -i ../../data/eight_specimen_records.csv'
-        s += ' -o ../../vocabularies/dwc_geography.txt'
+        s =  'syntax: python dwc_geog_collector.py'
+        s += ' -i ./data/eight_specimen_records.csv'
+        s += ' -v ./data/vocabularies/dwc_geography.txt'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -180,9 +169,10 @@ def main():
     optdict['inputfile'] = options.inputfile
     optdict['vocabfile'] = options.vocabfile
     optdict['loglevel'] = options.loglevel
+    print 'optdict: %s' % optdict
 
     # Append distinct values of to vocab file
-    response=json.loads(dwc_geog_collector(json.dumps(inputs)))
+    response=dwc_geog_collector(optdict)
     print 'response: %s' % response
 #    logging.debug('To file %s, added new values: %s' % (inputfile, response['addedvalues']))
 

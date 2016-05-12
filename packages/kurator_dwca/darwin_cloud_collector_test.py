@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector_test.py 2016-04-05T10:59-03:00"
+__version__ = "darwin_cloud_collector_test.py 2016-05-11T22:40-03:00"
 
 # This file contains unit test for the darwin_cloud_collector function.
 #
@@ -25,7 +25,6 @@ __version__ = "darwin_cloud_collector_test.py 2016-04-05T10:59-03:00"
 from darwin_cloud_collector import darwin_cloud_collector
 from dwca_utils import read_header
 import os
-import json
 import unittest
 
 class DarwinCloudCollectorFramework():
@@ -38,13 +37,13 @@ class DarwinCloudCollectorFramework():
     testfile2 = testdatapath + 'test_three_specimen_records.txt'
 
     # output data files from tests, remove these in dispose()
-    testcollectorfile = testdatapath + 'test_collector_file.csv'
+    outputfile = 'test_collector_file.csv'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-        testcollectorfile = self.testcollectorfile
-        if os.path.isfile(testcollectorfile):
-            os.remove(testcollectorfile)
+        outputfile = self.testdatapath + self.outputfile
+        if os.path.isfile(outputfile):
+            os.remove(outputfile)
         return True
 
 class DarwinCloudCollectorTestCase(unittest.TestCase):
@@ -66,23 +65,40 @@ class DarwinCloudCollectorTestCase(unittest.TestCase):
     def test_missing_parameters(self):
         print 'testing missing_parameters'
         testfile1 = self.framework.testfile1
+        outputfile = self.framework.outputfile
 
+        # Test with missing required inputs
+        # Test with no inputs
         inputs = {}
-        response=json.loads(darwin_cloud_collector(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertEquals(response['addedvalues'], None, \
-            'values added without input file')
-        self.assertFalse(response['success'], \
-            'success without input file')
+        response=darwin_cloud_collector(inputs)
+#        print 'response1:\n%s' % response
+        s = 'success without any required inputs'
+        self.assertFalse(response['success'], s)
 
+        # Test with missing inputfile
+        inputs['outputfile'] = outputfile
+        response=darwin_cloud_collector(inputs)
+#        print 'response2:\n%s' % response
+        s = 'success without inputfile'
+        self.assertFalse(response['success'], s)
+
+        # Test with missing outputfile
+        inputs = {}
         inputs['inputfile'] = testfile1
-#        print 'inputs:\n%s' % inputs
-        response=json.loads(darwin_cloud_collector(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertEquals(response['addedvalues'], None, \
-            'values added without output file')
-        self.assertFalse(response['success'], \
-            'success without output file')
+        response=darwin_cloud_collector(inputs)
+#        print 'response3:\n%s' % response
+        s = 'success without outputfile'
+        self.assertFalse(response['success'], s)
+
+        # Test with missing optional inputs
+        inputs['outputfile'] = outputfile
+        response=darwin_cloud_collector(inputs)
+#        print 'response4:\n%s' % response
+        s = 'no output file produced with required inputs'
+        self.assertTrue(response['success'], s)
+        # Remove the file create by this test, as the Framework does not know about it
+        if os.path.isfile(response['outputfile']):
+            os.remove(response['outputfile'])
 
     def test_headers(self):
         print 'testing headers'
@@ -114,43 +130,50 @@ class DarwinCloudCollectorTestCase(unittest.TestCase):
             'dayIdentified','class','order','family','subSpecies','vernacularName',
             'taxonRemarks','geneticTissueType','plateID','wellID','extractionID',
             'previousTissueID','tissueStorageID','BCID','']
-        s = 'test file %s header:\n%s does not match expected:\n%s' % (testfile, header, expected)
+        s = 'test file %s header:\n%s does not match expected:\n%s' % \
+            (testfile, header, expected)
         self.assertEqual(header, expected)
 
     def test_darwin_cloud_collector(self):
         print 'testing darwin_cloud_collector'
         testfile1 = self.framework.testfile1
         testfile2 = self.framework.testfile2
-        outputfile = self.framework.testcollectorfile
+        testdatapath = self.framework.testdatapath
+        outputfile = self.framework.outputfile
         
         inputs = {}
         inputs['inputfile'] = testfile1
         inputs['outputfile'] = outputfile
+        inputs['workspace'] = testdatapath
 
         # Collect terms
-        response=json.loads(darwin_cloud_collector(json.dumps(inputs)))
-        values = response['addedvalues']
-        expected = ['CollectionCode','DatasetName','Id','InstitutionCode']
-#        print 'values:\n%s expected: %s' % (values,expected)
-        s = 'new Darwin Cloud terms %s not extracted correctly from %s' \
-            % (values, testfile1)
-        self.assertEqual(values, expected, s)
+        response=darwin_cloud_collector(inputs)
+#        print 'response1:\n%s' % response
+        addedvalues = response['addedvalues']
+        expected = ['CollectionCode ', 'DatasetName ', 'Id', 'InstitutionCode ', 
+            'catalogNumber ', 'decimalLatitude ', 'decimalLongitude ', 'family ', 
+            'fieldNumber ', 'geodeticDatum ', 'reproductiveCondition ', 
+            'scientificName ', 'scientificNameAuthorship ']
+#        print 'addedvalues:\n%s expected: %s' % (addedvalues,expected)
+        s = 'From: %s\nFound:\n%s\nExpected:\n%s' % (testfile1, addedvalues, expected)
+        self.assertEqual(addedvalues, expected, s)
 
         inputs['inputfile'] = testfile2
 
         # Collect terms
-        response=json.loads(darwin_cloud_collector(json.dumps(inputs)))
-        values = response['addedvalues']
+        response=darwin_cloud_collector(inputs)
+#        print 'response2:\n%s' % response
+        addedvalues = response['addedvalues']
         expected = ['BCID','basisOfIdentification','dayCollected','dayIdentified', 
         'extractionID','fundingSource','geneticTissueType','length','microHabitat',
         'monthCollected','monthIdentified','permitInformation','plateID','preservative',
         'previousTissueID','principalInvestigator','sampleOwnerInstitutionCode','species',
         'subSpecies','substratum','tissueStorageID','weight','wellID','wormsID',
         'yearCollected','yearIdentified']
-#        print 'values:\n%s\nexpected:\n%s' % (values,expected)
-        s = 'new Darwin Cloud terms %s not extracted correctly from %s' \
-            % (values, testfile2)
-        self.assertEqual(values, expected, s)
+#        print 'addedvalues:\n%s\nexpected:\n%s' % (addedvalues,expected)
+        s = 'From: %s\nFound:\n%s\nExpected:\n%s' % (testfile2, addedvalues, expected)
+        self.assertEqual(addedvalues, expected, s)
 
 if __name__ == '__main__':
+    print '=== darwin_cloud_collector_test.py ==='
     unittest.main()

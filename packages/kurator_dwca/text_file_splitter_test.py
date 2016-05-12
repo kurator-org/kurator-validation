@@ -14,14 +14,12 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_splitter_test.py 2016-04-05T14:24-03:00"
+__version__ = "text_file_splitter_test.py 2016-05-11T22:50-03:00"
 
 from text_file_splitter import text_file_splitter
 from dwca_utils import split_path
 import os
-import csv
 import glob
-import json
 import unittest
 
 # This file contains unit test for the text_file_splitter function.
@@ -36,22 +34,21 @@ class TextFileSplitterFramework():
     testdatapath = './data/tests/'
     
     # test file to split
-    csvfile = 'test_eight_specimen_records.csv'
+    inputfile = testdatapath + 'test_eight_specimen_records.csv'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-        testdatapath = self.testdatapath
-        path, ext, filename = split_path(testdatapath+self.csvfile)
+        path, ext, filename = split_path(self.inputfile)
 
         # do not remove the source file from the test data path
 #        csvfile = self.csvfile        
 #        if os.path.isfile(testdatapath + csvfile):
 #            os.remove(testdatapath + csvfile)
 
-        files = glob.glob(testdatapath + filename + '*')
+        files = glob.glob(self.testdatapath + filename + '*')
 
         # remove the source file from the list of files to remove from the test data path
-        files.remove(testdatapath+self.csvfile)
+        files.remove(self.inputfile)
         
         # remove the chunked files
         for file in files:
@@ -69,41 +66,51 @@ class TextFileSplitterTestCase(unittest.TestCase):
 
     def test_source_file_exists(self):
         print 'testing source_file_exists'
-        csvfile = self.framework.testdatapath + self.framework.csvfile        
-        self.assertTrue(os.path.isfile(csvfile), csvfile + ' does not exist')
+        inputfile = self.framework.inputfile
+        self.assertTrue(os.path.isfile(inputfile), inputfile + ' does not exist')
 
     def test_missing_parameters(self):
         print 'testing missing_parameters'
         workspace = self.framework.testdatapath
-        csvfile = self.framework.testdatapath + self.framework.csvfile        
+        inputfile = self.framework.inputfile
 
+        # Test with missing required inputs
+        # Test with no inputs
         inputs = {}
-        response=json.loads(text_file_splitter(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['rowcount'], \
-            'rows split without input file')
-        self.assertIsNone(response['chunks'], \
-            'chunks resulted without input file')
-        self.assertFalse(response['success'], \
-            'success without input file')
+        response=text_file_splitter(inputs)
+#        print 'response1:\n%s' % response
+        s = 'success without any required inputs'
+        self.assertFalse(response['success'], s)
+
+        # Test with missing optional inputs
+        inputs = {}
+        inputs['inputfile'] = inputfile
+        inputs['workspace'] = workspace
+        response=text_file_splitter(inputs)
+#        print 'response2:\n%s' % response
+        s = 'no output file produced with required inputs'
+        self.assertTrue(response['success'], s)
+        # Remove the file create by this test, as the Framework does not know about it
+#         if os.path.isfile(response['outputfile']):
+#             os.remove(response['outputfile'])
 
     def test_split(self):
         print 'testing split'
         workspace = self.framework.testdatapath
         chunksize = 3
-        csvfile = self.framework.testdatapath + self.framework.csvfile        
+        inputfile = self.framework.inputfile
 
         inputs = {}
-        inputs['inputfile'] = csvfile
+        inputs['inputfile'] = inputfile
         inputs['workspace'] = workspace
         inputs['chunksize'] = chunksize
 #        print 'inputs:\n%s' % inputs
 
         # Split text file into chucks
-        response=json.loads(text_file_splitter(json.dumps(inputs)))
+        response=text_file_splitter(inputs)
 #        print 'response:\n%s' % response
 
-        path, ext, filename = split_path(workspace+csvfile)
+        path, ext, filename = split_path(inputfile)
         files = glob.glob(workspace + filename + '*')
         splitfilecount = len(files)-1
 
@@ -112,4 +119,5 @@ class TextFileSplitterTestCase(unittest.TestCase):
         self.assertEqual(splitfilecount, 3, 'incorrect number of chunk files')
 
 if __name__ == '__main__':
+    print '=== text_file_splitter_test.py ==='
     unittest.main()

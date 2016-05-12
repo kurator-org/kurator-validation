@@ -14,18 +14,17 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_token_counter_test.py 2016-04-05T14:19-03:00"
+__version__ = "term_token_reporter_test.py 2016-05-11T22:49-03:00"
 
-# This file contains unit test for the term_token_counter function.
+# This file contains unit test for the term_token_reporter function.
 #
 # Example:
 #
-# python term_token_counter_test.py
+# python term_token_reporter_test.py
 
-from term_token_counter import term_token_counter
+from term_token_reporter import term_token_reporter
 from dwca_utils import read_header
 import os
-import json
 import unittest
 
 class TermCounterFramework():
@@ -34,16 +33,16 @@ class TermCounterFramework():
     testdatapath = './data/tests/'
 
     # input data files to tests, don't remove these
-    termtokenfile = testdatapath + 'test_eight_specimen_records.csv'
+    inputfile = testdatapath + 'test_eight_specimen_records.csv'
 
     # output data files from tests, remove these in dispose()
-    testtokenextractfile = testdatapath + 'test_token_extract_file.csv'
+    outputfile = 'test_token_extract_file.csv'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-        testtokenextractfile = self.testtokenextractfile
-        if os.path.isfile(testtokenextractfile):
-            os.remove(testtokenextractfile)
+        outputfile = self.testdatapath + self.outputfile
+        if os.path.isfile(outputfile):
+            os.remove(outputfile)
         return True
 
 class TermCounterTestCase(unittest.TestCase):
@@ -57,53 +56,73 @@ class TermCounterTestCase(unittest.TestCase):
 
     def test_source_files_exist(self):
         print 'testing source_files_exist'
-        termtokenfile = self.framework.termtokenfile
-        self.assertTrue(os.path.isfile(termtokenfile), termtokenfile + ' does not exist')
+        inputfile = self.framework.inputfile
+        self.assertTrue(os.path.isfile(inputfile), inputfile + ' does not exist')
 
     def test_missing_parameters(self):
         print 'testing missing_parameters'
-        termtokenfile = self.framework.termtokenfile
+        inputfile = self.framework.inputfile
 
+        # Test with missing required inputs
+        # Test with no inputs
         inputs = {}
-        response=json.loads(term_token_counter(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['tokens'], \
-            'tokens found without input file')
-        self.assertFalse(response['success'], \
-            'success without input file')
+        response=term_token_reporter(inputs)
+#        print 'response1:\n%s' % response
+        s = 'success without any required inputs'
+        self.assertFalse(response['success'], s)
 
-        inputs['inputfile'] = termtokenfile
-#        print 'inputs:\n%s' % inputs
-        response=json.loads(term_token_counter(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['tokens'], \
-            'tokens found without term name')
-        self.assertFalse(response['success'], \
-            'success with missing term name')
+        # Test with missing inputfile
+        inputs['termname'] = 'locality'
+        response=term_token_reporter(inputs)
+#        print 'response2:\n%s' % response
+        s = 'success without input file'
+        self.assertFalse(response['success'], s)
 
-    def test_term_token_counter(self):
-        print 'testing term_token_counter'
-        termtokenfile = self.framework.termtokenfile
-        testtokenextractfile = self.framework.testtokenextractfile
+        # Test with missing termname
+        inputs = {}
+        inputs['inputfile'] = inputfile
+        response=term_token_reporter(inputs)
+#        print 'response3:\n%s' % response
+        s = 'success without term name'
+        self.assertFalse(response['success'], s)
+
+        # Test with missing optional inputs
+        inputs = {}
+        inputs['inputfile'] = inputfile
+        inputs['termname'] = 'locality'
+        response=term_token_reporter(inputs)
+#        print 'response4:\n%s' % response
+        s = 'no output file produced with required inputs'
+        self.assertTrue(response['success'], s)
+        # Remove the file create by this test, as the Framework does not know about it
+        if os.path.isfile(response['outputfile']):
+            os.remove(response['outputfile'])
+
+    def test_term_token_reporter(self):
+        print 'testing term_token_reporter'
+        inputfile = self.framework.inputfile
+        outputfile = self.framework.outputfile
+        workspace = self.framework.testdatapath
         termname = 'locality'
         
         inputs = {}
-        inputs['inputfile'] = termtokenfile
-        inputs['outputfile'] = testtokenextractfile
+        inputs['inputfile'] = inputfile
+        inputs['outputfile'] = outputfile
+        inputs['workspace'] = workspace
         inputs['termname'] = termname
 
-        # Extract distinct values of term
+        # Extract tokens from term
 #        print 'inputs:\n%s' % inputs
-        response=json.loads(term_token_counter(json.dumps(inputs)))
+        response=term_token_reporter(inputs)
 #        print 'response:\n%s' % response
         tokens = response['tokens']
         s = 'no tokens for term %s from file %s' % \
-            (termname, termtokenfile)
+            (termname, inputfile)
         self.assertIsNotNone(tokens, s)
         
         tokenlist = tokens['tokenlist']
         s = 'no tokenlist for term %s from file %s' % \
-            (termname, termtokenfile)
+            (termname, inputfile)
         self.assertIsNotNone(tokens, s)
 
         parametercount = len(tokens)
@@ -135,4 +154,5 @@ class TermCounterTestCase(unittest.TestCase):
         self.assertEqual(tokens['tokenlist'][value]['totalcount'],totalcount,s)
 
 if __name__ == '__main__':
+    print '=== term_token_reporter_test.py ==='
     unittest.main()

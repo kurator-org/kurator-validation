@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_fieldcount_checker_test.py 2016-04-05T10:58-03:00"
+__version__ = "csv_fieldcount_checker_test.py 2016-05-11T22:39-03:00"
 
 # This file contains unit test for the csv_fieldcount_checker function.
 #
@@ -24,7 +24,6 @@ __version__ = "csv_fieldcount_checker_test.py 2016-04-05T10:58-03:00"
 
 from csv_fieldcount_checker import csv_fieldcount_checker
 import os
-import json
 import unittest
 
 class CsvFieldcountCheckerFramework():
@@ -69,21 +68,19 @@ class CsvFieldcountCheckerTestCase(unittest.TestCase):
         print 'testing missing_parameters'
         testfile1 = self.framework.testfile1
 
+        # Test with missing required inputs
+        # Test with no inputs
         inputs = {}
-        response=json.loads(csv_fieldcount_checker(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertEquals(response['firstbadrowindex'], 0, \
-            'bad row found without input file')
-        self.assertFalse(response['success'], \
-            'success without input file')
+        response=csv_fieldcount_checker(inputs)
+#        print 'response1:\n%s' % response
+        s = 'success without any required inputs'
+        self.assertFalse(response['success'], s)
 
         inputs['inputfile'] = ''
-        response=json.loads(csv_fieldcount_checker(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertEquals(response['firstbadrowindex'], 0, \
-            'bad row found with blank input file')
-        self.assertTrue(response['success'], \
-            'success with blank input file')
+        response=csv_fieldcount_checker(inputs)
+#        print 'response2:\n%s' % response
+        s = 'success with blank input filename'
+        self.assertFalse(response['success'], s)
 
     def test_csv_fieldcount_checker(self):
         print 'testing csv_fieldcount_checker'
@@ -95,14 +92,15 @@ class CsvFieldcountCheckerTestCase(unittest.TestCase):
         inputs['inputfile'] = testfile1
 
         # Check for bad rows
-        response=json.loads(csv_fieldcount_checker(json.dumps(inputs)))
+        response=csv_fieldcount_checker(inputs)
+#        print 'response:\n%s' % response
         s = 'Bad row found for file %s' % (testfile1)
         firstbadrowindex = response['firstbadrowindex']
         self.assertEqual(firstbadrowindex, 0, s)
-#        self.assertIsNone(response, s)
         
         inputs['inputfile'] = testfile2
-        response=json.loads(csv_fieldcount_checker(json.dumps(inputs)))
+        response=csv_fieldcount_checker(inputs)
+#        print 'response:\n%s' % response
         s = 'No bad row found for file %s' % (testfile2)
         self.assertIsNotNone(response, s)
         firstbadrowindex = response['firstbadrowindex']
@@ -112,7 +110,8 @@ class CsvFieldcountCheckerTestCase(unittest.TestCase):
         self.assertEqual(firstbadrowindex, 3, s)
 
         inputs['inputfile'] = testfile3
-        response=json.loads(csv_fieldcount_checker(json.dumps(inputs)))
+        response=csv_fieldcount_checker(inputs)
+#        print 'response:\n%s' % response
         s = 'No bad row found for file %s' % (testfile3)
         self.assertIsNotNone(response, s)
         firstbadrowindex = response['firstbadrowindex']
@@ -122,4 +121,5 @@ class CsvFieldcountCheckerTestCase(unittest.TestCase):
         self.assertEqual(firstbadrowindex, 3, s)
 
 if __name__ == '__main__':
+    print '=== csv_fieldcount_checker_test.py ==='
     unittest.main()

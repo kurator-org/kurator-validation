@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2016-05-05T19:28-03:00"
+__version__ = "dwca_core_to_tsv.py 2016-05-11T16:04-03:00"
 
 from optparse import OptionParser
 from dwcareader_utils import short_term_names
@@ -22,8 +22,8 @@ from dwca_utils import tsv_dialect
 from dwca_utils import response
 import csv
 import uuid
-import os.path
-#import logging
+import os
+import logging
 
 # Python Darwin Core Archive Reader from 
 #   https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
@@ -35,17 +35,18 @@ from dwca.read import GBIFResultsReader
 def dwca_core_to_tsv(options):
     """Save the core of the archive to a tsv file with short DwC term names as headers.
     options - a dictionary of parameters
-        workspace - path to a directory for the tsvfile (optional)
-        dwcafile - full path to the input Darwin Core archive file (required)
-        tsvfile - file name of the tsv output file, no path (optional)
+        workspace - path to a directory for the outputfile (optional)
+        inputfile - full path to the input Darwin Core archive file (required)
+        outputfile - file name of the tsv output file, no path (optional)
         archivetype - the archive type ('standard' or 'gbif') (optional)
         loglevel - the level at which to log (e.g., DEBUG)
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
-        tsvfile - actual full path to the output tsv file
+        outputfile - actual full path to the output tsv file
         rowcount - the number of rows in the Darwin Core archive file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
+        artifacts - a dictionary of persistent objects created
     """
 #    print 'Started %s' % __version__
 #    print 'options: %s' % options
@@ -64,13 +65,14 @@ def dwca_core_to_tsv(options):
 #     logging.info('Starting %s' % __version__)
 
     # Make a list for the response
-    returnvars = ['workspace', 'tsvfile', 'rowcount', 'success', 'message', 'artifacts']
+    returnvars = ['workspace', 'outputfile', 'rowcount', 'success', 'message', 
+        'artifacts']
 
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
     # outputs
-    tsvfile = None
+    outputfile = None
     rowcount = None
     success = False
     message = None
@@ -81,34 +83,34 @@ def dwca_core_to_tsv(options):
     except:
         workspace = None
 
-    if workspace is None:
+    if workspace is None or len(workspace)==0:
         workspace = './'
 
     try:
-        dwcafile = options['dwcafile']
+        inputfile = options['inputfile']
     except:
-        dwcafile = None
+        inputfile = None
 
-    if dwcafile is None or len(dwcafile)==0:
-        message = 'No input dwca file given'
-        returnvals = [workspace, tsvfile, rowcount, success, message, artifacts]
+    if inputfile is None or len(inputfile)==0:
+        message = 'No input file given'
+        returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
-    if os.path.isfile(dwcafile) == False:
-        message = 'Input dwca file not found'
-        returnvals = [workspace, tsvfile, rowcount, success, message, artifacts]
+    if os.path.isfile(inputfile) == False:
+        message = 'Input file not found'
+        returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     try:
-        tsvfile = options['tsvfile']
+        outputfile = options['outputfile']
     except:
-        tsvfile = None
+        outputfile = None
 
-    if tsvfile is None:
-        tsvfile = 'dwca_%s.tsv' %  str(uuid.uuid1())
-    tsvfile = '%s/%s' % (workspace.rstrip('/'), tsvfile)
+    if outputfile is None or len(outputfile)==0:
+        outputfile = 'dwca_%s.tsv' %  str(uuid.uuid1())
+    outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     try:
         type = options['archivetype']
@@ -120,35 +122,35 @@ def dwca_core_to_tsv(options):
     dwcareader = None
     if type=='gbif':
         try:
-            dwcareader = GBIFResultsReader(dwcafile)
+            dwcareader = GBIFResultsReader(inputfile)
         except Exception, e:
-            message = 'Error %s reading GBIF archive: %s' % (dwcafile, e)
-            returnvals = [workspace, tsvfile, rowcount, success, message, artifacts]
+            message = 'Error %s reading GBIF archive: %s' % (inputfile, e)
+            returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
 #            logging.debug('message:\n%s' % message)
             return response(returnvars, returnvals)
     try:
-        dwcareader = DwCAReader(dwcafile)
+        dwcareader = DwCAReader(inputfile)
     except Exception, e:
-        message = 'Error %s reading archive: %s' % (dwcafile, e)
-        returnvals = [workspace, tsvfile, rowcount, success, message, artifacts]
+        message = 'Error %s reading archive: %s' % (inputfile, e)
+        returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if dwcareader is None:
-        message = 'No viable archive found at %s' % dwcafile
-        returnvals = [workspace, tsvfile, rowcount, success, message, artifacts]
+        message = 'No viable archive found at %s' % inputfile
+        returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
 #        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     termnames=list(dwcareader.descriptor.core.terms)
     shorttermnames=short_term_names(termnames)
     dialect = tsv_dialect()
-    with open(tsvfile, 'w') as thefile:
+    with open(outputfile, 'w') as thefile:
         writer = csv.DictWriter(thefile, dialect=dialect, fieldnames=shorttermnames)
         writer.writeheader()
 
     rowcount = 0
-    with open(tsvfile, 'a') as thefile:
+    with open(outputfile, 'a') as thefile:
         writer = csv.DictWriter(thefile, dialect=dialect, fieldnames=termnames)
         for row in dwcareader:
             for f in row.data:
@@ -161,10 +163,10 @@ def dwca_core_to_tsv(options):
 
     success = True
     if success==True:
-        artifacts['tsvfile'] = tsvfile
+        artifacts['outputfile'] = outputfile
 
-    returnvals = [workspace, tsvfile, rowcount, success, message, artifacts]
-#    print 'returnvals: %s' % returnvals
+    returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
+#    logging.debug('message:\n%s' % message)
 #    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
@@ -189,17 +191,16 @@ def _getoptions():
     return parser.parse_args()[0]
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
     options = _getoptions()
     optdict = {}
 
-    dwcafile = options.inputfile
-    tsvfile = options.outputfile
+    inputfile = options.inputfile
+    outputfile = options.outputfile
     archivetype = options.type
 
-    if dwcafile is None or len(dwcafile)==0:
+    if inputfile is None or len(inputfile)==0:
         s =  'syntax: python dwca_core_to_tsv.py'
-        s += ' -i ../../data/dwca-uwymv_herp.zip'
+        s += ' -i ./data/dwca-uwymv_herp.zip'
         s += ' -w ./workspace'
         s += ' -o testout.txt -t standard'
         s += ' -l DEBUG'
@@ -209,17 +210,16 @@ def main():
     if archivetype is None:
         archivetype = 'standard'
 
-    optdict['dwcafile'] = dwcafile
+    optdict['inputfile'] = inputfile
     optdict['workspace'] = options.workspace
-    optdict['tsvfile'] = tsvfile
+    optdict['outputfile'] = outputfile
     optdict['archivetype'] = archivetype
     optdict['loglevel'] = options.loglevel
+    print 'optdict: %s' % optdict
 
     # Write the core to a tsv file at the specified location
     response = dwca_core_to_tsv(optdict)
-#    print 'response: %s' % response
-#    print 'TSV file %s with %s rows extracted from core of archive %s (type %s).' \
-#        % (response['tsvfile'], response['rowcount'], dwcafile, archivetype)
+    print 'response: %s' % response
 
 if __name__ == '__main__':
     """ Demo of dwca_core_splitter"""

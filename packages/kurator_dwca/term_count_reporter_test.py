@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_count_reporter_test.py 2016-05-05T20:44-03:00"
+__version__ = "term_count_reporter_test.py 2016-05-11T22:47-03:00"
 
 # This file contains unit tests for the term_count_reporter function.
 #
@@ -130,4 +130,5 @@ class TermCountReporterTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(outputfile), outputfile + ' does not exist')
 
 if __name__ == '__main__':
+    print '=== term_count_reporter_test.py ==='
     unittest.main()

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender_test.py 2016-04-05T14:25-03:00"
+__version__ = "vocab_appender_test.py 2016-05-11T22:51-03:00"
 
 # This file contains unit test for the vocab_appender function.
 #
@@ -26,7 +26,6 @@ from vocab_appender import vocab_appender
 from dwca_utils import read_header
 from dwca_vocab_utils import distinct_term_values_from_file
 import os
-import json
 import unittest
 
 class VocabAppenderFramework():
@@ -35,10 +34,10 @@ class VocabAppenderFramework():
     testdatapath = './data/tests/'
 
     # input data files to tests, don't remove these
-    monthvocabfile = testdatapath + 'test_vocab_month.txt'
+    vocabfile = testdatapath + 'test_vocab_month.txt'
 
     # output data files from tests, remove these in dispose()
-    testvocabfile = testdatapath + 'test_vocab_file.csv'
+    testvocabfile = 'test_vocab_file.csv'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
@@ -58,44 +57,36 @@ class VocabAppenderTestCase(unittest.TestCase):
 
     def test_source_files_exist(self):
         print 'testing source_files_exist'
-        monthvocabfile = self.framework.monthvocabfile
-        self.assertTrue(os.path.isfile(monthvocabfile), monthvocabfile + ' does not exist')
+        vocabfile = self.framework.vocabfile
+        self.assertTrue(os.path.isfile(vocabfile), vocabfile + ' does not exist')
 
     def test_missing_parameters(self):
         print 'testing missing_parameters'
-        monthvocabfile = self.framework.monthvocabfile
+        vocabfile = self.framework.vocabfile
 
+        # Test with missing required inputs
+        # Test with no inputs
         inputs = {}
-        response=json.loads(vocab_appender(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['addedvalues'], \
-            'values added without vocab file')
-        self.assertFalse(response['success'], \
-            'success without vocab file')
+        response=vocab_appender(inputs)
+#        print 'response1:\n%s' % response
+        s = 'success without any required inputs'
+        self.assertFalse(response['success'], s)
 
-        inputs['vocabfile'] = monthvocabfile
-#        print 'inputs:\n%s' % inputs
-        response=json.loads(vocab_appender(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['addedvalues'], \
-            'values added without values list')
-        self.assertTrue(response['success'], \
-            'no success with missing added values list')
-
-        inputs['checkvaluelist'] = None
-#        print 'inputs:\n%s' % inputs
-        response=json.loads(vocab_appender(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['addedvalues'], \
-            'values added without empty new values list')
-        self.assertTrue(response['success'], \
-            'no success with empty added values list')
+        # Test with missing optional inputs
+        inputs = {}
+        inputs['vocabfile'] = vocabfile
+        response=vocab_appender(inputs)
+#        print 'response2:\n%s' % response
+        s = 'values added no new values list'
+        self.assertIsNone(response['addedvalues'], s)
+        s = 'success without added values list'
+        self.assertTrue(response['success'], s)
 
     def test_source_headers_correct(self):
         print 'testing source_headers_correct'
-        monthvocabfile = self.framework.monthvocabfile
+        vocabfile = self.framework.vocabfile
 
-        header = read_header(monthvocabfile)
+        header = read_header(vocabfile)
         modelheader = []
         modelheader.append('verbatim')
         modelheader.append('standard')
@@ -122,10 +113,10 @@ class VocabAppenderTestCase(unittest.TestCase):
         inputs['checkvaluelist'] = checkvaluelist
 
         # Aggregate all vocabs to new vocab file
-        response=json.loads(vocab_appender(json.dumps(inputs)))
+        response=vocab_appender(inputs)
         
         writtenlist = response['addedvalues']
-#        print 'response:\n%s' % response
+#        print 'inputs: %s\nresponse:\n%s' % (inputs, response)
         self.assertEqual(writtenlist, ['5', 'MAY', 'May', 'v'],
             'values not written to new testvocabfile')
 
@@ -139,7 +130,7 @@ class VocabAppenderTestCase(unittest.TestCase):
         inputs['checkvaluelist'] = checkvaluelist
 
         # Aggregate new vocabs to existing vocab file
-        response=json.loads(vocab_appender(json.dumps(inputs)))
+        response=vocab_appender(inputs)
 
         writtenlist = response['addedvalues']
 #        print 'writtenlist2: %s' % writtenlist
@@ -153,4 +144,5 @@ class VocabAppenderTestCase(unittest.TestCase):
             'verbatim month values do not match expectation after addition')
 
 if __name__ == '__main__':
+    print '=== vocab_appender_test.py ==='
     unittest.main()

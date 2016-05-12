@@ -14,42 +14,47 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2016-02-21T19:59-03:00"
-
-# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
-# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
-#
-# Example: 
-#
-# kurator -f workflows/vocab_appender.yaml -p v=vocabfile -p v=./workspace/basisOfRecord.csv -p n='preservedspecimen, voucher, fossil'
-#
-# or as a command-line script.
-# Example:
-#
-# python vocab_appender.py -v ../../vocabularies/day.csv -n '33'
+__version__ = "vocab_appender.py 2016-05-11T20:29-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
-from dwca_terms import vocabfieldlist
 import os
-import json
 import logging
 
-def vocab_appender(inputs_as_json):
+def vocab_appender(options):
     """Given a set of distinct values for a given term, append any not already in the 
-    corresponding vocabulary file as new entries.
-    inputs_as_json - JSON string containing inputs
+       corresponding vocabulary file as new entries.
+    options - a dictionary of parameters
+        loglevel - level at which to log (e.g., DEBUG) (optional)
+        vocabfile - full path to the file containing the vocabulary (required)
+        checkvaluelist - list of candidate term values to append to the vocabulary 
+            file (optional)
+    returns a dictionary with information about the results
         vocabfile - full path to the file containing the vocabulary
-        checkvaluelist - a list of candidate term values to append to the vocabulary file
-    returns JSON string with information about the results
         addedvalues - new values added to the vocabulary file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
+#    print 'Started %s' % __version__
+#    print 'options: %s' % options
+
+    # Set up logging
+#     try:
+#         loglevel = options['loglevel']
+#     except:
+#         loglevel = None
+#     if loglevel is not None:
+#         if loglevel.upper() == 'DEBUG':
+#             logging.basicConfig(level=logging.DEBUG)
+#         elif loglevel.upper() == 'INFO':        
+#             logging.basicConfig(level=logging.INFO)
+# 
+#     logging.info('Starting %s' % __version__)
+
     # Make a list for the response
-    returnvars = ['addedvalues', 'success', 'message']
+    returnvars = ['vocabfile', 'addedvalues', 'success', 'message']
 
     # outputs
     addedvalues = None
@@ -57,26 +62,30 @@ def vocab_appender(inputs_as_json):
     message = None
 
     # inputs
-    inputs = json.loads(inputs_as_json)
     try:
-        vocabfile = inputs['vocabfile']
+        vocabfile = options['vocabfile']
     except:
         vocabfile = None
+
+    if vocabfile is None or len(vocabfile)==0:
+        message = 'No vocabfile file given'
+        returnvals = [vocabfile, addedvalues, success, message]
+#        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
     try:
-        checkvaluelist = inputs['checkvaluelist']
+        checkvaluelist = options['checkvaluelist']
     except:
         checkvaluelist = None
-
-    if vocabfile is None:
-        message = 'No vocabfile file given'
-        returnvals = [addedvalues, success, message]
-        return response(returnvars, returnvals)
     
     dialect = vocab_dialect()
     addedvalues = distinct_vocabs_to_file(vocabfile, checkvaluelist, dialect)
     success = True
 
-    returnvals = [addedvalues, success, message]
+    # Prepare the response dictionary
+    returnvals = [vocabfile, addedvalues, success, message]
+#    logging.debug('message:\n%s' % message)
+#    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
     
 def _getoptions():
@@ -88,28 +97,35 @@ def _getoptions():
     parser.add_option("-n", "--checkvaluelist", dest="checkvaluelist",
                       help="List of new values to add to the vocab",
                       default=None)
+    parser.add_option("-l", "--loglevel", dest="loglevel",
+                      help="(e.g., DEBUG, WARNING, INFO) (optional)",
+                      default=None)
     return parser.parse_args()[0]
 
 def main():
     options = _getoptions()
-    vocabfile = options.vocabfile
-    thelist=options.checkvaluelist
-    checkvaluelist=[subs.strip() for subs in str(thelist).split(',')]
-#    print 'checkvaluelist: %s' % checkvaluelist
-    if vocabfile is None:
-        print "syntax: python vocab_appender.py -v ./workspace/basisOfRecord.csv -n 'preservedspecimen, voucher, fossil'"
-        return
-    
-    inputs = {}
-    inputs['vocabfile'] = vocabfile
-    inputs['checkvaluelist'] = checkvaluelist
+    optdict = {}
 
-#    print 'inputs: %s' % inputs
+    separator = ','
+    theList=options.checkvaluelist
+    checkvaluelist=[subs.strip() for subs in str(theList).split(separator)]
+
+    if options.vocabfile is None or len(options.vocabfile)==0:
+        s =  'syntax: python vocab_appender.py'
+        s += ' -v ./data/vocabularies/basisOfRecord.txt'
+        s += ' -n "preservedspecimen, voucher, fossil"'
+        s += ' -l DEBUG'
+        print '%s' % s
+        return
+
+    optdict['vocabfile'] = options.vocabfile
+    optdict['checkvaluelist'] = checkvaluelist
+    optdict['loglevel'] = options.loglevel
+    print 'optdict: %s' % optdict
 
     # Append distinct values of term to vocab file
-    response=json.loads(vocab_appender(json.dumps(inputs)))
-#    print 'response: %s' % response
-    logging.debug('To file %s, added new values: %s' % (vocabfile, response['addedvalues']))
+    response=vocab_appender(optdict)
+    print 'response: %s' % response
 
 if __name__ == '__main__':
     main()

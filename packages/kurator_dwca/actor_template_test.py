@@ -14,37 +14,34 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "actor_template_test.py 2016-05-05T20:46-03:00"
+__version__ = "actor_template_test.py 2016-05-11T22:38-03:00"
 
-# This file contains unit test for the downloader function.
+# This file contains unit test for the dostuffer function.
 #
 # Example:
 #
 # python actor_template_test.py
 
-from downloader import downloader
+from actor_template import dostuffer
 import os
-import json
 import unittest
 
 class DownloaderFramework():
-    """Test framework for the downloader."""
+    """Test framework for the dostuffer."""
     # location for the test inputs and outputs
-    workspace = './workspace/'
-    outputfile = 'test_ccber_mammals_download.zip'
-    testurl = 'http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals'
+    workspace = './data/tests/'
 
     # input data files to tests, don't remove these
-#    testfile1 = testdatapath + 'test_eight_specimen_records.csv'
+    inputfile = workspace + 'test_eight_specimen_records.csv'
 
     # output data files from tests, remove these in dispose()
-    testdownloadfile = workspace + outputfile
+    outputfile = 'test_ccber_mammals_download.zip'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-        testdownloadfile = self.testdownloadfile
-        if os.path.isfile(testdownloadfile):
-            os.remove(testdownloadfile)
+        outputfile = self.workspace + self.outputfile
+        if os.path.isfile(outputfile):
+            os.remove(outputfile)
         return True
 
 class DownloaderTestCase(unittest.TestCase):
@@ -58,30 +55,30 @@ class DownloaderTestCase(unittest.TestCase):
 
     def test_missing_parameters(self):
         print 'testing missing_parameters'
-        testurl = self.framework.testurl
+        inputfile = self.framework.inputfile
         outputfile = self.framework.outputfile
         workspace = self.framework.workspace
 
         # Test with missing required inputs
         # Test with no inputs
         inputs = {}
-        response=downloader(inputs)
+        response=dostuffer(inputs)
 #        print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
-        # Test with missing url
+        # Test with missing inputfile
         inputs['outputfile'] = outputfile
         inputs['workspace'] = workspace
-        response=downloader(inputs)
+        response=dostuffer(inputs)
 #        print 'response2:\n%s' % response
-        s = 'success without url'
+        s = 'success without inputfile'
         self.assertFalse(response['success'], s)
 
         # Test with missing optional inputs
         inputs = {}
-        inputs['url'] = testurl
-        response=downloader(inputs)
+        inputs['inputfile'] = inputfile
+        response=dostuffer(inputs)
 #        print 'response3:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
@@ -89,24 +86,27 @@ class DownloaderTestCase(unittest.TestCase):
         if os.path.isfile(response['outputfile']):
             os.remove(response['outputfile'])
 
-    def test_downloader(self):
-        print 'testing downloader'
-        testurl = self.framework.testurl
+    def test_dostuffer(self):
+        print 'testing dostuffer'
+        inputfile = self.framework.inputfile
         outputfile = self.framework.outputfile
         workspace = self.framework.workspace
-        
+
         inputs = {}
-        inputs['url'] = testurl
+        inputs['inputfile'] = inputfile
         inputs['outputfile'] = outputfile
         inputs['workspace'] = workspace
 #        print 'actor_template_test.py: inputs:\n%s' % inputs
 
         # Collect terms
-        response=downloader(inputs)
+        response=dostuffer(inputs)
 #        print 'response:\n%s' % response
         success = response['success']
-        s = 'file not downloaded from %s' % testurl 
+        s = 'stuff not done with inputfile %s' % inputfile
+        s += ' to outputfile %s' % outputfile
+        s += ' in workspace %s' % workspace
         self.assertTrue(success, s)
 
 if __name__ == '__main__':
+    print '=== actor_template_test.py ==='
     unittest.main()

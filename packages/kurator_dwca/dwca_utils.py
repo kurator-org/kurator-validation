@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-05-05T09:01-03:00"
+__version__ = "dwca_utils.py 2016-05-11T22:45-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -235,7 +235,7 @@ def write_header(fullpath, fieldnames, dialect):
         try:
             writer.writeheader()
         except:
-            success = false
+            success = False
     return success
 
 def header_map(header):
@@ -247,7 +247,7 @@ def header_map(header):
     """
     headermap = {}
     for field in header:
-        cleanfield = clean_field_name(field)
+        cleanfield = slugify(field)
         headermap[cleanfield]=field
     return headermap
 
@@ -267,7 +267,7 @@ def clean_header(header):
 
     # Clean every field in the header and append it to the cleanheader
     for field in header:
-        cleanfield = clean_field_name(field)
+        cleanfield = slugify(field)
         if len(cleanfield)==0:
             cleanfield = 'field%s' % i
         cleanheader.append(cleanfield)
@@ -275,20 +275,34 @@ def clean_header(header):
 
     # Return a version of the header that has been cleaned
     return cleanheader
-    
-def clean_field_name(fieldname):
-    """Construct a clean field name as a lowercase field name stripped of white space.
-    parameters:
-        fieldname - the field name to clean
-    returns:
-        cleanfield - the field name after changing to lower case and stripping white space
-    """
-    # Cannot function without a fieldname
-    if fieldname is None or len(fieldname)==0:
-        return None
 
-    cleanfield = fieldname.strip().lower()
-    return cleanfield
+def slugify(s, length=None, separator="-"):
+    """Construct a slugged version of supplied string.
+    parameters:
+        s - the target string
+        length - the maximum length token from s to keep
+        separator - the character to put in the place of whitespace
+    returns:
+        ret.strip() - lower case, accent-removed, stripped version of input string
+    """
+    s = re.sub('[^a-zA-Z\d\s:]', ' ', s)
+    if length:
+        words = s.split()[:length]
+    else:
+        words = s.split()
+    s = ' '.join(words)
+    ret = ''
+    for c in s.lower():
+        try:
+            ret += htmlentitydefs.codepoint2name[ord(c)]
+        except:
+            ret += c
+    ret = re.sub('([a-zA-Z])(uml|acute|grave|circ|tilde|cedil)', r'\1', ret)
+    ret = ret.strip()
+    ret = re.sub(' ', '_', ret)
+    ret = re.sub('\W', '', ret)
+    ret = re.sub('[ _]+/', separator, ret)
+    return ret.strip()
 
 def merge_headers(headersofar, headertoadd = None):
     """Construct a header from the distinct white-space-stripped fields in two headers.
@@ -1194,4 +1208,5 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(tokens[value]['rowcount'],rowcount,s)
 
 if __name__ == '__main__':
+    print '=== dwca_utils.py ==='
     unittest.main()

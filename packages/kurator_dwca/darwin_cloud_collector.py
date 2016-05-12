@@ -14,19 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector.py 2016-02-21T16:07-03:00"
-
-# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
-# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
-#
-# Example: 
-#
-# kurator -f workflows/darwin_cloud_collector.yaml -p i=../../data/eight_specimen_records.csv -p o=../../vocabularies/dwc_cloud.txt
-#
-# or as a command-line script.
-# Example:
-#
-# python darwin_cloud_collector.py -i ../../data/eight_specimen_records.csv -o ../../vocabularies/dwc_cloud.txt
+__version__ = "darwin_cloud_collector.py 2016-05-11T15:58-03:00"
 
 from optparse import OptionParser
 from dwca_vocab_utils import vocab_dialect
@@ -35,22 +23,44 @@ from dwca_vocab_utils import terms_not_in_dwc
 from dwca_utils import read_header
 from dwca_utils import clean_header
 from dwca_utils import response
-import json
+import os
 import logging
 
-def darwin_cloud_collector(inputs_as_json):
+def darwin_cloud_collector(options):
     """Get field names from inputfile and put any that are not Simple Darwin Core into 
        outputfile.
-    inputs_as_json - JSON string containing inputs
-        inputfile - full path to the input file
-        outputfile - full path to the output file
-    returns JSON string with information about the results
+    options - a dictionary of parameters
+        loglevel - level at which to log (e.g., DEBUG) (optional)
+        workspace - path to a directory for the outputfile (optional)
+        inputfile - full path to the input file (required)
+        outputfile - name of the output file, without path (required)
+    returns a dictionary with information about the results
         addedvalues - new values added to the output file
+        outputfile - actual full path to the output file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
+#    print 'Started %s' % __version__
+#    print 'options: %s' % options
+
+    # Set up logging
+#     try:
+#         loglevel = options['loglevel']
+#     except:
+#         loglevel = None
+#     if loglevel is not None:
+#         if loglevel.upper() == 'DEBUG':
+#             logging.basicConfig(level=logging.DEBUG)
+#         elif loglevel.upper() == 'INFO':        
+#             logging.basicConfig(level=logging.INFO)
+# 
+#     logging.info('Starting %s' % __version__)
+
     # Make a list for the response
-    returnvars = ['addedvalues', 'success', 'comment']
+    returnvars = ['addedvalues', 'outputfile', 'success', 'message', 'artifacts']
+
+    # Make a dictionary for artifacts left behind
+    artifacts = {}
 
     # outputs
     addedvalues = None
@@ -58,35 +68,55 @@ def darwin_cloud_collector(inputs_as_json):
     message = None
 
     # inputs
-    inputs = json.loads(inputs_as_json)
     try:
-        inputfile = inputs['inputfile']
+        workspace = options['workspace']
+    except:
+        workspace = None
+
+    if workspace is None or len(workspace)==0:
+        workspace = './'
+
+    try:
+        inputfile = options['inputfile']
     except:
         inputfile = None
+
     try:
-        outputfile = inputs['outputfile']
+        outputfile = options['outputfile']
     except:
         outputfile = None
 
-    if inputfile is None:
+    if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
-        returnvals = [addedvalues, success, message]
+        returnvals = [addedvalues, outputfile, success, message, artifacts]
+#        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
-    if outputfile is None:
+    if os.path.isfile(inputfile) == False:
+        message = 'Input file not found'
+        returnvals = [addedvalues, outputfile, success, message, artifacts]
+#        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    if outputfile is None or len(outputfile)==0:
         message = 'No output file given'
-        returnvals = [addedvalues, success, message]
+        returnvals = [addedvalues, outputfile, success, message, artifacts]
+#        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
-    header = clean_header(read_header(inputfile))
-#    print 'cleaned header: %s\n' % header
+    outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
+
+    header = read_header(inputfile)
+#    print 'header: %s\n' % header
     nondwc = terms_not_in_dwc(header)
 #    print 'nondwc: %s\n' % nondwc
 
     dialect = vocab_dialect()
     addedvalues = distinct_vocabs_to_file(outputfile, nondwc, dialect)
     success = True
-    returnvals = [addedvalues, success, message]
+    artifacts['darwin_cloud_collector_file'] = outputfile
+    returnvals = [addedvalues, outputfile, success, message, artifacts]
+#    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
     
 def _getoptions():
@@ -98,25 +128,37 @@ def _getoptions():
     parser.add_option("-o", "--output", dest="outputfile",
                       help="Text file to store field names",
                       default=None)
+    parser.add_option("-w", "--workspace", dest="workspace",
+                      help="Directory for the output file (optional)",
+                      default=None)
+    parser.add_option("-l", "--loglevel", dest="loglevel",
+                      help="(e.g., DEBUG, WARNING, INFO) (optional)",
+                      default=None)
     return parser.parse_args()[0]
 
 def main():
     options = _getoptions()
-    inputfile = options.inputfile
-    outputfile = options.outputfile
+    optdict = {}
 
-    if inputfile is None or outputfile is None:
-        print "syntax: python darwin_cloud_collector.py -i ../../data/eight_specimen_records.csv -o ../../vocabularies/dwc_cloud.txt"
+    if options.inputfile is None or len(options.inputfile)==0 or \
+        options.outputfile is None or len(options.outputfile)==0:
+        s =  'syntax: python darwin_cloud_collector.py'
+        s += ' -i ./data/tests/test_eight_specimen_records.csv'
+        s += ' -o dwc_cloud.txt'
+        s += ' -w ./workspace'
+        s += ' -l DEBUG'
+        print '%s' % s
         return
-    
-    inputs = {}
-    inputs['inputfile'] = inputfile
-    inputs['outputfile'] = outputfile
 
-    # Append distinct values of to vocab file
-    response=json.loads(darwin_cloud_collector(json.dumps(inputs)))
-#    print 'response: %s' % response
-    logging.debug('To file %s, added new values: %s' % (inputfile, response['addedvalues']))
+    optdict['inputfile'] = options.inputfile
+    optdict['workspace'] = options.workspace
+    optdict['outputfile'] = options.outputfile
+    optdict['loglevel'] = options.loglevel
+    print 'optdict: %s' % optdict
+
+    # Append distinct new field names to Darwin Cloud vocab file
+    response=darwin_cloud_collector(optdict)
+    print 'response: %s' % response
 
 if __name__ == '__main__':
     main()

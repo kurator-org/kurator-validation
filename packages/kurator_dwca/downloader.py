@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader.py 2016-05-05T16:09-03:00"
+__version__ = "downloader.py 2016-05-06T13:40-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
@@ -43,6 +43,7 @@ def downloader(options):
         outputfile - actual full path to the output file
         success - True if process completed successfully, otherwise False
         message - an explanation of the results
+        artifacts - a dictionary of persistent objects created
     """
 #    print 'Started %s' % __version__
 #    print 'options: %s' % options
@@ -76,14 +77,14 @@ def downloader(options):
     except:
         workspace = None
 
-    if workspace is None:
+    if workspace is None or len(workspace)==0:
         workspace = './'
 
     try:
         outputfile = options['outputfile']
     except:
         outputfile = None
-    if outputfile is None:
+    if outputfile is None or len(outputfile)==0:
         outputfile='dwca_'+str(uuid.uuid1())+'.zip'
 
     try:

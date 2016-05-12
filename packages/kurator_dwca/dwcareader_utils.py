@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwcareader_utils.py 2016-04-07T13:05-03:00"
+__version__ = "dwcareader_utils.py 2016-05-11T22:46-03:00"
 
 # This file contains common utility functions for dealing with the content of a Darwin
 # Core archive. It is built with unit tests that can be invoked by running the script
@@ -218,4 +218,5 @@ class DWCAUtilsReaderTestCase(unittest.TestCase):
         self.assertEqual(north, '90', 'north geographic coverage incorrect from archive metadata')
     
 if __name__ == '__main__':
+    print '=== dwcareader_utils.py ==='
     unittest.main()

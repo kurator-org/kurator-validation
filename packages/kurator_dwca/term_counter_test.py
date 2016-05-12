@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_counter_test.py 2016-04-05T11:42-03:00"
+__version__ = "term_counter_test.py 2016-05-11T22:47-03:00"
 
 # This file contains unit test for the term_counter function.
 #
@@ -25,7 +25,6 @@ __version__ = "term_counter_test.py 2016-04-05T11:42-03:00"
 from term_counter import term_counter
 from dwca_utils import read_header
 import os
-import json
 import unittest
 
 class TermCounterFramework():
@@ -67,22 +66,28 @@ class TermCounterTestCase(unittest.TestCase):
         print 'testing missing_parameters'
         testfile = self.framework.testfile1
 
+        # Test with missing required inputs
+        # Test with no inputs
         inputs = {}
-        response=json.loads(term_counter(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['rowcount'], \
-            'rows counted without input file')
-        self.assertFalse(response['success'], \
-            'success without input file')
+        response=term_counter(inputs)
+#        print 'response1:\n%s' % response
+        s = 'success without any required inputs'
+        self.assertFalse(response['success'], s)
 
+        # Test with missing termname
         inputs['inputfile'] = testfile
-#        print 'inputs:\n%s' % inputs
-        response=json.loads(term_counter(json.dumps(inputs)))
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['rowcount'], \
-            'rows counted without term name')
-        self.assertFalse(response['success'], \
-            'success with missing term name')
+        response=term_counter(inputs)
+#        print 'response2:\n%s' % response
+        s = 'success without termname'
+        self.assertFalse(response['success'], s)
+
+        # Test with missing inputfile
+        inputs = {}
+        inputs['termname'] = 'year'
+        response=term_counter(inputs)
+#        print 'response3:\n%s' % response
+        s = 'success without input file'
+        self.assertFalse(response['success'], s)
 
     def test_term_counter(self):
         print 'testing term_counter'
@@ -94,7 +99,7 @@ class TermCounterTestCase(unittest.TestCase):
         inputs['termname'] = termname
 
         # Extract distinct values of term
-        response=json.loads(term_counter(json.dumps(inputs)))
+        response=term_counter(inputs)
 #        print 'response:\n%s' % response
         rowcount = response['rowcount']
         expected = 8
@@ -105,11 +110,12 @@ class TermCounterTestCase(unittest.TestCase):
         term = 'island'
         inputs['inputfile'] = testfile
         inputs['termname'] = term
-        response=json.loads(term_counter(json.dumps(inputs)))
+        response=term_counter(inputs)
         rowcount = response['rowcount']
 #        print 'response:\n%s' % response
         s = 'rowcount for term %s not extracted correctly from %s' % (term, testfile)
         self.assertEqual(rowcount, 1, s)
 
 if __name__ == '__main__':
+    print '=== term_counter_test.py ==='
     unittest.main()

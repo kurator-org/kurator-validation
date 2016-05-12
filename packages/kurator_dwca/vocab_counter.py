@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_counter.py 2016-04-26T13:53-03:00"
+__version__ = "vocab_counter.py 2016-05-11T21:55-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
@@ -22,34 +22,22 @@ from dwca_vocab_utils import distinct_term_counts_from_file
 import os.path
 import logging
 
-# Example: 
-#
-# kurator -f vocab_counter.yaml 
-#         -p i=../data/eight_specimen_records.csv 
-#         -p t=year
-#
-# or as a command-line script.
-# Example:
-#
-# python vocab_counter.py 
-#        -i ./data/eight_specimen_records.csv 
-#        -t year
-
 def vocab_counter(options):
     """Extract a list of the distinct values of a given term in a text file along with 
        the number of times each occurs.
     options - a dictionary of parameters
-        inputfile - full path to the input file
-        termname - the name of the term for which to find distinct values
-        loglevel - the level at which to log
+        loglevel - the level at which to log (optional)
+        inputfile - full path to the input file (required)
+        termname - the name of the term for which to find distinct values (required)
     returns a dictionary with information about the results
         extractedvalues - a list of distinct values of the term in the inputfile, with a
            count of the number of times it occurs
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
-    print 'Started %s' % __version__
+#    print 'Started %s' % __version__
 #    print 'options: %s' % options
+
     # Set up logging
 #     try:
 #         loglevel = options['loglevel']
@@ -76,19 +64,8 @@ def vocab_counter(options):
         inputfile = options['inputfile']
     except:
         inputfile = None
-    try:
-        termname = options['termname']
-    except:
-        termname = None
-
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
-        returnvals = [extractedvalues, success, message]
-#        logging.debug('message: %s' % message)
-        return response(returnvars, returnvals)
-        
-    if termname is None or len(termname)==0:
-        message = 'No term given'
         returnvals = [extractedvalues, success, message]
 #        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
@@ -99,6 +76,17 @@ def vocab_counter(options):
 #        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
+    try:
+        termname = options['termname']
+    except:
+        termname = None
+
+    if termname is None or len(termname)==0:
+        message = 'No term given'
+        returnvals = [extractedvalues, success, message]
+#        logging.debug('message: %s' % message)
+        return response(returnvars, returnvals)
+        
     extractedvalues = distinct_term_counts_from_file(inputfile, termname)
     success = True
     returnvals = [extractedvalues, success, message]
@@ -130,6 +118,7 @@ def main():
         s =  'syntax: python vocab_counter.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -t year'
+        s += ' -l DEBUG'
         print '%s' % s
         return
 

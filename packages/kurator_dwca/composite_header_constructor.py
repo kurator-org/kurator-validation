@@ -14,18 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor.py 2016-02-21T14:35-03:00"
-
-# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
-# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
-#
-# Example: 
-# kurator -f workflows/composite_header_constructor.yaml -p 1="../../data/tests/test_tsv_1.txt" -p 2=../../data/tests/test_tsv_2.txt -p o="./workspace/compositeheader.txt"
-#
-# or as a command-line script.
-# Example:
-#
-# python composite_header_constructor.py -1 "../../data/tests/test_tsv_1.txt" -2 "../../data/tests/test_tsv_2.txt" -w ./workspace -o "./workspace/compositeheader.txt"
+__version__ = "composite_header_constructor.py 2016-05-11T09:50-03:00"
 
 from optparse import OptionParser
 from dwca_utils import read_header
@@ -33,26 +22,45 @@ from dwca_utils import write_header
 from dwca_utils import merge_headers
 from dwca_utils import tsv_dialect
 from dwca_utils import response
-import os
-import glob
-import csv
-import json
 import logging
 
-def composite_header_constructor(inputs_as_json):
+def composite_header_constructor(options):
     """Construct a header that contains the distinct column names in two input files and
        write the header to an outputfile.
-    inputs_as_json - JSON string containing inputs
-        inputfile1 - full path to one of the input files
-        inputfile2 - full path to the second input file
-        outputfile - full path to the output file
-    returns JSON string with information about the results
-        compositeheader - the constructed header
+    options - a dictionary of parameters
+        loglevel - level at which to log (e.g., DEBUG) (optional)
+        workspace - path to a directory for the outputfile (optional)
+        inputfile1 - full path to one of the input files (optional)
+        inputfile2 - full path to the second input file (optional)
+        outputfile - name of the output file, without path (required)
+    returns a dictionary with information about the results
+        compositeheader - header combining two inputs
+        outputfile - actual full path to the output file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
+        artifacts - a dictionary of persistent objects created
     """
+#    print 'Started %s' % __version__
+#    print 'options: %s' % options
+
+    # Set up logging
+#     try:
+#         loglevel = options['loglevel']
+#     except:
+#         loglevel = None
+#     if loglevel is not None:
+#         if loglevel.upper() == 'DEBUG':
+#             logging.basicConfig(level=logging.DEBUG)
+#         elif loglevel.upper() == 'INFO':        
+#             logging.basicConfig(level=logging.INFO)
+# 
+#     logging.info('Starting %s' % __version__)
+
     # Make a list for the response
-    returnvars = ['compositeheader', 'success', 'message']
+    returnvars = ['compositeheader', 'outputfile', 'success', 'message', 'artifacts']
+
+    # Make a dictionary for artifacts left behind
+    artifacts = {}
 
     # outputs
     compositeheader = None
@@ -60,24 +68,35 @@ def composite_header_constructor(inputs_as_json):
     message = None
 
     # inputs
-    inputs = json.loads(inputs_as_json)
     try:
-        file1 = inputs['inputfile1']
+        workspace = options['workspace']
+    except:
+        workspace = None
+
+    if workspace is None or len(workspace)==0:
+        workspace = './'
+
+    try:
+        file1 = options['inputfile1']
     except:
         file1 = None
+
     try:
-        file2 = inputs['inputfile2']
+        file2 = options['inputfile2']
     except:
         file2 = None
-    try:
-        headeroutputfile = inputs['outputfile']
-    except:
-        headeroutputfile = None
 
-    if headeroutputfile is None:
+    try:
+        outputfile = options['outputfile']
+    except:
+        outputfile = None
+
+    if outputfile is None or len(outputfile)==0:
         message = 'No output file given'
-        returnvals = [compositeheader, success, message]
+        returnvals = [compositeheader, outputfile, success, message, artifacts]
         return response(returnvars, returnvals)
+
+    outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     header1 = read_header(file1)
     header2 = read_header(file2)
@@ -86,16 +105,18 @@ def composite_header_constructor(inputs_as_json):
 
     # Write the resulting header into
     dialect = tsv_dialect()
-    success = write_header(headeroutputfile, compositeheader, dialect)
+    success = write_header(outputfile, compositeheader, dialect)
     if success == False:
         message = 'Header was not written.'
-        returnvals = [compositeheader, success, message]
+        returnvals = [compositeheader, outputfile, success, message, artifacts]
         return response(returnvars, returnvals)
 
     if compositeheader is not None:
         compositeheader = list(compositeheader)
 
-    returnvals = [compositeheader, success, message]
+    artifacts['composite_header_file'] = outputfile
+
+    returnvals = [compositeheader, outputfile, success, message, artifacts]
     return response(returnvars, returnvals)
  
 def _getoptions():
@@ -110,32 +131,40 @@ def _getoptions():
     parser.add_option("-o", "--outputfile", dest="outputfile",
                       help="Name for file to hold the composite header",
                       default=None)
+    parser.add_option("-w", "--workspace", dest="workspace",
+                      help="Directory for the output file (optional)",
+                      default=None)
+    parser.add_option("-l", "--loglevel", dest="loglevel",
+                      help="(e.g., DEBUG, WARNING, INFO) (optional)",
+                      default=None)
     return parser.parse_args()[0]
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
     options = _getoptions()
-    file1 = options.file1
-    file2 = options.file2
-    outputfile = options.outputfile
+    optdict = {}
 
-    if file1 is None or file2 is None or outputfile is None:
-        print 'syntax: python composite_header_constructor.py -1 "../../data/tests/composite/test_tsv_1.txt" -2 "../../data/tests/composite/test_tsv_2.txt" -o "./workspace/compositeheader.txt"'
+    if options.outputfile is None or len(options.outputfile)==0 or \
+        ((options.file1 is None or len(options.file1)==0) and \
+         (options.file2 is None or len(options.file2)==0)):
+        s =  'syntax: python composite_header_constructor.py'
+        s += ' -1 ./data/tests/test_tsv_1.txt'
+        s += ' -2 ./data/tests/test_tsv_2.txt'
+        s += ' -w ./workspace'
+        s += ' -o test_compositeheader.txt'
+        s += ' -l DEBUG'
+        print '%s' % s
         return
+
+    optdict['inputfile1'] = options.file1
+    optdict['inputfile2'] = options.file2
+    optdict['workspace'] = options.workspace
+    optdict['outputfile'] = options.outputfile
+    optdict['loglevel'] = options.loglevel
+    print 'optdict: %s' % optdict
     
-    inputs = {}
-    inputs['inputfile1'] = file1
-    inputs['inputfile2'] = file2
-    inputs['outputfile'] = outputfile
-
     # Compose distinct field header from headers of files in inputpath
-    response=json.loads(composite_header_constructor(json.dumps(inputs)))
-
-    s = 'Input file1: %s\n' % file1
-    s += 'Input file2: %s\n' % file2
-    s += 'Header output file: %s\n' % outputfile
-    s += 'Composite header:\n%s' % response['compositeheader']
-    logging.debug( s )
+    response=composite_header_constructor(optdict)
+    print 'response: %s' % response
 
 if __name__ == '__main__':
     main()

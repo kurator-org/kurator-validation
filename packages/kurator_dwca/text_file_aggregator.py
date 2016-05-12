@@ -14,19 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator.py 2016-02-21T19:04-03:00"
-
-# TODO: Integrate pattern for calling actor in a workflow using dictionary of parameters
-# OBSOLETE: Use global variables for parameters sent at the command line in a workflow
-#
-# Example: 
-#
-# kurator -f workflows/text_file_aggregator.yaml -p i="../../data/tests/test_tsv_*.txt" -p w=./workspace -p f=joinedfile.txt -p d=tsv
-#
-# or as a command-line script.
-# Example:
-#
-# python text_file_aggregator.py -i "../../data/tests/test_tsv_*.txt" -w ./workspace -f joinedfile.txt -d tsv
+__version__ = "text_file_aggregator.py 2016-05-11T16:11-03:00"
 
 from optparse import OptionParser
 from dwca_utils import composite_header
@@ -37,67 +25,104 @@ from dwca_utils import response
 import os
 import glob
 import csv
-import json
+import uuid
 import logging
 
-def text_file_aggregator(inputs_as_json):
+def text_file_aggregator(options):
     """Join the contents of files in a given path. Headers are not assumed to be the
-    same. Write a file containing the joined files with one header line.
-    inputs_as_json - JSON string containing inputs
-        inputpath - full path to the input
-        input dialect - the csv dialect of the input files ("tsv", "excel", or None)
-        aggregatedfile - full path to the outputfile
-    returns JSON string with information about the results
+       same. Write a file containing the joined files with one header line.
+    options - a dictionary of parameters
+        inputpath - full path to the input file set (required)
+        inputdialect - csv dialect of the input files ("tsv", "excel", or None) (optional)
+        outputfile - name of the output file, without path (optional)
+        workspace - path to a directory for the outputfile (optional)
+    returns a dictionary with information about the results
+        workspace - actual path to the directory where the outputfile was written
+        outputfile - actual full path to the output file
         aggregaterowcount - the number of rows in the aggregated file, not counting header
-        aggregateheader - the header for the aggregated file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
+        artifacts - a dictionary of persistent objects created
     """
+#    print 'Started %s' % __version__
+#    print 'options: %s' % options
+
+    # Set up logging
+#     try:
+#         loglevel = options['loglevel']
+#     except:
+#         loglevel = None
+#     if loglevel is not None:
+#         if loglevel.upper() == 'DEBUG':
+#             logging.basicConfig(level=logging.DEBUG)
+#         elif loglevel.upper() == 'INFO':        
+#             logging.basicConfig(level=logging.INFO)
+# 
+#     logging.info('Starting %s' % __version__)
+
     # Make a list for the response
-    returnvars = ['aggregaterowcount', 'aggregateheader', 'success', 'message']
+    returnvars = ['workspace', 'outputfile', 'aggregaterowcount', 'success', 'message', 
+        'artifacts']
+
+    # Make a dictionary for artifacts left behind
+    artifacts = {}
 
     # outputs
     success = False
     aggregaterowcount = None
     aggregateheader = None
     message = None
+    dialect = None
+    extension = ''
 
     # inputs
-    inputs = json.loads(inputs_as_json)
     try:
-        inputpath = inputs['inputpath']
+        workspace = options['workspace']
+    except:
+        workspace = None
+
+    if workspace is None or len(workspace)==0:
+        workspace = './'
+
+    try:
+        outputfile = options['outputfile']
+    except:
+        outputfile = None
+    if outputfile is None or len(outputfile)==0:
+        outputfile='aggregate_'+str(uuid.uuid1())+extension
+
+    # Construct the output file path in the workspace
+    outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
+
+    try:
+        inputpath = options['inputpath']
     except:
         inputpath = None
+
+    if inputpath is None or len(inputpath)==0:
+        message = 'No input file given'
+        returnvals = [workspace, outputfile, aggregaterowcount, success, message,
+            artifacts]
+#        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
     try:
-        aggregatedfile = inputs['aggregatedfile']
-    except:
-        aggregatedfile = None
-    try:
-        inputdialect = inputs['inputdialect']
+        inputdialect = options['inputdialect']
     except:
         inputdialect = None
 
-    if inputpath is None:
-        message = 'No input path given'
-        returnvals = [aggregaterowcount, aggregateheader, success, message]
-        return response(returnvars, returnvals)
-
-    if aggregatedfile is None:
-        message = 'No input file given'
-        returnvals = [aggregaterowcount, aggregateheader, success, message]
-        return response(returnvars, returnvals)
-
-    dialect = None
     if inputdialect == 'tsv':
         dialect = tsv_dialect()
+        extension = '.tsv'
     elif inputdialect == 'excel' or inputdialect == 'csv.excel': 
         dialect = csv.excel
+        extension = '.csv'
 
     aggregateheader = composite_header(inputpath, dialect)
     aggregaterowcount = 0
 
     # Open a file to write the aggregated results
-    with open(aggregatedfile, 'w') as outfile:
+    with open(outputfile, 'w') as outfile:
         writer = csv.DictWriter(outfile, dialect=tsv_dialect(), 
             fieldnames=aggregateheader, extrasaction='ignore')
         writer.writeheader()
@@ -114,13 +139,19 @@ def text_file_aggregator(inputs_as_json):
                         aggregaterowcount += 1
                     except:
                         message = 'failed to write line:\n%s\nto file %s' % (line, file)
-                        returnvals = [aggregaterowcount, aggregateheader, success, message]
+                        returnvals = [workspace, outputfile, aggregaterowcount, success, 
+                            message, artifacts]
+#                        logging.debug('message:\n%s' % message)
                         return response(returnvars, returnvals)
 
     success = True
+    artifacts['aggregated_file'] = outputfile
     if aggregateheader is not None:
         aggregateheader = list(aggregateheader)
-    returnvals = [aggregaterowcount, aggregateheader, success, message]
+        returnvals = [workspace, outputfile, aggregaterowcount, success, message,
+            artifacts]
+#    logging.debug('message:\n%s' % message)
+#    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def _getoptions():
@@ -129,51 +160,44 @@ def _getoptions():
     parser.add_option("-i", "--inputpath", dest="inputpath",
                       help="Path to files to analyze",
                       default=None)
-    parser.add_option("-d", "--dialect", dest="dialect",
-                      help="CSV dialect to use",
+    parser.add_option("-o", "--outputfile", dest="outputfile",
+                      help="Path to file with aggregated contents",
                       default=None)
     parser.add_option("-w", "--workspace", dest="workspace",
                       help="Path for temporary files",
                       default=None)
-    parser.add_option("-o", "--aggregatedfile", dest="aggregatedfile",
-                      help="Path to file with aggregated contents",
+    parser.add_option("-d", "--dialect", dest="dialect",
+                      help="CSV dialect to use",
+                      default=None)
+    parser.add_option("-l", "--loglevel", dest="loglevel",
+                      help="(e.g., DEBUG, WARNING, INFO) (optional)",
                       default=None)
     return parser.parse_args()[0]
 
 def main():
-    global aggregatorworkspace, aggregatedfilename, aggregatordialect
-    logging.basicConfig(level=logging.DEBUG)
     options = _getoptions()
-    inputpath = options.inputpath
-    aggregatorworkspace = options.workspace
-    aggregatordialect = options.dialect
+    optdict = {}
 
-    if inputpath is None:
-        print 'syntax: python text_file_aggregator.py -i "../../data/tests/test_tsv_*.txt" -w ./workspace -o aggregatedfile.txt -d tsv'
+    if options.inputpath is None or len(options.inputpath)==0:
+        s =  'syntax: python text_file_aggregator.py'
+        s += ' -i ./data/tests/test_tsv_*.txt'
+        s += ' -o aggregatedoutputfile.txt'
+        s += ' -w ./workspace'
+        s += ' -d tsv'
+        s += ' -l DEBUG'
+        print '%s' % s
         return
 
-    if aggregatorworkspace is None:
-        aggregatorworkspace = './workspace'
-    
-    if aggregatordialect is None:
-        aggregatordialect = None
-    
-    if aggregatedfilename is None:
-        aggregatedfilename = 'aggregatedfile.txt'
-    
-    inputs = {}
-    inputs['inputpath'] = inputpath
-    inputs['aggregatedfile'] = aggregatedfilename
-    inputs['workspace'] = aggregatorworkspace
-
-    if aggregatordialect is not None:
-        inputs['inputdialect'] = aggregatordialect
+    optdict['inputpath'] = options.inputpath
+    optdict['outputfile'] = options.outputfile
+    optdict['workspace'] = options.workspace
+    optdict['dialect'] = options.dialect
+    optdict['loglevel'] = options.loglevel
+    print 'optdict: %s' % optdict
 
     # Aggregate files
-    response=json.loads(text_file_aggregator(json.dumps(inputs)))
-
-    logging.debug('Input path: %s\nAggregated text file: %s\nAggregated row count: %s\nComposite header:\n%s ' \
-        % (inputpath, aggregatedfilename, response['aggregaterowcount'], response['aggregateheader']) )
+    response=text_file_aggregator(optdict)
+    print 'response: %s' % response
 
 if __name__ == '__main__':
     main()

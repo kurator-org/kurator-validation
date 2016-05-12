@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_geog_collector_test.py 2016-05-05T15:30-03:00"
+__version__ = "dwc_geog_collector_test.py 2016-05-11T22:42-03:00"
 
 # This file contains unit test for the dwc_geog_collector function.
 #
@@ -31,7 +31,7 @@ from dwca_terms import geogkeytermlist
 import os
 import unittest
 
-class DwcGeogCollectorFramework():
+class DwCGeogCollectorFramework():
     """Test framework for the Darwin Core Geography collector."""
     # location for the test inputs and outputs
     testdatapath = './data/tests/'
@@ -41,19 +41,19 @@ class DwcGeogCollectorFramework():
     testfile2 = testdatapath + 'test_three_specimen_records.txt'
 
     # output data files from tests, remove these in dispose()
-    testcollectorfile = testdatapath + 'test_geog_collector_file.csv'
+    vocabfile = testdatapath + 'test_geog_collector_file.csv'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-        testcollectorfile = self.testcollectorfile
-        if os.path.isfile(testcollectorfile):
-            os.remove(testcollectorfile)
+        vocabfile = self.vocabfile
+        if os.path.isfile(vocabfile):
+            os.remove(vocabfile)
         return True
 
-class DwcGeogCollectorTestCase(unittest.TestCase):
+class DwCGeogCollectorTestCase(unittest.TestCase):
     """Unit tests."""
     def setUp(self):
-        self.framework = DwcGeogCollectorFramework()
+        self.framework = DwCGeogCollectorFramework()
 
     def tearDown(self):
         self.framework.dispose()
@@ -69,30 +69,30 @@ class DwcGeogCollectorTestCase(unittest.TestCase):
     def test_missing_parameters(self):
         print 'testing missing_parameters'
         testfile1 = self.framework.testfile1
-        vocabfile = self.framework.testcollectorfile
+        vocabfile = self.framework.vocabfile
 
+        # Test with missing required inputs
+        # Test with no inputs
         inputs = {}
         response=dwc_geog_collector(inputs)
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['addedvalues'], \
-            'geog vocab values added without input file or vocabfile')
-        self.assertFalse(response['success'], \
-            'geog vocab addition successful without input file or vocabfile')
+#        print 'response1:\n%s' % response
+        s = 'success without any required inputs'
+        self.assertFalse(response['success'], s)
 
+        # Test with missing vocabfile
         inputs['inputfile'] = testfile1
         response=dwc_geog_collector(inputs)
-#        print 'response:\n%s' % response
-        self.assertFalse(response['success'], \
-            'geog vocab addition successful without vocabfile')
+#        print 'response2:\n%s' % response
+        s = 'success without vocabfile'
+        self.assertFalse(response['success'], s)
 
+        # Test with missing inputfile
         inputs = {}
         inputs['vocabfile'] = vocabfile
         response=dwc_geog_collector(inputs)
-#        print 'response:\n%s' % response
-        self.assertIsNone(response['addedvalues'], \
-            'geog vocab values added without inputfile')
-        self.assertFalse(response['success'], \
-            'geog vocab addition successful without inputfile')
+#        print 'response3:\n%s' % response
+        s = 'success without vocabfile'
+        self.assertFalse(response['success'], s)
 
     def test_headers(self):
         print 'testing headers'
@@ -131,7 +131,7 @@ class DwcGeogCollectorTestCase(unittest.TestCase):
         print 'testing dwc_geog_collector'
         testfile1 = self.framework.testfile1
         testfile2 = self.framework.testfile2
-        vocabfile = self.framework.testcollectorfile
+        vocabfile = self.framework.vocabfile
 
         inputs = {}
         inputs['inputfile'] = testfile1
@@ -149,8 +149,8 @@ class DwcGeogCollectorTestCase(unittest.TestCase):
             '|United States||Washington|Chelan||||'
         ]
 #        print 'addedvalues:\n%s\nexpected: %s' % (addedvalues,expected)
-#        print 'response:\n%s' % response
-        s = 'new Darwin Core geography terms %s not added correctly from %s' \
+#        print 'inputs: %s\nresponse1:\n%s' % (inputs, response)
+        s = 'New Darwin Core geography terms %s not added correctly from %s' \
             % (addedvalues, testfile1)
         self.assertEqual(addedvalues, expected, s)
 
@@ -158,15 +158,16 @@ class DwcGeogCollectorTestCase(unittest.TestCase):
 
         # Collect terms
         response=dwc_geog_collector(inputs)
-        values = response['addedvalues']
+        addedvalues = response['addedvalues']
         expected = [
             '|Mozambique||Maputo|||||Inhaca',
             '|South Africa||Kwa-Zulu Natal|||||'
         ]
-#        print 'values:\n%s\nexpected:\n%s' % (values,expected)
-        s = 'new Darwin Core geography terms %s not added correctly from input file %s' \
-            % (values, testfile2)
-        self.assertEqual(values, expected, s)
+#        print 'addedvalues:\n%s\nexpected:\n%s' % (addedvalues,expected)
+#        print 'response2:\n%s' % response
+        s = 'New Darwin Core geography terms %s not added correctly from input file %s' \
+            % (addedvalues, testfile2)
+        self.assertEqual(addedvalues, expected, s)
         
         dialect = vocab_dialect()
         geogkey = compose_key_from_list(geogkeytermlist)
@@ -188,4 +189,5 @@ class DwcGeogCollectorTestCase(unittest.TestCase):
         self.assertEqual(existinggeogs, expected, s)
 
 if __name__ == '__main__':
+    print '=== dwc_geog_collector_test.py ==='
     unittest.main()
