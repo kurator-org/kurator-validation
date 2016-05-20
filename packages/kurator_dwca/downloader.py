@@ -45,8 +45,8 @@ def downloader(options):
         message - an explanation of the results
         artifacts - a dictionary of persistent objects created
     """
-#    print 'Started %s' % __version__
-#    print 'options: %s' % options
+    logging.info( 'Started %s' % __version__ )
+    logging.info( 'options: %s' % options )
 
     # Set up logging
     try:

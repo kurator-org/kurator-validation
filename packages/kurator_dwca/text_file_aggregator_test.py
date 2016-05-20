@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator_test.py 2016-05-11T22:50-03:00"
+__version__ = "text_file_aggregator_test.py 2016-05-20T10:06-03:00"
 
 from text_file_aggregator import text_file_aggregator
 from dwca_utils import read_header
@@ -89,14 +89,16 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         inputs['inputdialect'] = 'tsv'
         inputs['workspace'] = workspace
 
+#        print 'inputs:\n%s' % (inputs)
+
         # Aggregate text file
         response=text_file_aggregator(inputs)
 
 #        print 'inputs:\n%s\nresponse:\n%s' % (inputs, response)
-        self.assertTrue(os.path.isfile(tsvfile), tsvfile + ' does not exist')
+        outputfile = response['outputfile']
+        self.assertTrue(os.path.isfile(outputfile), outputfile + ' does not exist')
         self.assertEqual(response['aggregaterowcount'], 6, 'incorrect number of rows')
 
-        outputfile = response['outputfile']
         header = read_header(outputfile)
         modelheader = []
         modelheader.append('decimalLatitude')
@@ -125,7 +127,8 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         response=text_file_aggregator(inputs)
 
 #        print 'inputs:\n%s\nresponse:\n%s' % (inputs, response)
-        self.assertTrue(os.path.isfile(tsvfile), tsvfile + ' does not exist')
+        outputfile = response['outputfile']
+        self.assertTrue(os.path.isfile(outputfile), outputfile + ' does not exist')
         self.assertEqual(response['aggregaterowcount'], 6, 'incorrect number of rows')
 
         outputfile = response['outputfile']
@@ -145,18 +148,20 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         print 'testing aggregate_mix'
         tsvfile = self.framework.tsvfile
         mixedcompositepath = self.framework.mixedcompositepath
+        workspace = self.framework.testdatapath
 
         inputs = {}
         inputs['inputpath'] = mixedcompositepath
         inputs['outputfile'] = self.framework.tsvfile
+        inputs['workspace'] = workspace
 
         # Aggregate text file
         response=text_file_aggregator(inputs)
 
-        self.assertTrue(os.path.isfile(tsvfile), tsvfile + ' does not exist')
+        outputfile = response['outputfile']
+        self.assertTrue(os.path.isfile(outputfile), outputfile + ' does not exist')
         self.assertEqual(response['aggregaterowcount'], 11, 'incorrect number of rows')
 
-        outputfile = response['outputfile']
         header = read_header(outputfile)
         modelheader = []
         modelheader.append('BCID')

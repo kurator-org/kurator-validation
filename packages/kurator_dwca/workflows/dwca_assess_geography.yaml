@@ -1,0 +1,125 @@
+#####################################################################################
+# dwca_term_values.yaml
+#####################################################################################
+#
+# This workflow:
+#    - downloads a Darwin Core Archive from a URL
+#    - extracts the core file of a Darwin Core Archive to a tab-separated text file
+#    - extracts distinct values of a set of fields from the text file
+#    - writes the distinct value lists to report files
+#
+# Example command-line usage:
+# kurator -f dwca_assess_geography.yaml 
+#         -p url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
+#         -l DEBUG (optional)
+#
+# Requires:
+# jython pip install requests
+# jython pip install python-dwca-reader
+# jython pip install py
+#
+#####################################################################################
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# __author__ = "John Wieczorek"
+# __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
+# __version__ = "dwca_assess_geography.yaml 2016-05-19T20:13-03:00"
+
+imports:
+
+- classpath:/org/kurator/akka/types.yaml
+
+components:
+
+# Inline python actor to demonstrate making a workspace on the fly to use for 
+# writing temporary workflow artifacts. 
+- id: MakeWorkspace
+  type: PythonActor
+  properties:
+    code: |
+        import uuid
+        import os
+        def on_start(options):
+            print 'Started MakeWorkspace'
+            print 'MakeWorkspace options: %s' % options
+            if options.has_key('workspace') == False:
+                options['workspace'] ='./workspace_'+str(uuid.uuid1())
+                if not os.path.exists(options['workspace']):
+                    os.makedirs(options['workspace'])
+            return options
+
+# Download file into workspace from URL given by url parameter.
+- id: Downloader
+  type: PythonActor
+  properties:
+    module: kurator_dwca.downloader
+    onData: downloader
+    inputs:
+        url: url
+        workspace : workspace
+    listensTo:
+      - !ref MakeWorkspace
+
+# Extract core file into a tab-separated value file in workspace from Darwin Core archive.
+- id: DWCAtoTSVWriter
+  type: PythonActor
+  properties:
+    module: kurator_dwca.dwca_core_to_tsv
+    onData: dwca_core_to_tsv
+    inputs:
+        outputfile: inputfile
+        workspace : workspace
+    listensTo:
+      - !ref Downloader
+
+- id: GeogReporter
+  type: PythonActor
+  properties:
+    module: kurator_dwca.geog_recommendation_reporter
+    onData: geog_recommendation_reporter
+    inputs:
+        outputfile: inputfile
+        workspace: workspace
+    parameters:
+        vocabfile: '../data/tests/test_geography.txt'
+    listensTo:
+      - !ref DWCAtoTSVWriter
+
+- id: WrapUp
+  type: PythonActor
+  properties:
+    code: |
+        def on_data(options):
+            print 'WrapUp options: %s' % options
+            print '### Finished DwCA Assess Geography Workflow ###'
+    inputs:
+        workspace: workspace
+        outputfile: outputfile
+        success: success
+        message: message
+    listensTo:
+      - !ref GeogReporter
+
+- id: DwCAGeogExtractor
+  type: Workflow
+  properties:
+    actors:
+      - !ref MakeWorkspace
+      - !ref Downloader
+      - !ref DWCAtoTSVWriter
+      - !ref GeogReporter
+      - !ref WrapUp
+    parameters:
+       url:
+         actor: !ref MakeWorkspace
+         parameter: url

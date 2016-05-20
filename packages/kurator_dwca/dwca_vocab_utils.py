@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-05-11T22:45-03:00"
+__version__ = "dwca_vocab_utils.py 2016-05-13T14:27-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -34,6 +34,7 @@ from dwca_terms import vocabfieldlist
 from dwca_terms import controlledtermlist
 from dwca_terms import geogkeytermlist
 from dwca_terms import geogvocabextrafieldlist
+from dwca_terms import geogvocabfieldlist
 from operator import itemgetter
 import os.path
 import glob
@@ -149,11 +150,72 @@ def matching_vocab_dict_from_file(checklist, vocabfile, dialect=None):
     if vocabdict is None or len(vocabdict)==0:
         return None
     matchingvocabdict = {}
-#    print 'checklist: %s\nvocabdict:\/%s' % (checklist, vocabdict)
+#    print 'checklist: %s\nvocabdict:\n/%s' % (checklist, vocabdict)
     for term in checklist:
         if term in vocabdict:
             matchingvocabdict[term]=vocabdict[term]
     return matchingvocabdict
+
+def matching_geog_dict_from_file(checklist, vocabfile, dialect=None):
+    """Given a checklist of values, get matching values from a vocabulary file.
+    parameters:
+        checklist - the list of values to get from the vocabfile
+        vocabfile - the full path to the vocabulary lookup file
+        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+    returns:
+        vocabdict - a dict of complete vocabulary records matching the values in the 
+            checklist
+    """
+    if checklist is None:
+        return None
+    vocabdict = dwc_geog_dict_from_file(vocabfile, dialect)
+    if vocabdict is None or len(vocabdict)==0:
+        return None
+    matchingvocabdict = {}
+#    print 'checklist: %s\nvocabdict:\n/%s' % (checklist, vocabdict)
+    for term in checklist:
+        if term in vocabdict:
+            matchingvocabdict[term]=vocabdict[term]
+    return matchingvocabdict
+
+def dwc_geog_dict_from_file(vocabfile, dialect=None):
+    """Get a full geography vocabulary as a dict.
+    parameters:
+        vocabfile - the full path to the vocabulary lookup file
+        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+    returns:
+        geogdict - a dict of complete geography records
+    """
+    if os.path.isfile(vocabfile) == False:
+        return None
+    geogdict = {}
+    if dialect is None:
+        dialect = vocab_dialect()
+
+#    geogkey = compose_key_from_list(geogkeytermlist)
+
+    with open(vocabfile, 'rU') as csvfile:
+        dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=geogvocabfieldlist)
+        h = dr.next()
+#        i=0
+        for row in dr:
+            # Skip the header row.
+#            print 'row: %s' % row
+#            if i==0:
+#                i=1
+#            else:
+            rowdict = {}
+            rowdict['checked']=row['checked']
+            rowdict['incorrectable']=row['incorrectable']
+            for field in geogkeytermlist:
+                rowdict[field]=row[field]
+            rowdict['error']=row['error']
+            rowdict['comment']=row['comment']
+            rowdict['higherGeographyID']=row['higherGeographyID']
+            geogdict[row['geogkey']]=rowdict
+#                print 'rowdict: %s' % rowdict
+#    print 'geogdict=%s' % geogdict    
+    return geogdict
 
 def vocab_dict_from_file(vocabfile, dialect=None):
     """Get a full vocabulary as a dict.
@@ -208,6 +270,110 @@ def term_values_recommended(lookupdict):
                 recommended[key] = value
     return recommended
 
+def geog_values_recommended(lookupdict):
+    """Get non-standard geog values and their standard equivalents from a lookupdict
+    parameters:
+        lookupdict - a dictionary of lookup terms from a vocabulary
+    returns:
+        recommended - a dictionary of verbatim values and their recommended 
+            standardized values
+    """
+    if lookupdict is None or len(lookupdict)==0:
+        return None
+#    print 'lookupdict:\n%s' % lookupdict
+    recommended = {}
+    for key, value in lookupdict.iteritems():
+        standard = ''
+        for field in geogkeytermlist:
+            standard += value[field]+'|'
+            standard = standard.strip('|')
+        if key != standard:
+            recommended[key] = value
+    return recommended
+
+def geog_recommendation_report(reportfile, recommendationdict, dialect=None):
+    """Write a term recommendation report for geography.
+    parameters:
+        reportfile - the full path to the output report file
+        recommendationdict - a dictionary of term recommendations
+        dialect - a csv.dialect object with the attributes of the report file
+    returns:
+        success - True if the report was written, else False
+    """
+    if recommendationdict is None or len(recommendationdict)==0:
+        print 'no recommendations to report'
+        return False
+
+    if reportfile is None or len(reportfile)==0:
+        print 'report file name not given'
+        return False
+
+    if dialect is None:
+        dialect = tsv_dialect()
+
+    with open(reportfile, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, dialect=dialect, \
+            fieldnames=geogvocabfieldlist)
+        writer.writeheader()
+
+    with open(reportfile, 'a') as csvfile:
+        writer = csv.DictWriter(csvfile, dialect=dialect, \
+            fieldnames=geogvocabfieldlist)
+        for key, value in recommendationdict.iteritems():
+#            print ' key: %s value: %s' % (key, value)
+            geogdict = { 'geogkey':key }
+            for k in geogvocabfieldlist:
+                if k != 'geogkey':
+                    geogdict[k]=value[k]
+            writer.writerow(geogdict)
+    return True
+
+def geog_row_recommendation_report(reportfile, recordfile, recommendationfile, dialect=None):
+    """Write a row recommendation report for geography.
+    parameters:
+        reportfile - the full path to the output report file
+        recordfile - the full path to the input file
+        recommendationfile - file of geography recommendations
+        dialect - a csv.dialect object with the attributes of the report file
+    returns:
+        success - True if the report was written, else False
+    """
+    if recommendationfile is None or len(recommendationfile)==0:
+        print 'No recommendation file name given'
+        return False
+
+    if os.path.isfile(recommendationfile) == False:
+        message = 'Recomendation file %s not found' % recommendationfile
+        return False
+
+    if reportfile is None or len(reportfile)==0:
+        print 'Report file name not given'
+        return False
+
+    if recordfile is None or len(recordfile)==0:
+        print 'File name for input records not given'
+        return False
+
+    if dialect is None:
+        dialect = tsv_dialect()
+
+    with open(reportfile, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, dialect=dialect, \
+            fieldnames=geogvocabfieldlist)
+        writer.writeheader()
+
+    with open(reportfile, 'a') as csvfile:
+        writer = csv.DictWriter(csvfile, dialect=dialect, \
+            fieldnames=geogvocabfieldlist)
+        for key, value in recommendationdict.iteritems():
+#            print ' key: %s value: %s' % (key, value)
+            geogdict = { 'geogkey':key }
+            for k in geogvocabfieldlist:
+                if k != 'geogkey':
+                    geogdict[k]=value[k]
+            writer.writerow(geogdict)
+    return True
+
 def term_recommendation_report(reportfile, recommendationdict, dialect=None):
     """Write a term recommendation report.
     parameters:
@@ -223,7 +389,7 @@ def term_recommendation_report(reportfile, recommendationdict, dialect=None):
     if dialect is None:
         dialect = tsv_dialect()
 
-    if reportfile is not None:
+    if reportfile is not None and len(reportfile)>0:
         with open(reportfile, 'w') as csvfile:
             writer = csv.DictWriter(csvfile, dialect=dialect, \
                 fieldnames=vocabfieldlist)

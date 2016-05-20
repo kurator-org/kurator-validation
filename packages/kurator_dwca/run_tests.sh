@@ -2,12 +2,13 @@ python actor_template_test.py
 python composite_header_constructor_test.py
 python csv_fieldcount_checker_test.py
 python darwin_cloud_collector_test.py
-python downloader_test.py
+#python downloader_test.py
 python dwc_geog_collector_test.py
 python dwca_core_to_tsv_test.py
 python dwca_utils.py
 python dwca_vocab_utils.py
 python dwcareader_utils.py
+python geog_recommendation_reporter_test.py
 python term_count_reporter_test.py
 python term_counter_test.py
 python term_recommendation_reporter_test.py
