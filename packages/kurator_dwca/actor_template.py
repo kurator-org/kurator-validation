@@ -14,10 +14,10 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "actor_template.py 2016-05-11T15:51-03:00"
+__version__ = "actor_template.py 2016-05-26T14:21-03:00"
 
-from optparse import OptionParser
 from dwca_utils import response
+import argparse
 import os
 import logging
 import uuid
@@ -132,24 +132,25 @@ def do_stuff(inputfile, outputfile):
     return True
 
 def _getoptions():
-    """Parses command line options and returns them."""
-    parser = OptionParser()
-    parser.add_option("-i", "--inputfile", dest="inputfile",
-                      help="Text file to mine for vocab values",
-                      default=None)
-    parser.add_option("-o", "--outputfile", dest="outputfile",
-                      help="Output file name, no path (optional)",
-                      default=None)
-    parser.add_option("-w", "--workspace", dest="workspace",
-                      help="Directory for the output file (optional)",
-                      default=None)
-    parser.add_option("-l", "--loglevel", dest="loglevel",
-                      help="(e.g., DEBUG, WARNING, INFO) (optional)",
-                      default=None)
-    return parser.parse_args()[0]
+    parser = argparse.ArgumentParser()
+
+    help = 'full path to the input file'
+    parser.add_argument("-i", "--inputfile", help=help)
+
+    help = 'output file name, no path (optional)'
+    parser.add_argument("-o", "--outputfile", help=help)
+
+    help = 'directory for the output file (optional)'
+    parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
+    parser.add_argument("-l", "--loglevel", help=help)
+
+    return parser.parse_args()
 
 def main():
     options = _getoptions()
+    print 'options: %s' % options
     optdict = {}
 
     if options.inputfile is None or len(options.inputfile)==0 or \

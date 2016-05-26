@@ -14,15 +14,15 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor.py 2016-05-11T09:50-03:00"
+__version__ = "composite_header_constructor.py 2016-05-26T14:30-03:00"
 
-from optparse import OptionParser
 from dwca_utils import read_header
 from dwca_utils import write_header
 from dwca_utils import merge_headers
 from dwca_utils import tsv_dialect
 from dwca_utils import response
 import logging
+import argparse
 
 def composite_header_constructor(options):
     """Construct a header that contains the distinct column names in two input files and
@@ -120,24 +120,24 @@ def composite_header_constructor(options):
     return response(returnvars, returnvals)
  
 def _getoptions():
-    """Parses command line options and returns them."""
-    parser = OptionParser()
-    parser.add_option("-1", "--file1", dest="file1",
-                      help="Path to first file with header",
-                      default=None)
-    parser.add_option("-2", "--file2", dest="file2",
-                      help="Path to second file with header",
-                      default=None)
-    parser.add_option("-o", "--outputfile", dest="outputfile",
-                      help="Name for file to hold the composite header",
-                      default=None)
-    parser.add_option("-w", "--workspace", dest="workspace",
-                      help="Directory for the output file (optional)",
-                      default=None)
-    parser.add_option("-l", "--loglevel", dest="loglevel",
-                      help="(e.g., DEBUG, WARNING, INFO) (optional)",
-                      default=None)
-    return parser.parse_args()[0]
+    parser = argparse.ArgumentParser()
+
+    help = 'full path to first input file'
+    parser.add_argument("-1", "--file1", help=help)
+
+    help = 'full path to first input file'
+    parser.add_argument("-2", "--file2", help=help)
+
+    help = 'output file name, no path (optional)'
+    parser.add_argument("-o", "--outputfile", help=help)
+
+    help = 'directory for the output file (optional)'
+    parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
+    parser.add_argument("-l", "--loglevel", help=help)
+
+    return parser.parse_args()
 
 def main():
     options = _getoptions()
