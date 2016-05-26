@@ -1,1 +1,16 @@
-continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island	standard	checked	error	misplaced	incorrectable	source	comment	notHigherGeographyOceania|United States|US|Hawaii|Honolulu|Honolulu|North Pacific Ocean|Hawaiian Islands|Oahu		0						|United States|US|California|||||		0						North America|United States|US|Washington|Chelan||||		0						|United States||California|Kern||||		0						|United States||California|San Bernardino||||		0						|United States||California|||||		0						|United States||Colorado|||||		0						|United States||Hawaii|Honolulu||||		0						|United States||Washington|Chelan||||		0						
+continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island	checked	incorrectable	continent	country	countryCode	stateProvince	county	municipality	waterBody	islandGroup	island	error	comment	higherGeographyID
+||||||||	1	0												hgid0000000000
+|United States||California|||||	1	0	North America	United States	US	California								hgid0000000001
+|South Africa||Kwa-Zulu Natal|||||	1	0	Africa	South Africa	ZA	Kwa-Zulu Natal								hgid0000000002
+|United States||Hawaii|Honolulu||||	1	0	North America	United States	US	Hawaii	Honolulu		North Pacific Ocean	Hawaiian Islands				hgid0000000003
+|United States||Washington|Chelan||||	1	0	North America	United States	US	Washington	Chelan							hgid0000000004
+|United States||California|San Bernardino||||	1	0	North America	United States	US	California	San Bernardino							hgid0000000005
+|United States||Colorado|||||	1	0	North America	United States	US	Colorado								hgid0000000006
+|United States||California|Kern||||	1	0	North America	United States	US	California	Kern							hgid0000000007
+|Mozambique||Maputo|||||Inhaca	1	0	Africa	Mozambique		Maputo	Matutuíne		Indian Ocean		Inhaca			hgid0000000008
+North America|United States||North Carolina|Wake County||||	1	0	North America	United States	US	North Carolina	Wake							hgid0000000009
+North America|United States||Wyoming|Albany County||||	1	0	North America	United States	US	Wyoming	Albany							hgid0000000010
+Europe|France|||||||	1	0	Europe	France	FR									hgid0000000011
+North America|United States||New York|Tompkins County||||	1	0	North America	United States	US	New York	Tompkins							hgid0000000012
+North America|United States||Florida|Pinellas County||||	1	0	North America	United States	US	Florida	Pinellas							hgid0000000013
+North America||||||||	1	0	North America											hgid0000000014

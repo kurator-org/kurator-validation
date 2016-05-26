@@ -14,18 +14,23 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "geog_recommendation_reporter.py 2016-05-20T04:47-03:00"
+__version__ = "geog_recommendation_reporter.py 2016-05-25T16:52-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
 from dwca_utils import csv_file_dialect
+from dwca_utils import tsv_dialect
+from dwca_utils import read_header
 from dwca_terms import geogkeytermlist
 from dwca_vocab_utils import distinct_composite_term_values_from_file
-from dwca_vocab_utils import matching_geog_dict_from_file
 from dwca_vocab_utils import compose_key_from_list
-from dwca_vocab_utils import geog_values_recommended
-from dwca_vocab_utils import geog_recommendation_report
+from dwca_vocab_utils import vocab_dialect
+from dwca_vocab_utils import compose_key_from_row
+from dwca_vocab_utils import compose_dict_from_key
+from dwca_vocab_utils import prefix_keys
+from dwca_terms import geogvocabfieldlist
 import os
+import csv
 import logging
 import uuid
 
@@ -184,11 +189,200 @@ def geog_recommendation_reporter(options):
     #        write the recomendation with record identifier and geogkey to file
     # if the file doesn't exist, something went wrong
     # add the file to the artifacts
+    rowoutput = 'geog_row_report.csv'
+    rowoutput = '%s/%s' % (workspace.rstrip('/'), rowoutput)
+
+    success = geog_row_recommendation_report(rowoutput, inputfile, recommended, dialect)
+
+    if not os.path.isfile(rowoutput):
+        message = 'Failed to write results to row output file %s' % rowoutput
+        returnvals = [workspace, outputfile, success, message, artifacts]
+#        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    s = 'geog_row_recommendation_report_file'
+    artifacts[s] = rowoutput
     
     returnvals = [workspace, outputfile, success, message, artifacts]
 #    logging.debug('message:\n%s' % message)
 #    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
+
+def matching_geog_dict_from_file(checklist, vocabfile, dialect=None):
+    """Given a checklist of values, get matching values from a geography vocabulary file.
+    parameters:
+        checklist - list of values to get from the vocabfile
+        vocabfile - full path to the vocabulary lookup file
+        dialect - csv.dialect object with the attributes of the vocabulary lookup file
+    returns:
+        matchingvocabdict - dictionary of complete vocabulary records matching the values 
+            in the checklist
+    """
+    if checklist is None or len(checklist)==0:
+#        print 'No list of values given in matching_geog_dict_from_file()'
+        return None
+    vocabdict = dwc_geog_dict_from_file(vocabfile, dialect)
+    if vocabdict is None or len(vocabdict)==0:
+#        print 'No vocabdict constructed in matching_geog_dict_from_file()'
+        return None
+    matchingvocabdict = {}
+    for term in checklist:
+        if term in vocabdict:
+            matchingvocabdict[term]=vocabdict[term]
+    return matchingvocabdict
+
+def dwc_geog_dict_from_file(vocabfile, dialect=None):
+    """Get a full geography vocabulary as a dict.
+    parameters:
+        vocabfile - full path to the vocabulary lookup file
+        dialect - csv.dialect object with the attributes of the vocabulary lookup file
+    returns:
+        geogdict - dictionary of geography records
+    """
+    if vocabfile is None or len(vocabfile)==0:
+#        print 'No vocab file given in dwc_geog_dict_from_file()'
+        return None
+    if os.path.isfile(vocabfile) == False:
+#        print 'Vocab file %s not found in dwc_geog_dict_from_file()' % vocabfile
+        return None
+    geogdict = {}
+    if dialect is None:
+        dialect = vocab_dialect()
+
+    with open(vocabfile, 'rU') as csvfile:
+        dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=geogvocabfieldlist)
+        h = dr.next()
+        for row in dr:
+            rowdict = {}
+            rowdict['checked']=row['checked']
+            rowdict['incorrectable']=row['incorrectable']
+            for field in geogkeytermlist:
+                rowdict[field]=row[field]
+            rowdict['error']=row['error']
+            rowdict['comment']=row['comment']
+            rowdict['higherGeographyID']=row['higherGeographyID']
+            geogdict[row['geogkey']]=rowdict
+    return geogdict
+
+def geog_values_recommended(lookupdict):
+    """Get non-standard geog values and their standard equivalents from a lookupdict
+    parameters:
+        lookupdict - a dictionary of lookup terms from a vocabulary
+    returns:
+        recommended - a dictionary of verbatim values and their recommended 
+            standardized values
+    """
+    if lookupdict is None or len(lookupdict)==0:
+        return None
+#    print 'lookupdict:\n%s' % lookupdict
+    recommended = {}
+    for key, value in lookupdict.iteritems():
+        standard = ''
+        for field in geogkeytermlist:
+#            print 'key: %s value: %s field: %s' % (key, value, field)
+            try:
+                v = value[field]
+            except:
+                v = ''
+            if v is None:
+                v = ''
+            standard += v + '|'
+            standard = standard.strip('|')
+        if key != standard:
+            recommended[key] = value
+    return recommended
+
+def geog_recommendation_report(reportfile, recommendationdict, dialect=None):
+    """Write a term recommendation report for geography.
+    parameters:
+        reportfile - the full path to the output report file
+        recommendationdict - a dictionary of term recommendations
+        dialect - a csv.dialect object with the attributes of the report file
+    returns:
+        success - True if the report was written, else False
+    """
+    if recommendationdict is None or len(recommendationdict)==0:
+        print 'no recommendations to report'
+        return False
+
+    if reportfile is None or len(reportfile)==0:
+        print 'report file name not given'
+        return False
+
+    if dialect is None:
+        dialect = tsv_dialect()
+
+    with open(reportfile, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, dialect=dialect, \
+            fieldnames=geogvocabfieldlist)
+        writer.writeheader()
+
+    with open(reportfile, 'a') as csvfile:
+        writer = csv.DictWriter(csvfile, dialect=dialect, \
+            fieldnames=geogvocabfieldlist)
+        for key, value in recommendationdict.iteritems():
+#            print ' key: %s value: %s' % (key, value)
+            geogdict = { 'geogkey':key }
+            for k in geogvocabfieldlist:
+                if k != 'geogkey':
+                    geogdict[k]=value[k]
+            writer.writerow(geogdict)
+    return True
+
+def geog_row_recommendation_report(reportfile, recordfile, recommended, dialect=None):
+    """Write a row recommendation report for geography.
+    parameters:
+        reportfile - the full path to the output report file
+        recordfile - the full path to the input file
+        recommended - dictionary of geography recommendations
+        dialect - a csv.dialect object with the attributes of the report file
+    returns:
+        success - True if the report was written, else False
+    """
+    if recommended is None or len(recommended)==0:
+        print 'No recommendation dictionary given'
+        return False
+
+    if reportfile is None or len(reportfile)==0:
+        print 'Report file name not given'
+        return False
+
+    if recordfile is None or len(recordfile)==0:
+        print 'File name for input records not given'
+        return False
+
+    if dialect is None:
+        dialect = tsv_dialect()
+
+    sourceheader = read_header(recordfile)
+    header = read_header(recordfile)
+    header.append('recommendedgeography')
+    # Add terms for new values of geography fields to the header
+    for t in geogkeytermlist:
+        header.append('new_'+t)
+
+    geogkey = compose_key_from_list(geogkeytermlist)
+
+    with open(reportfile, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=header)
+        writer.writeheader()
+
+    with open(reportfile, 'a') as csvfile:
+        writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=header)
+            
+        with open(recordfile, 'rU') as sourcefile:
+            dr = csv.DictReader(sourcefile, dialect=dialect, fieldnames=sourceheader)
+            for row in dr:
+                key = compose_key_from_row(row, geogkey)
+                if key in recommended:
+                    reckey = compose_key_from_row(recommended[key], geogkey)
+                    row['recommendedgeography'] = reckey
+                    predict = compose_dict_from_key(reckey, geogkeytermlist)
+                    addict = prefix_keys(predict)
+                    
+                    newrow = dict(row, **addict)
+                    writer.writerow(newrow)
+    return True
 
 def _getoptions():
     """Parses command line options and returns them."""

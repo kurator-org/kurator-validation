@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-05-13T14:27-03:00"
+__version__ = "dwca_vocab_utils.py 2016-05-26T08:28-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -33,7 +33,6 @@ from dwca_terms import simpledwctermlist
 from dwca_terms import vocabfieldlist
 from dwca_terms import controlledtermlist
 from dwca_terms import geogkeytermlist
-from dwca_terms import geogvocabextrafieldlist
 from dwca_terms import geogvocabfieldlist
 from operator import itemgetter
 import os.path
@@ -49,25 +48,39 @@ except ImportError:
     import csv
 
 def geogvocabheader():
-    # Construct the header row for the geog vocabulary.
+    ''' Construct a header row for the geog vocabulary.
+    parameters:
+        None
+    returns:
+        fieldnames -  a list of field names in the header
+    '''
     geogkey = compose_key_from_list(geogkeytermlist)
-    fieldnames = makevocabheader(geogkey)
-    for f in geogvocabextrafieldlist:
-        fieldnames.append(f)
+    fieldnames = []
+    fieldnames.append(geogkey)
+
+    for f in geogvocabfieldlist:
+        if f != 'geogkey':
+            fieldnames.append(f)
+
     return fieldnames
 
 def makevocabheader(keyfields):
-    # Construct the header row for this vocabulary. Begin with a field name
-    # equal to the keyfields variable, then add the remaining field names after
-    # the first one from the standard vocabfieldlist.
+    ''' Construct the header row for a vocabulary file. Begin with a field name equal to 
+    the keyfields variable, then add the remaining field names after the first one from 
+    the standard vocabfieldlist.
+    parameters:
+        keyfields - string of fields concatenated with a separator (required)
+    returns:
+        fieldnames - list of field names
     # Example:
     # if keyfields = 'country|stateprovince|county'
     # and
     # vocabfieldlist = ['verbatim','standard','checked']
     # then the header will end up as 
     # 'country|stateprovince|county','standard','checked'
-
-    if keyfields is None:
+    '''
+    if keyfields is None or len(keyfields)==0:
+#        print 'No key fields string given in makevocabheader()'
         return None
 
     fieldnames=[]
@@ -84,29 +97,52 @@ def makevocabheader(keyfields):
             firstfield = False
         else:
             fieldnames.append(f)
+
     return fieldnames
 
 def writevocabheader(fullpath, fieldnames, dialect):
-    if fullpath is None or fieldnames is None or len(fullpath) == 0 or \
-        len(fieldnames) == 0:
+    ''' Write a vocabulary header to a file.
+    parameters:
+        fullpath - the full path to the file to write into (required)
+        fieldnames - list of field names in the header (required)
+        dialect - a csv.dialect object with the attributes of the input file (optional)
+    returns:
+        success - True if the header was written to the file, otherwise False
+    '''
+    if fullpath is None or len(fullpath) == 0:
+#        print 'No vocabulary file given in writevocabheader().'
         return False
-    with open(fullpath, 'w') as csvfile:
+
+    if fieldnames is None or len(fieldnames) == 0:
+#        print 'No list of field names given in writevocabheader().'
+        return False
+
+    if dialect is None:
+        dialect = tsv_dialect()
+
+    with open(fullpath, 'w') as outfile:
         try:
-            writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
+            writer = csv.DictWriter(outfile, dialect=dialect, fieldnames=fieldnames)
             writer.writeheader()
         except:
+#            print 'No header written to file %s in writevocabheader()' % fullpath
             return False
+
     return True
 
 def compose_key_from_list(alist, separator='|'):
-    """Get a string consisting of the values in a list, separated by separator value.
+    """Get a string consisting of the values in a list, separated by separator.
     parameters:
-        alist - the list of values to compose into a string. The values cannot contain 
-            the separator string, which is '|' by default.
-        separator - the string to use as the value separator in the string
+        alist - list of values to compose into a string. The values cannot contain 
+            the separator string (required)
+        separator - string to use as the value separator in the string (default '|')
     returns:
-        key - the composed string with values separated by separator
+        key - composed string with values separated by separator
     """
+    if alist is None or len(alist)==0:
+#        print 'No list given in compose_key_from_list()'
+        return None
+
     n=0
     for value in alist:
         if n==0:
@@ -114,6 +150,7 @@ def compose_key_from_list(alist, separator='|'):
         else:
             key=key+separator+value
         n+=1
+
     return key
 
 def vocab_dialect():
@@ -122,552 +159,437 @@ def vocab_dialect():
         None
     returns:
         dialect - a csv.dialect object with TSV attributes"""
-#     dialect = csv.excel
-#     dialect.lineterminator='\r'
-#     dialect.delimiter=','
-#     dialect.escapechar='/'
-#     dialect.doublequote=True
-#     dialect.quotechar='"'
-#     dialect.quoting=csv.QUOTE_MINIMAL
-#     dialect.skipinitialspace=True
-#     dialect.strict=False
-#     return dialect
     return tsv_dialect()
 
 def matching_vocab_dict_from_file(checklist, vocabfile, dialect=None):
     """Given a checklist of values, get matching values from a vocabulary file.
     parameters:
-        checklist - the list of values to get from the vocabfile
-        vocabfile - the full path to the vocabulary lookup file
-        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+        checklist - list of values to get from the vocabfile (required)
+        vocabfile - full path to the vocabulary lookup file (required)
+        dialect - csv.dialect object with the attributes of the vocabulary lookup file 
+            (default None)
     returns:
-        vocabdict - a dict of complete vocabulary records matching the values in the 
-            checklist
+        matchingvocabdict - dictionary of complete vocabulary records matching the values 
+            in the checklist
     """
-    if checklist is None:
+    if checklist is None or len(checklist)==0:
+#        print 'No list of values given in matching_vocab_dict_from_file()'
         return None
+
     vocabdict = vocab_dict_from_file(vocabfile, dialect)
     if vocabdict is None or len(vocabdict)==0:
+#        print 'No vocabdict constructed in matching_vocab_dict_from_file()'
         return None
+
     matchingvocabdict = {}
-#    print 'checklist: %s\nvocabdict:\n/%s' % (checklist, vocabdict)
+
     for term in checklist:
         if term in vocabdict:
             matchingvocabdict[term]=vocabdict[term]
+
     return matchingvocabdict
-
-def matching_geog_dict_from_file(checklist, vocabfile, dialect=None):
-    """Given a checklist of values, get matching values from a vocabulary file.
-    parameters:
-        checklist - the list of values to get from the vocabfile
-        vocabfile - the full path to the vocabulary lookup file
-        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
-    returns:
-        vocabdict - a dict of complete vocabulary records matching the values in the 
-            checklist
-    """
-    if checklist is None:
-        return None
-    vocabdict = dwc_geog_dict_from_file(vocabfile, dialect)
-    if vocabdict is None or len(vocabdict)==0:
-        return None
-    matchingvocabdict = {}
-#    print 'checklist: %s\nvocabdict:\n/%s' % (checklist, vocabdict)
-    for term in checklist:
-        if term in vocabdict:
-            matchingvocabdict[term]=vocabdict[term]
-    return matchingvocabdict
-
-def dwc_geog_dict_from_file(vocabfile, dialect=None):
-    """Get a full geography vocabulary as a dict.
-    parameters:
-        vocabfile - the full path to the vocabulary lookup file
-        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
-    returns:
-        geogdict - a dict of complete geography records
-    """
-    if os.path.isfile(vocabfile) == False:
-        return None
-    geogdict = {}
-    if dialect is None:
-        dialect = vocab_dialect()
-
-#    geogkey = compose_key_from_list(geogkeytermlist)
-
-    with open(vocabfile, 'rU') as csvfile:
-        dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=geogvocabfieldlist)
-        h = dr.next()
-#        i=0
-        for row in dr:
-            # Skip the header row.
-#            print 'row: %s' % row
-#            if i==0:
-#                i=1
-#            else:
-            rowdict = {}
-            rowdict['checked']=row['checked']
-            rowdict['incorrectable']=row['incorrectable']
-            for field in geogkeytermlist:
-                rowdict[field]=row[field]
-            rowdict['error']=row['error']
-            rowdict['comment']=row['comment']
-            rowdict['higherGeographyID']=row['higherGeographyID']
-            geogdict[row['geogkey']]=rowdict
-#                print 'rowdict: %s' % rowdict
-#    print 'geogdict=%s' % geogdict    
-    return geogdict
 
 def vocab_dict_from_file(vocabfile, dialect=None):
-    """Get a full vocabulary as a dict.
+    """Get a vocabulary as a dictionary from a file.
     parameters:
-        vocabfile - the full path to the vocabulary lookup file
-        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+        vocabfile - path to the vocabulary file (required)
+        dialect - csv.dialect object with the attributes of the vocabulary lookup file
+            (default None)
     returns:
-        vocabdict - a dict of complete vocabulary records
+        vocabdict - dictionary of complete vocabulary records
     """
+    if vocabfile is None or len(vocabfile) == 0:
+#        print 'No vocabulary file given in vocab_dict_from_file().'
+        return False
+
     if os.path.isfile(vocabfile) == False:
+#        print 'Vocabulary file %s not found in vocab_dict_from_file().' % vocabfile
         return None
+
     vocabdict = {}
+
     if dialect is None:
         dialect = vocab_dialect()
+
     with open(vocabfile, 'rU') as csvfile:
         dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
-        i=0
+        # Read the header
+        dr.next()
         for row in dr:
-            # Skip the header row.
-#            print 'row: %s' % row
-            if i==0:
-                i=1
-            else:
-                rowdict = {}
-                rowdict['standard']=row['standard']
-                rowdict['checked']=row['checked']
-                rowdict['error']=row['error']
-                rowdict['incorrectable']=row['incorrectable']
-                rowdict['source']=row['source']
-                rowdict['misplaced']=row['misplaced']
-                rowdict['comment']=row['comment']
-                vocabdict[row['verbatim']]=rowdict
-#                print 'rowdict: %s' % rowdict
-#    print 'vocabdict=%s' % vocabdict    
+            rowdict = {}
+            rowdict['standard']=row['standard']
+            rowdict['checked']=row['checked']
+            rowdict['error']=row['error']
+            rowdict['incorrectable']=row['incorrectable']
+            rowdict['source']=row['source']
+            rowdict['misplaced']=row['misplaced']
+            rowdict['comment']=row['comment']
+            vocabdict[row['verbatim']]=rowdict
+
     return vocabdict
 
 def term_values_recommended(lookupdict):
     """Get non-standard values and their standard equivalents from a lookupdict
     parameters:
-        lookupdict - a dictionary of lookup terms from a vocabulary
+        lookupdict - dictionary of lookup terms from a vocabulary (required)
     returns:
-        recommended - a dictionary of verbatim values and their recommended 
-            standardized values
+        recommended - dictionary of verbatim values and their recommended equivalents
     """
     if lookupdict is None or len(lookupdict)==0:
+#        print 'No lookup dictionary given in term_values_recommended().'
         return None
+
     recommended = {}
+
     for key, value in lookupdict.iteritems():
-#        print 'key: %s value: %s' % (key, value)
         if value['checked']=='1':
             if value['standard'] != key:
                 recommended[key] = value
+
     return recommended
 
-def geog_values_recommended(lookupdict):
-    """Get non-standard geog values and their standard equivalents from a lookupdict
+def prefix_keys(d, prefix='new_'):
+    ''' Change the keys in a dictionary by adding a prefix to each one.
     parameters:
-        lookupdict - a dictionary of lookup terms from a vocabulary
+        d - dictionary (required)
+        prefix - string to prepend to key names (default 'new_')
     returns:
-        recommended - a dictionary of verbatim values and their recommended 
-            standardized values
-    """
-    if lookupdict is None or len(lookupdict)==0:
+        newd - dictionary with replaced keys
+    '''
+    if d is None or len(d)==0:
+#        print 'No dictionary given in prefix_keys().'
         return None
-#    print 'lookupdict:\n%s' % lookupdict
-    recommended = {}
-    for key, value in lookupdict.iteritems():
-        standard = ''
-        for field in geogkeytermlist:
-            standard += value[field]+'|'
-            standard = standard.strip('|')
-        if key != standard:
-            recommended[key] = value
-    return recommended
 
-def geog_recommendation_report(reportfile, recommendationdict, dialect=None):
-    """Write a term recommendation report for geography.
+    newd = {}
+
+    for k in d:
+        newd[prefix+k]=d[k]
+
+    return newd
+
+def compose_dict_from_key(key, termlist, separator='|'):
+    ''' Create a dictionary from a composite key and a list of terms names in the key.
     parameters:
-        reportfile - the full path to the output report file
-        recommendationdict - a dictionary of term recommendations
-        dialect - a csv.dialect object with the attributes of the report file
+        key - string with the composite values of terms (required) 
+            (e.g., '|United States|US')
+        termlist - field names for the values in the key (required)
+            (e.g., ['continent', 'country', 'countryCode'])
+        separator - string separating the values in the key (default '|')
     returns:
-        success - True if the report was written, else False
-    """
-    if recommendationdict is None or len(recommendationdict)==0:
-        print 'no recommendations to report'
-        return False
-
-    if reportfile is None or len(reportfile)==0:
-        print 'report file name not given'
-        return False
-
-    if dialect is None:
-        dialect = tsv_dialect()
-
-    with open(reportfile, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, \
-            fieldnames=geogvocabfieldlist)
-        writer.writeheader()
-
-    with open(reportfile, 'a') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, \
-            fieldnames=geogvocabfieldlist)
-        for key, value in recommendationdict.iteritems():
-#            print ' key: %s value: %s' % (key, value)
-            geogdict = { 'geogkey':key }
-            for k in geogvocabfieldlist:
-                if k != 'geogkey':
-                    geogdict[k]=value[k]
-            writer.writerow(geogdict)
-    return True
-
-def geog_row_recommendation_report(reportfile, recordfile, recommendationfile, dialect=None):
-    """Write a row recommendation report for geography.
-    parameters:
-        reportfile - the full path to the output report file
-        recordfile - the full path to the input file
-        recommendationfile - file of geography recommendations
-        dialect - a csv.dialect object with the attributes of the report file
-    returns:
-        success - True if the report was written, else False
-    """
-    if recommendationfile is None or len(recommendationfile)==0:
-        print 'No recommendation file name given'
-        return False
-
-    if os.path.isfile(recommendationfile) == False:
-        message = 'Recomendation file %s not found' % recommendationfile
-        return False
-
-    if reportfile is None or len(reportfile)==0:
-        print 'Report file name not given'
-        return False
-
-    if recordfile is None or len(recordfile)==0:
-        print 'File name for input records not given'
-        return False
-
-    if dialect is None:
-        dialect = tsv_dialect()
-
-    with open(reportfile, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, \
-            fieldnames=geogvocabfieldlist)
-        writer.writeheader()
-
-    with open(reportfile, 'a') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, \
-            fieldnames=geogvocabfieldlist)
-        for key, value in recommendationdict.iteritems():
-#            print ' key: %s value: %s' % (key, value)
-            geogdict = { 'geogkey':key }
-            for k in geogvocabfieldlist:
-                if k != 'geogkey':
-                    geogdict[k]=value[k]
-            writer.writerow(geogdict)
-    return True
-
-def term_recommendation_report(reportfile, recommendationdict, dialect=None):
-    """Write a term recommendation report.
-    parameters:
-        reportfile - the full path to the output report file
-        recommendationdict - a dictionary of term recommendations
-        dialect - a csv.dialect object with the attributes of the report file
-    returns:
-        success - True if the report was written, else False
-    """
-    if recommendationdict is None or len(recommendationdict)==0:
-        return False
-
-    if dialect is None:
-        dialect = tsv_dialect()
-
-    if reportfile is not None and len(reportfile)>0:
-        with open(reportfile, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, dialect=dialect, \
-                fieldnames=vocabfieldlist)
-            writer.writeheader()
-
-        if os.path.isfile(reportfile) == False:
-            print 'reportfile: %s not created' % reportfile
-            return False
-
-#        print 'tokens: %s' % (tokens)
-        with open(reportfile, 'a') as csvfile:
-            writer = csv.DictWriter(csvfile, dialect=dialect, \
-                fieldnames=vocabfieldlist)
-            for key, value in recommendationdict.iteritems():
-#                print ' key: %s value: %s' % (key, value)
-                writer.writerow({'verbatim':key, 
-                    'standard':value['standard'], \
-                    'checked':value['checked'], \
-                    'error':value['error'], \
-                    'misplaced':value['misplaced'], \
-                    'incorrectable':value['incorrectable'], \
-                    'source':value['source'], \
-                    'comment':value['comment'] })
-    else:
-        # print the report
-        print 'verbatim\tstandard\tchecked\terror\tmisplaced\tincorrectable\tsource\tcomment'
-        for key, value in recommendationdict.iteritems():
-            print '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' ( \
-                key,
-                value['standard'], \
-                value['checked'], \
-                value['error'], \
-                value['misplaced'], \
-                value['incorrectable'], \
-                value['source'], \
-                value['comment'])
-    return True
-
-def term_count_report(reportfile, termcountlist, dialect=None):
-    """Write a term count report.
-    parameters:
-        reportfile - the full path to the output report file
-        termcountlist - a list of terms with counts
-        dialect - a csv.dialect object with the attributes of the report file
-    returns:
-        success - True if the report was written, else False
-    """
-    countreportfieldlist = ['term', 'count']
-#    print 'termcountlist: %s' % termcountlist
-    if termcountlist is None or len(termcountlist)==0:
-        return False
-
-    if dialect is None:
-        dialect = tsv_dialect()
-
-    if reportfile is not None:
-        with open(reportfile, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, dialect=dialect, \
-                fieldnames=countreportfieldlist)
-            writer.writeheader()
-
-        if os.path.isfile(reportfile) == False:
-            print 'reportfile: %s not created' % reportfile
-            return False
-
-#        print 'tokens: %s' % (tokens)
-        with open(reportfile, 'a') as csvfile:
-            writer = csv.DictWriter(csvfile, dialect=dialect, \
-                fieldnames=countreportfieldlist)
-            for item in termcountlist:
-#                print ' key: %s value: %s' % (key, value)
-                writer.writerow({'term':item[0], 'count':item[1] })
-    else:
-        # print the report
-        print 'term\tcount'
-        for item in termcountlist:
-            print '%s\t%s' (item[0], item[1])
-    return True
-
-def distinct_composite_term_values_from_file(inputfile, terms, separator = '|', dialect=None):
-    """Get the list of distinct order-specific values of set of terms in a file.
-    parameters:
-        inputfile - the full path to the input file
-        terms - a string containing the field names in the input file to use for the key
-        separator - the string that separates the fieldnames in terms
-        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
-    returns:
-        list(valueset) - a list of distinct values of the composite term
-    """
-    if inputfile is None:
+        d - dictionary of fields and their values 
+            (e.g., {'continent':'', 'country':'United States', 'countryCode':'US' } )
+    '''
+    if key is None or len(key)==0:
+#        print 'No key given in compose_dict_from_key()'
         return None
-    if os.path.isfile(inputfile) == False:
+
+    if termlist is None or len(termlist)==0:
+#        print 'No term list given in compose_dict_from_key()'
         return None
-    values = set()
-    if dialect is None:
-        dialect = csv_file_dialect(inputfile)
-    header = read_header(inputfile, dialect)
-    if header is None:
+
+    vallist = key.split(separator)
+    i = 0
+    d = {}
+
+    for t in termlist:
+        d[t]=vallist[i]
+        i += 1
+
+    return d
+
+def compose_key_from_row(row, terms, separator='|'):
+    ''' Create a string of values of terms in a dictionary separated by separator.
+    parameters:
+        row -  dictionary of key:value pairs (required)
+            (e.g., {'country':'United States', 'countryCode':'US'} )
+        terms - string of field names for values in the row from which to construct the 
+            composite key (required)
+            (e.g., 'continent|country|countryCode')
+        separator - string separating the values in terms (default '|')
+    returns:
+        values - string of separator-separated values (e.g., '|United States|US')
+    '''
+    if row is None or len(row)==0:
+#        print 'No row given in compose_key_from_row()'
+        return None
+
+    if terms is None or len(terms)==0:
+#        print 'No terms given in compose_key_from_row()'
         return None
 
     termlist = terms.split(separator)
-#    print 'header: %s\ntermlist: %s' % (header, termlist)
+    vallist=[]
+
+    for t in termlist:
+        try:
+            v=row[t]
+            vallist.append(v)
+        except:
+            vallist.append('')
+    values=compose_key_from_list(vallist)
+
+    return values
+
+def distinct_composite_term_values_from_file(inputfile, terms, separator = '|', dialect=None):
+    """Get the list of distinct composite values of set of terms in a file.
+    parameters:
+        inputfile - full path to the input file (required)
+        terms - string containing the fields to use for the key (required)
+        separator - string that separates the fieldnames in terms (default '|')
+        dialect - csv.dialect object with the attributes of the vocabulary lookup file
+            (default None)
+    returns:
+        a list of distinct values of the composite term
+    """
+    if inputfile is None or len(inputfile)==0:
+#        print 'No input file given in distinct_composite_term_values_from_file()'
+        return None
+
+    if os.path.isfile(inputfile) == False:
+#        print 'Input file %s not found in distinct_composite_term_values_from_file()' \
+#            % inputfile
+        return None
+
+    if terms is None or len(terms)==0:
+#        print 'No term string given in distinct_composite_term_values_from_file()'
+        return None
+
+    if dialect is None:
+        dialect = csv_file_dialect(inputfile)
+
+    header = read_header(inputfile, dialect)
+    if header is None:
+#        s = 'No header found for input file %s' % inputfile
+#        s += ' in distinct_composite_term_values_from_file()'
+#        print '%s' % s
+        return None
+
+    termlist = terms.split(separator)
+
+    values = set()
+
     # Iterate over the file rows to get the values of the terms
     with open(inputfile, 'rU') as csvfile:
         dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=header)
-        i=0
+        # Read the header
+        dr.next()
         # Now pull out the values of all the terms in the term composite
         # for every row and add the key to the vocabulary with the values of the 
         # constituent terms.
         for row in dr:
-            # Skip the header row.
-            if i>0:
-                vallist=[]
-                for t in termlist:
-                    try:
-                        v=row[t]
-                        vallist.append(v)
-                    except:
-                        vallist.append('')
-                values.add(compose_key_from_list(vallist))
-            i+=1
+            vallist=[]
+            for t in termlist:
+                try:
+                    v=row[t]
+                    vallist.append(v)
+                except:
+                    vallist.append('')
+            values.add(compose_key_from_list(vallist))
+
     return list(values)
 
 def distinct_term_values_from_file(inputfile, termname, dialect=None):
     """Get the list of distinct values of a term in a file.
     parameters:
-        inputfile - the full path to the input file
-        termname - the field name in the header of the input file to search in
-        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+        inputfile - full path to the input file (required)
+        termname - field name to get distinct values of (required) 
+        dialect - csv.dialect object with the attributes of the vocabulary lookup file
+            (default None)
     returns:
-        sorted(list(values)) - a sorted list of distinct values of the term
+        a sorted list of distinct values of the term
     """
     if inputfile is None or len(inputfile)==0:
-        print 'Input file not given for distinct_term_values_from_file()'
+#        print 'Input file not given for distinct_term_values_from_file()'
         return None
 
     if os.path.isfile(inputfile) == False:
         # It's actually OK if the file does not exist. Just return None
-#        print 'input file %s not found' % inputfile
+#        print 'Input file %s not found for distinct_term_values_from_file()' % inputfile
+        return None
+
+    if termname is None or len(termname)==0:
+#        print 'No term name given for distinct_term_values_from_file()'
+        return None
+
+    if dialect is None:
+        dialect = csv_file_dialect(inputfile)
+
+    header = read_header(inputfile, dialect)
+
+    if header is None:
+#        s = 'No header found for input file %s' % inputfile
+#        s += ' in distinct_term_values_from_file()'
+#        print '%s' % s
+        return None
+
+    if termname not in header:
+#        s = 'Term %s not found in header for input file %s' % (termname, inputfile)
+#        s += ' in distinct_term_values_from_file()'
+#        print '%s' % s
         return None
 
     values = set()
 
-    if dialect is None:
-        dialect = csv_file_dialect(inputfile)
-
-    header = read_header(inputfile, dialect)
-#    print 'header before:\n%s' % header
-
-#    header = clean_header(header)
-#    print 'header after:\n%s' % header
-#    print 'dialect:\n%s' % dialect_attributes(dialect)
-
-    if header is None:
-        print 'No header found'
-        return None
-
-    if termname not in header:
-        print '%s not found in header:\n%s' % (termname, header)
-        return None
-
     with open(inputfile, 'rU') as csvfile:
         dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=header)
-        i=0
+        # Read the header
+        dr.next()
         for row in dr:
-            # Skip the header row.
-            if i>0:
-                values.add(row[termname])
-            i+=1
+            values.add(row[termname])
 
     return sorted(list(values))
 
 def distinct_term_counts_from_file(inputfile, termname, dialect=None):
-    """Get the list of distinct values of a term in a file with the number of times each
-       occurs.
+    """Get the list of distinct values of a term and the number of times each occurs in
+       the input file.
     parameters:
-        inputfile - the full path to the input file
-        termname - the field name in the header of the input file to search in
-        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+        inputfile - full path to the input file (required)
+        termname - field name to get distinct values of (required) 
+        dialect - csv.dialect object with the attributes of the vocabulary lookup file
+            (default None)
     returns:
-        sorted(values.iteritems(), key=itemgetter(1), reverse=True) - a list of distinct 
-           values of the term, sorted by the number of occurrences of the value in 
-           descending order (most commonly found term value first).
+        a list of distinct values of the term, sorted by the number of occurrences of the 
+        value in descending order (most commonly found term value first).
     """
-    if inputfile is None:
+    if inputfile is None or len(inputfile)==0:
+#        print 'Input file not given for distinct_term_counts_from_file()'
         return None
+
     if os.path.isfile(inputfile) == False:
+        # It's actually OK if the file does not exist. Just return None
+#        print 'Input file %s not found for distinct_term_counts_from_file()' % inputfile
         return None
-    values = {}
+
     if dialect is None:
         dialect = csv_file_dialect(inputfile)
+
     header = read_header(inputfile, dialect)
-#    print 'header:/n%s' % header
-#    print 'dialect:\n%s' % dialect_attributes(dialect)
+
     if header is None:
+#        s = 'No header found for input file %s' % inputfile
+#        s += ' in distinct_term_counts_from_file()'
+#        print '%s' % s
         return None
+
     if termname not in header:
+#        s = 'Term %s not found in header for input file %s' % (termname, inputfile)
+#        s += ' in distinct_term_counts_from_file()'
+#        print '%s' % s
         return None
+
+    values = {}
+
     with open(inputfile, 'rU') as csvfile:
         dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=header)
-        i=0
+        # Read the header
+        dr.next()
         for row in dr:
-            # Skip the header row.
-            if i>0:
-                if row[termname] in values:
-                    values[row[termname]] += 1
-                else:
-                    values[row[termname]] = 1
-            i+=1
+            if row[termname] in values:
+                values[row[termname]] += 1
+            else:
+                values[row[termname]] = 1
+
     return sorted(values.iteritems(), key=itemgetter(1), reverse=True)
 
 def terms_not_in_dwc(checklist):
     """From a list of terms, get those that are not Darwin Core terms.
     parameters:
-        checklist - the list of values to check against the targetlist
+        checklist - list of values to check against Darwin Core (required)
     returns:
-        sorted(list(values)) - a sorted list of non-Darwin Core terms from the checklist
+        a sorted list of non-Darwin Core terms from the checklist
     """
+    # No need to check if checklist is given, not_in_list() does that
     return not_in_list(simpledwctermlist, checklist)
 
 def not_in_list(targetlist, checklist):
     """Get the list of distinct values in a checklist that are not in a target list.
     parameters:
-        targetlist - the list to check to see if the value already exists there
-        checklist - the list of values to check against the targetlist
+        targetlist - list to check to see if the value already exists there (required)
+        checklist - list of values to check against the target list (required)
     returns:
-        sorted(list(values)) - a sorted list of distinct new values not in the target list
+        a sorted list of distinct new values not in the target list
     """
-    if checklist is None:
+    if checklist is None or len(checklist)==0:
+#        print 'No checklist given in not_in_list()'
         return None
-    if targetlist is None:
+
+    if targetlist is None or len(targetlist)==0:
+#        print 'No target list given in not_in_list()'
         return sorted(checklist)
+
     newlist = []
+
     for v in checklist:
         if v not in targetlist:
             newlist.append(v)
+
     if '' in newlist:
         newlist.remove('')
+
     return sorted(newlist)
 
 def keys_list(sourcedict):
+    """Get the list of keys in a dictionary.
+    parameters:
+        sourcedict - dictionary to get the keys from (required)
+    returns:
+        an unsorted list of keys from the dictionary
+    """
     if sourcedict is None or len(sourcedict)==0:
+#        print 'No dictionary given in keys_list()'
         return None
+
     keylist = []
+
     for key, value in sourcedict.iteritems():
         keylist.append(key)
+
     return keylist
 
 def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
-    """Add distinct new verbatim values from a valuelist to a vocabulary lookup file.
+    """Add distinct new verbatim values from a valuelist to a vocabulary file.
     parameters:
-        vocabfile - the full path to the vocabulary lookup file
-        valuelist - the list of values to check and add any new ones to the vocabulary
-            lookup file
-        dialect - a csv.dialect object with the attributes of the vocabulary lookup file
+        vocabfile - full path to the vocabulary file (required)
+        valuelist - list of values to check for adding to the vocabulary file (required)
+        dialect - a csv.dialect object with the attributes of the vocabulary file
+            (default None)
     returns:
         newvaluelist - a sorted list of distinct verbatim values added to the vocabulary
             lookup file
     """
-    if vocabfile is None:
+    if vocabfile is None or len(vocabfile)==0:
+#        print 'No vocab file given in distinct_vocabs_to_file()'
         return None
-#    print 'Getting vocablist in distinct_vocabs_to_file(%s)' % vocabfile
+
+    # No need to check if valuelist is given, not_in_list() does that
+
+    # Get the distinct verbatim vales from the vocab file
     vocablist = distinct_term_values_from_file(vocabfile, 'verbatim', dialect)
+
+    # Get the values not already in the vocab file
     newvaluelist = not_in_list(vocablist, valuelist)
+
     if newvaluelist is None or len(newvaluelist) == 0:
+#        print 'No new values found for %s in distinct_vocabs_to_file()' % vocabfile
         return None
 
     if dialect is None:
         dialect = vocab_dialect()
+
     if not os.path.isfile(vocabfile):
         with open(vocabfile, 'w') as csvfile:
             writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
             writer.writeheader()
 
+    if os.path.isfile(vocabfile) == False:
+#        print 'Vocab file %s not found for distinct_vocabs_to_filee()' % vocabfile
+        return None
+
     with open(vocabfile, 'a') as csvfile:
         writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
         for term in newvaluelist:
             writer.writerow({'verbatim':term, 'standard':'', 'checked':0 })
+
     return newvaluelist
 
 class DWCAVocabUtilsFramework():
@@ -764,18 +686,13 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         dialect = vocab_dialect()
         geogvocabfile = self.framework.geogvocabfile
         header = read_header(geogvocabfile, dialect)
-        modelheader = []
-        modelheader.append('continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island')
-        for f in vocabfieldlist:
-            if f != 'verbatim':
-                modelheader.append(f)
-        for f in geogvocabextrafieldlist:
-            modelheader.append(f)
+        modelheader = geogvocabheader()
 #        print 'len(header)=%s len(model)=%s\nheader:\n%s\nmodel:\n%s' \
 #            % (len(header), len(modelheader), header, modelheader)
-        self.assertEqual(len(header), len(vocabfieldlist) + len(geogvocabextrafieldlist), 
-            'incorrect number of fields in header')
-        self.assertEqual(header, modelheader, 'geog header not equal to the model header')
+        s = 'incorrect number of fields in geog vocabulary header'
+        self.assertEqual(len(header), len(modelheader), s)
+        s = 'geog vocabulary header not equal to the model header'
+        self.assertEqual(header, modelheader, s)
 
     def test_vocab_dict_from_file(self):
         print 'testing vocab_dict_from_file'
@@ -1009,10 +926,12 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
     def test_geogvocabheader(self):
         print 'testing geogvocabheader'
         header = geogvocabheader()
+        geogkey = compose_key_from_list(geogkeytermlist)
         expected = [
-            'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island',
-            'standard', 'checked', 'error', 'misplaced', 'incorrectable', 'source', 
-            'comment', 'notHigherGeography']
+            geogkey,
+            'checked', 'incorrectable', 'continent', 'country', 'countryCode', 
+            'stateProvince', 'county', 'municipality', 'waterBody', 'islandGroup',
+            'island', 'error', 'comment', 'higherGeographyID']
         s = 'geog header:\n%s\nnot as expected:\n%s' \
             % (header, expected)
         self.assertEqual(header, expected, s)
@@ -1033,26 +952,122 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
             % (recommended, expected)
         self.assertEqual(recommended, expected, s)
 
-    def test_term_recommendation_report(self):
-        print 'testing term_recommendation_report'
-        monthvocabfile = self.framework.monthvocabfile
-        reportfile = self.framework.recommendedreporttestfile
-        monthdict = vocab_dict_from_file(monthvocabfile)
-        recommended = term_values_recommended(monthdict)
-        success = term_recommendation_report(reportfile, recommended)
-        s = 'term recommendation report (%s) not written successfully' % reportfile
-        self.assertTrue(success, s)
+    def test_prefix_keys(self):
+        print 'testing prefix_keys'
+        d = {}
+        newd = prefix_keys(d)
+        s = 'prefix_keys returned dict for empty input dict'
+        self.assertIsNone(newd, s)
+        
+        thekey = 'akey'
+        d = { thekey:'avalue' }
+        newd = prefix_keys(d)
+        s = 'prefix_keys returned dict with length different from input dict'
+        self.assertEqual(len(d), len(newd), s)
 
-    def test_term_count_report(self):
-        print 'testing term_count_report'
-        counttestfile = self.framework.counttestfile
-        reportfile = self.framework.termcountreporttestfile
-        counts = distinct_term_counts_from_file(counttestfile, 'country')
-#        print 'counts: %s' % counts
-        success = term_count_report(reportfile, counts)
-        s = 'term recommendation report (%s) not written successfully' % reportfile
-        self.assertTrue(success, s)
+        expected = d[thekey]
+        s = 'expected prefixed key name (%s) not found' % expected
+        try:
+            found = newd['new_'+thekey]
+        except:
+            found = None
+        self.assertIsNotNone(found, s)
+        
+    def test_compose_dict_from_key(self):
+        print 'testing compose_dict_from_key'
+        key = '|United States|US'
+        termlist = ['continent', 'country', 'countryCode']
+
+        d = compose_dict_from_key('', termlist)
+        s = 'compose_dict_from_key returned dict for empty input key'
+        self.assertIsNone(d, s)
+
+        d = compose_dict_from_key(key, None)
+        s = 'compose_dict_from_key returned dict for empty termlist'
+        self.assertIsNone(d, s)
+
+#        print 'key: %s\ntermlist: %s' % (key, termlist)
+        d = compose_dict_from_key(key, termlist)
+#        print 'd: %s' % d
+        try:
+            continent = d['continent']
+        except:
+            continent = None
+        s = 'continent not in composed dictionary'
+        self.assertIsNotNone(continent, s)
+        s = 'continent %s not zero length' % continent
+        self.assertEqual(len(continent), 0, s)
+
+        try:
+            country = d['country']
+        except:
+            country = None
+        s = 'country not in composed dictionary'
+        self.assertIsNotNone(country, s)
+        expected = 'United States'
+        s = 'country %s not as expected %s' % (country, expected)
+        self.assertEqual(country, expected, s)
+
+        try:
+            countrycode = d['countryCode']
+        except:
+            countrycode = None
+        s = 'countrycode not in composed dictionary'
+        self.assertIsNotNone(countrycode, s)
+        expected = 'US'
+        s = 'countryCode %s not as expected %s' % (countrycode, expected)
+        self.assertEqual(countrycode, expected, s)
+
+    def test_compose_key_from_row(self):
+        print 'testing compose_key_from_row'
+        row = {'country':'United States', 'countryCode':'US'}
+        terms = 'continent|country|countryCode'
+        
+        k = compose_key_from_row(None, terms)
+        s = 'compose_key_from_row returned a key without an input row'
+        self.assertIsNone(k, s)
+
+        k = compose_key_from_row(row, '')
+        s = 'compose_key_from_row returned a key without an input field list string'
+        self.assertIsNone(k, s)
+
+        k = compose_key_from_row(row, terms)
+        expected = '|United States|US'
+        s = 'key %s not as expected %s' % (k, expected)
+        self.assertEqual(k, expected, s)
 
 if __name__ == '__main__':
     print '=== dwca_vocab_utils.py ==='
     unittest.main()
+
+def compose_key_from_row(row, terms, separator='|'):
+    ''' Create a string of values of terms in a dictionary separated by separator.
+    parameters:
+        row -  dictionary of key:value pairs 
+            (e.g., {'country':'United States', 'countryCode':'US'} )
+        terms - string of field names for values in the row from which to construct the 
+            composite key (e.g., 'continent|country|countryCode')
+        separator - string separating the values in terms (default '|')
+    returns:
+        values - string of separator-separated values (e.g., '|United States|US')
+    '''
+    if row is None or len(row)==0:
+        print 'No row given in compose_key_from_row()'
+        return None
+    if terms is None or len(terms)==0:
+        print 'No terms given in compose_key_from_row()'
+        return None
+    termlist = terms.split(separator)
+#    print 'termlist:%s\nrow:%s' % (termlist, row)
+    vallist=[]
+    for t in termlist:
+#        print 't: %s' %t
+        try:
+            v=row[t]
+            vallist.append(v)
+        except:
+            vallist.append('')
+#    print 'vallist: %s' % vallist
+    values=compose_key_from_list(vallist)
+#    print 'values: %s' % values
+    return values

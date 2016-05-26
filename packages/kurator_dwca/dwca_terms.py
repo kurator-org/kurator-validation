@@ -16,7 +16,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_terms.py 2016-05-12T13:55-03:00"
+__version__ = "dwca_terms.py 2016-05-24T17:05-03:00"
 
 # This file contains definitions of standard sets of Darwin Core terms.
 
@@ -74,9 +74,6 @@ geogkeytermlist = [
 geogvocabfieldlist = ['geogkey', 'checked', 'incorrectable', 'continent', 'country',
     'countryCode', 'stateProvince', 'county', 'municipality', 'waterBody', 'islandGroup',
     'island', 'error', 'comment', 'higherGeographyID']
-    
-# Extra terms expected in the standardized geography vocabulary
-geogvocabextrafieldlist = ['notHigherGeography']
 
 # The taxonkeytermlist contains the terms that make up a distinct taxon name combination
 taxonkeytermlist = [

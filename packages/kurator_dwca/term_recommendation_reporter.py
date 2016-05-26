@@ -14,19 +14,21 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter.py 2016-05-11T16:09-03:00"
+__version__ = "term_recommendation_reporter.py 2016-05-25T17:52-03:00"
 
 from optparse import OptionParser
 from dwca_utils import response
 from dwca_utils import csv_file_dialect
 from dwca_utils import dialect_attributes
+from dwca_utils import tsv_dialect
 from dwca_vocab_utils import distinct_term_values_from_file
 from dwca_vocab_utils import matching_vocab_dict_from_file
 from dwca_vocab_utils import term_values_recommended
-from dwca_vocab_utils import term_recommendation_report
 from dwca_vocab_utils import not_in_list
 from dwca_vocab_utils import keys_list
+from dwca_terms import vocabfieldlist
 import os.path
+import csv
 import logging
 import uuid
 
@@ -192,6 +194,60 @@ def term_recommendation_reporter(options):
 #    logging.debug('message:\n%s' % message)
 #    logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
+
+def term_recommendation_report(reportfile, recommendationdict, dialect=None):
+    """Write a term recommendation report.
+    parameters:
+        reportfile - full path to the output report file (optional)
+        recommendationdict - dictionary of term recommendations (required)
+        dialect - a csv.dialect object with the attributes of the report file
+            (default None)
+    returns:
+        success - True if the report was written, else False
+    """
+    if recommendationdict is None or len(recommendationdict)==0:
+#        print 'No term recommendations given in term_recommendation_report()'
+        return False
+
+    if dialect is None:
+        dialect = tsv_dialect()
+
+    if reportfile is not None and len(reportfile)>0:
+        with open(reportfile, 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, dialect=dialect, \
+                fieldnames=vocabfieldlist)
+            writer.writeheader()
+
+        if os.path.isfile(reportfile) == False:
+            print 'reportfile: %s not created' % reportfile
+            return False
+
+        with open(reportfile, 'a') as csvfile:
+            writer = csv.DictWriter(csvfile, dialect=dialect, \
+                fieldnames=vocabfieldlist)
+            for key, value in recommendationdict.iteritems():
+                writer.writerow({'verbatim':key, 
+                    'standard':value['standard'], \
+                    'checked':value['checked'], \
+                    'error':value['error'], \
+                    'misplaced':value['misplaced'], \
+                    'incorrectable':value['incorrectable'], \
+                    'source':value['source'], \
+                    'comment':value['comment'] })
+    else:
+        # print the report
+        print 'verbatim\tstandard\tchecked\terror\tmisplaced\tincorrectable\tsource\tcomment'
+        for key, value in recommendationdict.iteritems():
+            print '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' ( \
+                key,
+                value['standard'], \
+                value['checked'], \
+                value['error'], \
+                value['misplaced'], \
+                value['incorrectable'], \
+                value['source'], \
+                value['comment'])
+    return True
 
 def _getoptions():
     """Parses command line options and returns them."""
