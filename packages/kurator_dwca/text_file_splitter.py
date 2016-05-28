@@ -14,18 +14,20 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_splitter.py 2016-05-11T16:12-03:00"
+__version__ = "text_file_splitter.py 2016-05-27T21:19-03:00"
 
-from optparse import OptionParser
 from dwca_utils import split_path
 from dwca_utils import response
+from dwca_utils import setup_actor_logging
 import os
 import uuid
 import logging
+import argparse
 
 def text_file_splitter(options):
     """Split a text file into chunks with headers. Put the chunk files in the workspace
     options - a dictionary of parameters
+        loglevel - level at which to log (e.g., DEBUG) (optional)
         inputfile - full path to the input file (required)
         workspace - the directory in which the output will be written (optional)
         chunksize - the maximum number of records in an output file (optional)
@@ -37,21 +39,10 @@ def text_file_splitter(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
-#    print 'Started %s' % __version__
-#    print 'options: %s' % options
+    setup_actor_logging(options)
 
-    # Set up logging
-#     try:
-#         loglevel = options['loglevel']
-#     except:
-#         loglevel = None
-#     if loglevel is not None:
-#         if loglevel.upper() == 'DEBUG':
-#             logging.basicConfig(level=logging.DEBUG)
-#         elif loglevel.upper() == 'INFO':        
-#             logging.basicConfig(level=logging.INFO)
-# 
-#     logging.info('Starting %s' % __version__)
+    logging.debug( 'Started %s' % __version__ )
+    logging.debug( 'options: %s' % options )
 
     # Make a list for the response
     returnvars = ['workspace', 'filepattern', 'chunks', 'rowcount', 'success', 'message']
@@ -85,13 +76,13 @@ def text_file_splitter(options):
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
         returnvals = [workspace, filepattern, chunks, rowcount, success, message]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if not os.path.isfile(inputfile):
         message = 'Input file %s not found' % inputfile
         returnvals = [workspace, filepattern, chunks, rowcount, success, message]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     # local variables
@@ -143,33 +134,34 @@ def text_file_splitter(options):
     
     # Prepare the response dictionary
     returnvals = [workspace, filepattern, chunks, rowcount, success, message]
-#    logging.debug('message:\n%s' % message)
-#    logging.info('Finishing %s' % __version__)
+    logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
-    
+
 def _getoptions():
-    """Parses command line options and returns them."""
-    parser = OptionParser()
-    parser.add_option("-i", "--input", dest="inputfile",
-                      help="Text file to split",
-                      default=None)
-    parser.add_option("-w", "--workspace", dest="workspace",
-                      help="Path for temporary files",
-                      default=None)
-    parser.add_option("-c", "--chunksize", dest="chunksize",
-                      help="Maximum number of lines per chunk file",
-                      default=None)
-    parser.add_option("-l", "--loglevel", dest="loglevel",
-                      help="(e.g., DEBUG, WARNING, INFO) (optional)",
-                      default=None)
-    return parser.parse_args()[0]
+    """Parse command line options and return them."""
+    parser = argparse.ArgumentParser()
+
+    help = 'full path to the input file (required)'
+    parser.add_argument("-i", "--inputfile", help=help)
+
+    help = 'directory for the output file (optional)'
+    parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'maximum number of lines in split files (optional)'
+    parser.add_argument("-c", "--chunksize", help=help)
+
+    help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
+    parser.add_argument("-l", "--loglevel", help=help)
+
+    return parser.parse_args()
 
 def main():
     options = _getoptions()
     optdict = {}
 
     if options.inputfile is None or len(options.inputfile)==0:
-        s =  'syntax: python text_file_splitter.py'
+        s =  'syntax:\n'
+        s += 'python text_file_splitter.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -w ./workspace'
         s += ' -c 5'
@@ -190,7 +182,7 @@ def main():
 
     # Split text file into chucks
     response=text_file_splitter(optdict)
-    print 'response: %s' % response
+    print '\nresponse: %s' % response
 
 if __name__ == '__main__':
     """ Demo of text_file_splitter"""

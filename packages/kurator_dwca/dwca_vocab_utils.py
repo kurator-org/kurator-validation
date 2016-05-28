@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-05-26T08:28-03:00"
+__version__ = "dwca_vocab_utils.py 2016-05-27T16:16-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -37,6 +37,7 @@ from dwca_terms import geogvocabfieldlist
 from operator import itemgetter
 import os.path
 import glob
+import logging
 import unittest
 try:
     # need to install unicodecsv for this to be used
@@ -80,7 +81,7 @@ def makevocabheader(keyfields):
     # 'country|stateprovince|county','standard','checked'
     '''
     if keyfields is None or len(keyfields)==0:
-#        print 'No key fields string given in makevocabheader()'
+        logging.debug('No key fields string given in makevocabheader()')
         return None
 
     fieldnames=[]
@@ -110,11 +111,11 @@ def writevocabheader(fullpath, fieldnames, dialect):
         success - True if the header was written to the file, otherwise False
     '''
     if fullpath is None or len(fullpath) == 0:
-#        print 'No vocabulary file given in writevocabheader().'
+        logging.debug('No vocabulary file given in writevocabheader().')
         return False
 
     if fieldnames is None or len(fieldnames) == 0:
-#        print 'No list of field names given in writevocabheader().'
+        logging.debug('No list of field names given in writevocabheader().')
         return False
 
     if dialect is None:
@@ -125,7 +126,7 @@ def writevocabheader(fullpath, fieldnames, dialect):
             writer = csv.DictWriter(outfile, dialect=dialect, fieldnames=fieldnames)
             writer.writeheader()
         except:
-#            print 'No header written to file %s in writevocabheader()' % fullpath
+            logging.debug('No header written to file %s in writevocabheader()' % fullpath)
             return False
 
     return True
@@ -140,7 +141,7 @@ def compose_key_from_list(alist, separator='|'):
         key - composed string with values separated by separator
     """
     if alist is None or len(alist)==0:
-#        print 'No list given in compose_key_from_list()'
+        logging.debug('No list given in compose_key_from_list()')
         return None
 
     n=0
@@ -173,12 +174,12 @@ def matching_vocab_dict_from_file(checklist, vocabfile, dialect=None):
             in the checklist
     """
     if checklist is None or len(checklist)==0:
-#        print 'No list of values given in matching_vocab_dict_from_file()'
+        logging.debug('No list of values given in matching_vocab_dict_from_file()')
         return None
 
     vocabdict = vocab_dict_from_file(vocabfile, dialect)
     if vocabdict is None or len(vocabdict)==0:
-#        print 'No vocabdict constructed in matching_vocab_dict_from_file()'
+        logging.debug('No vocabdict constructed in matching_vocab_dict_from_file()')
         return None
 
     matchingvocabdict = {}
@@ -199,11 +200,12 @@ def vocab_dict_from_file(vocabfile, dialect=None):
         vocabdict - dictionary of complete vocabulary records
     """
     if vocabfile is None or len(vocabfile) == 0:
-#        print 'No vocabulary file given in vocab_dict_from_file().'
+        logging.debug('No vocabulary file given in vocab_dict_from_file().')
         return False
 
     if os.path.isfile(vocabfile) == False:
-#        print 'Vocabulary file %s not found in vocab_dict_from_file().' % vocabfile
+        s = 'Vocabulary file %s not found in vocab_dict_from_file().' % vocabfile
+        logging.debug(s)
         return None
 
     vocabdict = {}
@@ -236,7 +238,7 @@ def term_values_recommended(lookupdict):
         recommended - dictionary of verbatim values and their recommended equivalents
     """
     if lookupdict is None or len(lookupdict)==0:
-#        print 'No lookup dictionary given in term_values_recommended().'
+        logging.debug('No lookup dictionary given in term_values_recommended().')
         return None
 
     recommended = {}
@@ -257,7 +259,7 @@ def prefix_keys(d, prefix='new_'):
         newd - dictionary with replaced keys
     '''
     if d is None or len(d)==0:
-#        print 'No dictionary given in prefix_keys().'
+        logging.debug('No dictionary given in prefix_keys().')
         return None
 
     newd = {}
@@ -280,11 +282,11 @@ def compose_dict_from_key(key, termlist, separator='|'):
             (e.g., {'continent':'', 'country':'United States', 'countryCode':'US' } )
     '''
     if key is None or len(key)==0:
-#        print 'No key given in compose_dict_from_key()'
+        logging.debug('No key given in compose_dict_from_key()')
         return None
 
     if termlist is None or len(termlist)==0:
-#        print 'No term list given in compose_dict_from_key()'
+        logging.debug('No term list given in compose_dict_from_key()')
         return None
 
     vallist = key.split(separator)
@@ -310,11 +312,11 @@ def compose_key_from_row(row, terms, separator='|'):
         values - string of separator-separated values (e.g., '|United States|US')
     '''
     if row is None or len(row)==0:
-#        print 'No row given in compose_key_from_row()'
+        logging.debug('No row given in compose_key_from_row()')
         return None
 
     if terms is None or len(terms)==0:
-#        print 'No terms given in compose_key_from_row()'
+        logging.debug('No terms given in compose_key_from_row()')
         return None
 
     termlist = terms.split(separator)
@@ -342,16 +344,18 @@ def distinct_composite_term_values_from_file(inputfile, terms, separator = '|', 
         a list of distinct values of the composite term
     """
     if inputfile is None or len(inputfile)==0:
-#        print 'No input file given in distinct_composite_term_values_from_file()'
+        logging.debug('No input file given in distinct_composite_term_values_from_file()')
         return None
 
     if os.path.isfile(inputfile) == False:
-#        print 'Input file %s not found in distinct_composite_term_values_from_file()' \
-#            % inputfile
+        s = 'Input file %s not found in ' % inputfile
+        s += 'distinct_composite_term_values_from_file()'
+        logging.debug(s)
         return None
 
     if terms is None or len(terms)==0:
-#        print 'No term string given in distinct_composite_term_values_from_file()'
+        s = 'No term string given in distinct_composite_term_values_from_file()'
+        logging.dwbug(s)
         return None
 
     if dialect is None:
@@ -359,9 +363,9 @@ def distinct_composite_term_values_from_file(inputfile, terms, separator = '|', 
 
     header = read_header(inputfile, dialect)
     if header is None:
-#        s = 'No header found for input file %s' % inputfile
-#        s += ' in distinct_composite_term_values_from_file()'
-#        print '%s' % s
+        s = 'No header found for input file %s' % inputfile
+        s += ' in distinct_composite_term_values_from_file()'
+        logging.debug(s)
         return None
 
     termlist = terms.split(separator)
@@ -399,16 +403,17 @@ def distinct_term_values_from_file(inputfile, termname, dialect=None):
         a sorted list of distinct values of the term
     """
     if inputfile is None or len(inputfile)==0:
-#        print 'Input file not given for distinct_term_values_from_file()'
+        logging.debug('Input file not given for distinct_term_values_from_file()')
         return None
 
     if os.path.isfile(inputfile) == False:
         # It's actually OK if the file does not exist. Just return None
-#        print 'Input file %s not found for distinct_term_values_from_file()' % inputfile
+        s = 'Input file %s not found for distinct_term_values_from_file()' % inputfile
+        logging.debug(s)
         return None
 
     if termname is None or len(termname)==0:
-#        print 'No term name given for distinct_term_values_from_file()'
+        logging.dwbug('No term name given for distinct_term_values_from_file()')
         return None
 
     if dialect is None:
@@ -417,15 +422,15 @@ def distinct_term_values_from_file(inputfile, termname, dialect=None):
     header = read_header(inputfile, dialect)
 
     if header is None:
-#        s = 'No header found for input file %s' % inputfile
-#        s += ' in distinct_term_values_from_file()'
-#        print '%s' % s
+        s = 'No header found for input file %s' % inputfile
+        s += ' in distinct_term_values_from_file()'
+        logging.debug(s)
         return None
 
     if termname not in header:
-#        s = 'Term %s not found in header for input file %s' % (termname, inputfile)
-#        s += ' in distinct_term_values_from_file()'
-#        print '%s' % s
+        s = 'Term %s not found in header for input file %s' % (termname, inputfile)
+        s += ' in distinct_term_values_from_file()'
+        logging.debug(s)
         return None
 
     values = set()
@@ -452,12 +457,13 @@ def distinct_term_counts_from_file(inputfile, termname, dialect=None):
         value in descending order (most commonly found term value first).
     """
     if inputfile is None or len(inputfile)==0:
-#        print 'Input file not given for distinct_term_counts_from_file()'
+        logging.debug('Input file not given for distinct_term_counts_from_file()')
         return None
 
     if os.path.isfile(inputfile) == False:
         # It's actually OK if the file does not exist. Just return None
-#        print 'Input file %s not found for distinct_term_counts_from_file()' % inputfile
+        s = 'Input file %s not found for distinct_term_counts_from_file()' % inputfile
+        logging.debug(s)
         return None
 
     if dialect is None:
@@ -466,15 +472,15 @@ def distinct_term_counts_from_file(inputfile, termname, dialect=None):
     header = read_header(inputfile, dialect)
 
     if header is None:
-#        s = 'No header found for input file %s' % inputfile
-#        s += ' in distinct_term_counts_from_file()'
-#        print '%s' % s
+        s = 'No header found for input file %s' % inputfile
+        s += ' in distinct_term_counts_from_file()'
+        logging.debug(s)
         return None
 
     if termname not in header:
-#        s = 'Term %s not found in header for input file %s' % (termname, inputfile)
-#        s += ' in distinct_term_counts_from_file()'
-#        print '%s' % s
+        s = 'Term %s not found in header for input file %s' % (termname, inputfile)
+        s += ' in distinct_term_counts_from_file()'
+        logging.debug(s)
         return None
 
     values = {}
@@ -510,11 +516,11 @@ def not_in_list(targetlist, checklist):
         a sorted list of distinct new values not in the target list
     """
     if checklist is None or len(checklist)==0:
-#        print 'No checklist given in not_in_list()'
+        logging.debug('No checklist given in not_in_list()')
         return None
 
     if targetlist is None or len(targetlist)==0:
-#        print 'No target list given in not_in_list()'
+        logging.debug('No target list given in not_in_list()')
         return sorted(checklist)
 
     newlist = []
@@ -536,7 +542,7 @@ def keys_list(sourcedict):
         an unsorted list of keys from the dictionary
     """
     if sourcedict is None or len(sourcedict)==0:
-#        print 'No dictionary given in keys_list()'
+        logging.debug('No dictionary given in keys_list()')
         return None
 
     keylist = []
@@ -558,7 +564,7 @@ def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
             lookup file
     """
     if vocabfile is None or len(vocabfile)==0:
-#        print 'No vocab file given in distinct_vocabs_to_file()'
+        logging.debug('No vocab file given in distinct_vocabs_to_file()')
         return None
 
     # No need to check if valuelist is given, not_in_list() does that
@@ -570,7 +576,8 @@ def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
     newvaluelist = not_in_list(vocablist, valuelist)
 
     if newvaluelist is None or len(newvaluelist) == 0:
-#        print 'No new values found for %s in distinct_vocabs_to_file()' % vocabfile
+        s = 'No new values found for %s in distinct_vocabs_to_file()' % vocabfile
+        logging.debug(s)
         return None
 
     if dialect is None:
@@ -582,7 +589,8 @@ def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
             writer.writeheader()
 
     if os.path.isfile(vocabfile) == False:
-#        print 'Vocab file %s not found for distinct_vocabs_to_filee()' % vocabfile
+        s = 'Vocab file %s not found for distinct_vocabs_to_filee()' % vocabfile
+        logging.debug(s)
         return None
 
     with open(vocabfile, 'a') as csvfile:

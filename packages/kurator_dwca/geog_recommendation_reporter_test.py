@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "geog_recommendation_reporter_test.py 2016-05-25T16:52-03:00"
+__version__ = "geog_recommendation_reporter_test.py 2016-05-27T06:44-03:00"
 
 # This file contains unit tests for the geog_recommendation_reporter function.
 #
@@ -36,13 +36,17 @@ class GeogRecommendationReporterFramework():
     vocabfile = testdatapath + 'test_geography.txt'
 
     # output data files from tests, remove these in dispose()
-    testreportfile = 'test_geog_recommendation_file.txt'
+    testgeogreportfile = 'test_geog_recommendation_file.txt'
+    testgeogrowreportfile = 'test_geog_row_recommendation_file.csv'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-        testreportfile = self.testdatapath + self.testreportfile
-        if os.path.isfile(testreportfile):
-            os.remove(testreportfile)
+        testgeogreportfile = self.testdatapath + self.testgeogreportfile
+        if os.path.isfile(testgeogreportfile):
+            os.remove(testgeogreportfile)
+        testgeogrowreportfile = self.testdatapath + self.testgeogrowreportfile
+        if os.path.isfile(testgeogrowreportfile):
+            os.remove(testgeogrowreportfile)
         return True
 
 class GeogRecommendationReporterTestCase(unittest.TestCase):
@@ -95,22 +99,26 @@ class GeogRecommendationReporterTestCase(unittest.TestCase):
         inputs['vocabfile'] = vocabfile
         response=geog_recommendation_reporter(inputs)
 #        print 'response4:\n%s' % response
-        s = 'no output file produced with required inputs'
+        s = 'no output files produced with required inputs'
         self.assertTrue(response['success'], s)
-        # Remove the file create by this test, as the Framework does not know about it
-        if os.path.isfile(response['outputfile']):
-            os.remove(response['outputfile'])
+        # Remove the files created by this test, as the Framework does not know about it
+        if os.path.isfile(response['geogoutputfile']):
+            os.remove(response['geogoutputfile'])
+        if os.path.isfile(response['geogrowoutputfile']):
+            os.remove(response['geogrowoutputfile'])
 
     def test_geog_recommendation_reporter(self):
         print 'testing geog_recommendation_reporter'
         inputfile = self.framework.inputfile
-        testreportfile = self.framework.testreportfile
+        testgeogreportfile = self.framework.testgeogreportfile
+        testgeogrowreportfile = self.framework.testgeogrowreportfile
         vocabfile = self.framework.vocabfile
         workspace = self.framework.testdatapath
         
         inputs = {}
         inputs['inputfile'] = inputfile
-        inputs['outputfile'] = testreportfile
+        inputs['geogoutputfile'] = testgeogreportfile
+        inputs['geogrowoutputfile'] = testgeogrowreportfile
         inputs['vocabfile'] = vocabfile
         inputs['workspace'] = workspace
 

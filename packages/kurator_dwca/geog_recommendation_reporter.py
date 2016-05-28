@@ -14,10 +14,10 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "geog_recommendation_reporter.py 2016-05-25T16:52-03:00"
+__version__ = "geog_recommendation_reporter.py 2016-05-27T06:43-43:00"
 
-from optparse import OptionParser
 from dwca_utils import response
+from dwca_utils import setup_actor_logging
 from dwca_utils import csv_file_dialect
 from dwca_utils import tsv_dialect
 from dwca_utils import read_header
@@ -33,47 +33,41 @@ import os
 import csv
 import logging
 import uuid
+import argparse
 
 def geog_recommendation_reporter(options):
     """Report a list of recommended standardizations for distinct geography combinations
        in an input file compared to a geography lookup file.
     options - a dictionary of parameters
-        loglevel - the level at which to log (optional)
+        loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the tsvfile (optional)
         inputfile - full path to the input file (required)
         vocabfile - full path to the vocabulary file (required)
-        outputfile - name of the output file, without path (optional)
+        geogoutputfile - name of the distinct geogoutput file, without path (optional)
+        geogrowoutputfile - name of the geog row output file, without path (optional)
     returns a dictionary with information about the results
-        workspace - actual path to the directory where the outputfile was written
-        outputfile - actual full path to the output file
+        workspace - actual path to the directory where the geogoutputfile was written
+        geogoutputfile - actual full path to the distinct geog output file
+        geogrowoutputfile - actual full path to the geog row output file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     """
-    logging.info( 'Started %s' % __version__ )
-    logging.info( 'options: %s' % options )
-    # Set up logging
-#     try:
-#         loglevel = options['loglevel']
-#     except:
-#         loglevel = None
-#     if loglevel is not None:
-#         if loglevel.upper() == 'DEBUG':
-#             logging.basicConfig(level=logging.DEBUG)
-#         elif loglevel.upper() == 'INFO':        
-#             logging.basicConfig(level=logging.INFO)
-# 
-#     logging.info('Starting %s' % __version__)
+    setup_actor_logging(options)
+
+    logging.debug( 'Started %s' % __version__ )
+    logging.debug( 'options: %s' % options )
 
     # Make a list for the response
-    returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
+    returnvars = ['workspace', 'geogoutputfile', 'geogrowoutputfile', 'success', 'message', 'artifacts']
 
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
     # outputs
     workspace = None
-    outputfile = None
+    geogoutputfile = None
+    geogrowoutputfile = None
     success = False
     message = None
 
@@ -93,14 +87,14 @@ def geog_recommendation_reporter(options):
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
-        returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        returnvals = [workspace, geogoutputfile, geogrowoutputfile, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
         message = 'Input file not found'
-        returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        returnvals = [workspace, geogoutputfile, geogrowoutputfile, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     try:
@@ -110,102 +104,100 @@ def geog_recommendation_reporter(options):
 
     if vocabfile is None or len(vocabfile)==0:
         message = 'No vocab file given'
-        returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        returnvals = [workspace, geogoutputfile, geogrowoutputfile, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(vocabfile) == False:
         message = 'Vocab file not found'
-        returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        returnvals = [workspace, geogoutputfile, geogrowoutputfile, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
+    auuid = str(uuid.uuid1())
     try:
-        outputfile = options['outputfile']
+        geogoutputfile = options['geogoutputfile']
     except:
-        outputfile = None
-    if outputfile is None:
-        outputfile = '%s/geog_recommendation_report_%s.txt' % \
-          (workspace.rstrip('/'), str(uuid.uuid1()))
+        geogoutputfile = None
+    if geogoutputfile is None:
+        geogoutputfile = '%s/geog_recommendation_report_%s.txt' % \
+          (workspace.rstrip('/'), auuid)
     else:
-        outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
+        geogoutputfile = '%s/%s' % (workspace.rstrip('/'), geogoutputfile)
+
+    try:
+        geogrowoutputfile = options['geogrowoutputfile']
+    except:
+        geogrowoutputfile = None
+    if geogrowoutputfile is None:
+        geogrowoutputfile = '%s/geog_row_recommendation_report_%s.txt' % \
+          (workspace.rstrip('/'), auuid)
+    else:
+        geogrowoutputfile = '%s/%s' % (workspace.rstrip('/'), geogrowoutputfile)
 
     # Get a list of distinct values of the term in the input file
     dialect = csv_file_dialect(inputfile)
-
     geogkey = compose_key_from_list(geogkeytermlist)
-
     checklist = distinct_composite_term_values_from_file(inputfile, geogkey, '|', dialect)
-    
-#    print 'checklist:\n%s' % checklist
+    logging.debug('checklist:\n%s' % checklist)
+
     if checklist is None or len(checklist)==0:
         message = 'No values of %s from %s' % (geogkey, inputfile)
-        returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        returnvals = [workspace, geogoutputfile, geogrowoutputfile, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     # Get a dictionary of matching checklist values from the vocabfile
     matchingvocabdict = matching_geog_dict_from_file(checklist, vocabfile)
-#    print 'matchingvocabdict:\n%s' % matchingvocabdict
+    logging.debug('matchingvocabdict:\n%s' % matchingvocabdict)
     if matchingvocabdict is None or len(matchingvocabdict)==0:
         message = 'No matching values of %s from %s found in %s' % \
             (geogkey, inputfile, vocabfile)
-        returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        returnvals = [workspace, geogoutputfile, geogrowoutputfile, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     # Get a dictionary of the recommended values from the matchingvocabdict
     recommended = geog_values_recommended(matchingvocabdict)
-#    print 'recommended:\n%s' % recommended
+    logging.debug('recommended:\n%s' % recommended)
 
     if recommended is None or len(recommended)==0:
         message = 'Vocabulary %s has no recommended values for %s from %s' % \
             (vocabfile, termcomposite, inputfile)
-        returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        returnvals = [workspace, geogoutputfile, geogrowoutputfile, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     # Create a series of term reports
     # TODO: Use Allan's DQ report framework
     # Validation, Improvement, Measure
-#    print 'outputfile:\n%s\nrecommended:\n%s' % (outputfile, recommended)
-    success = geog_recommendation_report(outputfile, recommended)
+    logging.debug('geogoutputfile:\n%s\nrecommended:\n%s' % (geogoutputfile, recommended))
+    success = geog_recommendation_report(geogoutputfile, recommended)
 
-    if not os.path.isfile(outputfile):
-        message = 'Failed to write results to output file %s' % outputfile
-        returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+    if not os.path.isfile(geogoutputfile):
+        message = 'Failed to write results to output file %s' % geogoutputfile
+        returnvals = [workspace, geogoutputfile, geogrowoutputfile, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     s = 'geog_recommendation_report_file'
-    artifacts[s] = outputfile
+    artifacts[s] = geogoutputfile
     
     # Now work on the reports for individual records using the recommendations file
     # just created
-    ###
-    # for every row in the inputfile
-    #    get the geogkey
-    #    if the geogkey is in the recommended dictionary
-    #        write the recomendation with record identifier and geogkey to file
-    # if the file doesn't exist, something went wrong
-    # add the file to the artifacts
-    rowoutput = 'geog_row_report.csv'
-    rowoutput = '%s/%s' % (workspace.rstrip('/'), rowoutput)
+    success = geog_row_recommendation_report(geogrowoutputfile, inputfile, recommended, dialect)
 
-    success = geog_row_recommendation_report(rowoutput, inputfile, recommended, dialect)
-
-    if not os.path.isfile(rowoutput):
-        message = 'Failed to write results to row output file %s' % rowoutput
-        returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+    if not os.path.isfile(geogrowoutputfile):
+        message = 'Failed to write results to row output file %s' % geogrowoutputfile
+        returnvals = [workspace, geogoutputfile, geogrowoutputfile, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     s = 'geog_row_recommendation_report_file'
-    artifacts[s] = rowoutput
+    artifacts[s] = geogrowoutputfile
     
-    returnvals = [workspace, outputfile, success, message, artifacts]
-#    logging.debug('message:\n%s' % message)
-#    logging.info('Finishing %s' % __version__)
+    returnvals = [workspace, geogoutputfile, geogrowoutputfile, success, message, artifacts]
+    logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def matching_geog_dict_from_file(checklist, vocabfile, dialect=None):
@@ -219,11 +211,11 @@ def matching_geog_dict_from_file(checklist, vocabfile, dialect=None):
             in the checklist
     """
     if checklist is None or len(checklist)==0:
-#        print 'No list of values given in matching_geog_dict_from_file()'
+        logging.debug('No list of values given in matching_geog_dict_from_file()')
         return None
     vocabdict = dwc_geog_dict_from_file(vocabfile, dialect)
     if vocabdict is None or len(vocabdict)==0:
-#        print 'No vocabdict constructed in matching_geog_dict_from_file()'
+        logging.debug('No vocabdict constructed in matching_geog_dict_from_file()')
         return None
     matchingvocabdict = {}
     for term in checklist:
@@ -240,10 +232,10 @@ def dwc_geog_dict_from_file(vocabfile, dialect=None):
         geogdict - dictionary of geography records
     """
     if vocabfile is None or len(vocabfile)==0:
-#        print 'No vocab file given in dwc_geog_dict_from_file()'
+        logging.debug('No vocab file given in dwc_geog_dict_from_file()')
         return None
     if os.path.isfile(vocabfile) == False:
-#        print 'Vocab file %s not found in dwc_geog_dict_from_file()' % vocabfile
+        logging.debug('Vocab file %s not found in dwc_geog_dict_from_file()' % vocabfile)
         return None
     geogdict = {}
     if dialect is None:
@@ -274,12 +266,12 @@ def geog_values_recommended(lookupdict):
     """
     if lookupdict is None or len(lookupdict)==0:
         return None
-#    print 'lookupdict:\n%s' % lookupdict
+    logging.debug('lookupdict:\n%s' % lookupdict)
     recommended = {}
     for key, value in lookupdict.iteritems():
         standard = ''
         for field in geogkeytermlist:
-#            print 'key: %s value: %s field: %s' % (key, value, field)
+            logging.debug('key: %s value: %s field: %s' % (key, value, field))
             try:
                 v = value[field]
             except:
@@ -302,11 +294,11 @@ def geog_recommendation_report(reportfile, recommendationdict, dialect=None):
         success - True if the report was written, else False
     """
     if recommendationdict is None or len(recommendationdict)==0:
-        print 'no recommendations to report'
+        logging.dbug('no recommendations to report')
         return False
 
     if reportfile is None or len(reportfile)==0:
-        print 'report file name not given'
+        logging.dwbug('report file name not given')
         return False
 
     if dialect is None:
@@ -321,7 +313,7 @@ def geog_recommendation_report(reportfile, recommendationdict, dialect=None):
         writer = csv.DictWriter(csvfile, dialect=dialect, \
             fieldnames=geogvocabfieldlist)
         for key, value in recommendationdict.iteritems():
-#            print ' key: %s value: %s' % (key, value)
+            logging.debug(' key: %s value: %s' % (key, value))
             geogdict = { 'geogkey':key }
             for k in geogvocabfieldlist:
                 if k != 'geogkey':
@@ -340,15 +332,15 @@ def geog_row_recommendation_report(reportfile, recordfile, recommended, dialect=
         success - True if the report was written, else False
     """
     if recommended is None or len(recommended)==0:
-        print 'No recommendation dictionary given'
+        logging.debug('No recommendation dictionary given')
         return False
 
     if reportfile is None or len(reportfile)==0:
-        print 'Report file name not given'
+        logging.debug('Report file name not given')
         return False
 
     if recordfile is None or len(recordfile)==0:
-        print 'File name for input records not given'
+        logging.debug('File name for input records not given')
         return False
 
     if dialect is None:
@@ -385,24 +377,28 @@ def geog_row_recommendation_report(reportfile, recordfile, recommended, dialect=
     return True
 
 def _getoptions():
-    """Parses command line options and returns them."""
-    parser = OptionParser()
-    parser.add_option("-i", "--inputfile", dest="inputfile",
-                      help="Input file to report on",
-                      default=None)
-    parser.add_option("-v", "--vocabfile", dest="vocabfile",
-                      help="Vocab file to check against",
-                      default=None)
-    parser.add_option("-w", "--workspace", dest="workspace",
-                      help="Directory for the output file",
-                      default=None)
-    parser.add_option("-o", "--outputfile", dest="outputfile",
-                      help="Outputfile for report",
-                      default=None)
-    parser.add_option("-l", "--loglevel", dest="loglevel",
-                      help="(DEBUG, INFO)",
-                      default=None)
-    return parser.parse_args()[0]
+    """Parse command line options and return them."""
+    parser = argparse.ArgumentParser()
+
+    help = 'full path to the input file'
+    parser.add_argument("-i", "--inputfile", help=help)
+
+    help = 'full path to the vocab file (required)'
+    parser.add_argument("-v", "--vocabfile", help=help)
+
+    help = 'directory for the output file (optional)'
+    parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'geography recommendation output file name, no path (optional)'
+    parser.add_argument("-g", "--geogoutputfile", help=help)
+
+    help = 'geography row recommendation output file name, no path (optional)'
+    parser.add_argument("-r", "--geogrowoutputfile", help=help)
+
+    help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
+    parser.add_argument("-l", "--loglevel", help=help)
+
+    return parser.parse_args()
 
 def main():
     options = _getoptions()
@@ -412,11 +408,13 @@ def main():
 
     if options.inputfile is None or len(options.inputfile)==0 or \
        options.vocabfile is None or len(options.vocabfile)==0:
-        s =  'syntax:\npython geog_recommendation_reporter.py'
+        s =  'syntax:\n'
+        s += 'python geog_recommendation_reporter.py'
         s += ' -i ./data/tests/test_eight_specimen_records.csv'
         s += ' -v ./data/vocabularies/dwc_geography.txt'
         s += ' -w ./workspace'
-        s += ' -o testgeogrecommendations.txt'
+        s += ' -g testgeogrecommendations.txt'
+        s += ' -r testgeogrowrecommendations.csv'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -424,13 +422,13 @@ def main():
     optdict['inputfile'] = options.inputfile
     optdict['vocabfile'] = options.vocabfile
     optdict['workspace'] = options.workspace
-    optdict['outputfile'] = options.outputfile
+    optdict['geogoutputfile'] = options.geogoutputfile
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 
     # Report recommended standardizations for values of a given term from the inputfile
     response=geog_recommendation_reporter(optdict)
-    print 'response: %s' % response
+    print '\nresponse: %s' % response
 
 if __name__ == '__main__':
     main()

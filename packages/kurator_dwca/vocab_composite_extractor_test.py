@@ -74,7 +74,7 @@ class VocabCompositeExtractorTestCase(unittest.TestCase):
         self.assertFalse(response['success'], s)
 
         # Test with missing inputfile
-        inputs['termcomposite'] = 'year'
+        inputs['keyfieldlist'] = 'year'
         response=vocab_composite_extractor(inputs)
 #        print 'response2:\n%s' % response
         s = 'success without inputfile'
@@ -91,7 +91,7 @@ class VocabCompositeExtractorTestCase(unittest.TestCase):
         # Test with missing optional inputs
         inputs = {}
         inputs['inputfile'] = testfile
-        inputs['termcomposite'] = 'country|stateProvince'
+        inputs['keyfieldlist'] = 'country|stateProvince'
         response=vocab_composite_extractor(inputs)
 #        print 'response4:\n%s' % response
         s = 'no output file produced with required inputs'
@@ -104,7 +104,7 @@ class VocabCompositeExtractorTestCase(unittest.TestCase):
 
         inputs = {}
         inputs['inputfile'] = testfile
-        inputs['termcomposite'] = terms
+        inputs['keyfieldlist'] = terms
 
         # Extract distinct values of term
         response=vocab_composite_extractor(inputs)
@@ -114,7 +114,7 @@ class VocabCompositeExtractorTestCase(unittest.TestCase):
         self.assertEqual(values, ['United States'], s)
 
         terms = 'country|stateProvince'
-        inputs['termcomposite'] = terms
+        inputs['keyfieldlist'] = terms
         response=vocab_composite_extractor(inputs)
         s = 'values of key %s not extracted correctly from %s' % (terms, testfile)
         values = response['valueset']
@@ -123,7 +123,7 @@ class VocabCompositeExtractorTestCase(unittest.TestCase):
             'United States|Washington', 'United States|Hawaii'], s)
 
         terms = 'family '
-        inputs['termcomposite'] = terms
+        inputs['keyfieldlist'] = terms
         response=vocab_composite_extractor(inputs)
         s = 'values of key %s not extracted correctly from %s' % (terms, testfile)
         values = response['valueset']
@@ -133,7 +133,7 @@ class VocabCompositeExtractorTestCase(unittest.TestCase):
         terms = 'country|stateProvince'
         testfile = self.framework.testfile2
         inputs['inputfile'] = testfile
-        inputs['termcomposite'] = terms
+        inputs['keyfieldlist'] = terms
         response=vocab_composite_extractor(inputs)
         s = 'values of key %s not extracted correctly from %s' % (terms, testfile)
         values = response['valueset']

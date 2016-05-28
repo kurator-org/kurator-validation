@@ -14,13 +14,14 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "actor_template.py 2016-05-26T14:21-03:00"
+__version__ = "actor_template.py 2016-05-27T13:35-03:00"
 
 from dwca_utils import response
-import argparse
+from dwca_utils import setup_actor_logging
 import os
 import logging
 import uuid
+import argparse
 
 def dostuffer(options):
     """Generic actor showing patterns for logging, input dictionary, and output dictionary
@@ -37,21 +38,10 @@ def dostuffer(options):
         message - an explanation of the results
         artifacts - a dictionary of persistent objects created
     """
-#    print 'Started %s' % __version__
-#    print 'options: %s' % options
+    setup_actor_logging(options)
 
-    # Set up logging
-    try:
-        loglevel = options['loglevel']
-    except:
-        loglevel = None
-    if loglevel is not None:
-        if loglevel.upper() == 'DEBUG':
-            logging.basicConfig(level=logging.DEBUG)
-        elif loglevel.upper() == 'INFO':        
-            logging.basicConfig(level=logging.INFO)
-
-    logging.info('Starting %s' % __version__)
+    logging.debug( 'Started %s' % __version__ )
+    logging.debug( 'options: %s' % options )
 
     # Make a list for the response
     returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
@@ -82,13 +72,13 @@ def dostuffer(options):
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
         returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
         message = 'Input file not found'
         returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     try:
@@ -110,7 +100,7 @@ def dostuffer(options):
 
     # Prepare the response dictionary
     returnvals = [workspace, outputfile, success, message, artifacts]
-    logging.info('Finishing %s' % __version__)
+    logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def do_stuff(inputfile, outputfile):
@@ -123,25 +113,28 @@ def do_stuff(inputfile, outputfile):
     """
     # Check for required values
     if inputfile is None or len(inputfile)==0:
+        logging.debug('No input file given in do_stuff()')
         return False
 
     if outputfile is None or len(outputfile)==0:
+        logging.debug('No output file given in do_stuff()')
         return False
 
     # Success
     return True
 
 def _getoptions():
+    """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
-    help = 'full path to the input file'
+    help = 'full path to the input file (required)'
     parser.add_argument("-i", "--inputfile", help=help)
-
-    help = 'output file name, no path (optional)'
-    parser.add_argument("-o", "--outputfile", help=help)
 
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'output file name, no path (optional)'
+    parser.add_argument("-o", "--outputfile", help=help)
 
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
@@ -150,12 +143,11 @@ def _getoptions():
 
 def main():
     options = _getoptions()
-    print 'options: %s' % options
     optdict = {}
 
-    if options.inputfile is None or len(options.inputfile)==0 or \
-        options.outputfile is None or len(options.outputfile)==0:
-        s =  'syntax: python actor_template.py'
+    if options.inputfile is None or len(options.inputfile)==0:
+        s =  'syntax:\n'
+        s += 'python actor_template.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -o test_ccber_mammals_dwc_archive.zip'
         s += ' -w ./workspace'
@@ -171,7 +163,7 @@ def main():
 
     # Append distinct values of to vocab file
     response=dostuffer(optdict)
-    print 'response: %s' % response
+    print '\nresponse: %s' % response
 
 if __name__ == '__main__':
     main()

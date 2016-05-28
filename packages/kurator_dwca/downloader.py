@@ -14,12 +14,13 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader.py 2016-05-06T13:40-03:00"
+__version__ = "downloader.py 2016-05-27T15:52-03:00"
 
-from optparse import OptionParser
 from dwca_utils import response
+from dwca_utils import setup_actor_logging
 import logging
 import uuid
+import argparse
 
 # Uses the HTTP requests package
 #   pip install requests
@@ -45,21 +46,10 @@ def downloader(options):
         message - an explanation of the results
         artifacts - a dictionary of persistent objects created
     """
-    logging.info( 'Started %s' % __version__ )
-    logging.info( 'options: %s' % options )
+    setup_actor_logging(options)
 
-    # Set up logging
-    try:
-        loglevel = options['loglevel']
-    except:
-        loglevel = None
-    if loglevel is not None:
-        if loglevel.upper() == 'DEBUG':
-            logging.basicConfig(level=logging.DEBUG)
-        elif loglevel.upper() == 'INFO':        
-            logging.basicConfig(level=logging.INFO)
-
-    logging.info('Starting %s' % __version__)
+    logging.debug( 'Started %s' % __version__ )
+    logging.debug( 'options: %s' % options )
 
     # Make a list for the response
     returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
@@ -92,7 +82,6 @@ def downloader(options):
     except:
         url = None
 
-#    print 'options: %s' % options
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     success = download_file(url, outputfile)
@@ -100,7 +89,7 @@ def downloader(options):
         artifacts['downloaded_file'] = outputfile
 
     returnvals = [workspace, outputfile, success, message, artifacts]
-    logging.info('Finishing %s' % __version__)
+    logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def download_file(url, outputfile):
@@ -113,46 +102,56 @@ def download_file(url, outputfile):
         success - True if the file was downloaded, False if the request was unsuccessful
     """
     if url is None or len(url)==0:
+        logging.info('No URL given in download_file()')
         return False
+
     if outputfile is None or len(outputfile)==0:
+        logging.info('No output file given in download_file()')
         return False
 
     try:
         r = requests.get(url, stream=True)
     except:
+        s = 'Exception while attempting requests.get(url) in download_file()'
+        logging.warning(s)
         return False
     if not r.ok:
+        s = 'Return value of requests.get(url) not ok in download_file(): %s' % r
+        logging.warning(s)
         return False
 
     # Example outputfile: './workspace/test_ccber_mammals_dwc_archive.zip'
     with open(outputfile, 'wb') as handle:
         for block in r.iter_content(1024):
             handle.write(block)
+
     return True
 
 def _getoptions():
-    """Parses command line options and returns them."""
-    parser = OptionParser()
-    parser.add_option("-u", "--url", dest="url",
-                      help="URL for the file to download (required)",
-                      default=None)
-    parser.add_option("-o", "--outputfile", dest="outputfile",
-                      help="Output file name, no path (optional)",
-                      default=None)
-    parser.add_option("-w", "--workspace", dest="workspace",
-                      help="Directory for the output file (optional)",
-                      default=None)
-    parser.add_option("-l", "--loglevel", dest="loglevel",
-                      help="(e.g., DEBUG, WARNING, INFO) (optional)",
-                      default=None)
-    return parser.parse_args()[0]
+    """Parse command line options and return them."""
+    parser = argparse.ArgumentParser()
+
+    help = 'URL of the file to download (required)'
+    parser.add_argument("-u", "--url", help=help)
+
+    help = 'directory for the output file (optional)'
+    parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'output file name, no path (optional)'
+    parser.add_argument("-o", "--outputfile", help=help)
+
+    help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
+    parser.add_argument("-l", "--loglevel", help=help)
+
+    return parser.parse_args()
 
 def main():
     options = _getoptions()
     optdict = {}
 
     if options.url is None or len(options.url)==0:
-        s =  'syntax: python downloader.py'
+        s =  'syntax:\n'
+        s += 'python downloader.py'
         s += ' -u http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals'
         s += ' -w ./workspace'
         s += ' -o test_ccber_mammals_dwc_archive.zip'
@@ -168,7 +167,7 @@ def main():
 
     # Append distinct values of to vocab file
     response=downloader(optdict)
-    print 'response: %s' % response
+    print '\nresponse: %s' % response
 
 if __name__ == '__main__':
     main()

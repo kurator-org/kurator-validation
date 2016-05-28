@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector_test.py 2016-05-11T22:40-03:00"
+__version__ = "darwin_cloud_collector_test.py 2016-05-27T21:59-03:00"
 
 # This file contains unit test for the darwin_cloud_collector function.
 #
@@ -96,7 +96,7 @@ class DarwinCloudCollectorTestCase(unittest.TestCase):
 #        print 'response4:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
-        # Remove the file create by this test, as the Framework does not know about it
+        # Remove the file created by this test, as the Framework does not know about it
         if os.path.isfile(response['outputfile']):
             os.remove(response['outputfile'])
 

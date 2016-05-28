@@ -14,16 +14,17 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2016-05-11T16:04-03:00"
+__version__ = "dwca_core_to_tsv.py 2016-05-27T15:56-03:00"
 
-from optparse import OptionParser
 from dwcareader_utils import short_term_names
 from dwca_utils import tsv_dialect
 from dwca_utils import response
+from dwca_utils import setup_actor_logging
 import csv
 import uuid
 import os
 import logging
+import argparse
 
 # Python Darwin Core Archive Reader from 
 #   https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
@@ -35,11 +36,11 @@ from dwca.read import GBIFResultsReader
 def dwca_core_to_tsv(options):
     """Save the core of the archive to a tsv file with short DwC term names as headers.
     options - a dictionary of parameters
+        loglevel - the level at which to log (e.g., DEBUG)
         workspace - path to a directory for the outputfile (optional)
         inputfile - full path to the input Darwin Core archive file (required)
         outputfile - file name of the tsv output file, no path (optional)
         archivetype - the archive type ('standard' or 'gbif') (optional)
-        loglevel - the level at which to log (e.g., DEBUG)
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
         outputfile - actual full path to the output tsv file
@@ -48,21 +49,10 @@ def dwca_core_to_tsv(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     """
-    logging.info( 'Started %s' % __version__ )
-    logging.info( 'options: %s' % options )
+    setup_actor_logging(options)
 
-    # Set up logging
-#     try:
-#         loglevel = options['loglevel']
-#     except:
-#         loglevel = None
-#     if loglevel is not None:
-#         if loglevel.upper() == 'DEBUG':
-#             logging.basicConfig(level=logging.DEBUG)
-#         elif loglevel.upper() == 'INFO':        
-#             logging.basicConfig(level=logging.INFO)
-# 
-#     logging.info('Starting %s' % __version__)
+    logging.debug( 'Started %s' % __version__ )
+    logging.debug( 'options: %s' % options )
 
     # Make a list for the response
     returnvars = ['workspace', 'outputfile', 'rowcount', 'success', 'message', 
@@ -94,13 +84,13 @@ def dwca_core_to_tsv(options):
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
         returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
         message = 'Input file not found'
         returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     try:
@@ -126,20 +116,20 @@ def dwca_core_to_tsv(options):
         except Exception, e:
             message = 'Error %s reading GBIF archive: %s' % (inputfile, e)
             returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
-#            logging.debug('message:\n%s' % message)
+            logging.debug('message:\n%s' % message)
             return response(returnvars, returnvals)
     try:
         dwcareader = DwCAReader(inputfile)
     except Exception, e:
         message = 'Error %s reading archive: %s' % (inputfile, e)
         returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if dwcareader is None:
         message = 'No viable archive found at %s' % inputfile
         returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     termnames=list(dwcareader.descriptor.core.terms)
@@ -166,29 +156,29 @@ def dwca_core_to_tsv(options):
         artifacts['outputfile'] = outputfile
 
     returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
-#    logging.debug('message:\n%s' % message)
-#    logging.info('Finishing %s' % __version__)
+    logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parses command line options and returns them."""
-    parser = OptionParser()
-    parser.add_option("-i", "--inputfile", dest="inputfile",
-                      help="DwC archive to split",
-                      default=None)
-    parser.add_option("-o", "--outputfile", dest="outputfile",
-                      help="Path for output file",
-                      default=None)
-    parser.add_option("-w", "--workspace", dest="workspace",
-                      help="Directory for the output file",
-                      default=None)
-    parser.add_option("-t", "--type", dest="type",
-                      help="Type of Darwin Core archive ('gbif', 'standard')",
-                      default=None)
-    parser.add_option("-l", "--loglevel", dest="loglevel",
-                      help="(DEBUG, INFO)",
-                      default=None)
-    return parser.parse_args()[0]
+    """Parse command line options and return them."""
+    parser = argparse.ArgumentParser()
+
+    help = 'full path to the input file (required)'
+    parser.add_argument("-i", "--inputfile", help=help)
+
+    help = 'directory for the output file (optional)'
+    parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'output file name, no path (optional)'
+    parser.add_argument("-o", "--outputfile", help=help)
+
+    help = "type of Darwin Core archive ('gbif', 'standard') (optional)"
+    parser.add_argument("-t", "--type", help=help)
+
+    help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
+    parser.add_argument("-l", "--loglevel", help=help)
+
+    return parser.parse_args()
 
 def main():
     options = _getoptions()
@@ -199,10 +189,12 @@ def main():
     archivetype = options.type
 
     if inputfile is None or len(inputfile)==0:
-        s =  'syntax: python dwca_core_to_tsv.py'
+        s =  'syntax:\n'
+        s += 'python dwca_core_to_tsv.py'
         s += ' -i ./data/dwca-uwymv_herp.zip'
         s += ' -w ./workspace'
-        s += ' -o testout.txt -t standard'
+        s += ' -o testout.txt'
+        s += ' -t standard'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -219,7 +211,7 @@ def main():
 
     # Write the core to a tsv file at the specified location
     response = dwca_core_to_tsv(optdict)
-    print 'response: %s' % response
+    print '\nresponse: %s' % response
 
 if __name__ == '__main__':
     """ Demo of dwca_core_splitter"""

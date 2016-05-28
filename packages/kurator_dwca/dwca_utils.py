@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-05-26T12:52-03:00"
+__version__ = "dwca_utils.py 2016-05-27T16:05-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -28,6 +28,7 @@ import os.path
 import glob
 import unittest
 import re
+import logging
 from slugify import slugify
 
 try:
@@ -40,12 +41,32 @@ except ImportError:
     warnings.warn("can't import `unicodecsv` encoding errors may occur")
     import csv
 
+def setup_actor_logging(options):
+    """Set up logging based on 'loglevel' in a dictionary.
+    parameters:
+        options - dictionary in which to look for loglevel (required)
+    returns:
+        None
+    """
+    try:
+        loglevel = options['loglevel']
+    except:
+        loglevel = None
+    if loglevel is not None:
+        if loglevel.upper() == 'DEBUG':
+            logging.basicConfig(level=logging.DEBUG)
+            logging.debug('Log level set to DEBUG')
+        elif loglevel.upper() == 'INFO':        
+            logging.basicConfig(level=logging.INFO)
+            logging.info('Log level set to INFO')
+
 def tsv_dialect():
     """Get a dialect object with TSV properties.
     parameters:
         None
     returns:
-        dialect - a csv.dialect object with TSV attributes"""
+        dialect - a csv.dialect object with TSV attributes
+    """
     dialect = csv.excel_tab
     dialect.lineterminator='\r'
     dialect.delimiter='\t'
@@ -66,12 +87,12 @@ def csv_file_dialect(fullpath):
         dialect - a csv.dialect object with the detected attributes
     """
     if fullpath is None or len(fullpath) == 0:
-#        print 'No file given in csv_file_dialect().'
+        logging.debug('No file given in csv_file_dialect().')
         return False
 
     # Cannot function without an actual file where full path points
     if os.path.isfile(fullpath) == False:
-#        print 'File %s not found in csv_file_dialect().' % fullpath
+        logging.debug('File %s not found in csv_file_dialect().' % fullpath)
         return None
 
     # Let's look at up to readto bytes from the file
@@ -85,7 +106,7 @@ def csv_file_dialect(fullpath):
         # Try to read the specified part of the file
         try:
             buf = file.read(readto)
-#            print 'buf:\n%s' % buf
+            logging.debug('buf:\n%s' % buf)
             # Make a determination based on existence of tabs in the buffer, as the
             # Sniffer is not particularly good at detecting TSV file formats. So, if the
             # buffer has a tab in it, let's treat it as a TSV file 
@@ -99,12 +120,12 @@ def csv_file_dialect(fullpath):
             # the file
             try:
                 file.seek(0)
-#                print 'Re-sniffing with tab to %s' % (readto)
+                logging.debug('Re-sniffing with tab to %s' % (readto))
                 sample_text = ''.join(file.readline() for x in xrange(2,4,1))
                 dialect = csv.Sniffer().sniff(sample_text)
             # Sorry, couldn't figure it out
             except csv.Error:
-#                print 'No dice'
+                logging.debug('Unable to determine csv dialect')
                 return None
     
     # Fill in some standard values for the remaining dialect attributes        
@@ -191,12 +212,12 @@ def read_header(fullpath, dialect = None):
         header - a list containing the fields in the original header
     """
     if fullpath is None or len(fullpath)==0:
-#        print 'No file given in read_header().'
+        logging.debug('No file given in read_header().')
         return None
 
     # Cannot function without an actual file where the full path points
     if os.path.isfile(fullpath) == False:
-#        print 'File %s not found in read_header().' % fullpath
+        logging.debug('File %s not found in read_header().' % fullpath)
         return None
 
     header = None
@@ -225,7 +246,7 @@ def composite_header(fullpath, dialect = None):
         compositeheader - a list containing the fields in the header
     """
     if fullpath is None or len(fullpath)==0:
-#        print 'No file path given in composite_header().'
+        logging.debug('No file path given in composite_header().')
         return None
 
     compositeheader = None
@@ -233,6 +254,7 @@ def composite_header(fullpath, dialect = None):
     files = glob.glob(fullpath)
 
     if files is None:
+        logging.debug('No files found on path %s in composite_header().' % fullpath)
         return None
 
     for file in files:
@@ -254,7 +276,7 @@ def write_header(fullpath, fieldnames, dialect):
         True if the header was written to file, otherwise False
     """
     if fullpath is None or len(fullpath)==0:
-#        print 'No output file given in write_header().'
+        logging.debug('No output file given in write_header().')
         return False
 
     with open(fullpath, 'w') as csvfile:
@@ -262,7 +284,8 @@ def write_header(fullpath, fieldnames, dialect):
         try:
             writer.writeheader()
         except:
-#            print 'No header written to output file %s in write_header().' % fullpath
+            s = 'No header written to output file %s in write_header().' % fullpath
+            logging.debug(s)
             return False
 
     return True
@@ -275,7 +298,7 @@ def header_map(header):
         headermap - a dictionary of cleanedfield:originalfield pairs
     """
     if header is None or len(header)==0:
-#        print 'No header given in header_map().'
+        logging.debug('No header given in header_map().')
         return None
 
     headermap = {}
@@ -295,7 +318,7 @@ def clean_header(header):
     """
     # Cannot function without a header
     if header is None or len(header)==0:
-#        print 'No header given in clean_header().'
+        logging.debug('No header given in clean_header().')
         return None
 
     cleanheader = []
@@ -321,7 +344,7 @@ def merge_headers(headersofar, headertoadd = None):
         a sorted list of fields for the combined header
     """
     if headersofar is None and headertoadd is None:
-#        print 'No header given in merge_headers().'
+        logging.debug('No header given in merge_headers().')
         return None
 
     composedheader = set()
@@ -339,6 +362,7 @@ def merge_headers(headersofar, headertoadd = None):
                 composedheader.add(addme)
 
     if len(composedheader) == 0:
+        logging.debug('No fields in composed header merge_headers().')
         return None
 
     return sorted(list(composedheader))
@@ -352,15 +376,15 @@ def csv_to_tsv(inputfile, outputfile):
         True if finished successfully, otherwie False
     """
     if inputfile is None or len(inputfile) == 0:
-#        print 'No input file given in csv_to_tsv().'
+        logging.debug('No input file given in csv_to_tsv().')
         return False
 
     if outputfile is None or len(outputfile) == 0:
-#        print 'No output file given in csv_to_tsv().'
+        logging.debug('No output file given in csv_to_tsv().')
         return False
 
     if os.path.isfile(inputfile) == False:
-#        print 'File %s not found in csv_to_tsv().' % inputfile
+        logging.debug('File %s not found in csv_to_tsv().' % inputfile)
         return False
 
     # Determine the dialect of the input file
@@ -384,15 +408,15 @@ def term_rowcount_from_file(inputfile, termname):
         rowcount - the number of rows with the term populated
     """
     if inputfile is None or len(inputfile) == 0:
-#        print 'No input file given in term_rowcount_from_file().'
+        logging.debug('No input file given in term_rowcount_from_file().')
         return 0
 
     if termname is None or len(termname) == 0:
-#        print 'No term name given in term_rowcount_from_file().'
+        logging.debug('No term name given in term_rowcount_from_file().')
         return 0
 
     if os.path.isfile(inputfile) == False:
-#        print 'File %s not found in term_rowcount_from_file().' % inputfile
+        logging.debug('File %s not found in term_rowcount_from_file().' % inputfile)
         return 0
 
     # Determine the dialect of the input file
@@ -400,7 +424,7 @@ def term_rowcount_from_file(inputfile, termname):
     inputheader = read_header(inputfile,inputdialect)
 
     if termname not in inputheader:
-#        print 'Term %s not found in term_rowcount_from_file().' % termname
+        logging.debug('Term %s not found in term_rowcount_from_file().' % termname)
         return 0
 
     rowcount = 0
@@ -424,11 +448,11 @@ def csv_field_checker(inputfile):
             number of fields (1 is the first row after the header) and the row string
     """
     if inputfile is None or len(inputfile) == 0:
-#        print 'No input file given in csv_field_checker().'
+        logging.debug('No input file given in csv_field_checker().')
         return None
 
     if os.path.isfile(inputfile) == False:
-#        print 'File %s not found in csv_field_checker().' % inputfile
+        logging.debug('File %s not found in csv_field_checker().' % inputfile)
         return None
 
     # Determine the dialect of the input file
@@ -478,7 +502,7 @@ def split_path(fullpath):
             filepattern - the file name without the path and extension (e.g., 'txt')
     """
     if fullpath is None or len(fullpath)==0:
-#        print 'No input file given in split_path().'
+        logging.debug('No input file given in split_path().')
         return None, None, None
 
     path = fullpath[:fullpath.rfind('/')]

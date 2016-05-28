@@ -14,10 +14,10 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter.py 2016-05-25T17:52-03:00"
+__version__ = "term_recommendation_reporter.py 2016-05-27T16:27-03:00"
 
-from optparse import OptionParser
 from dwca_utils import response
+from dwca_utils import setup_actor_logging
 from dwca_utils import csv_file_dialect
 from dwca_utils import dialect_attributes
 from dwca_utils import tsv_dialect
@@ -31,17 +31,18 @@ import os.path
 import csv
 import logging
 import uuid
+import argparse
 
 def term_recommendation_reporter(options):
     """Report a list of recommended standardizations for the values of a given term in
        an input file.
     options - a dictionary of parameters
+        loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the tsvfile (optional)
         inputfile - full path to the input file (required)
         vocabfile - full path to the vocabulary file (required)
         outputfile - name of the output file, without path (optional)
         termname - the name of the term for which to find standard values (required)
-        loglevel - the level at which to log
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
         outputfile - actual full path to the output report file
@@ -49,20 +50,10 @@ def term_recommendation_reporter(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     """
-#     print 'Started %s' % __version__
-#     print 'options: %s' % options
-    # Set up logging
-#     try:
-#         loglevel = options['loglevel']
-#     except:
-#         loglevel = None
-#     if loglevel is not None:
-#         if loglevel.upper() == 'DEBUG':
-#             logging.basicConfig(level=logging.DEBUG)
-#         elif loglevel.upper() == 'INFO':        
-#             logging.basicConfig(level=logging.INFO)
-# 
-#     logging.info('Starting %s' % __version__)
+    setup_actor_logging(options)
+
+    logging.debug( 'Started %s' % __version__ )
+    logging.debug( 'options: %s' % options )
 
     # Make a list for the response
     returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
@@ -93,13 +84,13 @@ def term_recommendation_reporter(options):
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
         returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
         message = 'Input file not found'
         returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     try:
@@ -110,13 +101,13 @@ def term_recommendation_reporter(options):
     if vocabfile is None or len(vocabfile)==0:
         message = 'No vocab file given'
         returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(vocabfile) == False:
         message = 'Vocab file not found'
         returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     try:
@@ -127,7 +118,7 @@ def term_recommendation_reporter(options):
     if termname is None or len(termname)==0:
         message = 'No term given'
         returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message: %s' % message)
+        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
     try:
@@ -143,56 +134,51 @@ def term_recommendation_reporter(options):
     # Get a list of distinct values of the term in the input file
     dialect = csv_file_dialect(inputfile)
     checklist = distinct_term_values_from_file(inputfile, termname, dialect)
-#    print 'checklist:\n%s' % checklist
-#    print 'dialect:\n%s' % dialect_attributes(dialect)
+
     if checklist is None or len(checklist)==0:
         message = 'No values of %s from %s' % (termname, inputfile)
         returnvals = [workspace, outputfile, success, message, artifacts]
+        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
     # Get a dictionary of checklist values from the vocabfile
     matchingvocabdict = matching_vocab_dict_from_file(checklist, vocabfile)
-#    print 'matchingvocabdict:\n%s' % matchingvocabdict
+
     if matchingvocabdict is None or len(matchingvocabdict)==0:
         message = 'No matching values of %s from %s found in %s' % \
             (termname, inputfile, vocabfile)
         returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     # Get a dictionary of the recommended values from the matchingvocabdict
     recommended = term_values_recommended(matchingvocabdict)
-#    print 'recommended:\n%s' % recommended
 
     if recommended is None or len(recommended)==0:
         message = 'Vocabulary %s has no recommended values for %s from %s' % \
             (vocabfile, termname, inputfile)
         returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
-    # Create a series of term reports
     # TODO: Use Allan's DQ report framework
     # Validation, Improvement, Measure
+    # Create a series of term reports
     success = term_recommendation_report(outputfile, recommended)
 
     matchingvocablist = keys_list(matchingvocabdict)
     newvalues = not_in_list(matchingvocablist, checklist)
-#    print 'checklist:\n%s' % checklist
-#    print 'matchingvocablist:\n%s' % matchingvocablist
-#    print 'newvalueslist:\n%s' % newvalues
 
     if outputfile is not None and not os.path.isfile(outputfile):
         message = 'Failed to write results to output file %s' % outputfile
         returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     s = '%s_recommendation_report_file' % termname
     artifacts[s] = outputfile
     returnvals = [workspace, outputfile, success, message, artifacts]
-#    logging.debug('message:\n%s' % message)
-#    logging.info('Finishing %s' % __version__)
+    logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def term_recommendation_report(reportfile, recommendationdict, dialect=None):
@@ -206,7 +192,7 @@ def term_recommendation_report(reportfile, recommendationdict, dialect=None):
         success - True if the report was written, else False
     """
     if recommendationdict is None or len(recommendationdict)==0:
-#        print 'No term recommendations given in term_recommendation_report()'
+        logging.debug('No term recommendations given in term_recommendation_report()')
         return False
 
     if dialect is None:
@@ -219,7 +205,7 @@ def term_recommendation_report(reportfile, recommendationdict, dialect=None):
             writer.writeheader()
 
         if os.path.isfile(reportfile) == False:
-            print 'reportfile: %s not created' % reportfile
+            logging.debug('reportfile: %s not created' % reportfile)
             return False
 
         with open(reportfile, 'a') as csvfile:
@@ -235,7 +221,7 @@ def term_recommendation_report(reportfile, recommendationdict, dialect=None):
                     'source':value['source'], \
                     'comment':value['comment'] })
     else:
-        # print the report
+        # Print the report to stdout
         print 'verbatim\tstandard\tchecked\terror\tmisplaced\tincorrectable\tsource\tcomment'
         for key, value in recommendationdict.iteritems():
             print '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' ( \
@@ -250,27 +236,28 @@ def term_recommendation_report(reportfile, recommendationdict, dialect=None):
     return True
 
 def _getoptions():
-    """Parses command line options and returns them."""
-    parser = OptionParser()
-    parser.add_option("-i", "--inputfile", dest="inputfile",
-                      help="Input file to report on",
-                      default=None)
-    parser.add_option("-v", "--vocabfile", dest="vocabfile",
-                      help="Vocab file to check against",
-                      default=None)
-    parser.add_option("-w", "--workspace", dest="workspace",
-                      help="Directory for the output file",
-                      default=None)
-    parser.add_option("-o", "--outputfile", dest="outputfile",
-                      help="Outputfile for report",
-                      default=None)
-    parser.add_option("-t", "--termname", dest="termname",
-                      help="Name of the term to check",
-                      default=None)
-    parser.add_option("-l", "--loglevel", dest="loglevel",
-                      help="(DEBUG, INFO)",
-                      default=None)
-    return parser.parse_args()[0]
+    """Parse command line options and return them."""
+    parser = argparse.ArgumentParser()
+
+    help = 'full path to the input file (required)'
+    parser.add_argument("-i", "--inputfile", help=help)
+
+    help = 'full path to the vocab file (required)'
+    parser.add_argument("-v", "--vocabfile", help=help)
+
+    help = 'directory for the output file (optional)'
+    parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'output file name, no path (optional)'
+    parser.add_argument("-o", "--outputfile", help=help)
+
+    help = "name of the term (required)"
+    parser.add_argument("-t", "--termname", help=help)
+
+    help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
+    parser.add_argument("-l", "--loglevel", help=help)
+
+    return parser.parse_args()
 
 def main():
     options = _getoptions()
@@ -279,7 +266,8 @@ def main():
     if options.inputfile is None or len(options.inputfile)==0 or \
        options.termname is None or len(options.termname)==0 or \
        options.vocabfile is None or len(options.vocabfile)==0:
-        s =  'syntax: python term_recommendation_reporter.py'
+        s =  'syntax:\n'
+        s += 'python term_recommendation_reporter.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -v ./data/vocabularies/country.txt'
         s += ' -w ./workspace'
@@ -299,7 +287,7 @@ def main():
 
     # Report recommended standardizations for values of a given term from the inputfile
     response=term_recommendation_reporter(optdict)
-    print 'response: %s' % response
+    print '\nresponse: %s' % response
 
 if __name__ == '__main__':
     main()

@@ -14,13 +14,14 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor.py 2016-05-26T14:30-03:00"
+__version__ = "composite_header_constructor.py 2016-05-27T15:50-03:00"
 
 from dwca_utils import read_header
 from dwca_utils import write_header
 from dwca_utils import merge_headers
 from dwca_utils import tsv_dialect
 from dwca_utils import response
+from dwca_utils import setup_actor_logging
 import logging
 import argparse
 
@@ -40,21 +41,10 @@ def composite_header_constructor(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     """
-#    print 'Started %s' % __version__
-#    print 'options: %s' % options
+    setup_actor_logging(options)
 
-    # Set up logging
-#     try:
-#         loglevel = options['loglevel']
-#     except:
-#         loglevel = None
-#     if loglevel is not None:
-#         if loglevel.upper() == 'DEBUG':
-#             logging.basicConfig(level=logging.DEBUG)
-#         elif loglevel.upper() == 'INFO':        
-#             logging.basicConfig(level=logging.INFO)
-# 
-#     logging.info('Starting %s' % __version__)
+    logging.debug( 'Started %s' % __version__ )
+    logging.debug( 'options: %s' % options )
 
     # Make a list for the response
     returnvars = ['compositeheader', 'outputfile', 'success', 'message', 'artifacts']
@@ -117,22 +107,24 @@ def composite_header_constructor(options):
     artifacts['composite_header_file'] = outputfile
 
     returnvals = [compositeheader, outputfile, success, message, artifacts]
+    logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
  
 def _getoptions():
+    """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
     help = 'full path to first input file'
     parser.add_argument("-1", "--file1", help=help)
 
-    help = 'full path to first input file'
+    help = 'full path to second input file'
     parser.add_argument("-2", "--file2", help=help)
-
-    help = 'output file name, no path (optional)'
-    parser.add_argument("-o", "--outputfile", help=help)
 
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'output file name, no path (optional)'
+    parser.add_argument("-o", "--outputfile", help=help)
 
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
@@ -146,7 +138,8 @@ def main():
     if options.outputfile is None or len(options.outputfile)==0 or \
         ((options.file1 is None or len(options.file1)==0) and \
          (options.file2 is None or len(options.file2)==0)):
-        s =  'syntax: python composite_header_constructor.py'
+        s =  'syntax:\n'
+        s += 'python composite_header_constructor.py'
         s += ' -1 ./data/tests/test_tsv_1.txt'
         s += ' -2 ./data/tests/test_tsv_2.txt'
         s += ' -w ./workspace'
@@ -164,7 +157,7 @@ def main():
     
     # Compose distinct field header from headers of files in inputpath
     response=composite_header_constructor(optdict)
-    print 'response: %s' % response
+    print '\nresponse: %s' % response
 
 if __name__ == '__main__':
     main()

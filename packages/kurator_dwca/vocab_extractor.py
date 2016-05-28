@@ -14,18 +14,19 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-05-11T21:18-03:00"
+__version__ = "vocab_extractor.py 2016-05-27T21:32-03:00"
 
-from optparse import OptionParser
 from dwca_utils import response
+from dwca_utils import setup_actor_logging
 from dwca_vocab_utils import distinct_term_values_from_file
 import os
 import logging
+import argparse
 
 def vocab_extractor(options):
     """Extract a list of the distinct values of a given term in a text file.
     options - a dictionary of parameters
-        loglevel - the level at which to log (optional)
+        loglevel - level at which to log (e.g., DEBUG) (optional)
         inputfile - full path to the input file (required)
         termname - the name of the term for which to find distinct values (required)
     returns a dictionary with information about the results
@@ -33,21 +34,10 @@ def vocab_extractor(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
-#     print 'Started %s' % __version__
-#     print 'options: %s' % options
+    setup_actor_logging(options)
 
-    # Set up logging
-#     try:
-#         loglevel = options['loglevel']
-#     except:
-#         loglevel = None
-#     if loglevel is not None:
-#         if loglevel.upper() == 'DEBUG':
-#             logging.basicConfig(level=logging.DEBUG)
-#         elif loglevel.upper() == 'INFO':        
-#             logging.basicConfig(level=logging.INFO)
-# 
-#     logging.info('Starting %s' % __version__)
+    logging.debug( 'Started %s' % __version__ )
+    logging.debug( 'options: %s' % options )
 
     # Make a list for the response
     returnvars = ['extractedvalues', 'success', 'message']
@@ -66,13 +56,13 @@ def vocab_extractor(options):
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
         returnvals = [extractedvalues, success, message]
-#        logging.debug('message: %s' % message)
+        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
     if not os.path.isfile(inputfile):
         message = 'Input file %s not found' % inputfile
         returnvals = [extractedvalues, success, message]
-#        logging.debug('message: %s' % message)
+        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
     try:
@@ -83,29 +73,29 @@ def vocab_extractor(options):
     if termname is None or len(termname)==0:
         message = 'No term given'
         returnvals = [extractedvalues, success, message]
-#        logging.debug('message: %s' % message)
+        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
     extractedvalues = distinct_term_values_from_file(inputfile, termname)
     success = True
     returnvals = [extractedvalues, success, message]
-#    logging.debug('options:\n%s' % options)
-#    logging.info('Finishing %s' % __version__)
+    logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parses command line options and returns them."""
-    parser = OptionParser()
-    parser.add_option("-i", "--inputfile", dest="inputfile",
-                      help="Text file to mine for vocab values",
-                      default=None)
-    parser.add_option("-t", "--termname", dest="termname",
-                      help="Name of the term for which distinct values are sought",
-                      default=None)
-    parser.add_option("-l", "--loglevel", dest="loglevel",
-                      help="(DEBUG, INFO)",
-                      default=None)
-    return parser.parse_args()[0]
+    """Parse command line options and return them."""
+    parser = argparse.ArgumentParser()
+
+    help = 'full path to the input file (required)'
+    parser.add_argument("-i", "--inputfile", help=help)
+
+    help = "name of the term (required)"
+    parser.add_argument("-t", "--termname", help=help)
+
+    help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
+    parser.add_argument("-l", "--loglevel", help=help)
+
+    return parser.parse_args()
 
 def main():
     options = _getoptions()
@@ -113,7 +103,8 @@ def main():
 
     if options.inputfile is None or len(options.inputfile)==0 or \
        options.termname is None or len(options.termname)==0:
-        s =  'syntax: python vocab_extractor.py'
+        s =  'syntax:\n'
+        s += 'python vocab_extractor.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -t year'
         s += ' -l DEBUG'
@@ -127,7 +118,7 @@ def main():
 
     # Get distinct values of termname from inputfile
     response=vocab_extractor(optdict)
-    print 'response: %s' % response
+    print '\nresponse: %s' % response
 
 if __name__ == '__main__':
     main()

@@ -14,11 +14,11 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_composite_appender.py 2016-05-11T20:46-03:00"
+__version__ = "vocab_composite_appender.py 2016-05-27T21:28-03:00"
 
-from optparse import OptionParser
 from dwca_utils import read_header
 from dwca_utils import response
+from dwca_utils import setup_actor_logging
 from dwca_vocab_utils import makevocabheader
 from dwca_vocab_utils import writevocabheader
 from dwca_vocab_utils import vocab_dialect
@@ -27,6 +27,8 @@ from dwca_vocab_utils import not_in_list
 from dwca_terms import vocabfieldlist
 import os
 import csv
+import logging
+import argparse
 
 def vocab_composite_appender(options):
     """Given a set of distinct key values for a given term composite (a combination of 
@@ -42,21 +44,10 @@ def vocab_composite_appender(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
-#    print 'Started %s' % __version__
-#    print 'options: %s' % options
+    setup_actor_logging(options)
 
-    # Set up logging
-#     try:
-#         loglevel = options['loglevel']
-#     except:
-#         loglevel = None
-#     if loglevel is not None:
-#         if loglevel.upper() == 'DEBUG':
-#             logging.basicConfig(level=logging.DEBUG)
-#         elif loglevel.upper() == 'INFO':        
-#             logging.basicConfig(level=logging.INFO)
-# 
-#     logging.info('Starting %s' % __version__)
+    logging.debug( 'Started %s' % __version__ )
+    logging.debug( 'options: %s' % options )
 
     # Make a list for the response
     returnvars = ['vocabfile', 'addedvalues', 'success', 'message']
@@ -75,7 +66,7 @@ def vocab_composite_appender(options):
     if vocabfile is None or len(vocabfile)==0:
         message = 'No vocabfile file given'
         returnvals = [vocabfile, addedvalues, success, message]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     try:
@@ -87,7 +78,7 @@ def vocab_composite_appender(options):
     if keyfields is None or len(keyfields)==0:
         message = 'No key given'
         returnvals = [vocabfile, addedvalues, success, message]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     try:
@@ -98,7 +89,7 @@ def vocab_composite_appender(options):
     if checkvaluelist is None or len(checkvaluelist)==0:
         message = 'No values to check'
         returnvals = [vocabfile, addedvalues, success, message]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     # If vocab file doesn't exist, create it with a header consisting of fieldnames
@@ -123,20 +114,18 @@ def vocab_composite_appender(options):
     if fieldnames != header:
         message = 'composite header for new values does not match vocabulary file header'
         returnvals = [vocabfile, addedvalues, success, message]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if keyfields != header[0]:
         message = 'the key in the composite header does not match vocabulary file key'
         returnvals = [vocabfile, addedvalues, success, message]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     existingvalues = distinct_term_values_from_file(vocabfile, keyfields)        
     addedvalues = not_in_list(existingvalues, checkvaluelist)
-#     print 'existingvalues:\n%s' % existingvalues
-#     print 'checkvaluelist:\n%s' % checkvaluelist
-#     print 'addedvalues:\n%s' % addedvalues
+
     with open(vocabfile, 'a') as csvfile:
         writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=vocabfieldlist)
         for term in addedvalues:
@@ -145,25 +134,26 @@ def vocab_composite_appender(options):
 
     success = True
     returnvals = [vocabfile, addedvalues, success, message]
-#    logging.debug('message:\n%s' % message)
+    logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
     
 def _getoptions():
-    """Parses command line options and returns them."""
-    parser = OptionParser()
-    parser.add_option("-v", "--vocabfile", dest="vocabfile",
-                      help="Text file to store vocabs",
-                      default=None)
-    parser.add_option("-n", "--checkvaluelist", dest="checkvaluelist",
-                      help="List of new values to add to the vocab",
-                      default=None)
-    parser.add_option("-k", "--keyfieldlist", dest="keyfieldlist",
-                      help="Ordered list of fields that make up the key",
-                      default=None)
-    parser.add_option("-l", "--loglevel", dest="loglevel",
-                      help="(e.g., DEBUG, WARNING, INFO) (optional)",
-                      default=None)
-    return parser.parse_args()[0]
+    """Parse command line options and return them."""
+    parser = argparse.ArgumentParser()
+
+    help = 'full path to the vocabulary file (required)'
+    parser.add_argument("-v", "--vocabfile", help=help)
+
+    help = 'list of potential values to add to vocabulary (required)'
+    parser.add_argument("-c", "--checkvaluelist", help=help)
+
+    help = 'ordered list of field names that make up the key (required)'
+    parser.add_argument("-k", "--keyfieldlist", help=help)
+
+    help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
+    parser.add_argument("-l", "--loglevel", help=help)
+
+    return parser.parse_args()
 
 def main():
     options = _getoptions()
@@ -176,9 +166,10 @@ def main():
 
     if options.vocabfile is None or len(options.vocabfile)==0 \
         or theList is None or len(theList)==0 or keyfields is None or len(keyfields)==0:
-        s =  'syntax: python vocab_composite_appender.py'
+        s =  'syntax:\n'
+        s += 'python vocab_composite_appender.py'
         s += ' -v ./workspace/dwcgeography.txt'
-        s += ' -n "Oceania|United States|US|Hawaii|Honolulu|Honolulu'
+        s += ' -c "Oceania|United States|US|Hawaii|Honolulu|Honolulu'
         s += '|North Pacific Ocean|Hawaiian Islands|Oahu, '
         s += '|United States||WA|Chelan Co.||||"'
         s += ' -k "continent|country|countrycode|stateprovince|'
@@ -195,7 +186,7 @@ def main():
 
     # Append distinct values of key to vocab file
     response=vocab_composite_appender(optdict)
-    print 'response: %s' % response
+    print '\nresponse: %s' % response
 
 if __name__ == '__main__':
     main()

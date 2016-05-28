@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv_test.py 2016-05-11T22:43-03:00"
+__version__ = "dwca_core_to_tsv_test.py 2016-05-27T22:01-03:00"
 
 # This file contains unit test for the dwca_core_to_tsv function.
 #
@@ -93,7 +93,7 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
 #        print 'response3:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
-        # Remove the file create by this test, as the Framework does not know about it
+        # Remove the file created by this test, as the Framework does not know about it
         if os.path.isfile(response['outputfile']):
             os.remove(response['outputfile'])
 

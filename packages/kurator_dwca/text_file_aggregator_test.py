@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator_test.py 2016-05-20T10:06-03:00"
+__version__ = "text_file_aggregator_test.py 2016-05-27T22:03-03:00"
 
 from text_file_aggregator import text_file_aggregator
 from dwca_utils import read_header
@@ -73,7 +73,7 @@ class TextFileAggregatorTestCase(unittest.TestCase):
 #        print 'response2:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
-        # Remove the file create by this test, as the Framework does not know about it
+        # Remove the file created by this test, as the Framework does not know about it
         if os.path.isfile(response['outputfile']):
             os.remove(response['outputfile'])
 
