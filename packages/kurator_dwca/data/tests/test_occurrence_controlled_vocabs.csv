@@ -1,0 +1,2 @@
+type, language, license, basisOfRecord, sex, lifeStage, reproductiveCondition, establishmentMeans, occurrenceStatus, preparations, disposition, organismScope, month, day, geodeticDatum, georeferenceVerificationStatus, identificationQualifier, typeStatus, identificationVerificationStatus, taxonRank, nomenclaturalCode, taxonomicStatus, nomenclaturalStatus
+specimen, en-US, cc0, voucher, M, juv, lact., "wild caught", 1, skel, unk, individual, v, 23, "WGS 84", unknown, sp, H, unknown, sp, Animalia, inv., amb.

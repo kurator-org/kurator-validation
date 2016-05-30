@@ -1,1 +1,1 @@
-verbatim	standard	checked	error	misplaced	incorrectable	source	comment
+verbatim	standard	checked	error	misplaced	incorrectable	source	commentamb.	nom. ambig.	1	NomenclaturalStatus is a synonym.	0	0		

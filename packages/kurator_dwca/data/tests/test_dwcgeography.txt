@@ -1,1 +1,0 @@
-continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island	standard	checked	error	misplaced	incorrectable	source	commentOceania|United States|US|Hawaii|Honolulu|Honolulu|North Pacific Ocean|Hawaiian Islands|Oahu		0					

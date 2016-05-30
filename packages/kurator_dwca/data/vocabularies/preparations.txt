@@ -1,1 +1,1 @@
-verbatim	standard	checked	error	misplaced	incorrectable	source	comment
+verbatim	standard	checked	error	misplaced	incorrectable	source	commentskel	skeleton	1	Preparations is an abbreviation.	0	0		

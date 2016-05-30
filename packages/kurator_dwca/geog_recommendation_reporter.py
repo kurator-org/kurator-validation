@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "geog_recommendation_reporter.py 2016-05-27T06:43-43:00"
+__version__ = "geog_recommendation_reporter.py 2016-05-28T06:43-43:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging

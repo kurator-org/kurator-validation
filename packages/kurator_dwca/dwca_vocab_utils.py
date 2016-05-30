@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-05-27T16:16-03:00"
+__version__ = "dwca_vocab_utils.py 2016-05-30T15:42-03:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -428,7 +428,7 @@ def distinct_term_values_from_file(inputfile, termname, dialect=None):
         return None
 
     if termname not in header:
-        s = 'Term %s not found in header for input file %s' % (termname, inputfile)
+        s = 'Term "%s" not found in header for input file %s' % (termname, inputfile)
         s += ' in distinct_term_values_from_file()'
         logging.debug(s)
         return None
@@ -478,7 +478,7 @@ def distinct_term_counts_from_file(inputfile, termname, dialect=None):
         return None
 
     if termname not in header:
-        s = 'Term %s not found in header for input file %s' % (termname, inputfile)
+        s = 'Term "%s" not found in header for input file %s' % (termname, inputfile)
         s += ' in distinct_term_counts_from_file()'
         logging.debug(s)
         return None

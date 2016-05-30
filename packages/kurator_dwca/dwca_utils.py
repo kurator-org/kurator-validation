@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-05-27T16:05-03:00"
+__version__ = "dwca_utils.py 2016-05-28T07:09-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -545,7 +545,7 @@ class DWCAUtilsFramework():
     tsvcompositepath = testdatapath + 'test_tsv*.txt'
     mixedcompositepath = testdatapath + 'test_*_specimen_records.*'
     monthvocabfile = testdatapath + 'test_vocab_month.txt'
-    geogvocabfile = testdatapath + 'test_dwcgeography.txt'
+    geogvocabfile = testdatapath + 'test_geography.txt'
     compositetestfile = testdatapath + 'test_eight_specimen_records.csv'
     fieldcountestfile1 = testdatapath + 'test_fieldcount.csv'
     fieldcountestfile2 = testdatapath + 'test_eight_specimen_records.csv'
