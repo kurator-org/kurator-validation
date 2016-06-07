@@ -972,7 +972,23 @@ class DWCAUtilsTestCase(unittest.TestCase):
         print 'testing clean_header'
         header = ['b ', ' a', 'c	']
         result = clean_header(header)
-        self.assertEqual(result, ['b', 'a', 'c'], 'header failed to be cleaned properly')
+        expected = ['b', 'a', 'c']
+        self.assertEqual(result, expected, 'short header failed to be cleaned properly')
+
+        header = ['catalogNumber ','recordedBy','fieldNumber ','year','month','day', \
+            'decimalLatitude ','decimalLongitude ','geodeticDatum ','country', \
+            'stateProvince','county','locality','family ','scientificName ', \
+            'scientificNameAuthorship ','reproductiveCondition ','InstitutionCode ', \
+            'CollectionCode ','DatasetName ','Id']
+        result = clean_header(header)
+        expected = ['catalognumber','recordedby','fieldnumber','year','month','day', \
+            'decimallatitude','decimallongitude','geodeticdatum','country', \
+            'stateprovince','county','locality','family','scientificname', \
+            'scientificnameauthorship','reproductivecondition','institutioncode', \
+            'collectioncode','datasetname','id']
+#        print 'result: %s' % result
+#        print 'expect: %s' % expected
+        self.assertEqual(result, expected, 'long header failed to be cleaned properly')
 
     def test_merge_headers(self):
         print 'testing merge_headers'

@@ -497,15 +497,33 @@ def distinct_term_counts_from_file(inputfile, termname, dialect=None):
 
     return sorted(values.iteritems(), key=itemgetter(1), reverse=True)
 
-def terms_not_in_dwc(checklist):
+def terms_not_in_dwc(checklist, strict=True):
     """From a list of terms, get those that are not Darwin Core terms.
     parameters:
         checklist - list of values to check against Darwin Core (required)
+        strict - exact match of True, otherwise check if known to Darwin Cloud vocabulary
+            (default = True)
     returns:
         a sorted list of non-Darwin Core terms from the checklist
     """
     # No need to check if checklist is given, not_in_list() does that
-    return not_in_list(simpledwctermlist, checklist)
+    if strict:
+        return not_in_list(simpledwctermlist, checklist)
+    else:
+        return not_in_darwin_cloud(checklist)
+
+def not_in_darwin_cloud(checklist):
+    """Get the list of distinct values in a checklist that are not in the Darwin Cloud
+       vocabulary. Verbatim values in Darwin Core vocabulary should be slugified versions
+       of the oiginal value, and should have the case-sensitive standard value.
+    parameters:
+        checklist - list of values to check against the target list (required)
+    returns:
+        a sorted list of distinct new values not in the target list
+    """
+    if checklist is None or len(checklist)==0:
+        logging.debug('No checklist given in not_in_list()')
+        return None
 
 def not_in_list(targetlist, checklist):
     """Get the list of distinct values in a checklist that are not in a target list.
