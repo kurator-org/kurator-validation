@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_terms_recommendation_reporter.py 2016-05-30T17:54-03:00"
+__version__ = "dwc_terms_recommendation_reporter.py 2016-06-07T14:07-03:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -122,43 +122,37 @@ def dwc_terms_recommendation_reporter(options):
         checklist = distinct_term_values_from_file(inputfile, termname, dialect)
         if checklist is not None and len(checklist)>0:
             vocabfile = '%s/%s.txt' % (vocabdir.rstrip('/'), termname)
-#             s = 'Checklist ready for "%s"' % termname
-#             s += ' in dwc_terms_recommendation_reporter(): %s' % checklist
-#             logging.debug(s)
+            s = 'Checklist ready for "%s"' % termname
+            s += ' in dwc_terms_recommendation_reporter(): %s' % checklist
+            logging.debug(s)
 
             # Get a dictionary of checklist values from the vocabfile
             matchingvocabdict = matching_vocab_dict_from_file(checklist, vocabfile)
 
-            if matchingvocabdict is None or len(matchingvocabdict)==0:
-                message = 'No matching values of %s from %s found in %s' % \
-                    (termname, inputfile, vocabfile)
-                returnvals = [workspace, guid, success, message, artifacts]
-                logging.debug('message:\n%s' % message)
-                return response(returnvars, returnvals)
+            if matchingvocabdict is not None and len(matchingvocabdict)>0:
+                s = 'Matching vocab ready for "%s"' % termname
+                s += ' in dwc_terms_recommendation_reporter(): %s' % matchingvocabdict
+                logging.debug(s)
 
-#             s = 'Matching vocab ready for "%s"' % termname
-#             s += ' in dwc_terms_recommendation_reporter(): %s' % matchingvocabdict
-#             logging.debug(s)
+                # Get a dictionary of the recommended values from the matchingvocabdict
+                recommended = term_values_recommended(matchingvocabdict)
 
-            # Get a dictionary of the recommended values from the matchingvocabdict
-            recommended = term_values_recommended(matchingvocabdict)
+                s = 'Recommendations ready for "%s"' % termname
+                s += ' in dwc_terms_recommendation_reporter(): %s' % recommended
+                logging.debug(s)
 
-            s = 'Recommendations ready for "%s"' % termname
-            s += ' in dwc_terms_recommendation_reporter(): %s' % recommended
-            logging.debug(s)
+                if recommended is not None and len(recommended)>0:
+                    # TODO: Use Allan's DQ report framework
+                    # Validation, Improvement, Measure
+                    # Create a series of term reports
+                    outputfile = '%s/%s%s_standardization_report_%s.txt' % \
+                      (workspace.rstrip('/'), prefix, termname, guid)
 
-            if recommended is not None and len(recommended)>0:
-                # TODO: Use Allan's DQ report framework
-                # Validation, Improvement, Measure
-                # Create a series of term reports
-                outputfile = '%s/%s%s_standardization_report_%s.txt' % \
-                  (workspace.rstrip('/'), prefix, termname, guid)
+                    success = term_recommendation_report(outputfile, recommended)
 
-                success = term_recommendation_report(outputfile, recommended)
-
-                if outputfile is not None and os.path.isfile(outputfile):
-                    s = '%s_recommendation_report_file' % termname
-                    artifacts[s] = outputfile
+                    if outputfile is not None and os.path.isfile(outputfile):
+                        s = '%s_recommendation_report_file' % termname
+                        artifacts[s] = outputfile
 
     returnvals = [workspace, guid, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)

@@ -1,5 +1,5 @@
 #####################################################################################
-# dwca_term_values.yaml
+# dwca_assess_controlled_terms.yaml
 #####################################################################################
 #
 # This workflow:
@@ -11,7 +11,6 @@
 # Example command-line usage:
 # kurator -f dwca_assess_controlled_terms.yaml 
 #         -p url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
-#         -l DEBUG (optional)
 #         -l DEBUG (optional)
 #
 # Requires:
@@ -36,7 +35,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_assess_controlled_terms.yaml 2016-06-02T12:55-03:00"
+# __version__ = "dwca_assess_controlled_terms.yaml 2016-06-07T14:15-03:00"
 
 imports:
 

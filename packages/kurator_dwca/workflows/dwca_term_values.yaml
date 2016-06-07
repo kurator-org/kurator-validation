@@ -10,7 +10,7 @@
 #
 # Example command-line usage:
 # kurator -f dwca_term_values.yaml 
-#         -p testinput=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
+#         -p url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
 #         -l DEBUG (optional)
 #
 # Requires:
@@ -33,27 +33,13 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_term_values.yaml 2016-04-26T11:27-03:00"
+# __version__ = "dwca_term_values.yaml 2016-06-07T14:39-03:00"
 
 imports:
 
 - classpath:/org/kurator/akka/types.yaml
 
 components:
-
-# Inline python actor to demonstrate getting parameters into the workflow upstream of 
-# the actors that need them. Such parameters are passed into the actor via the options
-# dictionary and downstream via the dictionary returned.
-- id: ReadInput
-  type: PythonActor
-  properties:
-    code: |
-        import logging
-        def on_start(options):
-            print 'Started ReadInput'
-            print 'ReadInput options: %s' % options
-            options['spurious_added_option']='just for kicks'
-            return options
 
 # Inline python actor to demonstrate making a workspace on the fly to use for 
 # writing temporary workflow artifacts. 
@@ -63,7 +49,7 @@ components:
     code: |
         import uuid
         import os
-        def on_data(options):
+        def on_start(options):
             print 'Started MakeWorkspace'
             print 'MakeWorkspace options: %s' % options
             if options.has_key('workspace') == False:
@@ -71,10 +57,6 @@ components:
                 if not os.path.exists(options['workspace']):
                     os.makedirs(options['workspace'])
             return options
-    inputs:
-        url: url
-    listensTo:
-      - !ref ReadInput
 
 # Download file into workspace from URL given by url parameter.
 - id: Downloader
@@ -95,7 +77,7 @@ components:
     module: kurator_dwca.dwca_core_to_tsv
     onData: dwca_core_to_tsv
     inputs:
-        outputfile: dwcafile
+        outputfile: inputfile
         workspace : workspace
     listensTo:
       - !ref Downloader
@@ -110,38 +92,23 @@ components:
         def on_data(options):
             print 'Started VocabList'
             print 'VocabList options: %s' % options
-            termlist = ['country', 'stateProvince', 'scientificName']
+            termlist = ['continent', 'country', 'stateProvince', \
+                'waterBody', 'islandGroup', 'island', \
+                'class', 'order', 'family', 'genus', 'scientificName', \
+                'type', 'language', 'license', 'basisOfRecord', 'sex', 'lifeStage', \
+                'reproductiveCondition', 'establishmentMeans', 'occurrenceStatus', \
+                'preparations', 'disposition', 'organismScope', 'month', 'day', \
+                'geodeticDatum', 'georeferenceVerificationStatus', \
+                'identificationQualifier', 'typeStatus', \
+                'identificationVerificationStatus', 'taxonRank', 'nomenclaturalCode', \
+                'taxonomicStatus', 'nomenclaturalStatus']
             for term in termlist:
-                yield { 'tsvfile':options['tsvfile'], 'workspace':options['workspace'], 'termname':term }
+                yield { 'inputfile':options['inputfile'], 'workspace':options['workspace'], 'termname':term }
     inputs:
-        tsvfile: tsvfile
+        outputfile: inputfile
         workspace: workspace
     listensTo:
       - !ref DWCAtoTSVWriter
-
-# Extract the distinct values of field given by termname from inputfile.
-#- id: VocabExtractor
-#  type: PythonActor
-#  properties:
-#    module: kurator_dwca.vocab_extractor
-#    onData: vocab_extractor
-#    inputs:
-#        tsvfile: inputfile
-#        termname: termname
-#    listensTo:
-#      - !ref VocabList
-
-# Extract the distinct values of field given by termname, with counts, from inputfile.
-#- id: VocabCounter
-#  type: PythonActor
-#  properties:
-#    module: kurator_dwca.vocab_counter
-#    onData: vocab_counter
-#    inputs:
-#        tsvfile: inputfile
-#        termname: termname
-#    listensTo:
-#      - !ref VocabList
 
 - id: VocabReporter
   type: PythonActor
@@ -149,26 +116,11 @@ components:
     module: kurator_dwca.term_count_reporter
     onData: term_count_reporter
     inputs:
-        tsvfile: inputfile
+        inputfile: inputfile
         termname: termname
         workspace: workspace
     listensTo:
       - !ref VocabList
-
-#- id: WriteOutput
-#  type: PythonActor
-#  properties:
-#    code: |
-#        def on_data(options):
-#            print 'WriteOutput options: %s' % options
-#            print 'showthis: %s' % options['showthis']
-#            print 'Finished WriteOutput'
-#    inputs:
-#        extractedvalues: showthis
-#    listensTo:
-#      - !ref VocabReporter
-#      - !ref VocabCounter
-#      - !ref VocabExtractor
 
 - id: WrapUp
   type: PythonActor
@@ -187,38 +139,13 @@ components:
   type: Workflow
   properties:
     actors:
-      - !ref ReadInput
       - !ref MakeWorkspace
       - !ref Downloader
       - !ref DWCAtoTSVWriter
       - !ref VocabList
-#      - !ref VocabExtractor
-#      - !ref VocabCounter
       - !ref VocabReporter
-#      - !ref WriteOutput
       - !ref WrapUp
     parameters:
-#       url:
-#         actor: !ref Downloader
-#         parameter: url
-#       outputfile:
-#         actor: !ref Downloader
-#         parameter: outputfile
-#       dwcafile:
-#         actor: !ref DWCAtoTSVWriter
-#         parameter: dwcafile
-#       tsvfile:
-#         actor: !ref DWCAtoTSVWriter
-#         parameter: tsvfile
-#       archivetype:
-#         actor: !ref DWCAtoTSVWriter
-#         parameter: archivetype
-#       inputfile:
-#         actor: !ref VocabExtractor
-#         parameter: inputfile
-#       termname:
-#         actor: !ref VocabExtractor
-#         parameter: termname
-       testinput:
-         actor: !ref ReadInput
+       url:
+         actor: !ref MakeWorkspace
          parameter: url

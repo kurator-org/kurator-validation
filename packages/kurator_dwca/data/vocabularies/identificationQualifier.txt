@@ -1,1 +1,1 @@
-verbatim	standard	checked	error	misplaced	incorrectable	source	commentsp.	species	1					ssp. subspecies	1					sp	species	1	IdentificationQualifier is an abbreviation.	0	0		ssp subspecies	1	IdentificationQualifier is an abbreviation.	0	0		
+verbatim	standard	checked	error	misplaced	incorrectable	source	commentspecies	sp.	1					sp	sp.	1		0	0		subspecies	ssp.	1					subsp.	ssp.	1					ssp ssp.	1		0	0		cf	cf.	1					aff	aff.	1					

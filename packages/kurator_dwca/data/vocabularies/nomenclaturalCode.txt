@@ -1,1 +1,1 @@
-verbatim	standard	checked	error	misplaced	incorrectable	source	commentICZN	ICZN	1					ICBN	ICBN	1					Animalia	ICZN	1	NomenclaturalStatus is a kingdom.	0	0		
+verbatim	standard	checked	error	misplaced	incorrectable	source	commentICZN	ICZN	1					ICBN	ICBN	1					Animalia	ICZN	1	NomenclaturalStatus is a kingdom.	0	0		Animal	ICZN	1		0	0		Plantae	ICBN	1	NomenclaturalStatus is a kingdom.	0	0		Plant	ICBN	1		0	0		

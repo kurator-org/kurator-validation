@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter.py 2016-05-30T15:00-03:00"
+__version__ = "term_recommendation_reporter.py 2016-06-07T14:06-03:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -176,60 +176,6 @@ def term_recommendation_reporter(options):
     returnvals = [workspace, outputfile, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
-
-# def term_recommendation_report(reportfile, recommendationdict, dialect=None):
-#     """Write a term recommendation report.
-#     parameters:
-#         reportfile - full path to the output report file (optional)
-#         recommendationdict - dictionary of term recommendations (required)
-#         dialect - a csv.dialect object with the attributes of the report file
-#             (default None)
-#     returns:
-#         success - True if the report was written, else False
-#     """
-#     if recommendationdict is None or len(recommendationdict)==0:
-#         logging.debug('No term recommendations given in term_recommendation_report()')
-#         return False
-# 
-#     if dialect is None:
-#         dialect = tsv_dialect()
-# 
-#     if reportfile is not None and len(reportfile)>0:
-#         with open(reportfile, 'w') as csvfile:
-#             writer = csv.DictWriter(csvfile, dialect=dialect, \
-#                 fieldnames=vocabfieldlist)
-#             writer.writeheader()
-# 
-#         if os.path.isfile(reportfile) == False:
-#             logging.debug('reportfile: %s not created' % reportfile)
-#             return False
-# 
-#         with open(reportfile, 'a') as csvfile:
-#             writer = csv.DictWriter(csvfile, dialect=dialect, \
-#                 fieldnames=vocabfieldlist)
-#             for key, value in recommendationdict.iteritems():
-#                 writer.writerow({'verbatim':key, 
-#                     'standard':value['standard'], \
-#                     'checked':value['checked'], \
-#                     'error':value['error'], \
-#                     'misplaced':value['misplaced'], \
-#                     'incorrectable':value['incorrectable'], \
-#                     'source':value['source'], \
-#                     'comment':value['comment'] })
-#     else:
-#         # Print the report to stdout
-#         print 'verbatim\tstandard\tchecked\terror\tmisplaced\tincorrectable\tsource\tcomment'
-#         for key, value in recommendationdict.iteritems():
-#             print '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' ( \
-#                 key,
-#                 value['standard'], \
-#                 value['checked'], \
-#                 value['error'], \
-#                 value['misplaced'], \
-#                 value['incorrectable'], \
-#                 value['source'], \
-#                 value['comment'])
-#     return True
 
 def _getoptions():
     """Parse command line options and return them."""
