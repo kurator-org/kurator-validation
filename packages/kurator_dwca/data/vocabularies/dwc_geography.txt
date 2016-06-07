@@ -14,3 +14,42 @@ Europe|France|||||||	1	0	Europe	France	FR									hgid0000000011
 North America|United States||New York|Tompkins County||||	1	0	North America	United States	US	New York	Tompkins							hgid0000000012
 North America|United States||Florida|Pinellas County||||	1	0	North America	United States	US	Florida	Pinellas							hgid0000000013
 North America||||||||	1	0	North America											hgid0000000014
+North America|United States|US|California|Alameda||||	1	0	North America	United States	US	California	Alameda							hgid0000000015
+North America|United States|US|California|Alpine||||	1	0	North America	United States	US	California	Alpine							hgid0000000016
+North America|United States|US|California|Contra Costa||||	1	0	North America	United States	US	California	Contra Costa							hgid0000000017
+North America|United States|US|California|Del Norte||||	1	0	North America	United States	US	California	Del Norte							hgid0000000018
+North America|United States|US|California|El Dorado||||	1	0	North America	United States	US	California	El Dorado							hgid0000000019
+North America|United States|US|California|Fresno||||	1	0	North America	United States	US	California	Fresno							hgid0000000020
+North America|United States|US|California|Humboldt||||	1	0	North America	United States	US	California	Humboldt							hgid0000000021
+North America|United States|US|California|Imperial||||	1	0	North America	United States	US	California	Imperial							hgid0000000022
+North America|United States|US|California|Inyo||||	1	0	North America	United States	US	California	Inyo							hgid0000000023
+North America|United States|US|California|Kern||||	1	0	North America	United States	US	California	Kern							hgid0000000024
+North America|United States|US|California|Kings||||	1	0	North America	United States	US	California	Kings							hgid0000000025
+North America|United States|US|California|Lake||||	1	0	North America	United States	US	California	Lake							hgid0000000026
+North America|United States|US|California|Los Angeles||||	1	0	North America	United States	US	California	Los Angeles							hgid0000000027
+North America|United States|US|California|Marin||||	1	0	North America	United States	US	California	Marin							hgid0000000028
+North America|United States|US|California|Mariposa||||	1	0	North America	United States	US	California	Mariposa							hgid0000000029
+North America|United States|US|California|Mendocino||||	1	0	North America	United States	US	California	Mendocino							hgid0000000030
+North America|United States|US|California|Modoc||||	1	0	North America	United States	US	California	Modoc							hgid0000000031
+North America|United States|US|California|Mono||||	1	0	North America	United States	US	California	Mono							hgid0000000032
+North America|United States|US|California|Monterey||||	1	0	North America	United States	US	California	Monterey							hgid0000000033
+North America|United States|US|California|Napa||||	1	0	North America	United States	US	California	Napa							hgid0000000034
+North America|United States|US|California|Nevada||||	1	0	North America	United States	US	California	Nevada							hgid0000000035
+North America|United States|US|California|Orange||||	1	0	North America	United States	US	California	Orange							hgid0000000036
+North America|United States|US|California|Riverside||||	1	0	North America	United States	US	California	Riverside							hgid0000000037
+North America|United States|US|California|San Benito||||	1	0	North America	United States	US	California	San Benito							hgid0000000038
+North America|United States|US|California|San Bernardino||||	1	0	North America	United States	US	California	San Bernardino							hgid0000000039
+North America|United States|US|California|San Diego||||	1	0	North America	United States	US	California	San Diego							hgid0000000040
+North America|United States|US|California|San Luis Obispo||||	1	0	North America	United States	US	California	San Luis Obispo							hgid0000000041
+North America|United States|US|California|San Mateo||||	1	0	North America	United States	US	California	San Mateo							hgid0000000042
+North America|United States|US|California|Santa Barbara||||	1	0	North America	United States	US	California	Santa Barbara							hgid0000000043
+North America|United States|US|California|Santa Cruz||||	1	0	North America	United States	US	California	Santa Cruz							hgid0000000044
+North America|United States|US|California|Siskiyou||||	1	0	North America	United States	US	California	Siskiyou							hgid0000000045
+North America|United States|US|California|Solano||||	1	0	North America	United States	US	California	Solano							hgid0000000046
+North America|United States|US|California|Sonoma||||	1	0	North America	United States	US	California	Sonoma							hgid0000000047
+North America|United States|US|California|Stanislaus||||	1	0	North America	United States	US	California	Stanislaus							hgid0000000048
+North America|United States|US|California|Tulare||||	1	0	North America	United States	US	California	Tulare							hgid0000000049
+North America|United States|US|California|Tuolumne||||	1	0	North America	United States	US	California	Tuolumne							hgid0000000050
+North America|United States|US|California|Ventura||||	1	0	North America	United States	US	California	Ventura							hgid0000000051
+North America|United States|US|California|Yolo||||	1	0	North America	United States	US	California	Yolo							hgid0000000052
+North America|United States|US|California|||||	1	0	North America	United States	US	California								hgid0000000053
