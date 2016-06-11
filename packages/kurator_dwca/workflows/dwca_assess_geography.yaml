@@ -36,7 +36,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_assess_geography.yaml 2016-06-07T14:15-03:00"
+# __version__ = "dwca_assess_geography.yaml 2016-06-11T19:26-03:00"
 
 imports:
 
@@ -95,6 +95,7 @@ components:
         workspace: workspace
     parameters:
         vocabfile: '../data/vocabularies/dwc_geography.txt'
+        format: 'csv'
     listensTo:
       - !ref DWCAtoTSVWriter
 

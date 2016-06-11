@@ -53,3 +53,57 @@ North America|United States|US|California|Tuolumne||||	1	0	North America	United 
 North America|United States|US|California|Ventura||||	1	0	North America	United States	US	California	Ventura							hgid0000000051
 North America|United States|US|California|Yolo||||	1	0	North America	United States	US	California	Yolo							hgid0000000052
 North America|United States|US|California|||||	1	0	North America	United States	US	California								hgid0000000053
+Africa|Crozet Islands|||||||	1	0		Territoire des Terres australes et antarctiques françaises	TF				Southern Ocean	Îles Crozet				hgid0000000054
+Africa|||||||Seychelles Islands|Aldabra	1	0	Africa	Seychelles	SC	Outer Islands			Indian Ocean	Aldabra Group				hgid0000000055
+Africa|||||||Seychelles Islands|La Digue Island	1	0	Africa	Seychelles	SC	La Digue and Inner Islands			Indian Ocean	Granitic Seychelles	La Digue			hgid0000000056
+Africa|||||||Seychelles Islands|Mahe Island	1	0	Africa	Seychelles	SC				Indian Ocean	Inner Islands	Mahé			hgid0000000057
+Asia|Turkestan||Ferghana Basin|||||	1	0	Asia	Uzbekistan	UZ	Ferghana							Ferghana Basin is not an administrative division.	hgid0000000058
+Asia|||Bengal|||||	1	0	Asia										Bengal is a transnational region.	hgid0000000059
+Asia|||Kashmir|Ladakh||||	1	0	Asia	India	IN	Jammu and Kashmir							Ladakh is not an administrative division.	hgid0000000060
+Asia|||Kashmir|||||	1	0	Asia	India	IN	Jammu and Kashmir								hgid0000000061
+Asia|||Kubansk|||||	1	0	Asia										Unable to locate Kubansk	hgid0000000062
+Asia|||Sarawak|First Division||||Borneo	1	0	Asia	Malaysia	MY	Sarawak			South China Sea	Greater Sunda Islands	Borneo			hgid0000000063
+Asia|||||||Lesser Sunda Islands|Timor	1	0	Asia							Lesser Sunda Islands	Timor		The island of Timor is divided between ID and TL.	hgid0000000064
+Asia||||||||Borneo?	1	0	Asia							Greater Sunda Islands	Borneo		The island of Borneo is divided between ID, BN, and MY.	hgid0000000065
+Atlantic Ocean|Dominican Republic|||||||	1	0	North America	Dominican Republic	DO				Caribbean Sea	Greater Antilles	Hispaniola			hgid0000000066
+Atlantic Ocean||||Needs data||||	1	0							Atlantic Ocean					hgid0000000067
+Atlantic Ocean||||||North Sea||	1	0	Europe						North Sea					hgid0000000068
+Atlantic Ocean||||||||	1	0							Atlantic Ocean					hgid0000000069
+Atlantic Ocean||||||||Baltic Sea	1	1										The Atlantic Ocean and Baltic Sea do not overlap		hgid0000000070
+Australia||||||||Tasmania?	1	0	Australasia	Australia	AU	Tasmania								hgid0000000071
+Central America||||||||Hispaniola	1	0	North America						Caribbean Sea	Greater Antilles	Hispaniola		The island of Hispaniola is divided between DO and HT.	hgid0000000072
+Europe|||Pomerania|||||	1	0	Europe										Pomerania is a transnational region divided between DE and PL.	hgid0000000073
+Europe|||Tyrol|||||	1	0	Europe										Tyrol can refer to multiple geographic entities in AT and IT.	hgid0000000074
+Europe||||||||British Isles	1	0	Europe							British Isles			The British Isles are divided between GB and IE.	hgid0000000075
+Indian Ocean||||||||	1	0							Indian Ocean					hgid0000000076
+Indoaustralia||||||||New Guinea	1	0	Australasia								New Guinea		New Guinea is divided between ID and PG.	hgid0000000077
+North America|Bonaire, Sint Eustatius and Saba||Bonaire||||West Indies|Bonaire	1	0	North America	Bonaire, Sint Eustatius and Saba	BQ	Bonaire			Caribbean Sea	ABC Islands	Bonaire			hgid0000000078
+North America|United States||Florida//Mississippi|Jackson||||	1	1	North America	United States	US		Jackson					Jackson counties in Mississippi are not contiguous. Only one of the given states can be correct.		hgid0000000079
+North America|United States||Puerto Rico|||||	1	0	North America	Puerto Rico	PR				Caribbean Sea	Puerto Rico				hgid0000000080
+North America|United States||Unknown|||||	1	0	North America	United States	US									hgid0000000081
+North America|||Saint Vincent and the Grenadines||||Grenadines|Battowia Bullet	1	0	North America	Saint Vincent and the Grenadines	VC	Grenadines				Grenadines	Battowia Bullet			hgid0000000082
+Oceania|American Samoa||||||Samoa Islands|	1	0	Oceania	American Samoa	AS				South Pacific Ocean	Samoan Islands				hgid0000000083
+Pacific Ocean|Alaska|||||||	1	0	North America	United States	US	Alaska			North Pacific Ocean					hgid0000000084
+Pacific Ocean|American Samoa||||||Samoa Islands|	1	0	Oceania	American Samoa	AS				South Pacific Ocean	Samoan Islands				hgid0000000085
+Pacific Ocean|||Sulu Sea|||||	1	0	Asia	Philippines	PH				Sulu Sea					hgid0000000086
+Pacific Ocean||||||||Oahu	1	0	Oceania	United States	US	Hawaii	Honolulu		North Pacific Ocean	Hawaiian Islands	Oahu			hgid0000000087
+Pacific|American Samoa|||||||Tutuila Island	1	0	Oceania	American Samoa	AS				South Pacific Ocean	Samoan Islands	Tutuila			hgid0000000088
+South America|||Straits of Magellan|||||	1	0	South America						Straits of Magellan				The Straits of Magellan are divided between AR and CL.	hgid0000000089
+South America|||Sucre|||||	1	0	South America			Sucre							Sucre can refer to multiple geographic entities in CO, VE, EC, and BO.	hgid0000000090
+South America|||Tierra del Fuego|||||	1	0	South America			Tierra del Fuego							Tierra del Fuego can refer to multiple geographic entities in AR and CL.	hgid0000000091
+Southeast Asia|||Prahman|||||	1	0	Asia										Unable to locate Prahman.	hgid0000000092
+Southeast Asia||||||||Romah	1	0	Asia										Unable to locate Romah.	hgid0000000093
+West Indies||||||||Turks And Caicos Ids.	1	0	North America	Turks and Caicos	TC				North Atlantic Ocean	Lucayan Archipelago				hgid0000000094
+|Bahama|||||||	1	0	North America	Bahamas	BS				North Atlantic Ocean	Bahamas				hgid0000000095
+|Bandae|||||||	1	0											Unable to locate Bandae.	hgid0000000096
+|Puerto Rico||||||Greater Antilles|	1	0	North America	Puerto Rico	PR				Caribbean Sea	Puerto Rico				hgid0000000097
+|Russia||Behring Sea|||||	1	0	Asia	Russia	RU				Bering Sea					hgid0000000098
+|||Ill.?|||||	1	1										Ill.? is ambiguous.		hgid0000000099
+|||Tirol|||||	1	0	Europe										Tirol can refer to multiple geographic entities in AT and IT.	hgid0000000100
+||||Columbia||||	1	0	North America										Columbia can refer to multiple geographic entities in US and CA.	hgid0000000101
+||||Oxford||||	1	0											Oxford can refer to multiple geographic entities in US, CA, GB, and NZ.	hgid0000000102
+|||||||Lesser Antilles|Windward Islands	1	0	North America						Caribbean Sea	Windward Islands			The Windward Islands in the Lesser Antilles are divided between DM, VC, LC, MQ, and GD.	hgid0000000103
+Europe|||Bohemia|||||	1	0	Europe	Czech Republic	CZ								Bohemia is not an administrative division.	hgid0000000104
+|United States||Washington|Chelan Co.||||	1	0	North America	United States	US	Washington	Chelan							hgid0000000105
+North America|United States||Washington|Chelan||||	1	0	North America	United States	US	Washington	Chelan							hgid0000000106
+|United States|US|Washington|Chelan Co.||||	1	0	North America	United States	US	Washington	Chelan							hgid0000000107

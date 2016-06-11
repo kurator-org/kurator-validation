@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-05-28T07:09-03:00"
+__version__ = "dwca_utils.py 2016-06-10T22:40-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -76,7 +76,24 @@ def tsv_dialect():
     dialect.quoting=csv.QUOTE_NONE
     dialect.skipinitialspace=True
     dialect.strict=False
-
+    return dialect
+    
+def csv_dialect():
+    """Get a dialect object with CSV properties.
+    parameters:
+        None
+    returns:
+        dialect - a csv.dialect object with CSV attributes
+    """
+    dialect = csv.excel
+    dialect.lineterminator='\r'
+    dialect.delimiter=','
+    dialect.escapechar='/'
+    dialect.doublequote=True
+    dialect.quotechar='"'
+    dialect.quoting=csv.QUOTE_MINIMAL
+    dialect.skipinitialspace=True
+    dialect.strict=False
     return dialect
     
 def csv_file_dialect(fullpath):
@@ -106,7 +123,9 @@ def csv_file_dialect(fullpath):
         # Try to read the specified part of the file
         try:
             buf = file.read(readto)
-            logging.debug('buf:\n%s' % buf)
+            s = 'csv_file_dialect()'
+            s += ' buf:\n%s' % buf
+            logging.debug(s)
             # Make a determination based on existence of tabs in the buffer, as the
             # Sniffer is not particularly good at detecting TSV file formats. So, if the
             # buffer has a tab in it, let's treat it as a TSV file 
@@ -120,7 +139,9 @@ def csv_file_dialect(fullpath):
             # the file
             try:
                 file.seek(0)
-                logging.debug('Re-sniffing with tab to %s' % (readto))
+                s = 'csv_file_dialect()'
+                s += ' Re-sniffing with tab to %s' % (readto)
+                logging.debug(s)
                 sample_text = ''.join(file.readline() for x in xrange(2,4,1))
                 dialect = csv.Sniffer().sniff(sample_text)
             # Sorry, couldn't figure it out

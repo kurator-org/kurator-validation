@@ -5,7 +5,8 @@
 # This workflow:
 #    - downloads a Darwin Core Archive from a URL
 #    - extracts the core file of a Darwin Core Archive to a tab-separated text file
-#    - extracts distinct values of a set of fields from the text file
+#    - extracts distinct values and their record counts for each field in a set 
+#      of fields from the text file
 #    - writes the distinct value lists to report files
 #
 # Example command-line usage:
@@ -33,7 +34,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_term_values.yaml 2016-06-07T14:39-03:00"
+# __version__ = "dwca_term_values.yaml 2016-06-09T14:59-03:00"
 
 imports:
 

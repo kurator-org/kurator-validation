@@ -14,3 +14,6 @@ Europe|France|||||||	1	0	Europe	France	FR									hgid0000000011
 North America|United States||New York|Tompkins County||||	1	0	North America	United States	US	New York	Tompkins							hgid0000000012
 North America|United States||Florida|Pinellas County||||	1	0	North America	United States	US	Florida	Pinellas							hgid0000000013
 North America||||||||	1	0	North America											hgid0000000014
+North America|United States||Washington|Chelan||||	1	0	North America	United States	US	Washington	Chelan							hgid0000000015
+|United States||Washington|Chelan Co.||||	1	0	North America	United States	US	Washington	Chelan							hgid0000000016
+|United States||Washington|Chelan County||||	1	0	North America	United States	US	Washington	Chelan							hgid0000000017
