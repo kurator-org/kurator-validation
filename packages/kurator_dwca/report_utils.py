@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2016-05-30T17:54-03:00"
+__version__ = "report_utils.py 2016-06-11T19:59-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -24,6 +24,7 @@ __version__ = "report_utils.py 2016-05-30T17:54-03:00"
 #
 # python report_utils.py
 
+from dwca_utils import csv_dialect
 from dwca_utils import tsv_dialect
 from dwca_terms import vocabfieldlist
 import logging
@@ -31,13 +32,12 @@ import unittest
 import csv
 import os.path
 
-def term_recommendation_report(reportfile, recommendationdict, dialect=None):
+def term_recommendation_report(reportfile, recommendationdict, format=None):
     """Write a term recommendation report.
     parameters:
         reportfile - full path to the output report file (optional)
         recommendationdict - dictionary of term recommendations (required)
-        dialect - a csv.dialect object with the attributes of the report file
-            (default None)
+        format - string signifying the csv.dialect of the report file ('csv' or 'txt')
     returns:
         success - True if the report was written, else False
     """
@@ -45,7 +45,9 @@ def term_recommendation_report(reportfile, recommendationdict, dialect=None):
         logging.debug('No term recommendations given in term_recommendation_report()')
         return False
 
-    if dialect is None:
+    if format=='csv' or format is None:
+        dialect = csv_dialect()
+    else:
         dialect = tsv_dialect()
 
     if reportfile is not None and len(reportfile)>0:

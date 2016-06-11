@@ -14,10 +14,11 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_count_reporter.py 2016-05-27T16:23-03:00"
+__version__ = "term_count_reporter.py 2016-06-11T20:28-03:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
+from dwca_utils import csv_dialect
 from dwca_utils import tsv_dialect
 from dwca_vocab_utils import distinct_term_counts_from_file
 import logging
@@ -34,6 +35,7 @@ def term_count_reporter(options):
         workspace - path to a directory for the tsvfile (optional)
         inputfile - full path to the input file (required)
         outputfile - name of the output file, without path (optional)
+        format - output file format (e.g., 'csv' or 'txt') (optional)
         termname - the name of the term for which to find distinct values (required)
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
@@ -56,6 +58,7 @@ def term_count_reporter(options):
     # outputs
     workspace = None
     outputfile = None
+    format = None
     success = False
     message = None
 
@@ -95,19 +98,27 @@ def term_count_reporter(options):
         returnvals = [workspace, outputfile, success, message, artifacts]
 #        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
-        
+
+    try:
+        format = options['format']
+    except:
+        format = None
+
+    if format is None:
+        format = 'csv'
+
     try:
         outputfile = options['outputfile']
     except:
         outputfile = None
 
     if outputfile is None or len(outputfile)==0:
-        outputfile = '%s_count_report_%s.txt' % (termname, str(uuid.uuid1()))
+        outputfile = '%s_count_report_%s.%s' % (termname, str(uuid.uuid1()), format)
     
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     counts = distinct_term_counts_from_file(inputfile, termname)
-    success = term_count_report(outputfile, counts)
+    success = term_count_report(outputfile, counts, format)
     if success==True:
         s = '%s_count_report_file' % termname
         artifacts[s] = outputfile
@@ -115,12 +126,12 @@ def term_count_reporter(options):
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
-def term_count_report(reportfile, termcountlist, dialect=None):
+def term_count_report(reportfile, termcountlist, format=None):
     """Write a term count report.
     parameters:
         reportfile - full path to the output report file
         termcountlist - list of terms with counts (required)
-        dialect - csv.dialect object with the attributes of the report file
+        format - string signifying the csv.dialect of the report file ('csv' or 'txt')
     returns:
         success - True if the report was written, else False
     """
@@ -131,7 +142,9 @@ def term_count_report(reportfile, termcountlist, dialect=None):
         logging.debug('No term count list given in term_count_report()')
         return False
 
-    if dialect is None:
+    if format=='csv' or format is None:
+        dialect = csv_dialect()
+    else:
         dialect = tsv_dialect()
 
     countreportfieldlist = ['term', 'count']
@@ -168,6 +181,9 @@ def _getoptions():
     help = "name of the term (required)"
     parser.add_argument("-t", "--termname", help=help)
 
+    help = 'report file format (e.g., csv or txt) (optional)'
+    parser.add_argument("-f", "--format", help=help)
+
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
 
@@ -185,6 +201,7 @@ def main():
         s += ' -o testtermcountout.txt'
         s += ' -w ./workspace'
         s += ' -t year'
+        s += ' -f format'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -193,6 +210,7 @@ def main():
     optdict['outputfile'] = options.outputfile
     optdict['termname'] = options.termname
     optdict['workspace'] = options.workspace
+    optdict['format'] = options.format
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

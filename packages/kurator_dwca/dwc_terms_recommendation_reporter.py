@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_terms_recommendation_reporter.py 2016-06-07T14:07-03:00"
+__version__ = "dwc_terms_recommendation_reporter.py 2016-06-11T20:21-03:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -40,6 +40,7 @@ def dwc_terms_recommendation_reporter(options):
         workspace - path to a directory for the tsvfile (optional)
         inputfile - full path to the input file (required)
         vocabdir - full path to the vocabulary directory (required)
+        format - output file format (e.g., 'csv' or 'txt') (optional)
         prefix - prefix to prepend to the output report file names (optional)
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
@@ -61,6 +62,7 @@ def dwc_terms_recommendation_reporter(options):
 
     # outputs
     workspace = None
+    format = None
     guid = None
     prefix = None
     success = False
@@ -110,6 +112,14 @@ def dwc_terms_recommendation_reporter(options):
     if prefix is None:
         prefix = ''
 
+    try:
+        format = options['format']
+    except:
+        format = None
+
+    if format is None:
+        format = 'csv'
+
     # Create a UUID for report set identification
     guid = str(uuid.uuid1())
 
@@ -145,10 +155,10 @@ def dwc_terms_recommendation_reporter(options):
                     # TODO: Use Allan's DQ report framework
                     # Validation, Improvement, Measure
                     # Create a series of term reports
-                    outputfile = '%s/%s%s_standardization_report_%s.txt' % \
-                      (workspace.rstrip('/'), prefix, termname, guid)
+                    outputfile = '%s/%s%s_standardization_report_%s.%s' % \
+                      (workspace.rstrip('/'), prefix, termname, guid, format)
 
-                    success = term_recommendation_report(outputfile, recommended)
+                    success = term_recommendation_report(outputfile, recommended, format)
 
                     if outputfile is not None and os.path.isfile(outputfile):
                         s = '%s_recommendation_report_file' % termname
@@ -174,6 +184,9 @@ def _getoptions():
     help = 'output file prefix (optional)'
     parser.add_argument("-p", "--prefix", help=help)
 
+    help = 'report file format (e.g., csv or txt) (optional)'
+    parser.add_argument("-f", "--format", help=help)
+
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
 
@@ -191,6 +204,7 @@ def main():
         s += ' -v ./data/vocabularies/'
         s += ' -w ./workspace'
         s += ' -p my'
+        s += ' -f csv'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -199,6 +213,7 @@ def main():
     optdict['vocabdir'] = options.vocabdir
     optdict['workspace'] = options.workspace
     optdict['prefix'] = options.prefix
+    optdict['format'] = options.format
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

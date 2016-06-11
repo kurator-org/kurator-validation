@@ -34,7 +34,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_term_values.yaml 2016-06-09T14:59-03:00"
+# __version__ = "dwca_term_values.yaml 2016-06-11T20:32-03:00"
 
 imports:
 
@@ -120,6 +120,8 @@ components:
         inputfile: inputfile
         termname: termname
         workspace: workspace
+    parameters:
+        format: 'csv'
     listensTo:
       - !ref VocabList
 

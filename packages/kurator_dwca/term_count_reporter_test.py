@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_count_reporter_test.py 2016-05-27T22:02-03:00"
+__version__ = "term_count_reporter_test.py 2016-06-11T20:29-03:00"
 
 # This file contains unit tests for the term_count_reporter function.
 #
@@ -35,7 +35,7 @@ class TermCountReporterFramework():
     testinputfile = testdatapath + 'test_eight_specimen_records.csv'
 
     # output data files from tests, remove these in dispose()
-    testreportfile = 'test_term_report_file.txt'
+    testreportfile = 'test_term_count_report_file.csv'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""

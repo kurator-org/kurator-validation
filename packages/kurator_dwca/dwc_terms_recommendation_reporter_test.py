@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_terms_recommendation_reporter_test.py 2016-05-30T20:17-03:00"
+__version__ = "dwc_terms_recommendation_reporter_test.py 2016-06-11T20:20-03:00"
 
 # This file contains unit tests for the dwc_terms_recommendation_reporter function.
 #
@@ -130,7 +130,7 @@ class DwcTermsRecommendationReporterTestCase(unittest.TestCase):
         for termname in controlledtermlist:
             if termname != 'day':
                 checkfile = testdatapath + prefix + '_' + termname
-                checkfile += '_standardization_report_' + guid + '.txt'
+                checkfile += '_standardization_report_' + guid + '.csv'
                 success = os.path.isfile(checkfile)
                 s = 'Report not created for "%s"' % termname
                 self.assertTrue(success, s)

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "geog_recommendation_reporter_test.py 2016-06-11T19:04-03:00"
+__version__ = "geog_recommendation_reporter_test.py 2016-06-11T19:56-03:00"
 
 # This file contains unit tests for the geog_recommendation_reporter function.
 #
@@ -25,7 +25,6 @@ __version__ = "geog_recommendation_reporter_test.py 2016-06-11T19:04-03:00"
 from geog_recommendation_reporter import geog_recommendation_reporter
 from dwca_utils import read_header
 from dwca_utils import csv_file_dialect
-from dwca_utils import csv_dialect
 from dwca_terms import geogvocabfieldlist
 import os
 import csv
@@ -45,7 +44,6 @@ class GeogRecommendationReporterFramework():
     # output data files from tests, remove these in dispose()
     testgeogreportfile = 'test_geog_recommendation_file.csv'
     testgeogrowreportfile = 'test_geog_row_recommendation_file.csv'
-    testreportformat = 'csv'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
