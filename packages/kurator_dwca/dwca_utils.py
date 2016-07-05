@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-06-10T22:40-03:00"
+__version__ = "dwca_utils.py 2016-07-05T18:21+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -70,9 +70,9 @@ def tsv_dialect():
     dialect = csv.excel_tab
     dialect.lineterminator='\r'
     dialect.delimiter='\t'
-    dialect.escapechar='/'
+    dialect.escapechar=''
     dialect.doublequote=True
-    dialect.quotechar='"'
+    dialect.quotechar=''
     dialect.quoting=csv.QUOTE_NONE
     dialect.skipinitialspace=True
     dialect.strict=False
@@ -95,7 +95,7 @@ def csv_dialect():
     dialect.skipinitialspace=True
     dialect.strict=False
     return dialect
-    
+
 def csv_file_dialect(fullpath):
     """Detect the dialect of a CSV or TXT data file.
     parameters:
