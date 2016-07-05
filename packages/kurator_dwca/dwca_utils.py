@@ -647,9 +647,9 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'incorrect delimiter for tsv')
         self.assertEqual(dialect.lineterminator, '\r',
             'incorrect lineterminator for tsv')
-        self.assertEqual(dialect.escapechar, '/',
+        self.assertEqual(dialect.escapechar, '',
             'incorrect escapechar for tsv')
-        self.assertEqual(dialect.quotechar, '"',
+        self.assertEqual(dialect.quotechar, '',
             'incorrect quotechar for tsv')
         self.assertTrue(dialect.doublequote,
             'doublequote not set to True for tsv')
@@ -693,9 +693,9 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'incorrect delimiter detected for csv file')
         self.assertEqual(dialect.lineterminator, '\r',
             'incorrect lineterminator for csv file')
-        self.assertEqual(dialect.escapechar, '/',
+        self.assertEqual(dialect.escapechar, '',
             'incorrect escapechar for csv file')
-        self.assertEqual(dialect.quotechar, '"',
+        self.assertEqual(dialect.quotechar, '',
             'incorrect quotechar for csv file')
         self.assertTrue(dialect.doublequote,
             'doublequote not set to False for csv file')
