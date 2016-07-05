@@ -152,3 +152,6 @@ components:
        url:
          actor: !ref MakeWorkspace
          parameter: url
+       workspace:
+         actor: !ref MakeWorkspace
+         parameter: workspace
