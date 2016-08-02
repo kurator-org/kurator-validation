@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_count_reporter.py 2016-07-21T15:26+02:00"
+__version__ = "term_count_reporter.py 2016-07-29T13:43+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -165,7 +165,7 @@ def term_count_report(reportfile, termcountlist, format=None):
         writer = csv.DictWriter(csvfile, dialect=dialect, \
             fieldnames=countreportfieldlist)
         for item in termcountlist:
-            writer.writerow({'term':item[0], 'count':item[1] })
+            writer.writerow({'term':item[0].encode('utf-8'), 'count':item[1] })
     return True
 
 def _getoptions():

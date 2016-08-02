@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-05-30T15:42-03:00"
+__version__ = "dwca_vocab_utils.py 2016-08-02T15:08+02:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -189,6 +189,23 @@ def matching_vocab_dict_from_file(checklist, vocabfile, dialect=None):
             matchingvocabdict[term]=vocabdict[term]
 
     return matchingvocabdict
+
+def checked_vocab_dict_from_file(vocabfile, dialect=None):
+    """Get the checked vocabulary as a dictionary from a file.
+    parameters:
+        vocabfile - path to the vocabulary file (required)
+        dialect - csv.dialect object with the attributes of the vocabulary lookup file
+            (default None)
+    returns:
+        vocabdict - dictionary of complete checked vocabulary records
+    """
+    # No need to check for vocabfile, vocab_dict_from_file does that.
+    thedict = vocab_dict_from_file(vocabfile, dialect)
+    checkeddict = {}
+    for entry in thedict:
+        if thedict[entry]['checked'] == '1':
+            checkeddict[entry]=thedict[entry]
+    return checkeddict
 
 def vocab_dict_from_file(vocabfile, dialect=None):
     """Get a vocabulary as a dictionary from a file.
@@ -497,33 +514,101 @@ def distinct_term_counts_from_file(inputfile, termname, dialect=None):
 
     return sorted(values.iteritems(), key=itemgetter(1), reverse=True)
 
-def terms_not_in_dwc(checklist, strict=True):
+def terms_not_in_dwc(checklist, casesensitive=True):
     """From a list of terms, get those that are not Darwin Core terms.
     parameters:
         checklist - list of values to check against Darwin Core (required)
-        strict - exact match of True, otherwise check if known to Darwin Cloud vocabulary
-            (default = True)
+        casesensitive - True if the test for inclusion is case sensitive (default True)
     returns:
         a sorted list of non-Darwin Core terms from the checklist
     """
     # No need to check if checklist is given, not_in_list() does that
-    if strict:
+    if casesensitive:
         return not_in_list(simpledwctermlist, checklist)
-    else:
-        return not_in_darwin_cloud(checklist)
+    lowerdwc = []
+    for term in simpledwctermlist:
+        lowerdwc.append(term.lower())
+    lowerchecklist = []
+    lookup = {}
+    for term in checklist:
+        lterm = term.lower()
+        lowerchecklist.append(lterm)
+        lookup[lterm] = term
+    notfound = not_in_list(lowerdwc, lowerchecklist)
+    count = len(notfound)
+    i = 0
+    while i < count:
+        notfound[i] = lookup[notfound[i]]
+        i += 1
+    return notfound
 
-def not_in_darwin_cloud(checklist):
+def terms_not_in_darwin_cloud(checklist, dwccloudfile, checked=True):
     """Get the list of distinct values in a checklist that are not in the Darwin Cloud
-       vocabulary. Verbatim values in Darwin Core vocabulary should be slugified versions
-       of the oiginal value, and should have the case-sensitive standard value.
+       vocabulary. Verbatim values in the Darwin Cloud vocabulary should be lower-case and
+       stripped already, so that is what must be matched here. The Darwin Cloud vocabulary
+       should have the case-sensitive standard value.
     parameters:
         checklist - list of values to check against the target list (required)
+        dwccloudfile - the vocabulary file for the Darwin Cloud (required)
+        checked - set to False if unchecked values should also be returned (default True)
     returns:
-        a sorted list of distinct new values not in the target list
+        a sorted list of distinct new values not in the Darwin Cloud vocabulary
     """
     if checklist is None or len(checklist)==0:
-        logging.debug('No checklist given in not_in_list()')
+        logging.debug('No checklist given in terms_not_in_darwin_cloud()')
         return None
+    thelist = []
+    for term in checklist:
+        thelist.append(term.lower())
+    # No need to check if dwccloudfile is given and exists, vocab_dict_from_file() and
+    # checked_vocab_dict_from_file() do that.
+    if checked:
+        darwinclouddict = checked_vocab_dict_from_file(dwccloudfile)
+    else:
+        darwinclouddict = vocab_dict_from_file(dwccloudfile)
+    darwincloudlist = []
+    for term in darwinclouddict:
+        darwincloudlist.append(term)
+    return not_in_list(darwincloudlist, thelist)
+
+def darwinize_list(termlist, dwccloudfile):
+    """Translate the terms in a list to standard Darwin Core terms.
+    parameters:
+        termlist - list of values to translate (required)
+        dwccloudfile - the vocabulary file for the Darwin Cloud (required)
+    returns:
+        a list with all translatable terms translated
+    """
+    if termlist is None or len(termlist)==0:
+        logging.debug('No termlist given in darwinize_list()')
+        return None
+    # No need to check if dwccloudfile is given and exists, checked_vocab_dict_from_file() 
+    # does that.
+    darwinclouddict = checked_vocab_dict_from_file(dwccloudfile)
+    if darwinclouddict is None:
+        logging.debug('No Darwin Cloud terms in darwinize_list()')
+        return None
+    thelist = []
+    for term in termlist:
+        thelist.append(term.lower().strip())
+#    print 'dwccloudfile: %s' % dwccloudfile
+#    print 'thelist: %s' % thelist
+#    print 'darwinclouddict: %s' % darwinclouddict
+    darwinizedlist = []
+    i = 0
+    j = 1
+    for term in thelist:
+        if term in darwinclouddict and len(darwinclouddict[term]['standard'].strip()) > 0:
+            newterm = darwinclouddict[term]['standard']
+#            print 'term: %s newterm: %s' % (term, newterm)
+        else:
+            newterm = termlist[i].strip()
+            if len(newterm) == 0:
+                newterm = 'unnamedcolumn_%s' % j
+                j += 1
+        darwinizedlist.append(newterm)
+        i += 1
+    return darwinizedlist
 
 def not_in_list(targetlist, checklist):
     """Get the list of distinct values in a checklist that are not in a target list.
@@ -628,6 +713,7 @@ class DWCAVocabUtilsFramework():
     compositetestfile = testdatapath + 'test_eight_specimen_records.csv'
     monthvocabfile = testdatapath + 'test_vocab_month.txt'
     geogvocabfile = vocabpath + 'dwc_geography.txt'
+    darwincloudfile = vocabpath + 'dwc_cloud.txt'
 
     # following are files output during the tests, remove these in dispose()
     csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
@@ -860,6 +946,32 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         notdwc = terms_not_in_dwc(checklist)
         expectedlist = ['catalognumber']
 #        print 'notdwc: %s\nexpected: %s' % (notdwc, expectedlist)
+        s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
+        self.assertEqual(notdwc, expectedlist, s)
+
+        notdwc = terms_not_in_dwc(checklist)
+        expectedlist = ['catalognumber']
+#        print 'notdwc: %s\nexpected: %s' % (notdwc, expectedlist)
+        s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
+        self.assertEqual(notdwc, expectedlist, s)
+
+    def test_terms_not_in_darwin_cloud(self):
+        print 'testing terms_not_in_darwin_cloud'
+        checklist = ['stuff', 'nonsense', 'Year']
+        darwincloudfile = self.framework.darwincloudfile
+        notdwc = terms_not_in_darwin_cloud(checklist, darwincloudfile)
+        expectedlist = ['nonsense', 'stuff']
+        s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
+        self.assertEqual(notdwc, expectedlist, s)
+
+    def test_darwinize_list(self):
+        print 'testing darwinize_list'
+        checklist = ['STUFF', 'Nonsense', 'Year', '  ', 'dwc:day', 'MONTH ', \
+            'lifestage', 'Id']
+        darwincloudfile = self.framework.darwincloudfile
+        notdwc = darwinize_list(checklist, darwincloudfile)
+        expectedlist = ['STUFF', 'Nonsense', 'year', 'unnamedcolumn_1', 'day', 'month', \
+            'lifeStage', 'Id']
         s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
         self.assertEqual(notdwc, expectedlist, s)
 

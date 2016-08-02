@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-07-05T18:21+02:00"
+__version__ = "dwca_utils.py 2016-08-02T15:00+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -158,6 +158,34 @@ def csv_file_dialect(fullpath):
 
     return dialect
 
+def dialects_equal(dialect1, dialect2):
+    ''' Determine if two dialects have the same attributes.
+    parameters:
+        dialect1 - a csv.dialect object (required)
+        dialect2 - a csv.dialect object (required)
+    returns:
+        True is the attributes are all the same, otherwise False
+    '''
+    if dialect1 is None or dialect2 is None:
+        return False
+    if dialect1.lineterminator != dialect2.lineterminator:
+        return False
+    if dialect1.delimiter != dialect2.delimiter:
+        return False
+    if dialect1.escapechar != dialect2.escapechar:
+        return False
+    if dialect1.quotechar != dialect2.quotechar:
+        return False
+    if dialect1.doublequote != dialect2.doublequote:
+        return False
+    if dialect1.quoting != dialect2.quoting:
+        return False
+    if dialect1.skipinitialspace != dialect2.skipinitialspace:
+        return False
+    if dialect1.strict != dialect2.strict:
+        return False
+    return True
+
 def dialect_attributes(dialect):
     ''' Get a string showing the attributes of a csv dialect.
     parameters:
@@ -171,9 +199,9 @@ def dialect_attributes(dialect):
     if dialect.lineterminator == '\r':
         s+= '{CR}'
     elif dialect.lineterminator == '\n':
-        s+= '{NL}'
+        s+= '{LF}'
     elif dialect.lineterminator == '\r\n':
-        s+= '{CR}{NL}'
+        s+= '{CR}{LF}'
     else: 
         s += dialect.lineterminator
 
@@ -503,8 +531,7 @@ def read_csv_row(fullpath, dialect):
         fullpath - full path to the input file (required)
         dialect - csv.dialect object with the attributes of the input file (required)
     returns:
-        index, row - a tuple composed of the index of the first row that has a different 
-            number of fields (1 is the first row after the header) and the row string
+        row - the row as a dictionary
     """
     with open(fullpath, 'rU') as data:
         reader = csv.DictReader(data, dialect=dialect)
@@ -929,6 +956,27 @@ class DWCAUtilsTestCase(unittest.TestCase):
 
         self.assertEqual(header, writtenheader,
             'writtenheader not the same as model header')
+
+    def test_dialect_preservation(self):
+        print 'testing dialect preservation'
+        csvreadheaderfile = self.framework.csvreadheaderfile
+        csvwriteheaderfile = self.framework.csvwriteheaderfile
+        indialect = csv_file_dialect(csvreadheaderfile)
+        self.assertIsNotNone(indialect, 'input dialect not determined')
+
+        header = read_header(csvreadheaderfile, indialect)
+        self.assertIsNotNone(header, 'header not read')
+
+        written = write_header(csvwriteheaderfile, header, indialect)
+        self.assertTrue(written, 'header not written')
+
+        outdialect = csv_file_dialect(csvwriteheaderfile)
+        self.assertIsNotNone(header, 'output dialect not determined')
+        equaldialects = dialects_equal(indialect, outdialect)
+        if equaldialects == False:
+            print 'input dialect:\n%s' % dialect_attributes(indialect)
+            print 'output dialect:\n%s' % dialect_attributes(outdialect)
+        self.assertTrue(equaldialects, 'input and output dialects not the same')
 
     def test_csv_to_tsv1(self):
         print 'testing csv_to_tsv1'
