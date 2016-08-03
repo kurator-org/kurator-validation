@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-08-02T15:00+02:00"
+__version__ = "dwca_utils.py 2016-08-03T14:26+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -29,6 +30,7 @@ import glob
 import unittest
 import re
 import logging
+import codecs
 from slugify import slugify
 
 try:
@@ -422,7 +424,7 @@ def csv_to_tsv(inputfile, outputfile):
         inputfile - full path to the input file (required)
         outputfile - full path to the converted file (required)
     returns:
-        True if finished successfully, otherwie False
+        True if finished successfully, otherwise False
     """
     if inputfile is None or len(inputfile) == 0:
         logging.debug('No input file given in csv_to_tsv().')
@@ -436,14 +438,15 @@ def csv_to_tsv(inputfile, outputfile):
         logging.debug('File %s not found in csv_to_tsv().' % inputfile)
         return False
 
-    # Determine the dialect of the input file
+    # Determine the dialect and encoding of the input file
     inputdialect = csv_file_dialect(inputfile)
-    inputheader = read_header(inputfile,inputdialect)
+    inputencoding = csv_file_encoding(inputfile)
+    inputheader = read_header(inputfile, inputdialect)
 
     with open(outputfile, 'a') as tsvfile:
         writer = csv.DictWriter(tsvfile, dialect=tsv_dialect(), fieldnames=inputheader)
         writer.writeheader()
-        for row in read_csv_row(inputfile, inputdialect):
+        for row in read_csv_row(inputfile, inputdialect, inputencoding):
             writer.writerow(row)
 
     return True
@@ -468,8 +471,9 @@ def term_rowcount_from_file(inputfile, termname):
         logging.debug('File %s not found in term_rowcount_from_file().' % inputfile)
         return 0
 
-    # Determine the dialect of the input file
+    # Determine the dialect and encoding of the input file
     inputdialect = csv_file_dialect(inputfile)
+    inputencoding = csv_file_encoding(inputfile)
     inputheader = read_header(inputfile,inputdialect)
 
     if termname not in inputheader:
@@ -478,7 +482,7 @@ def term_rowcount_from_file(inputfile, termname):
 
     rowcount = 0
 
-    for row in read_csv_row(inputfile, inputdialect):
+    for row in read_csv_row(inputfile, inputdialect, inputencoding):
         try:
             value = row[termname]
             if value is not None and len(value.strip()) > 0:
@@ -524,20 +528,115 @@ def csv_field_checker(inputfile):
 
     return None
 
-def read_csv_row(fullpath, dialect):
-    """Yield a row in a csv file. Determine the existence of the file and its dialect 
-       before making call to this function.
+def csv_file_encoding(inputfile):
+    """Try to discern the encoding of a file.
+    parameters:
+        inputfile - the full path to an input file (required)
+    returns:
+        the best guess at an encoding
+    """
+    encodings = ['utf_8', 'mac_roman', 'latin_1', 'ascii', 'cp1252', 'utf_16', 'big5', 
+        'big5hkscs', 'cp037', 'cp424', 'cp437', 'cp500', 'cp737', 'cp775', 'cp850', 
+        'cp852', 'cp855', 'cp856', 'cp857', 'cp860', 'cp861', 'cp862', 'cp863', 'cp864', 
+        'cp865', 'cp866', 'cp869', 'cp874', 'cp875', 'cp932', 'cp949', 'cp950', 'cp1006', 
+        'cp1026', 'cp1140', 'cp1250', 'cp1251', 'cp1253', 'cp1254', 'cp1255', 'cp1256', 
+        'cp1257', 'cp1258', 'euc_jp', 'euc_jis_2004', 'euc_jisx0213', 'euc_kr', 'gb2312', 
+        'gbk', 'gb18030', 'hz', 'iso2022_jp', 'iso2022_jp_1', 'iso2022_jp_2', 
+        'iso2022_jp_2004', 'iso2022_jp_3', 'iso2022_jp_ext', 'iso2022_kr', 'iso8859_2', 
+        'iso8859_3', 'iso8859_4', 'iso8859_5', 'iso8859_6', 'iso8859_7', 'iso8859_8', 
+        'iso8859_9', 'iso8859_10', 'iso8859_13', 'iso8859_14', 'iso8859_15', 'johab', 
+        'koi8_r', 'koi8_u', 'mac_cyrillic', 'mac_greek', 'mac_iceland', 'mac_latin2', 
+        'mac_turkish', 'ptcp154', 'shift_jis', 'shift_jis_2004', 'shift_jisx0213', 
+        'utf_16_be', 'utf_16_le', 'utf_7']
+    for e in encodings:
+        try:
+            fh = codecs.open(inputfile, 'r', encoding=e)
+            fh.readlines()
+            fh.seek(0)
+        except UnicodeDecodeError:
+            s = 'Encoding error with %s on file %s,' % (e, inputfile)
+            s += ' trying different encoding'
+            logging.debug(s)
+        else:
+            # Able to read the file in this encoding
+            s = 'Encoding %s surmised for file %s,' % (e, inputfile)
+            logging.debug(s)
+            return e
+    # Encoding not determined
+    return None
+
+def read_csv_row(fullpath, dialect, encoding):
+    """Yield a row from a csv file. Determine the existence of the file, its dialect, and 
+       its encoding before making a call to this function.
     parameters:
         fullpath - full path to the input file (required)
         dialect - csv.dialect object with the attributes of the input file (required)
+        encoding - a string designating the input file encoding (required) 
+            (e.g., 'utf_8', 'mac_roman', 'latin_1', 'cp1252')
     returns:
         row - the row as a dictionary
     """
     with open(fullpath, 'rU') as data:
-        reader = csv.DictReader(data, dialect=dialect)
-
+        reader = csv.DictReader(utf8_data_encoder(data, encoding), dialect=dialect)
         for row in reader:
+#            print '===row===:\n%s' % row
+            for f in row:
+                row[f]=row[f].encode(encoding)
             yield row
+
+def utf8_file_encoder(inputfile, outputfile):
+    """Translate input file to utf8.
+    parameters:
+        inputfile - full path to the input file (required)
+        outputfile - full path to the translated output file (required)
+    returns:
+        False if the translation does not complete successfully, otherwise True
+    """
+    # Try to determine the encoding of the inputfile.
+    encoding = csv_file_encoding(inputfile)
+    if encoding is None:
+        # if we can't figure out the encoding, don't do anything.
+        return None
+    i = 0
+    with open(outputfile, 'w') as outdata:
+        with open(inputfile, 'rU') as indata:
+            for line in indata:
+                try:
+                    outdata.write( utf8_line_encoder(line, encoding) )
+                except UnicodeDecodeError, e:
+                    s = 'Failed to encode line %s in %s. Aborting' % (i, encoding)
+                    logging.debug(s)
+                    return False
+                i += 1
+    return True
+
+def utf8_data_encoder(data, encoding):
+    """Yield a row in utf8 from a file in given encoding.
+    parameters:
+        data - the open input file (required)
+        encoding - a string designating the input file encoding (required) 
+            (e.g., 'utf_8', 'mac_roman', 'latin_1', 'cp1252')
+    returns:
+        the row in utf8
+    """
+    for line in data:
+        try:
+            yield utf8_line_encoder(line, encoding)
+        except UnicodeDecodeError, e:
+            print 'Failed to encode in encoding %s' % (encoding, e)
+
+def utf8_line_encoder(line, encoding):
+    """Get a row with a given encoding as utf8.
+    parameters:
+        line - the line to process (required)
+        encoding - a string designating the input file encoding (required) 
+            (e.g., 'utf_8', 'latin_1', 'cp1252')
+    returns:
+        the line in utf8
+    """
+    if encoding == 'utf_8':
+        return line
+    return line.decode(encoding).encode('utf_8')
 
 def split_path(fullpath):
     """Parse out the path to, the name of, and the extension for a given file.
@@ -581,6 +680,8 @@ class DWCAUtilsFramework():
     testdatapath = './data/tests/'
 
     # following are files used as input during the tests, don't remove these
+    encodedfile_utf8 = testdatapath + 'test_eight_specimen_records_utf8_lf.csv'
+    encodedfile_mac_roman = testdatapath + 'test_thirty_records_mac_roman_crlf.csv'
     csvreadheaderfile = testdatapath + 'test_eight_specimen_records.csv'
     tsvreadheaderfile = testdatapath + 'test_three_specimen_records.txt'
     tsvtest1 = testdatapath + 'test_tsv_1.txt'
@@ -589,9 +690,6 @@ class DWCAUtilsFramework():
     csvtest2 = testdatapath + 'test_csv_2.csv'
     csvtotsvfile1 = testdatapath + 'test_csv_1.csv'
     csvtotsvfile2 = testdatapath + 'test_csv_2.csv'
-    csvcompositepath = testdatapath + 'test_csv*.csv'
-    tsvcompositepath = testdatapath + 'test_tsv*.txt'
-    mixedcompositepath = testdatapath + 'test_*_specimen_records.*'
     monthvocabfile = testdatapath + 'test_vocab_month.txt'
     geogvocabfile = testdatapath + 'test_geography.txt'
     compositetestfile = testdatapath + 'test_eight_specimen_records.csv'
@@ -602,12 +700,17 @@ class DWCAUtilsFramework():
     termrowcountfile2 = testdatapath + 'test_three_specimen_records.txt'
     termtokenfile = testdatapath + 'test_eight_specimen_records.csv'
 
+    csvcompositepath = testdatapath + 'test_csv*.csv'
+    tsvcompositepath = testdatapath + 'test_tsv*.txt'
+    mixedcompositepath = testdatapath + 'test_*_specimen_records.*'
+
     # following are files output during the tests, remove these in dispose()
     csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
     tsvfromcsvfile1 = testdatapath + 'test_tsv_from_csv_1.txt'
     tsvfromcsvfile2 = testdatapath + 'test_tsv_from_csv_2.txt'
     testvocabfile = testdatapath + 'test_vocab_file.csv'
     testtokenreportfile = testdatapath + 'test_token_report_file.txt'
+    testencoding = testdatapath + 'test_encoding.txt'
 
     def dispose(self):
         csvwriteheaderfile = self.csvwriteheaderfile
@@ -615,6 +718,7 @@ class DWCAUtilsFramework():
         tsvfromcsvfile2 = self.tsvfromcsvfile2
         testvocabfile = self.testvocabfile
         testtokenreportfile = self.testtokenreportfile
+        testencoding = self.testencoding
         if os.path.isfile(csvwriteheaderfile):
             os.remove(csvwriteheaderfile)
         if os.path.isfile(tsvfromcsvfile1):
@@ -625,6 +729,8 @@ class DWCAUtilsFramework():
             os.remove(testvocabfile)
         if os.path.isfile(testtokenreportfile):
             os.remove(testtokenreportfile)
+        if os.path.isfile(testencoding):
+            os.remove(testencoding)
         return True
 
 class DWCAUtilsTestCase(unittest.TestCase):
@@ -637,6 +743,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
 
     def test_source_files_exist(self):
         print 'testing source_files_exist'
+        encodedfile_utf8 = self.framework.encodedfile_utf8
+        encodedfile_mac_roman = self.framework.encodedfile_mac_roman
         csvreadheaderfile = self.framework.csvreadheaderfile
         tsvreadheaderfile = self.framework.tsvreadheaderfile
         tsvtest1 = self.framework.tsvtest1
@@ -651,7 +759,12 @@ class DWCAUtilsTestCase(unittest.TestCase):
         fieldcountestfile2 = self.framework.fieldcountestfile2
         fieldcountestfile3 = self.framework.fieldcountestfile3
         monthvocabfile = self.framework.monthvocabfile
+        termrowcountfile1 = self.framework.termrowcountfile1
+        termrowcountfile2 = self.framework.termrowcountfile2
+        termtokenfile = self.framework.termtokenfile
 
+        self.assertTrue(os.path.isfile(encodedfile_utf8), encodedfile_utf8 + ' does not exist')
+        self.assertTrue(os.path.isfile(encodedfile_mac_roman), encodedfile_mac_roman + ' does not exist')
         self.assertTrue(os.path.isfile(csvreadheaderfile), csvreadheaderfile + ' does not exist')
         self.assertTrue(os.path.isfile(tsvreadheaderfile), tsvreadheaderfile + ' does not exist')
         self.assertTrue(os.path.isfile(tsvtest1), tsvtest1 + ' does not exist')
@@ -666,6 +779,9 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(fieldcountestfile1), fieldcountestfile1 + ' does not exist')
         self.assertTrue(os.path.isfile(fieldcountestfile2), fieldcountestfile2 + ' does not exist')
         self.assertTrue(os.path.isfile(fieldcountestfile3), fieldcountestfile3 + ' does not exist')
+        self.assertTrue(os.path.isfile(termrowcountfile1), termrowcountfile1 + ' does not exist')
+        self.assertTrue(os.path.isfile(termrowcountfile2), termrowcountfile2 + ' does not exist')
+        self.assertTrue(os.path.isfile(termtokenfile), termtokenfile + ' does not exist')
 
     def test_tsv_dialect(self):
         print 'testing tsv_dialect'
@@ -737,94 +853,75 @@ class DWCAUtilsTestCase(unittest.TestCase):
         print 'testing read_header1'
         csvreadheaderfile = self.framework.csvreadheaderfile
         header = read_header(csvreadheaderfile)
-        modelheader = []
-        modelheader.append('catalogNumber ')
-        modelheader.append('recordedBy')
-        modelheader.append('fieldNumber ')
-        modelheader.append('year')
-        modelheader.append('month')
-        modelheader.append('day')
-        modelheader.append('decimalLatitude ')
-        modelheader.append('decimalLongitude ')
-        modelheader.append('geodeticDatum ')
-        modelheader.append('country')
-        modelheader.append('stateProvince')
-        modelheader.append('county')
-        modelheader.append('locality')
-        modelheader.append('family ')
-        modelheader.append('scientificName ')
-        modelheader.append('scientificNameAuthorship ')
-        modelheader.append('reproductiveCondition ')
-        modelheader.append('InstitutionCode ')
-        modelheader.append('CollectionCode ')
-        modelheader.append('DatasetName ')
-        modelheader.append('Id')
+        expected = ['catalogNumber ', 'recordedBy', 'fieldNumber ', 'year', 'month', 
+        'day', 'decimalLatitude ', 'decimalLongitude ', 'geodeticDatum ', 'country', 
+        'stateProvince', 'county', 'locality', 'family ', 'scientificName ', 
+        'scientificNameAuthorship ', 'reproductiveCondition ', 'InstitutionCode ', 
+        'CollectionCode ', 'DatasetName ', 'Id']
 #        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
 #            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 21, 'incorrect number of fields in header')
-        self.assertEqual(header, modelheader, 'header not equal to the model header')
+        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+        self.assertEqual(header, expected, s)
 
     def test_read_header2(self):
         print 'testing read_header2'
         tsvheaderfile = self.framework.tsvtest1
         header = read_header(tsvheaderfile)
-        modelheader = []
-        modelheader.append('materialSampleID')
-        modelheader.append('principalInvestigator')
-        modelheader.append('locality')
-        modelheader.append('phylum')
-        modelheader.append('')
+        expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', '']
 #        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
 #            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
-        self.assertEqual(header, modelheader, 'header not equal to the model header')
+        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+        self.assertEqual(header, expected, s)
 
     def test_read_header3(self):
         print 'testing read_header3'
         csvheaderfile = self.framework.csvtest1
         header = read_header(csvheaderfile)
-        modelheader = []
-        modelheader.append('materialSampleID')
-        modelheader.append('principalInvestigator')
-        modelheader.append('locality')
-        modelheader.append('phylum')
-        modelheader.append('')
+        expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', '']
 #        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
 #            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
-        self.assertEqual(header, modelheader, 'header not equal to the model header')
+        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+        self.assertEqual(header, expected, s)
 
     def test_read_header4(self):
         print 'testing read_header4'
         tsvheaderfile = self.framework.tsvtest2
         header = read_header(tsvheaderfile)
-        modelheader = []
-        modelheader.append('materialSampleID')
-        modelheader.append('principalInvestigator')
-        modelheader.append('locality')
-        modelheader.append('phylum')
-        modelheader.append('decimalLatitude')
-        modelheader.append('decimalLongitude')
+        expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', 
+        'decimalLatitude', 'decimalLongitude']
 #        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' \
 #            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
-        self.assertEqual(header, modelheader, 'header not equal to the model header')
+        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+        self.assertEqual(header, expected, s)
 
     def test_read_header5(self):
         print 'testing read_header5'
         csvheaderfile = self.framework.csvtest2
         header = read_header(csvheaderfile)
-        modelheader = []
-        modelheader.append('materialSampleID')
-        modelheader.append('principalInvestigator')
-        modelheader.append('locality')
-        modelheader.append('phylum')
-        modelheader.append('decimalLatitude')
-        modelheader.append('decimalLongitude')
+        expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', 
+        'decimalLatitude', 'decimalLongitude']
 #        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
 #            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
-        self.assertEqual(header, modelheader, 'header not equal to the model header')
+        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+        self.assertEqual(header, expected, s)
+
+    def test_read_header6(self):
+        print 'testing read_header6'
+        encodedfile_mac_roman = self.framework.encodedfile_mac_roman
+        header = read_header(encodedfile_mac_roman)
+        expected = ['id', 'class', 'coordinateUncertaintyInMeters', 'country',
+            'eventDate', 'family', 'genus', 'decimalLatitude', 'decimalLongitude',
+            'locality', 'scientificName', 'specificEpithet']
+#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
+#            % (len(header), len(modelheader), header, modelheader)
+        self.assertEqual(len(header), 12, 'incorrect number of fields in header')
+        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+        self.assertEqual(header, expected, s)
 
     def test_composite_header(self):
         print 'testing composite_header'
@@ -832,111 +929,50 @@ class DWCAUtilsTestCase(unittest.TestCase):
         tsvcompositepath = self.framework.tsvcompositepath
         mixedcompositepath = self.framework.mixedcompositepath
         header = composite_header(csvcompositepath)
-        modelheader = []
-        modelheader.append('decimalLatitude')
-        modelheader.append('decimalLongitude')
-        modelheader.append('locality')
-        modelheader.append('materialSampleID')
-        modelheader.append('phylum')
-        modelheader.append('principalInvestigator')
+        expected = ['decimalLatitude', 'decimalLongitude', 'locality', 
+        'materialSampleID', 'phylum', 'principalInvestigator']
 #        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' \
 #            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
-        self.assertEqual(header, modelheader, 'header not equal to the model header')
+        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+        self.assertEqual(header, expected, s)
 
-        header = composite_header(tsvcompositepath)
-        s =  'len(header)=%s' % len(header)
-        s += ' len(model)=%s' % len(modelheader)
-        s += '\nheader:\n%s' % header
-        s += '\nmodel:\n%s' % modelheader
-        s += '\ntsvcompositepath: %s' % tsvcompositepath
+#        header = composite_header(tsvcompositepath)
+#        s =  'len(header)=%s' % len(header)
+#        s += ' len(expected)=%s' % len(expected)
+#        s += '\nheader:\n%s' % header
+#        s += '\expected:\n%s' % expected
+#        s += '\ntsvcompositepath: %s' % tsvcompositepath
 #        print '%s' % s
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
-        self.assertEqual(header, modelheader, 'header not equal to the model header')
+        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+        self.assertEqual(header, expected, s)
 
         header = composite_header(mixedcompositepath)
-        modelheader = []
-        modelheader.append('BCID')
-        modelheader.append('CollectionCode')
-        modelheader.append('DatasetName')
-        modelheader.append('Id')
-        modelheader.append('InstitutionCode')
-        modelheader.append('associatedMedia')
-        modelheader.append('associatedReferences')
-        modelheader.append('associatedSequences')
-        modelheader.append('associatedTaxa')
-        modelheader.append('basisOfIdentification')
-        modelheader.append('catalogNumber')
-        modelheader.append('class')
-        modelheader.append('coordinateUncertaintyInMeters')
-        modelheader.append('country')
-        modelheader.append('county')
-        modelheader.append('day')
-        modelheader.append('dayCollected')
-        modelheader.append('dayIdentified')
-        modelheader.append('decimalLatitude')
-        modelheader.append('decimalLongitude')
-        modelheader.append('establishmentMeans')
-        modelheader.append('eventRemarks')
-        modelheader.append('extractionID')
-        modelheader.append('family')
-        modelheader.append('fieldNotes')
-        modelheader.append('fieldNumber')
-        modelheader.append('fundingSource')
-        modelheader.append('geneticTissueType')
-        modelheader.append('genus')
-        modelheader.append('geodeticDatum')
-        modelheader.append('georeferenceProtocol')
-        modelheader.append('habitat')
-        modelheader.append('identifiedBy')
-        modelheader.append('island')
-        modelheader.append('islandGroup')
-        modelheader.append('length')
-        modelheader.append('lifeStage')
-        modelheader.append('locality')
-        modelheader.append('materialSampleID')
-        modelheader.append('maximumDepthInMeters')
-        modelheader.append('maximumDistanceAboveSurfaceInMeters')
-        modelheader.append('microHabitat')
-        modelheader.append('minimumDepthInMeters')
-        modelheader.append('minimumDistanceAboveSurfaceInMeters')
-        modelheader.append('month')
-        modelheader.append('monthCollected')
-        modelheader.append('monthIdentified')
-        modelheader.append('occurrenceID')
-        modelheader.append('occurrenceRemarks')
-        modelheader.append('order')
-        modelheader.append('permitInformation')
-        modelheader.append('phylum')
-        modelheader.append('plateID')
-        modelheader.append('preservative')
-        modelheader.append('previousIdentifications')
-        modelheader.append('previousTissueID')
-        modelheader.append('principalInvestigator')
-        modelheader.append('recordedBy')
-        modelheader.append('reproductiveCondition')
-        modelheader.append('sampleOwnerInstitutionCode')
-        modelheader.append('samplingProtocol')
-        modelheader.append('scientificName')
-        modelheader.append('scientificNameAuthorship')
-        modelheader.append('sex')
-        modelheader.append('species')
-        modelheader.append('stateProvince')
-        modelheader.append('subSpecies')
-        modelheader.append('substratum')
-        modelheader.append('taxonRemarks')
-        modelheader.append('tissueStorageID')
-        modelheader.append('vernacularName')
-        modelheader.append('weight')
-        modelheader.append('wellID')
-        modelheader.append('wormsID')
-        modelheader.append('year')
-        modelheader.append('yearCollected')
-        modelheader.append('yearIdentified')
+        expected = ['BCID', 'CollectionCode', 'DatasetName', 'Id', 'InstitutionCode',
+        'associatedMedia', 'associatedReferences', 'associatedSequences', 
+        'associatedTaxa', 'basisOfIdentification', 'catalogNumber', 'class', 
+        'coordinateUncertaintyInMeters', 'country', 'county', 'day', 'dayCollected',
+        'dayIdentified', 'decimalLatitude', 'decimalLongitude', 'establishmentMeans', 
+        'eventRemarks', 'extractionID', 'family', 'fieldNotes','fieldNumber', 
+        'fundingSource', 'geneticTissueType', 'genus', 'geodeticDatum', 
+        'georeferenceProtocol', 'habitat', 'identifiedBy', 'island', 'islandGroup', 
+        'length', 'lifeStage', 'locality', 'materialSampleID', 'maximumDepthInMeters', 
+        'maximumDistanceAboveSurfaceInMeters', 'microHabitat', 'minimumDepthInMeters', 
+        'minimumDistanceAboveSurfaceInMeters', 'month', 'monthCollected', 
+        'monthIdentified', 'occurrenceID', 'occurrenceRemarks', 'order', 
+        'permitInformation', 'phylum', 'plateID', 'preservative', 
+        'previousIdentifications', 'previousTissueID', 'principalInvestigator', 
+        'recordedBy', 'reproductiveCondition', 'sampleOwnerInstitutionCode', 
+        'samplingProtocol', 'scientificName', 'scientificNameAuthorship', 'sex', 
+        'species', 'stateProvince', 'subSpecies', 'substratum', 'taxonRemarks', 
+        'tissueStorageID', 'vernacularName', 'weight', 'wellID', 'wormsID', 'year', 
+        'yearCollected', 'yearIdentified']
 #        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' \
 #            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header),77, 'incorrect number of fields in header')
-        self.assertEqual(header, modelheader, 'header not equal to the model header')
+        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+        self.assertEqual(header, expected, s)
 
     def test_write_header(self):
         print 'testing write_header'
@@ -953,9 +989,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
 
         self.assertEqual(len(header), len(writtenheader),
             'incorrect number of fields in writtenheader')
-
-        self.assertEqual(header, writtenheader,
-            'writtenheader not the same as model header')
+        s = 'header:\n%s\nnot as written header:\n%s' % (header, writtenheader)
+        self.assertEqual(header, writtenheader, s)
 
     def test_dialect_preservation(self):
         print 'testing dialect preservation'
@@ -988,16 +1023,12 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertTrue(written, 'tsv not written')
 
         header = read_header(tsvfile)
-        modelheader = []
-        modelheader.append('materialSampleID')
-        modelheader.append('principalInvestigator')
-        modelheader.append('locality')
-        modelheader.append('phylum')
-        modelheader.append('')
+        expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', '']
 #        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
 #            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
-        self.assertEqual(header, modelheader, 'header not equal to the model header')
+        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+        self.assertEqual(header, expected, s)
 
     def test_csv_to_tsv2(self):
         print 'testing csv_to_tsv2'
@@ -1009,17 +1040,13 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertTrue(written, 'tsv not written')
 
         header = read_header(tsvfile, tsv_dialect())
-        modelheader = []
-        modelheader.append('materialSampleID')
-        modelheader.append('principalInvestigator')
-        modelheader.append('locality')
-        modelheader.append('phylum')
-        modelheader.append('decimalLatitude')
-        modelheader.append('decimalLongitude')
+        expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', 
+        'decimalLatitude', 'decimalLongitude']
 #        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
 #            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
-        self.assertEqual(header, modelheader, 'header not equal to the model header')
+        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+        self.assertEqual(header, expected, s)
 
     def test_split_path(self):
         print 'testing split_path'
@@ -1157,6 +1184,43 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'rowcount (%s) for %s does not match expectation (%s) in %s'  \
             % (rowcount, term, expected, termrowcountfile)
         self.assertEqual(rowcount,expected,s)
+
+    def test_csv_file_encoding(self):
+        print 'testing csv_file_encoding'
+        encodedfile_utf8 = self.framework.encodedfile_utf8
+        encodedfile_mac_roman = self.framework.encodedfile_mac_roman
+        
+        encoding = csv_file_encoding(encodedfile_utf8)
+        expected = 'utf_8'
+        s = 'file encoding (%s) does not match expectation (%s)' % (encoding, expected)
+        self.assertEqual(encoding,expected,s)
+        
+        encoding = csv_file_encoding(encodedfile_mac_roman)
+        expected = 'mac_roman'
+        s = 'file encoding (%s) does not match expectation (%s)' % (encoding, expected)
+        self.assertEqual(encoding,expected,s)
+
+    def test_utf8_file_encoder(self):
+        print 'testing utf8_file_encoder'
+        tempfile = self.framework.testencoding
+
+        testfile = self.framework.encodedfile_utf8
+        success = utf8_file_encoder(testfile, tempfile)
+        s = '%s not translated to utf8' % testfile
+        self.assertEqual(success,True,s)
+        encoding = csv_file_encoding(tempfile)
+        expected = 'utf_8'
+        s = 'Encoding (%s) of %s to %s not utf_8' % (encoding, testfile, tempfile)
+        self.assertEqual(encoding,expected,s)
+
+        testfile = self.framework.encodedfile_mac_roman
+        success = utf8_file_encoder(testfile, tempfile)
+        s = '%s not translated to utf8' % testfile
+        self.assertEqual(success,True,s)
+        encoding = csv_file_encoding(tempfile)
+        expected = 'utf_8'
+        s = 'Encoding (%s) of %s to %s not utf_8' % (encoding, testfile, tempfile)
+        self.assertEqual(encoding,expected,s)
 
 if __name__ == '__main__':
     print '=== dwca_utils.py ==='

@@ -14,11 +14,12 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_token_reporter.py 2016-05-27T16:32-03:00"
+__version__ = "term_token_reporter.py 2016-08-03T14:13+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 from dwca_utils import csv_file_dialect
+from dwca_utils import csv_file_encoding
 from dwca_utils import read_header
 from dwca_utils import read_csv_row
 from dwca_utils import tsv_dialect
@@ -186,8 +187,9 @@ def term_token_count_from_file(inputfile, termname):
         logging.debug('File %s not found in term_token_count_from_file().' % inputfile)
         return 0
 
-    # Determine the dialect of the input file
+    # Determine the dialect and encoding of the input file
     inputdialect = csv_file_dialect(inputfile)
+    inputencoding = csv_file_encoding(inputfile)
     inputheader = read_header(inputfile, inputdialect)
 
     if termname not in inputheader:
@@ -201,7 +203,7 @@ def term_token_count_from_file(inputfile, termname):
     populatedrowcount = 0
     tokens = { 'tokenlist':{} }
 
-    for row in read_csv_row(inputfile, inputdialect):
+    for row in read_csv_row(inputfile, inputdialect, inputencoding):
         try:
             value = row[termname]
         except:

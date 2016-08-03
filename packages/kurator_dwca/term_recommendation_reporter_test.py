@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter_test.py 2016-06-11T20:11-03:00"
+__version__ = "term_recommendation_reporter_test.py 2016-08-03T14:00+02:00"
 
 # This file contains unit tests for the term_recommendation_reporter function.
 #
@@ -42,8 +42,8 @@ class TermRecommendationReporterFramework():
     def dispose(self):
         """Remove any output files created as a result of testing"""
         testreportfile = self.testreportfile
-#        if os.path.isfile(testreportfile):
-#            os.remove(testreportfile)
+        if os.path.isfile(testreportfile):
+            os.remove(testreportfile)
         return True
 
 class TermRecommendationReporterTestCase(unittest.TestCase):

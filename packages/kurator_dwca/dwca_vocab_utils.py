@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-08-02T15:08+02:00"
+__version__ = "dwca_vocab_utils.py 2016-08-03T14:03+02:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -703,6 +703,38 @@ def distinct_vocabs_to_file(vocabfile, valuelist, dialect=None):
 
     return newvaluelist
 
+def compose_key_from_row(row, terms, separator='|'):
+    ''' Create a string of values of terms in a dictionary separated by separator.
+    parameters:
+        row -  dictionary of key:value pairs 
+            (e.g., {'country':'United States', 'countryCode':'US'} )
+        terms - string of field names for values in the row from which to construct the 
+            composite key (e.g., 'continent|country|countryCode')
+        separator - string separating the values in terms (default '|')
+    returns:
+        values - string of separator-separated values (e.g., '|United States|US')
+    '''
+    if row is None or len(row)==0:
+        print 'No row given in compose_key_from_row()'
+        return None
+    if terms is None or len(terms)==0:
+        print 'No terms given in compose_key_from_row()'
+        return None
+    termlist = terms.split(separator)
+#    print 'termlist:%s\nrow:%s' % (termlist, row)
+    vallist=[]
+    for t in termlist:
+#        print 't: %s' %t
+        try:
+            v=row[t]
+            vallist.append(v)
+        except:
+            vallist.append('')
+#    print 'vallist: %s' % vallist
+    values=compose_key_from_list(vallist)
+#    print 'values: %s' % values
+    return values
+
 class DWCAVocabUtilsFramework():
     # testdatapath is the location of example files to test with
     testdatapath = './data/tests/'
@@ -1177,35 +1209,3 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
 if __name__ == '__main__':
     print '=== dwca_vocab_utils.py ==='
     unittest.main()
-
-def compose_key_from_row(row, terms, separator='|'):
-    ''' Create a string of values of terms in a dictionary separated by separator.
-    parameters:
-        row -  dictionary of key:value pairs 
-            (e.g., {'country':'United States', 'countryCode':'US'} )
-        terms - string of field names for values in the row from which to construct the 
-            composite key (e.g., 'continent|country|countryCode')
-        separator - string separating the values in terms (default '|')
-    returns:
-        values - string of separator-separated values (e.g., '|United States|US')
-    '''
-    if row is None or len(row)==0:
-        print 'No row given in compose_key_from_row()'
-        return None
-    if terms is None or len(terms)==0:
-        print 'No terms given in compose_key_from_row()'
-        return None
-    termlist = terms.split(separator)
-#    print 'termlist:%s\nrow:%s' % (termlist, row)
-    vallist=[]
-    for t in termlist:
-#        print 't: %s' %t
-        try:
-            v=row[t]
-            vallist.append(v)
-        except:
-            vallist.append('')
-#    print 'vallist: %s' % vallist
-    values=compose_key_from_list(vallist)
-#    print 'values: %s' % values
-    return values
