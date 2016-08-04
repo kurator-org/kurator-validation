@@ -19,6 +19,7 @@ python term_recommendation_reporter_test.py
 python term_token_reporter_test.py
 python text_file_aggregator_test.py
 python text_file_splitter_test.py
+python utf8_encoder_test.py
 python vocab_appender_test.py
 python vocab_composite_appender_test.py
 python vocab_composite_extractor_test.py
