@@ -14,30 +14,32 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "utf8_encoder_test.py 2016-08-04T14:19+02:00"
+__version__ = "csv_to_txt_converter_test.py 2016-08-04T14:14+02:00"
 
-# This file contains unit test for the utf8_encoder function.
+# This file contains unit test for the csv_to_txt_converter function.
 #
 # Example:
 #
-# python utf8_encoder_test.py
+# python csv_to_txt_converter_test.py
 
-from utf8_encoder import utf8_encoder
-from dwca_utils import csv_file_encoding
+from csv_to_txt_converter import csv_to_txt_converter
+from dwca_utils import csv_file_dialect
+from dwca_utils import tsv_dialect
+from dwca_utils import dialects_equal
 import os
 import unittest
 
-class UTF8EncoderFramework():
-    """Test framework for UTF8 Encoder."""
+class CSVToTXTConverterFramework():
+    """Test framework for CSV to TXT Converter."""
     # location for the test inputs and outputs
     testdatapath = './data/tests/'
 
     # input data files to tests, don't remove these
-    testfile1 = testdatapath + 'test_eight_records_utf8_lf.csv'
+    testfile1 = testdatapath + 'test_three_records_utf8_unix_lf.txt'
     testfile2 = testdatapath + 'test_thirty_records_latin_1_crlf.csv'
 
     # output data files from tests, remove these in dispose()
-    outputfile = 'test_utf8encoded_file.csv'
+    outputfile = 'test_txt_from_csv_file.txt'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
@@ -46,10 +48,10 @@ class UTF8EncoderFramework():
             os.remove(outputfile)
         return True
 
-class UTF8EncoderTestCase(unittest.TestCase):
+class CSVToTXTConverterTestCase(unittest.TestCase):
     """Unit tests."""
     def setUp(self):
-        self.framework = UTF8EncoderFramework()
+        self.framework = CSVToTXTConverterFramework()
 
     def tearDown(self):
         self.framework.dispose()
@@ -70,14 +72,14 @@ class UTF8EncoderTestCase(unittest.TestCase):
         # Test with missing required inputs
         # Test with no inputs
         inputs = {}
-        response=utf8_encoder(inputs)
+        response=csv_to_txt_converter(inputs)
 #        print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
         # Test with missing inputfile
         inputs['outputfile'] = outputfile
-        response=utf8_encoder(inputs)
+        response=csv_to_txt_converter(inputs)
 #        print 'response2:\n%s' % response
         s = 'success without inputfile'
         self.assertFalse(response['success'], s)
@@ -85,14 +87,14 @@ class UTF8EncoderTestCase(unittest.TestCase):
         # Test with missing outputfile
         inputs = {}
         inputs['inputfile'] = testfile1
-        response=utf8_encoder(inputs)
+        response=csv_to_txt_converter(inputs)
 #        print 'response4:\n%s' % response
         s = 'success without outputfile'
         self.assertFalse(response['success'], s)
 
         # Test with missing optional inputs
         inputs['outputfile'] = outputfile
-        response=utf8_encoder(inputs)
+        response=csv_to_txt_converter(inputs)
 #        print 'response5:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
@@ -100,8 +102,8 @@ class UTF8EncoderTestCase(unittest.TestCase):
         if os.path.isfile(response['outputfile']):
             os.remove(response['outputfile'])
 
-    def test_utf8_encoder(self):
-        print 'testing utf8_encoder'
+    def test_csv_to_txt_converter(self):
+        print 'testing csv_to_txt_converter'
         testfile1 = self.framework.testfile1
         testfile2 = self.framework.testfile2
         testdatapath = self.framework.testdatapath
@@ -113,33 +115,25 @@ class UTF8EncoderTestCase(unittest.TestCase):
         inputs['workspace'] = testdatapath
 
         # Translate the file to utf8 encoding
-        response=utf8_encoder(inputs)
+        response=csv_to_txt_converter(inputs)
         outfilelocation = '%s/%s' % (testdatapath, outputfile)
-        encoding = csv_file_encoding(outfilelocation)
+        outdialect = csv_file_dialect(outfilelocation)
 #        print 'inputs1:\n%s' % inputs
 #        print 'response1:\n%s' % response
-        expected = 'utf_8'
-        s = 'From input: %s\nFound:\n%s\nExpected:\n%s' % (testfile1, encoding, expected)
-        self.assertEqual(encoding, expected, s)
+        equal = dialects_equal(outdialect, tsv_dialect())
+        s = 'Output dialect for %s not TSV' % outfilelocation
+        self.assertTrue(equal, s)
 
         inputs['inputfile'] = testfile2
 
         # Translate the file to utf8 encoding
-        response=utf8_encoder(inputs)
-        encoding = csv_file_encoding(outfilelocation)
+        response=csv_to_txt_converter(inputs)
+        outdialect = csv_file_dialect(outfilelocation)
 #        print 'response2:\n%s' % response
-        s = 'From input: %s\nFound:\n%s\nExpected:\n%s' % (testfile2, encoding, expected)
-        self.assertEqual(encoding, expected, s)
-
-        inputs['encoding'] = 'mac_roman'
-
-        # Translate the file to utf8 encoding
-        response=utf8_encoder(inputs)
-        encoding = csv_file_encoding(outfilelocation)
-#        print 'response2:\n%s' % response
-        s = 'From input: %s\nFound:\n%s\nExpected:\n%s' % (testfile2, encoding, expected)
-        self.assertEqual(encoding, expected, s)
+        equal = dialects_equal(outdialect, tsv_dialect())
+        s = 'Output dialect for %s not TSV' % outfilelocation
+        self.assertTrue(equal, s)
 
 if __name__ == '__main__':
-    print '=== utf8_encoder_test.py ==='
+    print '=== csv_to_txt_converter_test.py ==='
     unittest.main()

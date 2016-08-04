@@ -15,10 +15,10 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-08-04T11:47+02:00"
+__version__ = "dwca_utils.py 2016-08-04T14:18+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
-# TSV data. It is built with unit tests that can be invoked by running the script
+# TXT data. It is built with unit tests that can be invoked by running the script
 # without any command line parameters.
 #
 # Example:
@@ -77,7 +77,7 @@ def setup_actor_logging(options):
             logging.info('Log level set to INFO')
 
 def tsv_dialect():
-    """Get a dialect object with TSV properties.
+    """Get a dialect object with tab-separated value properties.
     parameters:
         None
     returns:
@@ -432,8 +432,8 @@ def merge_headers(headersofar, headertoadd = None):
 
     return sorted(list(composedheader))
 
-def csv_to_tsv(inputfile, outputfile):
-    """Convert an arbitrary csv file into a tsv file.
+def csv_to_txt(inputfile, outputfile):
+    """Convert an arbitrary csv file into a txt file.
     parameters:
         inputfile - full path to the input file (required)
         outputfile - full path to the converted file (required)
@@ -441,15 +441,15 @@ def csv_to_tsv(inputfile, outputfile):
         True if finished successfully, otherwise False
     """
     if inputfile is None or len(inputfile) == 0:
-        logging.debug('No input file given in csv_to_tsv().')
+        logging.debug('No input file given in csv_to_txt().')
         return False
 
     if outputfile is None or len(outputfile) == 0:
-        logging.debug('No output file given in csv_to_tsv().')
+        logging.debug('No output file given in csv_to_txt().')
         return False
 
     if os.path.isfile(inputfile) == False:
-        logging.debug('File %s not found in csv_to_tsv().' % inputfile)
+        logging.debug('File %s not found in csv_to_txt().' % inputfile)
         return False
 
     # Determine the dialect and encoding of the input file
@@ -585,7 +585,7 @@ def read_csv_row(fullpath, dialect, encoding):
                 row[f]=row[f].encode(encoding)
             yield row
 
-def utf8_file_encoder(inputfile, outputfile, encoding):
+def utf8_file_encoder(inputfile, outputfile, encoding=None):
     """Translate input file to utf8.
     parameters:
         inputfile - full path to the input file (required)
@@ -683,8 +683,8 @@ class DWCAUtilsFramework():
     testdatapath = './data/tests/'
 
     # following are files used as input during the tests, don't remove these
-    encodedfile_utf8 = testdatapath + 'test_eight_specimen_records_utf8_lf.csv'
-    encodedfile_mac_roman = testdatapath + 'test_thirty_records_mac_roman_crlf.csv'
+    encodedfile_utf8 = testdatapath + 'test_eight_records_utf8_lf.csv'
+    encodedfile_mac_roman = testdatapath + 'test_thirty_records_latin_1_crlf.csv'
     csvreadheaderfile = testdatapath + 'test_eight_specimen_records.csv'
     tsvreadheaderfile = testdatapath + 'test_three_specimen_records.txt'
     tsvtest1 = testdatapath + 'test_tsv_1.txt'
@@ -1016,12 +1016,12 @@ class DWCAUtilsTestCase(unittest.TestCase):
             print 'output dialect:\n%s' % dialect_attributes(outdialect)
         self.assertTrue(equaldialects, 'input and output dialects not the same')
 
-    def test_csv_to_tsv1(self):
-        print 'testing csv_to_tsv1'
+    def test_csv_to_txt1(self):
+        print 'testing csv_to_txt1'
         csvfile = self.framework.csvtotsvfile1
         tsvfile = self.framework.tsvfromcsvfile1
 
-        csv_to_tsv(csvfile, tsvfile)
+        csv_to_txt(csvfile, tsvfile)
         written = os.path.isfile(tsvfile)
         self.assertTrue(written, 'tsv not written')
 
@@ -1033,12 +1033,12 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
 
-    def test_csv_to_tsv2(self):
-        print 'testing csv_to_tsv2'
+    def test_csv_to_txt2(self):
+        print 'testing csv_to_txt2'
         csvfile = self.framework.csvtotsvfile2
         tsvfile = self.framework.tsvfromcsvfile2
 
-        csv_to_tsv(csvfile, tsvfile)
+        csv_to_txt(csvfile, tsvfile)
         written = os.path.isfile(tsvfile)
         self.assertTrue(written, 'tsv not written')
 
@@ -1199,7 +1199,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(encoding,expected,s)
         
         encoding = csv_file_encoding(encodedfile_mac_roman)
-        expected = 'mac_roman'
+        expected = 'latin_1'
         s = 'file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding,expected,s)
 

@@ -1,8 +1,9 @@
 python actor_template_test.py
 python composite_header_constructor_test.py
 python csv_fieldcount_checker_test.py
+python csv_to_txt_converter_test.py
 python darwin_cloud_collector_test.py
-darwinize_header_test.py
+python darwinize_header_test.py
 python downloader_test.py
 python dwc_geog_collector_test.py
 python dwc_terms_recommendation_reporter_test.py
