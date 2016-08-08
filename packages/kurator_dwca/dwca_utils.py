@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-08-04T14:18+02:00"
+__version__ = "dwca_utils.py 2016-08-04T16:01+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -104,7 +104,7 @@ def csv_dialect():
     dialect = csv.excel
     dialect.lineterminator='\r'
     dialect.delimiter=','
-    dialect.escapechar='/'
+    dialect.escapechar='\\'
     dialect.doublequote=True
     dialect.quotechar='"'
     dialect.quoting=csv.QUOTE_MINIMAL
@@ -135,13 +135,18 @@ def csv_file_dialect(fullpath):
     if filesize < readto:
         readto = filesize
 
+    found_doublequotes = False
     with open(fullpath, 'rb') as file:
         # Try to read the specified part of the file
         try:
             buf = file.read(readto)
-            s = 'csv_file_dialect()'
-            s += ' buf:\n%s' % buf
-            logging.debug(s)
+#            s = 'csv_file_dialect()'
+#            s += ' buf:\n%s' % buf
+#            logging.debug(s)
+            # See if the buffer has any doubled double quotes in it. If so, infer that the 
+            # dialect doublequote value should be true.
+            if buf.find('""')>0:
+                found_doublequotes = True
             # Make a determination based on existence of tabs in the buffer, as the
             # Sniffer is not particularly good at detecting TSV file formats. So, if the
             # buffer has a tab in it, let's treat it as a TSV file 
@@ -149,6 +154,7 @@ def csv_file_dialect(fullpath):
                 return tsv_dialect()
 #            dialect = csv.Sniffer().sniff(file.read(readto))
             # Otherwise let's see what we can find invoking the Sniffer.
+            logging.debug('Forced to use csv.Sniffer()')
             dialect = csv.Sniffer().sniff(buf)
         except csv.Error:
             # Something went wrong, so let's try to read a few lines from the beginning of 
@@ -159,6 +165,10 @@ def csv_file_dialect(fullpath):
                 s += ' Re-sniffing with tab to %s' % (readto)
                 logging.debug(s)
                 sample_text = ''.join(file.readline() for x in xrange(2,4,1))
+                # See if the buffer has any doubled double quotes in it. If so, infer that the 
+                # dialect doublequote value should be true.
+                if sample_text.find('""')>0:
+                    found_doublequotes = True
                 dialect = csv.Sniffer().sniff(sample_text)
             # Sorry, couldn't figure it out
             except csv.Error:
@@ -167,10 +177,11 @@ def csv_file_dialect(fullpath):
     
     # Fill in some standard values for the remaining dialect attributes        
     if dialect.escapechar is None:
-        dialect.escapechar='/'
+        dialect.escapechar='\\'
 
     dialect.skipinitialspace=True
     dialect.strict=False
+    dialect.doublequote = found_doublequotes
 
     return dialect
 
@@ -456,11 +467,14 @@ def csv_to_txt(inputfile, outputfile):
     inputdialect = csv_file_dialect(inputfile)
     inputencoding = csv_file_encoding(inputfile)
     inputheader = read_header(inputfile, inputdialect)
+#    print 'inputdialect: %s' % dialect_attributes(inputdialect)
+#    print 'inputencoding: %s' % inputencoding
 
     with open(outputfile, 'a') as tsvfile:
         writer = csv.DictWriter(tsvfile, dialect=tsv_dialect(), fieldnames=inputheader)
         writer.writeheader()
         for row in read_csv_row(inputfile, inputdialect, inputencoding):
+#            print 'last row read successfully: %s' % row
             writer.writerow(row)
 
     return True
@@ -542,6 +556,55 @@ def csv_field_checker(inputfile):
 
     return None
 
+def csv_spurious_newline_condenser(inputfile, outputfile, sub='-'):
+    """Remove new lines and carriage returns in data.
+    parameters:
+        inputfile - full path to the input file (required)
+        outputfile - full path to the translated output file (required)
+        sub - character sequence to substitute for the non-printing character 
+            (default '-')
+    returns:
+        False if the removal does not complete successfully, otherwise True
+    """
+    if inputfile is None or len(inputfile) == 0:
+        logging.debug('No input file given in csv_field_checker().')
+        return None
+
+    if os.path.isfile(inputfile) == False:
+        logging.debug('File %s not found in csv_field_checker().' % inputfile)
+        return None
+
+    # Determine the dialect of the input file
+    inputdialect = csv_file_dialect(inputfile)
+    delimiter = inputdialect.delimiter
+    header = read_header(inputfile,inputdialect)
+
+    if header is None:
+        return None
+
+    fieldcount = len(header)
+    previousline = ''
+    with open(outputfile, 'w') as outfile:
+        with open(inputfile, 'rU') as infile:
+            i = 0
+            for line in infile:
+                line = previousline.replace('\n',sub).replace('\r',sub) + line
+                delimitercount = line.count(delimiter)
+#                print 'line: %s (%s delimiter)' % (line, delimitercount)
+                if delimitercount == fieldcount-1:
+                    writethis = filter_non_printable(line,sub)
+                    outfile.write(writethis)
+#                    print 'writing line: %s' % writethis
+                    previousline = ''
+                elif delimitercount < fieldcount-1:
+                    previousline = line
+                else:
+                    s = 'Unable to correctly join line %s from %s' % (i, inputfile)
+                    logging.debug(s)
+                    return False
+                i += 1
+    return True
+
 def csv_file_encoding(inputfile):
     """Try to discern the encoding of a file.
     parameters:
@@ -580,10 +643,81 @@ def read_csv_row(fullpath, dialect, encoding):
     with open(fullpath, 'rU') as data:
         reader = csv.DictReader(utf8_data_encoder(data, encoding), dialect=dialect)
         for row in reader:
-#            print '===row===:\n%s' % row
+            # print '===row===:\n%s' % row
             for f in row:
-                row[f]=row[f].encode(encoding)
+                try:
+                    row[f]=row[f].encode(encoding)
+                except AttributeError, e:
+                    s = 'Error encoding as %s: row[f]: %s' % (encoding, row[f])
+                    logging.debug(s)
+                    s = 'row: %s' % (row)
+                    logging.debug(s)
             yield row
+
+# def read_csv_row(fullpath, dialect, encoding):
+#     """Yield a row from a csv file. Determine the existence of the file, its dialect, and 
+#        its encoding before making a call to this function.
+#     parameters:
+#         fullpath - full path to the input file (required)
+#         dialect - csv.dialect object with the attributes of the input file (required)
+#         encoding - a string designating the input file encoding (required) 
+#             (e.g., 'utf_8', 'mac_roman', 'latin_1', 'cp1252')
+#     returns:
+#         row - the row as a dictionary
+#     """
+#     with open(fullpath, 'rU') as data:
+#         reader = csv.DictReader(data, dialect=dialect)
+#         for row in reader:
+#             # print '===row===:\n%s' % row
+#             for f in row:
+#                 try:
+#                     row[f]=row[f].encode(encoding)
+#                 except AttributeError, e:
+#                     s = 'Error encoding as %s: row[f]: %s' % (encoding, row[f])
+#                     logging.debug(s)
+#                     s = 'row: %s' % (row)
+#                     logging.debug(s)
+#             yield row
+
+def filter_non_printable(str, sub = ''):
+    """Create a copy of a string with non-printing characters removed.
+    parameters:
+        str - the input string (required)
+        sub - character sequence to substitute for the non-printing character 
+            (default '')
+    returns:
+        string with the non-printing characters removed
+    """
+    newstr = ''
+    for c in str:
+        if ord(c) > 31 or ord(c) == 9 or ord(c) == 10 or ord(c) == 13:
+            newstr += c
+        else:
+            newstr += sub
+    return newstr
+
+def file_filter_non_printable(inputfile, outputfile, sub = '-'):
+    """Create a copy of a file with non-printing characters removed.
+    parameters:
+        inputfile - full path to the input file (required)
+        outputfile - full path to the translated output file (required)
+        sub - character sequence to substitute for the non-printing character 
+            (default '-')
+    returns:
+        False if the translation does not complete successfully, otherwise True
+    """
+    i = 0
+    with open(outputfile, 'w') as outdata:
+        with open(inputfile, 'rU') as indata:
+            for line in indata:
+                try:
+                    outdata.write( filter_non_printable(line, sub))
+                except:
+                    s = 'Failed to write line %s in %s. Aborting' % (i, inputfile)
+                    logging.debug(s)
+                    return False
+                i += 1
+    return True
 
 def utf8_file_encoder(inputfile, outputfile, encoding=None):
     """Translate input file to utf8.
@@ -683,8 +817,10 @@ class DWCAUtilsFramework():
     testdatapath = './data/tests/'
 
     # following are files used as input during the tests, don't remove these
+    non_printing_file = testdatapath + 'test_non-printing.csv'
     encodedfile_utf8 = testdatapath + 'test_eight_records_utf8_lf.csv'
-    encodedfile_mac_roman = testdatapath + 'test_thirty_records_latin_1_crlf.csv'
+    encodedfile_latin_1 = testdatapath + 'test_thirty_records_latin_1_crlf.csv'
+    symbiotafile = testdatapath + 'test_symbiota_download.csv'
     csvreadheaderfile = testdatapath + 'test_eight_specimen_records.csv'
     tsvreadheaderfile = testdatapath + 'test_three_specimen_records.txt'
     tsvtest1 = testdatapath + 'test_tsv_1.txt'
@@ -714,6 +850,8 @@ class DWCAUtilsFramework():
     testvocabfile = testdatapath + 'test_vocab_file.csv'
     testtokenreportfile = testdatapath + 'test_token_report_file.txt'
     testencoding = testdatapath + 'test_encoding.txt'
+    testnonprinting = testdatapath + 'test_nonprinting_out.txt'
+    newlinecondenser = testdatapath + 'test_newlinecondenser_out.txt'
 
     def dispose(self):
         csvwriteheaderfile = self.csvwriteheaderfile
@@ -722,6 +860,7 @@ class DWCAUtilsFramework():
         testvocabfile = self.testvocabfile
         testtokenreportfile = self.testtokenreportfile
         testencoding = self.testencoding
+        testnonprinting = self.testnonprinting
         if os.path.isfile(csvwriteheaderfile):
             os.remove(csvwriteheaderfile)
         if os.path.isfile(tsvfromcsvfile1):
@@ -734,6 +873,10 @@ class DWCAUtilsFramework():
             os.remove(testtokenreportfile)
         if os.path.isfile(testencoding):
             os.remove(testencoding)
+        if os.path.isfile(testnonprinting):
+            os.remove(testnonprinting)
+#        if os.path.isfile(newlinecondenser):
+#            os.remove(newlinecondenser)
         return True
 
 class DWCAUtilsTestCase(unittest.TestCase):
@@ -746,8 +889,9 @@ class DWCAUtilsTestCase(unittest.TestCase):
 
     def test_source_files_exist(self):
         print 'testing source_files_exist'
+        non_printing_file = self.framework.non_printing_file
         encodedfile_utf8 = self.framework.encodedfile_utf8
-        encodedfile_mac_roman = self.framework.encodedfile_mac_roman
+        encodedfile_latin_1 = self.framework.encodedfile_latin_1
         csvreadheaderfile = self.framework.csvreadheaderfile
         tsvreadheaderfile = self.framework.tsvreadheaderfile
         tsvtest1 = self.framework.tsvtest1
@@ -766,8 +910,9 @@ class DWCAUtilsTestCase(unittest.TestCase):
         termrowcountfile2 = self.framework.termrowcountfile2
         termtokenfile = self.framework.termtokenfile
 
+        self.assertTrue(os.path.isfile(non_printing_file), non_printing_file + ' does not exist')
         self.assertTrue(os.path.isfile(encodedfile_utf8), encodedfile_utf8 + ' does not exist')
-        self.assertTrue(os.path.isfile(encodedfile_mac_roman), encodedfile_mac_roman + ' does not exist')
+        self.assertTrue(os.path.isfile(encodedfile_latin_1), encodedfile_latin_1 + ' does not exist')
         self.assertTrue(os.path.isfile(csvreadheaderfile), csvreadheaderfile + ' does not exist')
         self.assertTrue(os.path.isfile(tsvreadheaderfile), tsvreadheaderfile + ' does not exist')
         self.assertTrue(os.path.isfile(tsvtest1), tsvtest1 + ' does not exist')
@@ -816,7 +961,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'incorrect delimiter detected for csv file')
         self.assertEqual(dialect.lineterminator, '\r\n',
             'incorrect lineterminator for csv file')
-        self.assertEqual(dialect.escapechar, '/',
+        self.assertEqual(dialect.escapechar, '\\',
             'incorrect escapechar for csv file')
         self.assertEqual(dialect.quotechar, '"',
             'incorrect quotechar for csv file')
@@ -915,8 +1060,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
 
     def test_read_header6(self):
         print 'testing read_header6'
-        encodedfile_mac_roman = self.framework.encodedfile_mac_roman
-        header = read_header(encodedfile_mac_roman)
+        encodedfile_latin_1 = self.framework.encodedfile_latin_1
+        header = read_header(encodedfile_latin_1)
         expected = ['id', 'class', 'coordinateUncertaintyInMeters', 'country',
             'eventDate', 'family', 'genus', 'decimalLatitude', 'decimalLongitude',
             'locality', 'scientificName', 'specificEpithet']
@@ -1023,12 +1168,12 @@ class DWCAUtilsTestCase(unittest.TestCase):
 
         csv_to_txt(csvfile, tsvfile)
         written = os.path.isfile(tsvfile)
-        self.assertTrue(written, 'tsv not written')
+        self.assertTrue(written, 'tsv %s not written' % tsvfile)
 
         header = read_header(tsvfile)
         expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', '']
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
-#            % (len(header), len(modelheader), header, modelheader)
+        # print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
+        #    % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
@@ -1040,14 +1185,72 @@ class DWCAUtilsTestCase(unittest.TestCase):
 
         csv_to_txt(csvfile, tsvfile)
         written = os.path.isfile(tsvfile)
-        self.assertTrue(written, 'tsv not written')
+        self.assertTrue(written, 'tsv %s not written' % tsvfile)
 
         header = read_header(tsvfile, tsv_dialect())
         expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', 
         'decimalLatitude', 'decimalLongitude']
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
-#            % (len(header), len(modelheader), header, modelheader)
+        # print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
+        #    % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
+        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+        self.assertEqual(header, expected, s)
+
+    def test_csv_to_txt3(self):
+        print 'testing csv_to_txt3'
+        csvfile = self.framework.encodedfile_latin_1
+        tsvfile = self.framework.tsvfromcsvfile2
+
+        csv_to_txt(csvfile, tsvfile)
+        written = os.path.isfile(tsvfile)
+        self.assertTrue(written, 'tsv %s not written' % tsvfile)
+
+        header = read_header(tsvfile, tsv_dialect())
+        expected = ['id','class','coordinateUncertaintyInMeters','country','eventDate',
+            'family','genus','decimalLatitude','decimalLongitude','locality',
+            'scientificName','specificEpithet']
+        #print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
+        #    % (len(header), len(modelheader), header, modelheader)
+        self.assertEqual(len(header), 12, 'incorrect number of fields in header')
+        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+        self.assertEqual(header, expected, s)
+
+    def test_csv_to_txt4(self):
+        print 'testing csv_to_txt4'
+        csvfile = self.framework.symbiotafile
+        tsvfile = self.framework.tsvfromcsvfile2
+
+        csv_to_txt(csvfile, tsvfile)
+        written = os.path.isfile(tsvfile)
+        self.assertTrue(written, 'tsv %s not written' % tsvfile)
+
+        header = read_header(tsvfile, tsv_dialect())
+        expected = ['id', 'institutionCode', 'collectionCode', 'basisOfRecord', 
+            'occurrenceID', 'catalogNumber', 'otherCatalogNumbers', 'kingdom', 'phylum',
+            'class', 'order', 'family', 'scientificName', 'scientificNameAuthorship',
+            'genus', 'specificEpithet', 'taxonRank', 'infraspecificEpithet',
+            'identifiedBy', 'dateIdentified', 'identificationReferences', 
+            'identificationRemarks', 'taxonRemarks', 'identificationQualifier',
+            'typeStatus', 'recordedBy', 'recordedByID', 'associatedCollectors', 
+            'recordNumber', 'eventDate', 'year', 'month', 'day', 'startDayOfYear',
+            'endDayOfYear', 'verbatimEventDate', 'occurrenceRemarks', 'habitat', 
+            'substrate', 'verbatimAttributes', 'fieldNumber', 'informationWithheld',
+            'dataGeneralizations', 'dynamicProperties', 'associatedTaxa', 
+            'reproductiveCondition', 'establishmentMeans', 'cultivationStatus', 
+            'lifeStage', 'sex', 'individualCount', 'samplingProtocol', 'samplingEffort',
+            'preparations', 'country', 'stateProvince', 'county', 'municipality', 
+            'locality', 'locationRemarks', 'localitySecurity', 'localitySecurityReason',
+            'decimalLatitude', 'decimalLongitude', 'geodeticDatum', 
+            'coordinateUncertaintyInMeters', 'verbatimCoordinates', 'georeferencedBy',
+            'georeferenceProtocol', 'georeferenceSources', 
+            'georeferenceVerificationStatus', 'georeferenceRemarks', 
+            'minimumElevationInMeters', 'maximumElevationInMeters', 
+            'minimumDepthInMeters', 'maximumDepthInMeters', 'verbatimDepth', 
+            'verbatimElevation', 'disposition', 'language', 'recordEnteredBy', 
+            'modified', 'sourcePrimaryKey', 'collId', 'recordId', 'references']
+        #print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
+        #    % (len(header), len(modelheader), header, modelheader)
+        self.assertEqual(len(header), 86, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
 
@@ -1164,6 +1367,14 @@ class DWCAUtilsTestCase(unittest.TestCase):
             % (csvfile, firstbadrow)
         self.assertEqual(firstbadrow,3,s)
 
+        csvfile = self.framework.non_printing_file
+        result = csv_field_checker(csvfile)
+#        print 'csvfile: %s result: %s' % (csvfile, result)
+        firstbadrow = result[0]
+        s = 'field checker found first mismatched field in %s at row index %s'  \
+            % (csvfile, firstbadrow)
+        self.assertEqual(firstbadrow,5,s)
+
     def test_term_rowcount_from_file(self):
         print 'testing term_rowcount_from_file'
         termrowcountfile = self.framework.termrowcountfile1
@@ -1191,14 +1402,14 @@ class DWCAUtilsTestCase(unittest.TestCase):
     def test_csv_file_encoding(self):
         print 'testing csv_file_encoding'
         encodedfile_utf8 = self.framework.encodedfile_utf8
-        encodedfile_mac_roman = self.framework.encodedfile_mac_roman
+        encodedfile_latin_1 = self.framework.encodedfile_latin_1
         
         encoding = csv_file_encoding(encodedfile_utf8)
         expected = 'utf_8'
         s = 'file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding,expected,s)
         
-        encoding = csv_file_encoding(encodedfile_mac_roman)
+        encoding = csv_file_encoding(encodedfile_latin_1)
         expected = 'latin_1'
         s = 'file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding,expected,s)
@@ -1216,7 +1427,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Encoding (%s) of %s to %s not utf_8' % (encoding, testfile, tempfile)
         self.assertEqual(encoding,expected,s)
 
-        testfile = self.framework.encodedfile_mac_roman
+        testfile = self.framework.encodedfile_latin_1
         success = utf8_file_encoder(testfile, tempfile)
         s = '%s not translated to utf8' % testfile
         self.assertEqual(success,True,s)
@@ -1224,6 +1435,24 @@ class DWCAUtilsTestCase(unittest.TestCase):
         expected = 'utf_8'
         s = 'Encoding (%s) of %s to %s not utf_8' % (encoding, testfile, tempfile)
         self.assertEqual(encoding,expected,s)
+
+    def test_file_filter_non_printable(self):
+        print 'testing file_filter_non_printable'
+        testfile = self.framework.non_printing_file
+        tempfile = self.framework.testnonprinting
+
+        success = file_filter_non_printable(testfile, tempfile)
+        s = 'Unable to remove non-printing characters from %s' % testfile
+        self.assertEqual(success,True,s)
+
+    def test_csv_spurious_newline_condenser(self):
+        print 'testing csv_spurious_newline_condenser'
+        testfile = self.framework.non_printing_file
+        tempfile = self.framework.newlinecondenser
+
+        success = csv_spurious_newline_condenser(testfile, tempfile)
+        s = 'Unable to remove new lines from data content from %s' % testfile
+        self.assertEqual(success,True,s)
 
 if __name__ == '__main__':
     print '=== dwca_utils.py ==='

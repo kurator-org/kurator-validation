@@ -20,6 +20,7 @@ from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
 from dwca_vocab_utils import terms_not_in_dwc
 from dwca_vocab_utils import darwinize_list
+from dwca_utils import dialect_attributes
 from dwca_utils import read_header
 from dwca_utils import write_header
 from dwca_utils import read_csv_row
@@ -130,12 +131,15 @@ def darwinize_header(options):
         returnvals = [outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
+#    print 'dialect:\n%s' % dialect_attributes(dialect)
+#    print 'header:\n%s' % header
 
     # Read the rows of the input file, append them to the output file after the 
     # header with columns in the same order.
     with open(outputfile, 'a') as outfile:
         writer = csv.DictWriter(outfile, dialect=dialect, fieldnames=header)
         for row in read_csv_row(inputfile, dialect, encoding):
+#            print 'row:\n%s' % row
             writer.writerow(row)
 
     success = True

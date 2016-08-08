@@ -155,7 +155,7 @@ class TextFileFilterTestCase(unittest.TestCase):
             matches = 0
             for row in dr:
                 rows += 1
-                print 'row: %s' % row
+#                print 'row: %s' % row
                 if row[termname] == matchingvalue:
                     matches +=1
         expected = 6

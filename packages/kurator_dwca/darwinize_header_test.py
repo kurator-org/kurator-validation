@@ -34,8 +34,9 @@ class DarwinizeHeaderFramework():
     testdatapath = './data/tests/'
 
     # input data files to tests, don't remove these
-    testfile1 = testdatapath + 'test_eight_specimen_records.csv'
-    testfile2 = testdatapath + 'test_three_specimen_records.txt'
+    testfile1 = testdatapath + 'test_eight_records_utf8_lf.csv'
+    testfile2 = testdatapath + 'test_three_records_utf8_unix_lf.txt'
+    testfile3 = testdatapath + 'test_symbiota_download.csv'
     dwccloudfile = testdatapath + 'test_dwc_cloud.txt'
 
     # output data files from tests, remove these in dispose()
@@ -63,6 +64,8 @@ class DarwinizeHeaderTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(testfile1), testfile1 + ' does not exist')
         testfile2 = self.framework.testfile2
         self.assertTrue(os.path.isfile(testfile2), testfile2 + ' does not exist')
+        testfile3 = self.framework.testfile3
+        self.assertTrue(os.path.isfile(testfile3), testfile3 + ' does not exist')
         dwccloudfile = self.framework.dwccloudfile
         self.assertTrue(os.path.isfile(dwccloudfile), dwccloudfile + ' does not exist')
 
@@ -146,10 +149,40 @@ class DarwinizeHeaderTestCase(unittest.TestCase):
             (testfile, header, expected)
         self.assertEqual(header, expected)
 
+        testfile = self.framework.testfile3
+
+        header = read_header(testfile)
+        expected = ['id', 'institutionCode', 'collectionCode', 'basisOfRecord', 
+            'occurrenceID', 'catalogNumber', 'otherCatalogNumbers', 'kingdom', 'phylum',
+            'class', 'order', 'family', 'scientificName', 'scientificNameAuthorship',
+            'genus', 'specificEpithet', 'taxonRank', 'infraspecificEpithet',
+            'identifiedBy', 'dateIdentified', 'identificationReferences', 
+            'identificationRemarks', 'taxonRemarks', 'identificationQualifier',
+            'typeStatus', 'recordedBy', 'recordedByID', 'associatedCollectors', 
+            'recordNumber', 'eventDate', 'year', 'month', 'day', 'startDayOfYear',
+            'endDayOfYear', 'verbatimEventDate', 'occurrenceRemarks', 'habitat', 
+            'substrate', 'verbatimAttributes', 'fieldNumber', 'informationWithheld',
+            'dataGeneralizations', 'dynamicProperties', 'associatedTaxa', 
+            'reproductiveCondition', 'establishmentMeans', 'cultivationStatus', 
+            'lifeStage', 'sex', 'individualCount', 'samplingProtocol', 'samplingEffort',
+            'preparations', 'country', 'stateProvince', 'county', 'municipality', 
+            'locality', 'locationRemarks', 'localitySecurity', 'localitySecurityReason',
+            'decimalLatitude', 'decimalLongitude', 'geodeticDatum', 
+            'coordinateUncertaintyInMeters', 'verbatimCoordinates', 'georeferencedBy',
+            'georeferenceProtocol', 'georeferenceSources', 
+            'georeferenceVerificationStatus', 'georeferenceRemarks', 
+            'minimumElevationInMeters', 'maximumElevationInMeters', 
+            'minimumDepthInMeters', 'maximumDepthInMeters', 'verbatimDepth', 
+            'verbatimElevation', 'disposition', 'language', 'recordEnteredBy', 
+            'modified', 'sourcePrimaryKey', 'collId', 'recordId', 'references']
+        s = 'test file %s header:\n%s does not match expected:\n%s' % (testfile, header, expected)
+        self.assertEqual(header, expected)
+
     def test_darwinize_header(self):
         print 'testing darwinize_header'
         testfile1 = self.framework.testfile1
         testfile2 = self.framework.testfile2
+        testfile3 = self.framework.testfile3
         testdatapath = self.framework.testdatapath
         dwccloudfile = self.framework.dwccloudfile
         outputfile = self.framework.outputfile
@@ -215,6 +248,49 @@ class DarwinizeHeaderTestCase(unittest.TestCase):
         'permitInformation', 'plateID', 'preservative', 'principalInvestigator', 
         'sampleOwnerInstitutionCode', 'substratum', 'tissueStorageID', 'unnamedcolumn_1', 
         'weight', 'wellID', 'yearIdentified']
+        s = 'From input: %s\nFound:\n%s\nExpected:\n%s' % (testfile1, notdwc, expected)
+        self.assertEqual(notdwc, expected, s)
+
+        inputs['inputfile'] = testfile3
+
+        # Darwinize the header
+        response=darwinize_header(inputs)
+        header = read_header(outfilelocation)
+#        print 'response2:\n%s' % response
+        expected = ['id', 'institutionCode', 'collectionCode', 'basisOfRecord', 
+            'occurrenceID', 'catalogNumber', 'otherCatalogNumbers', 'kingdom', 'phylum',
+            'class', 'order', 'family', 'scientificName', 'scientificNameAuthorship',
+            'genus', 'specificEpithet', 'taxonRank', 'infraspecificEpithet',
+            'identifiedBy', 'dateIdentified', 'identificationReferences', 
+            'identificationRemarks', 'taxonRemarks', 'identificationQualifier',
+            'typeStatus', 'recordedBy', 'recordedByID', 'associatedCollectors', 
+            'recordNumber', 'eventDate', 'year', 'month', 'day', 'startDayOfYear',
+            'endDayOfYear', 'verbatimEventDate', 'occurrenceRemarks', 'habitat', 
+            'substrate', 'verbatimAttributes', 'fieldNumber', 'informationWithheld',
+            'dataGeneralizations', 'dynamicProperties', 'associatedTaxa', 
+            'reproductiveCondition', 'establishmentMeans', 'cultivationStatus', 
+            'lifeStage', 'sex', 'individualCount', 'samplingProtocol', 'samplingEffort',
+            'preparations', 'country', 'stateProvince', 'county', 'municipality', 
+            'locality', 'locationRemarks', 'localitySecurity', 'localitySecurityReason',
+            'decimalLatitude', 'decimalLongitude', 'geodeticDatum', 
+            'coordinateUncertaintyInMeters', 'verbatimCoordinates', 'georeferencedBy',
+            'georeferenceProtocol', 'georeferenceSources', 
+            'georeferenceVerificationStatus', 'georeferenceRemarks', 
+            'minimumElevationInMeters', 'maximumElevationInMeters', 
+            'minimumDepthInMeters', 'maximumDepthInMeters', 'verbatimDepth', 
+            'verbatimElevation', 'disposition', 'language', 'recordEnteredBy', 
+            'modified', 'sourcePrimaryKey', 'collId', 'recordId', 'references']
+        s = 'From input: %s\nFound:\n%s\nExpected:\n%s' % (testfile3, header, expected)
+        self.maxDiff = None
+        self.assertEqual(header, expected, s)
+
+        # What is not Darwin Core?
+        casesensitive = True
+        notdwc = terms_not_in_dwc(header, casesensitive)
+        expected = [
+        'associatedCollectors', 'collId', 'cultivationStatus', 'id', 'localitySecurity', 
+        'localitySecurityReason', 'recordEnteredBy', 'recordId', 'recordedByID', 
+        'sourcePrimaryKey', 'substrate', 'verbatimAttributes']
         s = 'From input: %s\nFound:\n%s\nExpected:\n%s' % (testfile1, notdwc, expected)
         self.assertEqual(notdwc, expected, s)
 
