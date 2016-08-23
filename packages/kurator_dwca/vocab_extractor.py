@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-08-21T21:19+02:00"
+__version__ = "vocab_extractor.py 2016-08-23T14:42+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -114,12 +114,18 @@ def main():
     optdict = {}
 
     if options.inputfile is None or len(options.inputfile)==0 or \
-       options.termlist is None or len(options.termlist)==0:
-        s =  'syntax:\n'
+       options.terms is None or len(options.terms)==0:
+        s =  'syntax examples:\n'
         s += 'python vocab_extractor.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -t year'
         s += ' -s |'
+        s += ' -l DEBUG\n'
+        print '%s' % s
+        s += 'python vocab_extractor.py'
+        s += ' -i ./data/eight_specimen_records.csv'
+        s += '"country|stateprovince|county"'
+        s += ' -s "|"'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -130,7 +136,7 @@ def main():
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 
-    # Get distinct values of termlist from inputfile
+    # Get distinct values of terms from inputfile
     response=vocab_extractor(optdict)
     print '\nresponse: %s' % response
 
