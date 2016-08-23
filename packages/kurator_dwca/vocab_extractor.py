@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-05-27T21:32-03:00"
+__version__ = "vocab_extractor.py 2016-08-21T21:19+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -24,11 +24,14 @@ import logging
 import argparse
 
 def vocab_extractor(options):
-    """Extract a list of the distinct values of a given term in a text file.
+    """Extract a list of the distinct values of a set of terms in a text file.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         inputfile - full path to the input file (required)
-        termname - the name of the term for which to find distinct values (required)
+        terms - string of separator-separated terms for which to find distinct values
+            (e.g., 'year', 'country|stateProvince|county') (required)
+        separator - string that separates the values in terms (e.g., '|') 
+            (optional; default None)
     returns a dictionary with information about the results
         extractedvalues - a list of distinct values of the term in the inputfile
         success - True if process completed successfully, otherwise False
@@ -66,17 +69,23 @@ def vocab_extractor(options):
         return response(returnvars, returnvals)
         
     try:
-        termname = options['termname']
+        terms = options['terms']
     except:
-        termname = None
+        terms = None
 
-    if termname is None or len(termname)==0:
-        message = 'No term given'
+    if terms is None or len(terms)==0:
+        message = 'No terms given'
         returnvals = [extractedvalues, success, message]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
-    extractedvalues = distinct_term_values_from_file(inputfile, termname)
+    try:
+        separator = options['separator']
+    except:
+        separator = None
+
+    extractedvalues = distinct_term_values_from_file(inputfile, terms, \
+        separator=separator)
     success = True
     returnvals = [extractedvalues, success, message]
     logging.debug('Finishing %s' % __version__)
@@ -89,8 +98,11 @@ def _getoptions():
     help = 'full path to the input file (required)'
     parser.add_argument("-i", "--inputfile", help=help)
 
-    help = "name of the term (required)"
-    parser.add_argument("-t", "--termname", help=help)
+    help = "terms (required)"
+    parser.add_argument("-t", "--terms", help=help)
+
+    help = "separator (optional)"
+    parser.add_argument("-s", "--separator", help=help)
 
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
@@ -102,21 +114,23 @@ def main():
     optdict = {}
 
     if options.inputfile is None or len(options.inputfile)==0 or \
-       options.termname is None or len(options.termname)==0:
+       options.termlist is None or len(options.termlist)==0:
         s =  'syntax:\n'
         s += 'python vocab_extractor.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -t year'
+        s += ' -s |'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
     optdict['inputfile'] = options.inputfile
-    optdict['termname'] = options.termname
+    optdict['terms'] = options.terms
+    optdict['separator'] = options.separator
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 
-    # Get distinct values of termname from inputfile
+    # Get distinct values of termlist from inputfile
     response=vocab_extractor(optdict)
     print '\nresponse: %s' % response
 

@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-08-04T16:01+02:00"
+__version__ = "dwca_utils.py 2016-08-23T10:30+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -414,8 +414,8 @@ def clean_header(header):
 def merge_headers(headersofar, headertoadd = None):
     """Construct a header from the distinct white-space-stripped fields in two headers.
     parameters:
-        headersofar - first header from which to build the composite (required)
-        headertoadd -  a header to merge with the first header (optional)
+        headersofar - first header to merge (required)
+        headertoadd - header to merge with the first header (optional)
     returns:
         a sorted list of fields for the combined header
     """
@@ -861,6 +861,7 @@ class DWCAUtilsFramework():
         testtokenreportfile = self.testtokenreportfile
         testencoding = self.testencoding
         testnonprinting = self.testnonprinting
+        newlinecondenser = self.newlinecondenser
         if os.path.isfile(csvwriteheaderfile):
             os.remove(csvwriteheaderfile)
         if os.path.isfile(tsvfromcsvfile1):
@@ -875,8 +876,8 @@ class DWCAUtilsFramework():
             os.remove(testencoding)
         if os.path.isfile(testnonprinting):
             os.remove(testnonprinting)
-#        if os.path.isfile(newlinecondenser):
-#            os.remove(newlinecondenser)
+        if os.path.isfile(newlinecondenser):
+            os.remove(newlinecondenser)
         return True
 
 class DWCAUtilsTestCase(unittest.TestCase):
@@ -1081,17 +1082,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
         'materialSampleID', 'phylum', 'principalInvestigator']
 #        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' \
 #            % (len(header), len(modelheader), header, modelheader)
-        self.assertEqual(len(header), 6, 'incorrect number of fields in header')
-        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
-        self.assertEqual(header, expected, s)
-
-#        header = composite_header(tsvcompositepath)
-#        s =  'len(header)=%s' % len(header)
-#        s += ' len(expected)=%s' % len(expected)
-#        s += '\nheader:\n%s' % header
-#        s += '\expected:\n%s' % expected
-#        s += '\ntsvcompositepath: %s' % tsvcompositepath
-#        print '%s' % s
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)

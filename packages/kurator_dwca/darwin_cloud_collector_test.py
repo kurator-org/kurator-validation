@@ -92,6 +92,7 @@ class DarwinCloudCollectorTestCase(unittest.TestCase):
 
         # Test with missing optional inputs
         inputs['outputfile'] = outputfile
+#        print 'inputs:\n%s' % inputs
         response=darwin_cloud_collector(inputs)
 #        print 'response4:\n%s' % response
         s = 'no output file produced with required inputs'

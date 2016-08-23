@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "geog_recommendation_reporter.py 2016-06-11T19:36-43:00"
+__version__ = "geog_recommendation_reporter.py 2016-08-23T09:56+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -23,13 +23,14 @@ from dwca_utils import csv_dialect
 from dwca_utils import tsv_dialect
 from dwca_utils import read_header
 from dwca_terms import geogkeytermlist
-from dwca_vocab_utils import distinct_composite_term_values_from_file
+from dwca_vocab_utils import distinct_term_values_from_file
 from dwca_vocab_utils import compose_key_from_list
 from dwca_vocab_utils import vocab_dialect
+from dwca_vocab_utils import vocabfieldlist
 from dwca_vocab_utils import compose_key_from_row
 from dwca_vocab_utils import compose_dict_from_key
 from dwca_vocab_utils import prefix_keys
-from dwca_terms import geogvocabfieldlist
+from dwca_vocab_utils import geogvocabheader
 import os
 import csv
 import logging
@@ -156,7 +157,7 @@ def geog_recommendation_reporter(options):
     # Get a list of distinct values of the term in the input file
     dialect = csv_file_dialect(inputfile)
     geogkey = compose_key_from_list(geogkeytermlist)
-    checklist = distinct_composite_term_values_from_file(inputfile, geogkey, '|', dialect)
+    checklist = distinct_term_values_from_file(inputfile, geogkey, dialect, '|')
     s = 'geog_recommendation_reporter()'
     s += ' checklist:\n%s' % checklist
     logging.debug(s)
@@ -188,8 +189,8 @@ def geog_recommendation_reporter(options):
     logging.debug(s)
 
     if recommended is None or len(recommended)==0:
-        message = 'Vocabulary %s has no recommended values for %s from %s' % \
-            (vocabfile, termcomposite, inputfile)
+        message = 'Vocabulary file %s has no recommended values for geogs in %s' % \
+            (vocabfile, inputfile)
         returnvals = \
             [workspace, geogoutputfile, geogrowoutputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
@@ -201,6 +202,7 @@ def geog_recommendation_reporter(options):
     s = 'geog_recommendation_reporter()'
     s += ' geogoutputfile:\n%s\nrecommended:\n%s' % (geogoutputfile, recommended)
     logging.debug(s)
+
     success = geog_recommendation_report(geogoutputfile, recommended, format)
 
     if not os.path.isfile(geogoutputfile):
@@ -247,6 +249,7 @@ def matching_geog_dict_from_file(checklist, vocabfile, dialect=None):
         logging.debug('No list of values given in matching_geog_dict_from_file()')
         return None
     vocabdict = dwc_geog_dict_from_file(vocabfile, dialect)
+
     if vocabdict is None or len(vocabdict)==0:
         logging.debug('No vocabdict constructed in matching_geog_dict_from_file()')
         return None
@@ -255,6 +258,30 @@ def matching_geog_dict_from_file(checklist, vocabfile, dialect=None):
         if term in vocabdict:
             matchingvocabdict[term]=vocabdict[term]
     return matchingvocabdict
+
+def non_matching_geog_dict_from_file(checklist, vocabfile, dialect=None):
+    """Given a checklist of values, get non-matching values from a geography vocabulary 
+       file.
+    parameters:
+        checklist - list of values to get from the vocabfile
+        vocabfile - full path to the vocabulary lookup file
+        dialect - csv.dialect object with the attributes of the vocabulary lookup file
+    returns:
+        nonmatchingvocabdict - dictionary of values in the checklist that are not found
+            in the vocabulary file.
+    """
+    if checklist is None or len(checklist)==0:
+        logging.debug('No list of values given in non_matching_geog_dict_from_file()')
+        return None
+    vocabdict = dwc_geog_dict_from_file(vocabfile, dialect)
+    if vocabdict is None or len(vocabdict)==0:
+        logging.debug('No vocabdict constructed in non_matching_geog_dict_from_file()')
+        return None
+    nonmatchingvocabdict = {}
+    for term in checklist:
+        if term not in vocabdict:
+            nonmatchingvocabdict[term]=vocabdict[term]
+    return nonmatchingvocabdict
 
 def dwc_geog_dict_from_file(vocabfile, dialect=None):
     """Get a full geography vocabulary as a dict.
@@ -270,22 +297,20 @@ def dwc_geog_dict_from_file(vocabfile, dialect=None):
     if os.path.isfile(vocabfile) == False:
         logging.debug('Vocab file %s not found in dwc_geog_dict_from_file()' % vocabfile)
         return None
+
     geogdict = {}
     if dialect is None:
         dialect = vocab_dialect()
-
     with open(vocabfile, 'rU') as csvfile:
-        dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=geogvocabfieldlist)
+        dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=geogvocabheader())
         h = dr.next()
         for row in dr:
+#            print 'row: %s' % row
             rowdict = {}
-            rowdict['checked']=row['checked']
-            rowdict['incorrectable']=row['incorrectable']
+            for f in vocabfieldlist:
+                rowdict[f]=row[f]
             for field in geogkeytermlist:
                 rowdict[field]=row[field]
-            rowdict['error']=row['error']
-            rowdict['comment']=row['comment']
-            rowdict['higherGeographyID']=row['higherGeographyID']
             geogdict[row['geogkey']]=rowdict
     return geogdict
 
@@ -344,20 +369,20 @@ def geog_recommendation_report(reportfile, recommendationdict, format=None):
     else:
         dialect = tsv_dialect()
 
+    fieldnames = geogvocabheader()
     with open(reportfile, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, \
-            fieldnames=geogvocabfieldlist)
+        writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
         writer.writeheader()
 
     with open(reportfile, 'a') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, \
-            fieldnames=geogvocabfieldlist)
+        writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
         for key, value in recommendationdict.iteritems():
+#            print 'key: %s\nvalue: %s' % (key, value)
             s = 'geog_recommendation_report()'
             s += ' key: %s value: %s' % (key, value)
             logging.debug(s)
             geogdict = { 'geogkey':key }
-            for k in geogvocabfieldlist:
+            for k in fieldnames:
                 if k != 'geogkey':
                     geogdict[k]=value[k]
             writer.writerow(geogdict)

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_geog_collector_test.py 2016-05-11T22:42-03:00"
+__version__ = "dwc_geog_collector_test.py 2016-08-23T10:13+02:00"
 
 # This file contains unit test for the dwc_geog_collector function.
 #
@@ -170,9 +170,9 @@ class DwCGeogCollectorTestCase(unittest.TestCase):
         self.assertEqual(addedvalues, expected, s)
         
         dialect = vocab_dialect()
-        geogkey = compose_key_from_list(geogkeytermlist)
+#        geogkey = compose_key_from_list(geogkeytermlist)
 #        print 'geogkey: %s' % geogkey
-        existinggeogs = distinct_term_values_from_file(vocabfile, geogkey, dialect)
+        existinggeogs = distinct_term_values_from_file(vocabfile, 'geogkey', separator='', dialect=dialect)
         expected = [
             '|Mozambique||Maputo|||||Inhaca',
             '|South Africa||Kwa-Zulu Natal|||||',
@@ -184,8 +184,8 @@ class DwCGeogCollectorTestCase(unittest.TestCase):
             '|United States||Washington|Chelan||||'
         ]
         s = 'Resulting Darwin Core geography file %s ' % vocabfile
-        s += 'not correct from input file %s and %s\n' % (testfile1, testfile2)
-        s += 'Found:\n%s\nShould be:\n%s' % (existinggeogs, expected)
+        s += 'not correct from input files %s and %s\n' % (testfile1, testfile2)
+        s += 'Found:\n%s\nExpected:\n%s' % (existinggeogs, expected)
         self.assertEqual(existinggeogs, expected, s)
 
 if __name__ == '__main__':

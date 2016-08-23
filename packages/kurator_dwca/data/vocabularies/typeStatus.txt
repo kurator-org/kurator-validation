@@ -1,1 +1,1 @@
-verbatim	standard	checked	error	misplaced	incorrectable	source	commentholotype	holotype	1					paratype	paratype	1					H	holotype	1	TypeStatus is an abbreviation.	0	0		P	paratype	1	TypeStatus is an abbreviation.	0	0
+verbatim	standard	vetted	error	misplaced	unresolved	source	commentholotype	holotype	1					paratype	paratype	1					H	holotype	1	TypeStatus is an abbreviation.	0	0		P	paratype	1	TypeStatus is an abbreviation.	0	0

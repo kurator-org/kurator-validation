@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "geog_recommendation_reporter_test.py 2016-06-11T19:56-03:00"
+__version__ = "geog_recommendation_reporter_test.py 2016-08-23T09:52+02:00"
 
 # This file contains unit tests for the geog_recommendation_reporter function.
 #
@@ -25,7 +25,7 @@ __version__ = "geog_recommendation_reporter_test.py 2016-06-11T19:56-03:00"
 from geog_recommendation_reporter import geog_recommendation_reporter
 from dwca_utils import read_header
 from dwca_utils import csv_file_dialect
-from dwca_terms import geogvocabfieldlist
+from dwca_vocab_utils import geogvocabheader
 import os
 import csv
 import unittest
@@ -118,6 +118,7 @@ class GeogRecommendationReporterTestCase(unittest.TestCase):
         inputs = {}
         inputs['inputfile'] = inputfile_onebad
         inputs['vocabfile'] = vocabfile
+#        print 'inputs:\n%s' % inputs
         response=geog_recommendation_reporter(inputs)
 #        print 'response4:\n%s' % response
         s = 'no output files produced with required inputs and a non-standard geog'
@@ -197,7 +198,7 @@ class GeogRecommendationReporterTestCase(unittest.TestCase):
 
         # Reports supposedly exists, check the geog file header
         header = read_header(geogfile)
-        expected = geogvocabfieldlist
+        expected = geogvocabheader()
         s = 'geog file %s ' % geogfile
         s += ' header:\n%s\n' % header
         s += 'does not match expected:\n%s' % expected
@@ -215,8 +216,8 @@ class GeogRecommendationReporterTestCase(unittest.TestCase):
         self.assertEqual(rowheader, expected)
 
         geogkey = None
-        checked = None
-        incorrectable = None
+        vetted = None
+        unresolved = None
         continent = None
         country = None
         countrycode = None
@@ -240,8 +241,8 @@ class GeogRecommendationReporterTestCase(unittest.TestCase):
                 i += 1
                 if i == 1:
                     geogkey = row['geogkey']
-                    checked = row['checked']
-                    incorrectable = row['incorrectable']
+                    vetted = row['vetted']
+                    unresolved = row['unresolved']
                     continent = row['continent']
                     country = row['country']
                     countrycode = row['countryCode']
@@ -264,15 +265,15 @@ class GeogRecommendationReporterTestCase(unittest.TestCase):
         s = '%s:\n%s does not match expected:\n%s' % (field, found, expected)
         self.assertEqual(found, expected)
 
-        field = 'checked'
-        found = checked
+        field = 'vetted'
+        found = vetted
         expected = '1'
         s = '%s:\n%s does not match expected:\n%s' % (field, found, expected)
         self.assertEqual(found, expected)
 
-        field = 'incorrectable'
-        found = incorrectable
-        expected = '0'
+        field = 'unresolved'
+        found = unresolved
+        expected = ''
         s = '%s:\n%s does not match expected:\n%s' % (field, found, expected)
         self.assertEqual(found, expected)
 

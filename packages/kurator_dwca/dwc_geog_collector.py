@@ -14,13 +14,12 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_geog_collector.py 2016-05-27T15:55-03:00"
+__version__ = "dwc_geog_collector.py 2016-08-22T15:20+02:00"
 
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import writevocabheader
 from dwca_vocab_utils import compose_key_from_list
 from dwca_vocab_utils import distinct_term_values_from_file
-from dwca_vocab_utils import distinct_composite_term_values_from_file
 from dwca_vocab_utils import not_in_list
 from dwca_vocab_utils import geogvocabheader
 from dwca_utils import read_header
@@ -90,10 +89,10 @@ def dwc_geog_collector(options):
 
     geogkey = compose_key_from_list(geogkeytermlist)
 
-    potentialgeogs = distinct_composite_term_values_from_file(inputfile, geogkey, '|')
+    potentialgeogs = distinct_term_values_from_file(inputfile, geogkey, separator='|')
     logging.debug('potentialgeogs: %s\n' % potentialgeogs)
 
-    existinggeogs = distinct_term_values_from_file(vocabfile, geogkey, dialect)
+    existinggeogs = distinct_term_values_from_file(vocabfile, geogkey, dialect=dialect)
     logging.debug('existinggeogs: %s\n' % existinggeogs)
 
     addedvalues = not_in_list(existinggeogs, potentialgeogs)
@@ -120,7 +119,7 @@ def dwc_geog_collector(options):
     with open(vocabfile, 'a') as csvfile:
         writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=geogheader)
         for term in addedvalues:
-            writer.writerow({geogkey:term, 'checked':0, 'incorrectable':0 })
+            writer.writerow({'geogkey':term, 'vetted':0, 'unresolved':0 })
     success = True
 
     returnvals = [addedvalues, success, message]

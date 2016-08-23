@@ -100,7 +100,7 @@ def darwin_cloud_collector(options):
     nondwc = terms_not_in_dwc(header)
 
     dialect = vocab_dialect()
-    addedvalues = distinct_vocabs_to_file(outputfile, nondwc, dialect)
+    addedvalues = distinct_vocabs_to_file(outputfile, nondwc, dialect=dialect)
     success = True
     artifacts['darwin_cloud_collector_file'] = outputfile
     returnvals = [addedvalues, outputfile, success, message, artifacts]

@@ -113,9 +113,9 @@ class TermRecommendationReporterTestCase(unittest.TestCase):
         inputs['termname'] = termname
         inputs['outputfile'] = testreportfile
         inputs['vocabfile'] = monthvocabfile
+#        print 'inputs:\n%s' % inputs
 
         # Create the report
-#        print 'inputs:\n%s' % inputs
         response=term_recommendation_reporter(inputs)
 #        print 'response:\n%s' % response
         success = response['success']

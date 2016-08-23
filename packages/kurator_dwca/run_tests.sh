@@ -23,7 +23,5 @@ python text_file_filter_test.py
 python text_file_splitter_test.py
 python utf8_encoder_test.py
 python vocab_appender_test.py
-python vocab_composite_appender_test.py
-python vocab_composite_extractor_test.py
 python vocab_counter_test.py
 python vocab_extractor_test.py

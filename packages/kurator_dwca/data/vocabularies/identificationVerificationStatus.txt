@@ -1,1 +1,1 @@
-verbatim	standard	checked	error	misplaced	incorrectable	source	commentunknown	unverified	1	IdentificationVerificationStatus is a synonym.	0	0		
+verbatim	standard	vetted	error	misplaced	unresolved	source	commentunknown	unverified	1	IdentificationVerificationStatus is a synonym.	0	0		

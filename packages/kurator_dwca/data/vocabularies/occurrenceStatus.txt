@@ -1,1 +1,1 @@
-verbatim	standard	checked	error	misplaced	incorrectable	source	commentpresent	present	1					absent	absent	1					1	present	1					0	absent	1					P	present	1					A	absent	1					pres	present	1					abs	absent	1					pres.	present	1					abs.	absent	1					
+verbatim	standard	vetted	error	misplaced	unresolved	source	commentpresent	present	1					absent	absent	1					1	present	1					0	absent	1					P	present	1					A	absent	1					pres	present	1					abs	absent	1					pres.	present	1					abs.	absent	1					

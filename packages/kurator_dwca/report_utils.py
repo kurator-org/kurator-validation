@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2016-06-11T19:59-03:00"
+__version__ = "report_utils.py 2016-08-22T16:07+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -32,18 +32,24 @@ import unittest
 import csv
 import os.path
 
-def term_recommendation_report(reportfile, recommendationdict, format=None):
+def term_recommendation_report(reportfile, recommendationdict, key=None, format=None):
     """Write a term recommendation report.
     parameters:
         reportfile - full path to the output report file (optional)
         recommendationdict - dictionary of term recommendations (required)
         format - string signifying the csv.dialect of the report file ('csv' or 'txt')
+        key - the field name that holds the distinct values in the vocabulary file
+            (optional; default None)
     returns:
         success - True if the report was written, else False
     """
     if recommendationdict is None or len(recommendationdict)==0:
         logging.debug('No term recommendations given in term_recommendation_report()')
         return False
+
+    if key is None or len(key.strip())==0:
+        key = defaultvocabkey
+    fieldnames = [key] + vocabfieldlist
 
     if format=='csv' or format is None:
         dialect = csv_dialect()
@@ -52,8 +58,7 @@ def term_recommendation_report(reportfile, recommendationdict, format=None):
 
     if reportfile is not None and len(reportfile)>0:
         with open(reportfile, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, dialect=dialect, \
-                fieldnames=vocabfieldlist)
+            writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
             writer.writeheader()
 
         if os.path.isfile(reportfile) == False:
@@ -61,29 +66,28 @@ def term_recommendation_report(reportfile, recommendationdict, format=None):
             return False
 
         with open(reportfile, 'a') as csvfile:
-            writer = csv.DictWriter(csvfile, dialect=dialect, \
-                fieldnames=vocabfieldlist)
-            for key, value in recommendationdict.iteritems():
-                writer.writerow({'verbatim':key, 
+            writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
+            for datakey, value in recommendationdict.iteritems():
+                writer.writerow({key:datakey, 
                     'standard':value['standard'], \
-                    'checked':value['checked'], \
+                    'vetted':value['vetted'], \
                     'error':value['error'], \
                     'misplaced':value['misplaced'], \
-                    'incorrectable':value['incorrectable'], \
+                    'unresolved':value['unresolved'], \
                     'source':value['source'], \
                     'comment':value['comment'] })
         logging.debug('Report written to %s in term_recommendation_report()' % reportfile)
     else:
         # Print the report to stdout
-        print 'verbatim\tstandard\tchecked\terror\tmisplaced\tincorrectable\tsource\tcomment'
-        for key, value in recommendationdict.iteritems():
+        print '%s\tstandard\tvetted\terror\tmisplaced\tunresolved\tsource\tcomment' % key
+        for datakey, value in recommendationdict.iteritems():
             print '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' ( \
-                key,
+                datakey,
                 value['standard'], \
-                value['checked'], \
+                value['vetted'], \
                 value['error'], \
                 value['misplaced'], \
-                value['incorrectable'], \
+                value['unresolved'], \
                 value['source'], \
                 value['comment'])
     return True

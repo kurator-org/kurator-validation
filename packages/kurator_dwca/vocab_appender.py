@@ -14,27 +14,34 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2016-05-27T21:25-03:00"
+__version__ = "vocab_appender.py 2016-08-21T13:20+02:00"
 
+from dwca_utils import read_header
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
+from dwca_vocab_utils import vocabheader
+from dwca_vocab_utils import writevocabheader
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
+from dwca_vocab_utils import defaultvocabkey
+from dwca_terms import vocabfieldlist
 import os
+import csv
 import logging
 import argparse
 
 def vocab_appender(options):
-    """Given a set of distinct values for a given term, append any not already in the 
-       corresponding vocabulary file as new entries.
+    """Given a set of distinct key values for a given term, append any not already in the 
+       given vocabulary file as new entries.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         vocabfile - full path to the file containing the vocabulary (required)
-        checkvaluelist - list of candidate term values to append to the vocabulary 
-            file (optional)
+        checkvaluelist - a list of candidate key values to append (optional)
+        key - the field name that holds the distinct values in the vocabulary file
+            (optional; default None)
     returns a dictionary with information about the results
         vocabfile - full path to the file containing the vocabulary
-        addedvalues - new values added to the vocabulary file
+        addedvalues - new key values added to the vocabulary file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
@@ -64,19 +71,61 @@ def vocab_appender(options):
         return response(returnvars, returnvals)
 
     try:
+        key = options['key']
+    except:
+        key = defaultvocabkey
+
+    try:
         checkvaluelist = options['checkvaluelist']
     except:
         checkvaluelist = None
-    
-    dialect = vocab_dialect()
-    addedvalues = distinct_vocabs_to_file(vocabfile, checkvaluelist, dialect)
-    success = True
 
-    # Prepare the response dictionary
+    if checkvaluelist is None or len(checkvaluelist)==0:
+        message = 'No values to check'
+        returnvals = [vocabfile, addedvalues, success, message]
+        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    # If vocab file doesn't exist, create it with a header consisting of fieldnames
+    # constructed from key
+    
+    isfile = os.path.isfile(vocabfile)
+    dialect = vocab_dialect()
+    fieldnames = vocabheader(key)
+    if not isfile:
+        writevocabheader(vocabfile, fieldnames, dialect)
+
+    filesize = os.stat(vocabfile).st_size
+    # If file is empty, recreate is with a header consisting of fieldnames
+    if filesize == 0:
+        writevocabheader(vocabfile, fieldnames, dialect)
+
+    # Now we should have a vocab file with a header at least
+    header = read_header(vocabfile, dialect)
+
+    # The header for the values we are trying to add has to match the header for the 
+    # vocabulary file. If not, the vocabulary structure will be compromised.
+    if fieldnames != header:
+        message = 'header for new values:\n%s\n' % fieldnames
+        message += 'does not match vocabulary file header: %s' % header
+        returnvals = [vocabfile, addedvalues, success, message]
+        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    if key != header[0]:
+        message = 'key in the header (%s)' % header[0]
+        message += ' does not match vocabulary specified key: %s' % key
+        returnvals = [vocabfile, addedvalues, success, message]
+        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    addedvalues = distinct_vocabs_to_file(vocabfile, checkvaluelist, key=key)
+
+    success = True
     returnvals = [vocabfile, addedvalues, success, message]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
-
+    
 def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
@@ -84,8 +133,11 @@ def _getoptions():
     help = 'full path to the vocabulary file (required)'
     parser.add_argument("-v", "--vocabfile", help=help)
 
-    help = 'list of potential values to add to vocabulary (optional)'
+    help = 'list of potential values to add to vocabulary (required)'
     parser.add_argument("-c", "--checkvaluelist", help=help)
+
+    help = 'field with the distinct values in the vocabulary file (required)'
+    parser.add_argument("-k", "--key", help=help)
 
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
@@ -96,25 +148,32 @@ def main():
     options = _getoptions()
     optdict = {}
 
-    separator = ','
     theList=options.checkvaluelist
+    key=options.key
+    separator = ','
     checkvaluelist=[subs.strip() for subs in str(theList).split(separator)]
 
-    if options.vocabfile is None or len(options.vocabfile)==0:
+    if options.vocabfile is None or len(options.vocabfile)==0 \
+        or theList is None or len(theList)==0 or key is None or len(key)==0:
         s =  'syntax:\n'
         s += 'python vocab_appender.py'
-        s += ' -v ./data/vocabularies/basisOfRecord.txt'
-        s += ' -c "preservedspecimen, voucher, fossil"'
+        s += ' -v ./workspace/dwcgeography.txt'
+        s += ' -c "Oceania|United States|US|Hawaii|Honolulu|Honolulu'
+        s += '|North Pacific Ocean|Hawaiian Islands|Oahu, '
+        s += '|United States||WA|Chelan Co.||||"'
+        s += ' -k "continent|country|countrycode|stateprovince|'
+        s += 'county|municipality|waterbody|islandgroup|island"'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
     optdict['vocabfile'] = options.vocabfile
     optdict['checkvaluelist'] = checkvaluelist
+    optdict['key'] = key
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 
-    # Append distinct values of term to vocab file
+    # Append distinct values of key to vocab file
     response=vocab_appender(optdict)
     print '\nresponse: %s' % response
 

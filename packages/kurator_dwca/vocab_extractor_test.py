@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor_test.py 2016-05-11T22:53-03:00"
+__version__ = "vocab_extractor_test.py 2016-08-22T13:22+02:00"
 
 # This file contains unit test for the vocab_extractor function.
 #
@@ -35,6 +35,7 @@ class VocabExtractorFramework():
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_eight_specimen_records.csv'
     testfile2 = testdatapath + 'test_vocab_month.txt'
+    testfile3 = testdatapath + 'test_three_specimen_records.txt'
 
     # output data files from tests, remove these in dispose()
 #    testvocabfile = testdatapath + 'test_vocab_file.csv'
@@ -61,6 +62,8 @@ class VocabExtractorTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(testfile1), testfile1 + ' does not exist')
         testfile2 = self.framework.testfile2
         self.assertTrue(os.path.isfile(testfile2), testfile2 + ' does not exist')
+        testfile3 = self.framework.testfile3
+        self.assertTrue(os.path.isfile(testfile3), testfile3 + ' does not exist')
 
     def test_missing_parameters(self):
         print 'testing missing_parameters'
@@ -75,13 +78,13 @@ class VocabExtractorTestCase(unittest.TestCase):
         self.assertFalse(response['success'], s)
 
         # Test with missing inputfile
-        inputs['termname'] = 'year'
+        inputs['terms'] = 'year'
         response=vocab_extractor(inputs)
 #        print 'response2:\n%s' % response
         s = 'success without inputfile'
         self.assertFalse(response['success'], s)
 
-        # Test with missing termname
+        # Test with missing terms
         inputs = {}
         inputs['inputfile'] = testfile
         response=vocab_extractor(inputs)
@@ -92,7 +95,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         # Test with missing optional inputs
         inputs = {}
         inputs['inputfile'] = testfile
-        inputs['termname'] = 'year'
+        inputs['terms'] = 'year'
         response=vocab_extractor(inputs)
 #        print 'response4:\n%s' % response
         s = 'no output file produced with required inputs'
@@ -127,18 +130,20 @@ class VocabExtractorTestCase(unittest.TestCase):
         
         inputs = {}
         inputs['inputfile'] = testfile
-        inputs['termname'] = term
+        inputs['terms'] = term
 
         # Extract distinct values of term
 #        print 'inputs:\n%s' % inputs
         response=vocab_extractor(inputs)
 #        print 'response:\n%s' % response
         values = response['extractedvalues']
-        s = 'values of term %s not extracted correctly from %s' % (term, testfile)
-        self.assertEqual(values, ['1973', '1990', '2003', '2007'], s)
+        expected = ['1973', '1990', '2003', '2007']
+        s = 'values of term %s\n%s\n' % (term, values)
+        s += 'not as expected:\n%s' % expected
+        self.assertEqual(values, expected, s)
 
         term = 'fieldNumber '
-        inputs['termname'] = term
+        inputs['terms'] = term
 #        print 'inputs:\n%s' % inputs
         response=vocab_extractor(inputs)
         values = response['extractedvalues']
@@ -150,13 +155,73 @@ class VocabExtractorTestCase(unittest.TestCase):
         testfile = self.framework.testfile2
         term = 'verbatim'
         inputs['inputfile'] = testfile
-        inputs['termname'] = term
+        inputs['terms'] = term
 #        print 'inputs:\n%s' % inputs
         response=vocab_extractor(inputs)
         values = response['extractedvalues']
 #        print 'response:\n%s' % response
         s = 'values of term %s not extracted correctly from %s' % (term, testfile)
         self.assertEqual(values, ['5', '6', 'V', 'VI', 'Vi', 'v', 'vI', 'vi'], s)
+
+        testfile = self.framework.testfile1
+        terms = 'country'
+
+        inputs = {}
+        inputs['inputfile'] = testfile
+        inputs['terms'] = terms
+
+        # Extract distinct values of term
+        response=vocab_extractor(inputs)
+#        print 'response1: %s' % response
+        values = response['extractedvalues']
+#        print '%s values: %s' % (term, values)
+        expected = ['United States']
+        s = 'country values: %s\n' % values
+        s += 'do not match expectation: %s' % expected
+        self.assertEqual(values, expected, s)
+        self.assertEqual(values, ['United States'], s)
+
+        terms = 'country|stateProvince'
+        inputs['terms'] = terms
+        inputs['separator'] = '|'
+        response=vocab_extractor(inputs)
+        values = response['extractedvalues']
+#        print 'values: %s' % values
+        expected = [
+            'United States|California', 
+            'United States|Colorado', 
+            'United States|Hawaii',
+            'United States|Washington'
+            ]
+        s = 'country|stateprovince values: %s\n' % values
+        s += 'do not match expectation: %s' % expected
+        self.assertEqual(values, expected, s)
+
+        terms = 'family '
+        inputs['terms'] = terms
+        inputs['separator'] = ''
+        response=vocab_extractor(inputs)
+        s = 'values of key %s not extracted correctly from %s' % (terms, testfile)
+        values = response['extractedvalues']
+#        print 'values: %s' % values
+        expected = ['Asteraceae ', 'Asteraceae  ']
+        s = 'family values: %s\n' % values
+        s += 'do not match expectation: %s' % expected
+        self.assertEqual(values, expected, s)
+
+        terms = 'country|stateProvince'
+        testfile = self.framework.testfile3
+        inputs['inputfile'] = testfile
+        inputs['terms'] = terms
+        inputs['separator'] = '|'
+        response=vocab_extractor(inputs)
+        s = 'values of key %s not extracted correctly from %s' % (terms, testfile)
+        values = response['extractedvalues']
+#        print 'values: %s' % values
+        expected = ['Mozambique|Maputo', u'South Africa|Kwa-Zulu Natal']
+        s = 'country|stateprovince values: %s\n' % values
+        s += 'do not match expectation: %s' % expected
+        self.assertEqual(values, expected, s)
 
 if __name__ == '__main__':
     print '=== vocab_extractor_test.py ==='
