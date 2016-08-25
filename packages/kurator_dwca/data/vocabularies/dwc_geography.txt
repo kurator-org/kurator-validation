@@ -1,3 +1,4 @@
 geogkey	continent	country	countryCode	stateProvince	county	municipality	waterBody	islandGroup	island	standard	vetted	error	misplaced	unresolved	source	comment
 ||||||||											1			0		
 |United States||California|||||	North America	United States	US	California							1			0		
+|United States||California|Kern||||											0			0		

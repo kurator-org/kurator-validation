@@ -1,0 +1,180 @@
+#####################################################################################
+# dwca_geography_cleaner.yaml
+#####################################################################################
+#
+# This workflow:
+#    - downloads a Darwin Core Archive from a URL
+#    - extracts the core file of a Darwin Core Archive to a tab-separated text file
+#    - extracts distinct combinations of geography from the text file
+#    - writes the distinct combinations of geography to change to a report file
+#    - writes the recommended geography changes for input records to a report file
+#
+# Example command-line usage:
+# kurator -f dwca_geography_cleaner.yaml 
+#         -p url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
+#         -l DEBUG (optional)
+#
+# Requires:
+# jython pip install requests
+# jython pip install python-dwca-reader
+# jython pip install py
+# jython pip install unicodecsv
+# jython pip install unidecode
+#
+#####################################################################################
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# __author__ = "John Wieczorek"
+# __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
+# __version__ = "dwca_geography_cleaner.yaml 2016-08-19T23:19+02:00"
+
+imports:
+
+- classpath:/org/kurator/akka/types.yaml
+
+components:
+
+# Inline python actor to demonstrate making a workspace on the fly to use for 
+# writing temporary workflow artifacts. 
+- id: MakeWorkspace
+  type: PythonActor
+  properties:
+    code: |
+        import uuid
+        import os
+        def on_start(options):
+            print 'Started MakeWorkspace'
+            print 'MakeWorkspace options: %s' % options
+            if options.has_key('workspace') == False:
+                options['workspace'] ='./workspace_'+str(uuid.uuid1())
+                if not os.path.exists(options['workspace']):
+                    os.makedirs(options['workspace'])
+            return options
+
+# Download country.txt file containing lowercase verbatim country lookup to country code.
+- id: CountryDownloader
+  type: PythonActor
+  properties:
+    module: kurator_dwca.downloader
+    onData: downloader
+    inputs:
+        workspace : workspace
+    parameters:
+#        url: 'https://github.com/tucotuco/DwCVocabs/raw/master/kurator/country.txt'
+#        url: 'http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals'
+        url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/country.txt'
+        outputfile : 'country.txt'
+    listensTo:
+      - !ref MakeWorkspace
+
+# Download countrycode.txt file containing country code to country name and 
+# continent lookup.
+#- id: CountryCodeDownloader
+#  type: PythonActor
+#  properties:
+#    module: kurator_dwca.downloader
+#    onData: downloader
+#    inputs:
+#        url: 'https://github.com/tucotuco/DwCVocabs/raw/master/kurator/countrycode.txt'
+#        workspace : workspace
+#    listensTo:
+#      - !ref CountryDownloader
+
+# Download input Darwin Core archive into workspace from URL given by url parameter.
+#- id: ArchiveDownloader
+# type: PythonActor
+# properties:
+#   module: kurator_dwca.downloader
+#   onData: downloader
+#   inputs:
+#       url: url
+#       workspace : workspace
+#   listensTo:
+#     - !ref CountryCodeDownloader
+
+# Extract core file into a tab-separated value file in workspace from Darwin Core archive.
+#- id: DWCAtoTSVWriter
+#  type: PythonActor
+#  properties:
+#    module: kurator_dwca.dwca_core_to_tsv
+#    onData: dwca_core_to_tsv
+#    inputs:
+#        outputfile: inputfile
+#        workspace : workspace
+#    listensTo:
+#      - !ref ArchiveDownloader
+
+#- id: CountryReporter
+#  type: PythonActor
+#  properties:
+#    module: kurator_dwca.term_recommendation_reporter
+#    onData: term_recommendation_reporter
+#    inputs:
+#        outputfile: inputfile
+#        workspace: workspace
+#    parameters:
+#        vocabfile: '../data/vocabularies/dwc_geography.txt'
+#        format: 'txt'
+#    listensTo:
+#      - !ref DWCAtoTSVWriter
+
+#- id: GeogReporter
+#  type: PythonActor
+#  properties:
+#    module: kurator_dwca.geog_recommendation_reporter
+#    onData: geog_recommendation_reporter
+#    inputs:
+#        outputfile: inputfile
+#        workspace: workspace
+#    parameters:
+#        vocabfile: '../data/vocabularies/dwc_geography.txt'
+#        format: 'csv'
+#    listensTo:
+#      - !ref DWCAtoTSVWriter
+
+- id: WrapUp
+  type: PythonActor
+  properties:
+    code: |
+        def on_data(options):
+            print 'WrapUp options: %s' % options
+            print '### Finished Workflow ###'
+    inputs:
+        workspace: workspace
+        outputfile: outputfile
+        success: success
+        message: message
+    listensTo:
+      - !ref CountryDownloader
+
+- id: DwCAGeogExtractor
+  type: Workflow
+  properties:
+    actors:
+      - !ref MakeWorkspace
+      - !ref CountryDownloader
+#      - !ref CountryCodeDownloader
+#      - !ref ArchiveDownloader
+#      - !ref DWCAtoTSVWriter
+#      - !ref CountryReporter
+      - !ref WrapUp
+    parameters:
+       url:
+         actor: !ref MakeWorkspace
+         parameter: url
+       workspace:
+         actor: !ref MakeWorkspace
+         parameter: workspace
+#       vocabfile:
+#         actor: !ref CountryReporter
+#         parameter: vocabfile

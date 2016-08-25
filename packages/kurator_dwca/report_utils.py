@@ -27,6 +27,7 @@ __version__ = "report_utils.py 2016-08-22T16:07+02:00"
 from dwca_utils import csv_dialect
 from dwca_utils import tsv_dialect
 from dwca_terms import vocabfieldlist
+from dwca_terms import defaultvocabkey
 import logging
 import unittest
 import csv
@@ -43,6 +44,7 @@ def term_recommendation_report(reportfile, recommendationdict, key=None, format=
     returns:
         success - True if the report was written, else False
     """
+    print 'reportfile: %s\nrecommendeddict: %s' % (reportfile, recommendeddict)
     if recommendationdict is None or len(recommendationdict)==0:
         logging.debug('No term recommendations given in term_recommendation_report()')
         return False

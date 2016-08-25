@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_terms_recommendation_reporter.py 2016-08-21T13:27+02:00"
+__version__ = "dwc_terms_recommendation_reporter.py 2016-08-23T15:57+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -130,6 +130,9 @@ def dwc_terms_recommendation_reporter(options):
     for termname in controlledtermlist:
         # Get a list of distinct values of the term in the input file
         checklist = distinct_term_values_from_file(inputfile, termname, dialect)
+
+        print '%s checklist: %s' % (termname, checklist)
+
         if checklist is not None and len(checklist)>0:
             vocabfile = '%s/%s.txt' % (vocabdir.rstrip('/'), termname)
             s = 'Checklist ready for "%s"' % termname
@@ -138,6 +141,8 @@ def dwc_terms_recommendation_reporter(options):
 
             # Get a dictionary of checklist values from the vocabfile
             matchingvocabdict = matching_vocab_dict_from_file(checklist, vocabfile)
+            
+            print 'matching: %s' % matchingvocabdict
 
             if matchingvocabdict is not None and len(matchingvocabdict)>0:
                 s = 'Matching vocab ready for "%s"' % termname
@@ -151,6 +156,8 @@ def dwc_terms_recommendation_reporter(options):
                 s += ' in dwc_terms_recommendation_reporter(): %s' % recommended
                 logging.debug(s)
 
+                print 'recommended: %s' % recommended
+
                 if recommended is not None and len(recommended)>0:
                     # TODO: Use Allan's DQ report framework
                     # Validation, Improvement, Measure
@@ -158,12 +165,13 @@ def dwc_terms_recommendation_reporter(options):
                     outputfile = '%s/%s%s_standardization_report_%s.%s' % \
                       (workspace.rstrip('/'), prefix, termname, guid, format)
 
-                    success = term_recommendation_report(outputfile, recommended, format)
+                    success = term_recommendation_report(outputfile, recommended, \
+                        format=format)
 
                     if outputfile is not None and os.path.isfile(outputfile):
                         s = '%s_recommendation_report_file' % termname
                         artifacts[s] = outputfile
-
+    success = True
     returnvals = [workspace, guid, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)

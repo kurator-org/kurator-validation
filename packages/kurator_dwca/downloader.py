@@ -51,6 +51,8 @@ def downloader(options):
     logging.debug( 'Started %s' % __version__ )
     logging.debug( 'options: %s' % options )
 
+    print 'downloader options: %s' % options
+
     # Make a list for the response
     returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
 
@@ -109,10 +111,11 @@ def download_file(url, outputfile):
         logging.info('No output file given in download_file()')
         return False
 
+    print 'OK so far'
     try:
         r = requests.get(url, stream=True)
-    except:
-        s = 'Exception while attempting requests.get(url) in download_file()'
+    except Exception, e:
+        s = 'Exception while attempting requests.get(url) in download_file(): %s' % e
         logging.warning(s)
         return False
     if not r.ok:

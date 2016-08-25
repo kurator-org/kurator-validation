@@ -37,7 +37,7 @@ def term_recommendation_reporter(options):
         workspace - path to a directory for the tsvfile (optional)
         inputfile - full path to the input file (required)
         vocabfile - full path to the vocabulary file (required)
-        format - output file format (e.g., 'csv' or 'txt') (optional)
+        format - output file format (e.g., 'csv' or 'txt') (optional; default csv)
         outputfile - name of the output file, without path (optional)
         termname - the name of the term for which to find standard values (required)
     returns a dictionary with information about the results
@@ -124,9 +124,6 @@ def term_recommendation_reporter(options):
     except:
         format = None
 
-    if format is None:
-        format = 'csv'
-
     try:
         outputfile = options['outputfile']
     except:
@@ -139,7 +136,7 @@ def term_recommendation_reporter(options):
 
     # Get a list of distinct values of the term in the input file
     dialect = csv_file_dialect(inputfile)
-    checklist = distinct_term_values_from_file(inputfile, termname, dialect)
+    checklist = distinct_term_values_from_file(inputfile, termname, dialect=dialect)
 
     if checklist is None or len(checklist)==0:
         message = 'No values of %s from %s' % (termname, inputfile)
@@ -170,7 +167,7 @@ def term_recommendation_reporter(options):
     # TODO: Use Allan's DQ report framework
     # Validation, Improvement, Measure
     # Create a series of term reports
-    success = term_recommendation_report(outputfile, recommended, format)
+    success = term_recommendation_report(outputfile, recommended, format=format)
 
     matchingvocablist = keys_list(matchingvocabdict)
     newvalues = not_in_list(matchingvocablist, checklist)
@@ -206,7 +203,7 @@ def _getoptions():
     help = "name of the term (required)"
     parser.add_argument("-t", "--termname", help=help)
 
-    help = 'report file format (e.g., csv or txt) (optional)'
+    help = 'report file format (e.g., csv or txt) (optional; default csv)'
     parser.add_argument("-f", "--format", help=help)
 
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
