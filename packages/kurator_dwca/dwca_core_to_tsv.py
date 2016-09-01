@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2016-05-27T15:56-03:00"
+__version__ = "dwca_core_to_tsv.py 2016-08-31T18:42+02:00"
 
 from dwcareader_utils import short_term_names
 from dwca_utils import tsv_dialect
@@ -50,6 +50,8 @@ def dwca_core_to_tsv(options):
         artifacts - a dictionary of persistent objects created
     """
     setup_actor_logging(options)
+
+    print '%s options: %s' % (__version__, options)
 
     logging.debug( 'Started %s' % __version__ )
     logging.debug( 'options: %s' % options )
@@ -99,7 +101,7 @@ def dwca_core_to_tsv(options):
         outputfile = None
 
     if outputfile is None or len(outputfile)==0:
-        outputfile = 'dwca_%s.tsv' %  str(uuid.uuid1())
+        outputfile = 'dwca_%s.txt' %  str(uuid.uuid1())
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     try:

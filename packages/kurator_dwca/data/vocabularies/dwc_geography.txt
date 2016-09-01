@@ -2,3 +2,15 @@ geogkey	continent	country	countryCode	stateProvince	county	municipality	waterBod
 ||||||||											1			0		
 |United States||California|||||	North America	United States	US	California							1			0		
 |United States||California|Kern||||											0			0		
+|United States||California|Kern||||											0			0		
+|United States||California|San Bernardino||||											0			0		
+|United States||California|||||											0			0		
+|United States||Colorado|||||											0			0		
+|United States||Hawaii|Honolulu||||											0			0		
+|United States||Washington|Chelan||||											0			0		
+|United States||California|Kern||||											0			0		
+|United States||California|San Bernardino||||											0			0		
+|United States||California|||||											0			0		
+|United States||Colorado|||||											0			0		
+|United States||Hawaii|Honolulu||||											0			0		
+|United States||Washington|Chelan||||											0			0		

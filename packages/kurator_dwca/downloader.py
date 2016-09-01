@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader.py 2016-05-27T15:52-03:00"
+__version__ = "downloader.py 2016-08-26T10:16+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -48,10 +48,12 @@ def downloader(options):
     """
     setup_actor_logging(options)
 
+    print '%s options: %s' % (__version__, options)
+
     logging.debug( 'Started %s' % __version__ )
     logging.debug( 'options: %s' % options )
 
-    print 'downloader options: %s' % options
+#    print 'downloader options: %s' % options
 
     # Make a list for the response
     returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
@@ -111,9 +113,11 @@ def download_file(url, outputfile):
         logging.info('No output file given in download_file()')
         return False
 
-    print 'OK so far'
     try:
-        r = requests.get(url, stream=True)
+        # Note that calls to https destinations will log an InsecureRequestWarning. To 
+        # avoid these warnings, enable certificate verification on the operating system 
+        # and remove the verify=False parameter in the requests.get() call.
+        r = requests.get(url, stream=True, verify=False)
     except Exception, e:
         s = 'Exception while attempting requests.get(url) in download_file(): %s' % e
         logging.warning(s)

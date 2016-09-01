@@ -44,7 +44,7 @@ def term_recommendation_report(reportfile, recommendationdict, key=None, format=
     returns:
         success - True if the report was written, else False
     """
-    print 'reportfile: %s\nrecommendeddict: %s' % (reportfile, recommendeddict)
+#    print 'reportfile: %s\nrecommendationdict: %s' % (reportfile, recommendationdict)
     if recommendationdict is None or len(recommendationdict)==0:
         logging.debug('No term recommendations given in term_recommendation_report()')
         return False

@@ -142,7 +142,7 @@ def dwc_terms_recommendation_reporter(options):
             # Get a dictionary of checklist values from the vocabfile
             matchingvocabdict = matching_vocab_dict_from_file(checklist, vocabfile)
             
-            print 'matching: %s' % matchingvocabdict
+#            print 'matching: %s' % matchingvocabdict
 
             if matchingvocabdict is not None and len(matchingvocabdict)>0:
                 s = 'Matching vocab ready for "%s"' % termname

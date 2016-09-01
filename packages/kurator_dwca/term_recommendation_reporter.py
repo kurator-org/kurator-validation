@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter.py 2016-08-21T13:10+02:00"
+__version__ = "term_recommendation_reporter.py 2016-08-26T13:55+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -35,8 +35,10 @@ def term_recommendation_reporter(options):
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the tsvfile (optional)
-        inputfile - full path to the input file (required)
-        vocabfile - full path to the vocabulary file (required)
+        inputfile - path to the input file. Either full path of path within the workspace
+            (required)
+        vocabfile - path to the vocabulary file. Either full path or path within the
+           workspace (required)
         format - output file format (e.g., 'csv' or 'txt') (optional; default csv)
         outputfile - name of the output file, without path (optional)
         termname - the name of the term for which to find standard values (required)
@@ -102,7 +104,13 @@ def term_recommendation_reporter(options):
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
-    if os.path.isfile(vocabfile) == False:
+    # Look to see if vocab file is at the absolute path or in the workspace.
+    vocabfileat = None
+    if os.path.isfile(vocabfile) == True:
+        vocabfileat = vocabfile
+    elif os.path.isfile(workspace+'/'+vocabfile) == True:
+        vocabfileat = workspace+'/'+vocabfile
+    else:
         message = 'Vocab file not found'
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
@@ -145,11 +153,11 @@ def term_recommendation_reporter(options):
         return response(returnvars, returnvals)
 
     # Get a dictionary of checklist values from the vocabfile
-    matchingvocabdict = matching_vocab_dict_from_file(checklist, vocabfile)
+    matchingvocabdict = matching_vocab_dict_from_file(checklist, vocabfileat)
 
     if matchingvocabdict is None or len(matchingvocabdict)==0:
         message = 'No matching values of %s from %s found in %s' % \
-            (termname, inputfile, vocabfile)
+            (termname, inputfile, vocabfileat)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)

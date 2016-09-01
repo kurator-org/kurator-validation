@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_geog_collector.py 2016-08-22T15:20+02:00"
+__version__ = "dwc_geog_collector.py 2016-08-27T21:39+02:00"
 
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import writevocabheader
@@ -36,42 +36,57 @@ def dwc_geog_collector(options):
         ones in the geography vocabulary file.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
-        inputfile - full path to the input file (required)
-        vocabfile - full path to the geography vocabulary file (required)
+        workspace - path to a directory to work in (optional)
+        inputfile - path to the input file. Either full path or path within the workspace
+            (required)
+        vocabfile - path to the geography vocabulary file. Either full path or path 
+           within the workspace (required)
     returns a dictionary with information about the results
+        workspace - path to a directory worked in
         addedvalues - new values added to the geography vocabulary file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
     setup_actor_logging(options)
 
+    print '%s options: %s' % (__version__, options)
+
     logging.debug( 'Started %s' % __version__ )
     logging.debug( 'options: %s' % options )
 
     # Make a list for the response
-    returnvars = ['addedvalues', 'success', 'message']
+    returnvars = ['workspace', 'addedvalues', 'success', 'message']
 
     # outputs
+    workspace = None
     addedvalues = None
     success = False
     message = None
 
     # inputs
     try:
+        workspace = options['workspace']
+    except:
+        workspace = None
+
+    if workspace is None:
+        workspace = './'
+
+    try:
         inputfile = options['inputfile']
     except:
         inputfile = None
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input dwca file given'
-        returnvals = [addedvalues, success, message]
-#        logging.debug('message:\n%s' % message)
+        message = 'No input file given'
+        returnvals = [workspace, addedvalues, success, message]
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
         message = 'Input file not found'
-        returnvals = [addedvalues, success, message]
-#        logging.debug('message:\n%s' % message)
+        returnvals = [workspace, addedvalues, success, message]
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     try:
@@ -80,9 +95,21 @@ def dwc_geog_collector(options):
         vocabfile = None
 
     if vocabfile is None or len(vocabfile)==0:
-        message = 'No input vocab file given'
-        returnvals = [addedvalues, success, message]
-#        logging.debug('message:\n%s' % message)
+        message = 'No vocab file given'
+        returnvals = [workspace, addedvalues, success, message]
+        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    # Look to see if vocab file is at the absolute path or in the workspace.
+    vocabfileat = None
+    if os.path.isfile(vocabfile) == True:
+        vocabfileat = vocabfile
+    elif os.path.isfile(workspace+'/'+vocabfile) == True:
+        vocabfileat = workspace+'/'+vocabfile
+    else:
+        message = 'Vocab file not found'
+        returnvals = [workspace, addedvalues, success, message]
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     dialect = vocab_dialect()
@@ -111,7 +138,7 @@ def dwc_geog_collector(options):
     checkheader = read_header(vocabfile, dialect)
     if checkheader != geogheader:
         message = 'header read from ' + vocabfile + 'does not match geogvocabheader'
-        returnvals = [addedvalues, success, message]
+        returnvals = [workspace, addedvalues, success, message]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
@@ -122,7 +149,7 @@ def dwc_geog_collector(options):
             writer.writerow({'geogkey':term, 'vetted':0, 'unresolved':0 })
     success = True
 
-    returnvals = [addedvalues, success, message]
+    returnvals = [workspace, addedvalues, success, message]
     logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
@@ -135,6 +162,9 @@ def _getoptions():
 
     help = 'full path to the vocab file (required)'
     parser.add_argument("-v", "--vocabfile", help=help)
+
+    help = 'directory for the output file (optional)'
+    parser.add_argument("-w", "--workspace", help=help)
 
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
@@ -151,12 +181,14 @@ def main():
         s += 'python dwc_geog_collector.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -v ./data/vocabularies/dwc_geography.txt'
+        s += ' -w ./workspace'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
     optdict['inputfile'] = options.inputfile
     optdict['vocabfile'] = options.vocabfile
+    optdict['workspace'] = options.workspace
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

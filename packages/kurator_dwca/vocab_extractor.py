@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-08-23T14:42+02:00"
+__version__ = "vocab_extractor.py 2016-08-31T21:57+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -28,29 +28,42 @@ def vocab_extractor(options):
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         inputfile - full path to the input file (required)
+        workspace - path to a directory to work in (optional)
         terms - string of separator-separated terms for which to find distinct values
             (e.g., 'year', 'country|stateProvince|county') (required)
         separator - string that separates the values in terms (e.g., '|') 
             (optional; default None)
     returns a dictionary with information about the results
+        workspace - path to a directory worked in
         extractedvalues - a list of distinct values of the term in the inputfile
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
     setup_actor_logging(options)
 
+    print '%s options: %s' % (__version__, options)
+
     logging.debug( 'Started %s' % __version__ )
     logging.debug( 'options: %s' % options )
 
     # Make a list for the response
-    returnvars = ['extractedvalues', 'success', 'message']
+    returnvars = ['workspace', 'extractedvalues', 'success', 'message']
 
     # outputs
+    workspace = None
     extractedvalues = None
     success = False
     message = None
 
     # inputs
+    try:
+        workspace = options['workspace']
+    except:
+        workspace = None
+
+    if workspace is None:
+        workspace = './'
+
     try:
         inputfile = options['inputfile']
     except:
@@ -58,13 +71,13 @@ def vocab_extractor(options):
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
-        returnvals = [extractedvalues, success, message]
+        returnvals = [workspace, extractedvalues, success, message]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
     if not os.path.isfile(inputfile):
         message = 'Input file %s not found' % inputfile
-        returnvals = [extractedvalues, success, message]
+        returnvals = [workspace, extractedvalues, success, message]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
@@ -75,7 +88,7 @@ def vocab_extractor(options):
 
     if terms is None or len(terms)==0:
         message = 'No terms given'
-        returnvals = [extractedvalues, success, message]
+        returnvals = [workspace, extractedvalues, success, message]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
@@ -86,8 +99,9 @@ def vocab_extractor(options):
 
     extractedvalues = distinct_term_values_from_file(inputfile, terms, \
         separator=separator)
+    print 'extractedvalues: %s' % extractedvalues
     success = True
-    returnvals = [extractedvalues, success, message]
+    returnvals = [workspace, extractedvalues, success, message]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
@@ -97,6 +111,9 @@ def _getoptions():
 
     help = 'full path to the input file (required)'
     parser.add_argument("-i", "--inputfile", help=help)
+
+    help = 'directory for the output file (optional)'
+    parser.add_argument("-w", "--workspace", help=help)
 
     help = "terms (required)"
     parser.add_argument("-t", "--terms", help=help)
@@ -118,12 +135,14 @@ def main():
         s =  'syntax examples:\n'
         s += 'python vocab_extractor.py'
         s += ' -i ./data/eight_specimen_records.csv'
+        s += ' -w ./workspace'
         s += ' -t year'
         s += ' -s |'
         s += ' -l DEBUG\n'
         print '%s' % s
         s += 'python vocab_extractor.py'
         s += ' -i ./data/eight_specimen_records.csv'
+        s += ' -w ./workspace'
         s += '"country|stateprovince|county"'
         s += ' -s "|"'
         s += ' -l DEBUG'
@@ -131,6 +150,7 @@ def main():
         return
 
     optdict['inputfile'] = options.inputfile
+    optdict['workspace'] = options.workspace
     optdict['terms'] = options.terms
     optdict['separator'] = options.separator
     optdict['loglevel'] = options.loglevel

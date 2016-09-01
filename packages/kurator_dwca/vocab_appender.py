@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2016-08-21T13:20+02:00"
+__version__ = "vocab_appender.py 2016-09-01T16:23+02:00"
 
 from dwca_utils import read_header
 from dwca_utils import response
@@ -35,11 +35,13 @@ def vocab_appender(options):
        given vocabulary file as new entries.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
+        workspace - path to a directory to work in (optional)
         vocabfile - full path to the file containing the vocabulary (required)
         checkvaluelist - a list of candidate key values to append (optional)
         key - the field name that holds the distinct values in the vocabulary file
             (optional; default None)
     returns a dictionary with information about the results
+        workspace - path to a directory worked in
         vocabfile - full path to the file containing the vocabulary
         addedvalues - new key values added to the vocabulary file
         success - True if process completed successfully, otherwise False
@@ -47,29 +49,49 @@ def vocab_appender(options):
     """
     setup_actor_logging(options)
 
+    print '%s options: %s' % (__version__, options)
+
     logging.debug( 'Started %s' % __version__ )
     logging.debug( 'options: %s' % options )
 
     # Make a list for the response
-    returnvars = ['vocabfile', 'addedvalues', 'success', 'message']
+    returnvars = ['workspace', 'vocabfile', 'addedvalues', 'success', 'message']
 
     # outputs
+    workspace = None
     addedvalues = None
     success = False
     message = None
 
     # inputs
     try:
+        workspace = options['workspace']
+    except:
+        workspace = None
+
+    if workspace is None:
+        workspace = './'
+
+    try:
         vocabfile = options['vocabfile']
     except:
         vocabfile = None
 
     if vocabfile is None or len(vocabfile)==0:
-        message = 'No vocabfile file given'
-        returnvals = [vocabfile, addedvalues, success, message]
+        message = 'No vocab file given'
+        returnvals = [workspace, vocabfile, addedvalues, success, message]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
+    # Look to see if vocab file is at the absolute path or in the workspace.
+    vocabfileat = None
+    if os.path.isfile(vocabfile) == True:
+        vocabfileat = vocabfile
+    else:
+        vocabfileat = workspace+'/'+vocabfile
+
+    vocabfile = vocabfileat
+    
     try:
         key = options['key']
     except:
@@ -82,7 +104,7 @@ def vocab_appender(options):
 
     if checkvaluelist is None or len(checkvaluelist)==0:
         message = 'No values to check'
-        returnvals = [vocabfile, addedvalues, success, message]
+        returnvals = [workspace, vocabfile, addedvalues, success, message]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
@@ -108,21 +130,21 @@ def vocab_appender(options):
     if fieldnames != header:
         message = 'header for new values:\n%s\n' % fieldnames
         message += 'does not match vocabulary file header: %s' % header
-        returnvals = [vocabfile, addedvalues, success, message]
+        returnvals = [workspace, vocabfile, addedvalues, success, message]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if key != header[0]:
         message = 'key in the header (%s)' % header[0]
         message += ' does not match vocabulary specified key: %s' % key
-        returnvals = [vocabfile, addedvalues, success, message]
+        returnvals = [workspace, vocabfile, addedvalues, success, message]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     addedvalues = distinct_vocabs_to_file(vocabfile, checkvaluelist, key=key)
 
     success = True
-    returnvals = [vocabfile, addedvalues, success, message]
+    returnvals = [workspace, vocabfile, addedvalues, success, message]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
     
@@ -132,6 +154,9 @@ def _getoptions():
 
     help = 'full path to the vocabulary file (required)'
     parser.add_argument("-v", "--vocabfile", help=help)
+
+    help = 'directory for the output file (optional)'
+    parser.add_argument("-w", "--workspace", help=help)
 
     help = 'list of potential values to add to vocabulary (required)'
     parser.add_argument("-c", "--checkvaluelist", help=help)
@@ -158,6 +183,7 @@ def main():
         s =  'syntax:\n'
         s += 'python vocab_appender.py'
         s += ' -v ./workspace/dwcgeography.txt'
+        s += ' -w ./workspace'
         s += ' -c "Oceania|United States|US|Hawaii|Honolulu|Honolulu'
         s += '|North Pacific Ocean|Hawaiian Islands|Oahu, '
         s += '|United States||WA|Chelan Co.||||"'
@@ -168,6 +194,7 @@ def main():
         return
 
     optdict['vocabfile'] = options.vocabfile
+    optdict['workspace'] = options.workspace
     optdict['checkvaluelist'] = checkvaluelist
     optdict['key'] = key
     optdict['loglevel'] = options.loglevel
