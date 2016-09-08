@@ -106,7 +106,7 @@ class VocabCounterTestCase(unittest.TestCase):
 
         testfile = self.framework.testfile2
         header = read_header(testfile)
-        term = 'verbatim'
+        term = 'month'
         present = term in header
         s = 'test file %s does not contain "%s" field' % (testfile, term)
         self.assertTrue(present, s)

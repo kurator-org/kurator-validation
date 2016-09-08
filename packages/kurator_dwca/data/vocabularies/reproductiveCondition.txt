@@ -1,1 +1,1 @@
-verbatim	standard	vetted	error	misplaced	unresolved	source	commentlact.	lactating	1	ReproductiveCondition is an abbreviation.	0	0	0	0
+reproductivecondition	standard	vetted	error	misplaced	unresolved	source	commentlact.	lactating	1	ReproductiveCondition is an abbreviation.	0	0	0	0

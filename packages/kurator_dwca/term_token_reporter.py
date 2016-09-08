@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_token_reporter.py 2016-08-03T14:13+02:00"
+__version__ = "term_token_reporter.py 2016-09-08T14:04+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -48,6 +48,8 @@ def term_token_reporter(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     """
+    # print '%s options: %s' % (__version__, options)
+
     setup_actor_logging(options)
 
     logging.debug( 'Started %s' % __version__ )
@@ -87,7 +89,7 @@ def term_token_reporter(options):
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file not found'
+        message = 'Input file %s not found' % inputfile
         returnvals = [workspace, outputfile, tokens, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -187,9 +189,24 @@ def term_token_count_from_file(inputfile, termname):
         logging.debug('File %s not found in term_token_count_from_file().' % inputfile)
         return 0
 
-    # Determine the dialect and encoding of the input file
+    # Determine the dialect of the input file
     inputdialect = csv_file_dialect(inputfile)
+    # print 'inputdialect: %s' % dialect_attributes(inputdialect)
+    if inputdialect is None:
+        s = 'Unable to determine file dialect for %s in extract_values_from_file().' \
+            % inputfile
+        logging.debug(s)
+        return None
+
+    # Determine the encoding of the input file
     inputencoding = csv_file_encoding(inputfile)
+    # print 'inputencoding: %s' % inputencoding
+    if inputencoding is None:
+        s = 'Unable to determine file encoding for %s in extract_values_from_file().' \
+            % inputfile
+        logging.debug(s)
+        return None
+
     inputheader = read_header(inputfile, inputdialect)
 
     if termname not in inputheader:

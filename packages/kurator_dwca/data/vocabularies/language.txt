@@ -1,1 +1,1 @@
-verbatim	standard	vetted	error	misplaced	unresolved	source	commenten	en	1					en-US	en	1	Language is not a two-letter ISO language code.	0			es	es	1					
+language	standard	vetted	error	misplaced	unresolved	source	commenten	en	1					en-US	en	1	Language is not a two-letter ISO language code.	0			es	es	1					

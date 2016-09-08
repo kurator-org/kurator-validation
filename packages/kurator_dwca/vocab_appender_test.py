@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender_test.py 2016-08-22T15:56+02:00"
+__version__ = "vocab_appender_test.py 2016-09-08T16:17+02:00"
 
 # This file contains unit test for the vocab_appender function.
 #
@@ -24,8 +24,9 @@ __version__ = "vocab_appender_test.py 2016-08-22T15:56+02:00"
 
 from vocab_appender import vocab_appender
 from dwca_utils import read_header
+from dwca_utils import extract_values_from_file
+from dwca_utils import lstripstr
 from dwca_vocab_utils import compose_key_from_list
-from dwca_vocab_utils import distinct_term_values_from_file
 from dwca_terms import geogkeytermlist
 import os
 import unittest
@@ -71,14 +72,14 @@ class VocabAppenderTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=vocab_appender(inputs)
-#        print 'response1:\n%s' % response
+        # print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
         # Test with missing key
         inputs['vocabfile'] = geogvocabfile
         response=vocab_appender(inputs)
-#        print 'response2:\n%s' % response
+        # print 'response2:\n%s' % response
         s = 'success without key'
         self.assertFalse(response['success'], s)
 
@@ -88,14 +89,14 @@ class VocabAppenderTestCase(unittest.TestCase):
         s += 'county|municipality|waterbody|islandgroup|island'
         inputs['key'] = s
         response=vocab_appender(inputs)
-#        print 'response3:\n%s' % response
+        # print 'response3:\n%s' % response
         s = 'success without vocabfile'
         self.assertFalse(response['success'], s)
 
         # Test with missing optional inputs
         inputs['vocabfile'] = geogvocabfile
         response=vocab_appender(inputs)
-#        print 'response4:\n%s' % response
+        # print 'response4:\n%s' % response
         s = 'values added with empty checkvalues list'
         self.assertIsNone(response['addedvalues'], s)
         s = 'success with empty checkvalues list'
@@ -117,41 +118,46 @@ class VocabAppenderTestCase(unittest.TestCase):
         inputs['vocabfile'] = testvocabfile
         inputs['key'] = geogkey
         inputs['checkvaluelist'] = n
-#        print 'inputs:\n%s' % inputs
+        # print 'inputs:\n%s' % inputs
 
         # Add new vocab to new vocab file
         response=vocab_appender(inputs)
-#        print 'response1:\n%s' % response
+        # print 'response1:\n%s' % response
         
         writtenlist = response['addedvalues']
-#        print 'writtenlist1: %s' % writtenlist
+        # print 'writtenlist1: %s' % writtenlist
         self.assertEqual(writtenlist, n, 'values not written to new testvocabfile')
+
+        header = read_header(testvocabfile)
+        #print 'vocab file header:\n%s' % header
 
         # Attempt to add same vocabs to the same vocabs file
         response=vocab_appender(inputs)
-#        print 'response2:\n%s' % response
+        # print 'response2:\n%s' % response
         
         writtenlist = response['addedvalues']
-#        print 'writtenlist2: %s' % writtenlist
+        # print 'writtenlist2: %s' % writtenlist
         self.assertIsNone(writtenlist, 'duplicate value written to testvocabfile')
         
         header = read_header(testvocabfile)
-#        print 'vocab file header:\n%s' % header
+        # print 'vocab file header:\n%s' % header
         self.assertEquals(header[0], geogkey, 'key field not correct in testvocabfile')
 
     def test_vocab_appender2(self):
         print 'testing vocab_appender2'
         testvocabfile = self.framework.testvocabfile
         checkvaluelist = ['May', 'v', '5', 'MAY']
+        key = 'month'
         
         inputs = {}
         inputs['vocabfile'] = testvocabfile
         inputs['checkvaluelist'] = checkvaluelist
-#        print 'inputs: %s' % inputs
+        inputs['key'] = key
+        # print 'inputs: %s' % inputs
 
         # Aggregate all vocabs to new vocab file
         response=vocab_appender(inputs)
-#        print 'response: %s' % response
+        # print 'response: %s' % response
         
         writtenlist = response['addedvalues']
         expected = ['5', 'MAY', 'May', 'v']
@@ -160,7 +166,7 @@ class VocabAppenderTestCase(unittest.TestCase):
         s += 'not as expected: %s' % expected
         self.assertEqual(writtenlist, expected, s)
 
-        months = distinct_term_values_from_file(testvocabfile, 'verbatim')
+        months = extract_values_from_file(testvocabfile, ['month'])
         expected = ['5', 'MAY', 'May', 'v']
         s = 'From file: %s\n' % testvocabfile
         s += 'The verbatim values read: %s ' % months
@@ -169,21 +175,21 @@ class VocabAppenderTestCase(unittest.TestCase):
 
         checkvaluelist = ['vi', '6', 'June', 'JUNE']
         inputs['checkvaluelist'] = checkvaluelist
-#        print 'inputs: %s' % inputs
+        # print 'inputs: %s' % inputs
 
         # Aggregate new vocabs to existing vocab file
         response=vocab_appender(inputs)
-#        print 'response: %s' % response
+        # print 'response: %s' % response
 
         writtenlist = response['addedvalues']
-#        print 'writtenlist2: %s' % writtenlist
+        # print 'writtenlist2: %s' % writtenlist
         expected = ['6', 'JUNE', 'June', 'vi']
         s = 'To file: %s\n' % testvocabfile
         s += 'The verbatim values written: %s ' % writtenlist
         s += 'not as expected: %s' % expected
         self.assertEqual(writtenlist, expected, s)
 
-        months = distinct_term_values_from_file(testvocabfile, 'verbatim')
+        months = extract_values_from_file(testvocabfile, ['month'])
         expected = ['5', '6', 'JUNE', 'June', 'MAY', 'May', 'v', 'vi']
         s = 'From file: %s\n' % testvocabfile
         s += 'The verbatim values read: %s ' % months

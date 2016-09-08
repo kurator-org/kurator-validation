@@ -1,1 +1,1 @@
-verbatim	standard	vetted	error	misplaced	unresolved	source	commentunk	unknown	1	Disposition is an abbreviation.	0	0		
+disposition	standard	vetted	error	misplaced	unresolved	source	commentunk	unknown	1	Disposition is an abbreviation.	0	0		

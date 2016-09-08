@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2016-08-31T18:42+02:00"
+__version__ = "dwca_core_to_tsv.py 2016-09-08T14:01+02:00"
 
 from dwcareader_utils import short_term_names
 from dwca_utils import tsv_dialect
@@ -49,9 +49,9 @@ def dwca_core_to_tsv(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     """
-    setup_actor_logging(options)
+    # print '%s options: %s' % (__version__, options)
 
-    print '%s options: %s' % (__version__, options)
+    setup_actor_logging(options)
 
     logging.debug( 'Started %s' % __version__ )
     logging.debug( 'options: %s' % options )
@@ -90,7 +90,7 @@ def dwca_core_to_tsv(options):
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file not found'
+        message = 'Input file %s not found' % inputfile
         returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)

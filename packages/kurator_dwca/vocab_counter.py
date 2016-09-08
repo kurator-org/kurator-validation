@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_counter.py 2016-05-27T21:30-03:00"
+__version__ = "vocab_counter.py 2016-09-08T14:07+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -36,6 +36,8 @@ def vocab_counter(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
+    # print '%s options: %s' % (__version__, options)
+
     setup_actor_logging(options)
 
     logging.debug( 'Started %s' % __version__ )

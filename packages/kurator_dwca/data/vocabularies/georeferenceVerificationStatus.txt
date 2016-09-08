@@ -1,1 +1,1 @@
-verbatim	standard	vetted	error	misplaced	unresolved	source	commentunverified	requires verification	1					verified	verified by curator	1					unknown	requires verification	1					unk	requires verification	1					
+georeferenceverificationstatus	standard	vetted	error	misplaced	unresolved	source	commentunverified	requires verification	1					verified	verified by curator	1					unknown	requires verification	1					unk	requires verification	1					

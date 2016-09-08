@@ -14,13 +14,13 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_terms_recommendation_reporter.py 2016-08-23T15:57+02:00"
+__version__ = "dwc_terms_recommendation_reporter.py 2016-09-06T22:28+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 from dwca_utils import csv_file_dialect
 from dwca_utils import dialect_attributes
-from dwca_vocab_utils import distinct_term_values_from_file
+from dwca_utils import extract_values_from_file
 from dwca_vocab_utils import matching_vocab_dict_from_file
 from dwca_vocab_utils import term_values_recommended
 from dwca_vocab_utils import keys_list
@@ -49,6 +49,8 @@ def dwc_terms_recommendation_reporter(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     """
+    # print '%s options: %s' % (__version__, options)
+
     setup_actor_logging(options)
 
     logging.debug( 'Started %s' % __version__ )
@@ -89,7 +91,7 @@ def dwc_terms_recommendation_reporter(options):
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file not found'
+        message = 'Input file %s not found' % inputfile
         returnvals = [workspace, guid, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -129,9 +131,12 @@ def dwc_terms_recommendation_reporter(options):
 
     for termname in controlledtermlist:
         # Get a list of distinct values of the term in the input file
-        checklist = distinct_term_values_from_file(inputfile, termname, dialect)
 
-        print '%s checklist: %s' % (termname, checklist)
+#        print 'termname: %s' % (termname)
+
+        checklist = extract_values_from_file(inputfile, [termname], dialect=dialect)
+
+#        print '%s checklist: %s' % (termname, checklist)
 
         if checklist is not None and len(checklist)>0:
             vocabfile = '%s/%s.txt' % (vocabdir.rstrip('/'), termname)
@@ -140,9 +145,10 @@ def dwc_terms_recommendation_reporter(options):
             logging.debug(s)
 
             # Get a dictionary of checklist values from the vocabfile
-            matchingvocabdict = matching_vocab_dict_from_file(checklist, vocabfile)
+            matchingvocabdict = matching_vocab_dict_from_file(checklist, vocabfile, \
+                termname)
             
-#            print 'matching: %s' % matchingvocabdict
+#            print 'vocabfile: %s matching: %s' % (vocabfile, matchingvocabdict)
 
             if matchingvocabdict is not None and len(matchingvocabdict)>0:
                 s = 'Matching vocab ready for "%s"' % termname
@@ -156,7 +162,7 @@ def dwc_terms_recommendation_reporter(options):
                 s += ' in dwc_terms_recommendation_reporter(): %s' % recommended
                 logging.debug(s)
 
-                print 'recommended: %s' % recommended
+#                print 'recommended: %s' % recommended
 
                 if recommended is not None and len(recommended)>0:
                     # TODO: Use Allan's DQ report framework
@@ -166,7 +172,7 @@ def dwc_terms_recommendation_reporter(options):
                       (workspace.rstrip('/'), prefix, termname, guid, format)
 
                     success = term_recommendation_report(outputfile, recommended, \
-                        format=format)
+                        termname, format=format)
 
                     if outputfile is not None and os.path.isfile(outputfile):
                         s = '%s_recommendation_report_file' % termname

@@ -1,1 +1,1 @@
-verbatim	standard	vetted	error	misplaced	unresolved	source	commentamb.	nom. ambig.	1	NomenclaturalStatus is a synonym.	0	0		
+nomenclaturalstatus	standard	vetted	error	misplaced	unresolved	source	commentamb.	nom. ambig.	1	NomenclaturalStatus is a synonym.	0	0		

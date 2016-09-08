@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator.py 2016-05-27T21:19-03:00"
+__version__ = "text_file_aggregator.py 2016-09-08T14:04+02:00"
 
 from dwca_utils import composite_header
 from dwca_utils import csv_file_dialect
@@ -45,6 +45,8 @@ def text_file_aggregator(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     """
+    # print '%s options: %s' % (__version__, options)
+
     setup_actor_logging(options)
 
     logging.debug( 'Started %s' % __version__ )

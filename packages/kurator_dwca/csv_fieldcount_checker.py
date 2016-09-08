@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_fieldcount_checker.py 2016-05-27T15:53-03:00"
+__version__ = "csv_fieldcount_checker.py 2016-09-08T13:50+02:00"
 
 from dwca_utils import csv_field_checker
 from dwca_utils import response
@@ -37,6 +37,8 @@ def csv_fieldcount_checker(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
+    # print '%s options: %s' % (__version__, options)
+
     setup_actor_logging(options)
 
     logging.debug( 'Started %s' % __version__ )
@@ -64,7 +66,7 @@ def csv_fieldcount_checker(options):
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file not found'
+        message = 'Input file %s not found' % inputfile
         returnvals = [firstbadrowindex, row, success, message]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)

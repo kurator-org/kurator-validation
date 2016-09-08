@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter_test.py 2016-08-03T14:00+02:00"
+__version__ = "term_recommendation_reporter_test.py 2016-09-06T13:19+02:00"
 
 # This file contains unit tests for the term_recommendation_reporter function.
 #
@@ -77,7 +77,7 @@ class TermRecommendationReporterTestCase(unittest.TestCase):
 
         # Test with missing inputfile
         inputs['vocabfile'] = monthvocabfile
-        inputs['termname'] = 'month'
+        inputs['key'] = 'month'
         response=term_recommendation_reporter(inputs)
 #        print 'response2:\n%s' % response
         s = 'success without inputfile'
@@ -86,19 +86,19 @@ class TermRecommendationReporterTestCase(unittest.TestCase):
         # Test with missing vocabfile
         inputs = {}
         inputs['inputfile'] = testfile
-        inputs['termname'] = 'month'
+        inputs['key'] = 'month'
         response=term_recommendation_reporter(inputs)
 #        print 'response3:\n%s' % response
         s = 'success without vocabfile'
         self.assertFalse(response['success'], s)
 
-        # Test with missing termname
+        # Test with missing key
         inputs = {}
         inputs['inputfile'] = testfile
         inputs['vocabfile'] = monthvocabfile
         response=term_recommendation_reporter(inputs)
 #        print 'response4:\n%s' % response
-        s = 'success without termname'
+        s = 'success without key'
         self.assertFalse(response['success'], s)
 
     def test_term_recommendation_reporter(self):
@@ -106,11 +106,10 @@ class TermRecommendationReporterTestCase(unittest.TestCase):
         testfile = self.framework.testfile1
         testreportfile = self.framework.testreportfile
         monthvocabfile = self.framework.monthvocabfile
-        termname = 'verbatim'
         
         inputs = {}
         inputs['inputfile'] = testfile
-        inputs['termname'] = termname
+        inputs['key'] = 'month'
         inputs['outputfile'] = testreportfile
         inputs['vocabfile'] = monthvocabfile
 #        print 'inputs:\n%s' % inputs

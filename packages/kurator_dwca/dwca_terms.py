@@ -16,7 +16,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_terms.py 2016-08-22T15:23+02:00"
+__version__ = "dwca_terms.py 2016-09-05T19:20+02:00"
 
 # This file contains definitions of standard sets of Darwin Core terms.
 
@@ -101,9 +101,6 @@ vocabfieldlist = ['standard', 'vetted', 'error', 'misplaced',
 # Dictionary defining the default vaues of a new vocabulary file entry
 vocabrowdict = {'standard':'', 'vetted':0, 'error':'', 'misplaced':'',
     'unresolved':0, 'source':'', 'comment':''}
-
-# Set the name of the key field to be used in vocabularies unless otherwise specified
-defaultvocabkey ='verbatim'
 
 # Darwin Cloud terms - concepts commonly found in source data that can be processed into 
 # Darwin Core

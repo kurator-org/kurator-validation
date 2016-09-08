@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "actor_template.py 2016-05-27T13:35-03:00"
+__version__ = "actor_template.py 2016-09-08T13:49+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -38,6 +38,8 @@ def dostuffer(options):
         message - an explanation of the results
         artifacts - a dictionary of persistent objects created
     """
+    # print '%s options: %s' % (__version__, options)
+
     setup_actor_logging(options)
 
     logging.debug( 'Started %s' % __version__ )
@@ -76,7 +78,7 @@ def dostuffer(options):
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file not found'
+        message = 'Input file %s not found' % inputfile
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
