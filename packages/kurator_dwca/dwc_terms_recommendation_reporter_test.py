@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwc_terms_recommendation_reporter_test.py 2016-06-11T20:20-03:00"
+__version__ = "dwc_terms_recommendation_reporter_test.py 2016-09-06T22:43+02:00"
 
 # This file contains unit tests for the dwc_terms_recommendation_reporter function.
 #
@@ -55,61 +55,61 @@ class DwcTermsRecommendationReporterTestCase(unittest.TestCase):
         self.framework.dispose()
         self.framework = None
 
-    def test_source_files_exist(self):
-        print 'testing source_files_exist'
-        testinput = self.framework.testinput
-        self.assertTrue(os.path.isfile(testinput), testinput + ' does not exist')
-        
-        vocabdir = self.framework.vocabdir
-        for termname in controlledtermlist:
-            vocabfile = vocabdir + termname + '.txt'
-            self.assertTrue(os.path.isfile(vocabfile), vocabfile + ' does not exist')
+#     def test_source_files_exist(self):
+#         print 'testing source_files_exist'
+#         testinput = self.framework.testinput
+#         self.assertTrue(os.path.isfile(testinput), testinput + ' does not exist')
+#         
+#         vocabdir = self.framework.vocabdir
+#         for termname in controlledtermlist:
+#             vocabfile = vocabdir + termname + '.txt'
+#             self.assertTrue(os.path.isfile(vocabfile), vocabfile + ' does not exist')
 
-    def test_missing_parameters(self):
-        print 'testing missing_parameters'
-        testinput = self.framework.testinput
-        vocabdir = self.framework.vocabdir
-
-        # Test with missing required inputs
-        # Test with no inputs
-        inputs = {}
-        response=dwc_terms_recommendation_reporter(inputs)
-#        print 'response1:\n%s' % response
-        s = 'success without any required inputs'
-        self.assertFalse(response['success'], s)
-
-        # Test with missing inputfile
-        inputs['vocabdir'] = vocabdir
-        response=dwc_terms_recommendation_reporter(inputs)
-#        print 'response2:\n%s' % response
-        s = 'success without inputfile'
-        self.assertFalse(response['success'], s)
-
-        # Test with missing vocabdir
-        inputs = {}
-        inputs['inputfile'] = testinput
-        response=dwc_terms_recommendation_reporter(inputs)
-#        print 'response3:\n%s' % response
-        s = 'success without vocabdir'
-        self.assertFalse(response['success'], s)
-
-        # Test with missing optional inputs
-        inputs['vocabdir'] = vocabdir
-        response=dwc_terms_recommendation_reporter(inputs)
-        s = 'no output files produced with required inputs'
-        self.assertTrue(response['success'], s)
-        # Remove the files created by this test, as the Framework does not know about them
-        artifacts = response['artifacts']
-        for key, value in artifacts.iteritems():
-            if os.path.isfile(value):
-                os.remove(value)
+#     def test_missing_parameters(self):
+#         print 'testing missing_parameters'
+#         testinput = self.framework.testinput
+#         vocabdir = self.framework.vocabdir
+# 
+#         # Test with missing required inputs
+#         # Test with no inputs
+#         inputs = {}
+#         response=dwc_terms_recommendation_reporter(inputs)
+#        # print 'response1:\n%s' % response
+#         s = 'success without any required inputs'
+#         self.assertFalse(response['success'], s)
+# 
+#         # Test with missing inputfile
+#         inputs['vocabdir'] = vocabdir
+#         response=dwc_terms_recommendation_reporter(inputs)
+#         # print 'response2:\n%s' % response
+#         s = 'success without inputfile'
+#         self.assertFalse(response['success'], s)
+# 
+#         # Test with missing vocabdir
+#         inputs = {}
+#         inputs['inputfile'] = testinput
+#         response=dwc_terms_recommendation_reporter(inputs)
+#         # print 'response3:\n%s' % response
+#         s = 'success without vocabdir'
+#         self.assertFalse(response['success'], s)
+# 
+#         # Test with missing optional inputs
+#         inputs['vocabdir'] = vocabdir
+#         response=dwc_terms_recommendation_reporter(inputs)
+#         s = 'no output files produced with required inputs'
+#         self.assertTrue(response['success'], s)
+#         # Remove the files created by this test, as the Framework does not know about them
+#         artifacts = response['artifacts']
+#         for key, value in artifacts.iteritems():
+#             if os.path.isfile(value):
+#                 os.remove(value)
 
     def test_dwc_terms_recommendation_reporter(self):
         print 'testing dwc_terms_recommendation_reporter'
         testdatapath = self.framework.testdatapath
         testinput = self.framework.testinput
         vocabdir = self.framework.vocabdir
-        prefix = 'test'
+        prefix = 'testterms'
         
         inputs = {}
         inputs['inputfile'] = testinput
@@ -137,6 +137,7 @@ class DwcTermsRecommendationReporterTestCase(unittest.TestCase):
 
         # Remove the files created by this test, as the Framework does not know about them
         artifacts = response['artifacts']
+
         for key, value in artifacts.iteritems():
             if os.path.isfile(value):
                 os.remove(value)

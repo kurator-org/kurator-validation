@@ -1,1 +1,1 @@
-verbatim	standard	vetted	error	misplaced	unresolved	source	commentspecies	sp.	1					sp	sp.	1		0	0		subspecies	ssp.	1					subsp.	ssp.	1					ssp ssp.	1		0	0		cf	cf.	1					aff	aff.	1					
+identificationqualifier	standard	vetted	error	misplaced	unresolved	source	commentspecies	sp.	1					sp	sp.	1		0	0		subspecies	ssp.	1					subsp.	ssp.	1					ssp ssp.	1		0	0		cf	cf.	1					aff	aff.	1					

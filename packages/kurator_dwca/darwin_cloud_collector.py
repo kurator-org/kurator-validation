@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector.py 2016-05-27T15:51-03:00"
+__version__ = "darwin_cloud_collector.py 2016-09-08T13:51+02:00"
 
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
@@ -41,6 +41,8 @@ def darwin_cloud_collector(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
+    # print '%s options: %s' % (__version__, options)
+
     setup_actor_logging(options)
 
     logging.debug( 'Started %s' % __version__ )
@@ -83,7 +85,7 @@ def darwin_cloud_collector(options):
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file not found'
+        message = 'Input file %s not found' % inputfile
         returnvals = [addedvalues, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -100,7 +102,7 @@ def darwin_cloud_collector(options):
     nondwc = terms_not_in_dwc(header)
 
     dialect = vocab_dialect()
-    addedvalues = distinct_vocabs_to_file(outputfile, nondwc, dialect=dialect)
+    addedvalues = distinct_vocabs_to_file(outputfile, nondwc, 'verbatim', dialect=dialect)
     success = True
     artifacts['darwin_cloud_collector_file'] = outputfile
     returnvals = [addedvalues, outputfile, success, message, artifacts]

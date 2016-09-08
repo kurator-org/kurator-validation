@@ -14,17 +14,18 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter.py 2016-08-26T13:55+02:00"
+__version__ = "term_recommendation_reporter.py 2016-09-08T16:04+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 from dwca_utils import csv_file_dialect
-from dwca_vocab_utils import distinct_term_values_from_file
+from dwca_utils import extract_values_from_file
 from dwca_vocab_utils import matching_vocab_dict_from_file
 from dwca_vocab_utils import term_values_recommended
 from dwca_vocab_utils import not_in_list
 from dwca_vocab_utils import keys_list
 from report_utils import term_recommendation_report
+from slugify import slugify
 import os.path
 import logging
 import argparse
@@ -35,13 +36,15 @@ def term_recommendation_reporter(options):
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the tsvfile (optional)
-        inputfile - path to the input file. Either full path of path within the workspace
+        inputfile - path to the input file. Either full path or path within the workspace
             (required)
         vocabfile - path to the vocabulary file. Either full path or path within the
            workspace (required)
         format - output file format (e.g., 'csv' or 'txt') (optional; default csv)
         outputfile - name of the output file, without path (optional)
-        termname - the name of the term for which to find standard values (required)
+        key - the field or separator-separated fieldnames that hold the distinct values 
+              in the vocabulary file (required)
+        separator - string to use as the value separator in the string (default '|')
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
         outputfile - actual full path to the output report file
@@ -49,6 +52,8 @@ def term_recommendation_reporter(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     """
+    # print '%s options: %s' % (__version__, options)
+
     setup_actor_logging(options)
 
     logging.debug( 'Started %s' % __version__ )
@@ -77,6 +82,22 @@ def term_recommendation_reporter(options):
         workspace = './'
 
     try:
+        key = options['key']
+    except:
+        key = None
+
+    if key is None or len(key)==0:
+        message = 'No key in term_recommendation_reporter'
+        returnvals = [workspace, outputfile, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    try:
+        separator = options['separator']
+    except:
+        separator = None
+
+    try:
         inputfile = options['inputfile']
     except:
         inputfile = None
@@ -87,11 +108,16 @@ def term_recommendation_reporter(options):
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
+
+    # Look to see if the input file is at the absolute path or in the workspace.
     if os.path.isfile(inputfile) == False:
-        message = 'Input file not found'
-        returnvals = [workspace, outputfile, success, message, artifacts]
-        logging.debug('message:\n%s' % message)
-        return response(returnvars, returnvals)
+        if os.path.isfile(workspace+'/'+inputfile) == True:
+            inputfile = workspace+'/'+inputfile
+        else:
+            message = 'Input file %s not found' % inputfile
+            returnvals = [workspace, outputfile, success, message, artifacts]
+            logging.debug('message:\n%s' % message)
+            return response(returnvars, returnvals)
 
     try:
         vocabfile = options['vocabfile']
@@ -108,25 +134,11 @@ def term_recommendation_reporter(options):
     vocabfileat = None
     if os.path.isfile(vocabfile) == True:
         vocabfileat = vocabfile
-    elif os.path.isfile(workspace+'/'+vocabfile) == True:
-        vocabfileat = workspace+'/'+vocabfile
     else:
-        message = 'Vocab file not found'
-        returnvals = [workspace, outputfile, success, message, artifacts]
-        logging.debug('message:\n%s' % message)
-        return response(returnvars, returnvals)
+        vocabfileat = workspace+'/'+vocabfile
 
-    try:
-        termname = options['termname']
-    except:
-        termname = None
+    vocabfile = vocabfileat
 
-    if termname is None or len(termname)==0:
-        message = 'No term given'
-        returnvals = [workspace, outputfile, success, message, artifacts]
-        logging.debug('message: %s' % message)
-        return response(returnvars, returnvals)
-        
     try:
         format = options['format']
     except:
@@ -138,26 +150,30 @@ def term_recommendation_reporter(options):
         outputfile = None
     if outputfile is None:
         outputfile = '%s/%s_standardization_report_%s.%s' % \
-          (workspace.rstrip('/'), termname, str(uuid.uuid1()), format)
+          (workspace.rstrip('/'), slugify(key), str(uuid.uuid1()), format)
     else:
         outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     # Get a list of distinct values of the term in the input file
     dialect = csv_file_dialect(inputfile)
-    checklist = distinct_term_values_from_file(inputfile, termname, dialect=dialect)
+    checklist = extract_values_from_file(inputfile, [key], separator, dialect=dialect)
 
     if checklist is None or len(checklist)==0:
-        message = 'No values of %s from %s' % (termname, inputfile)
+        message = 'No values of %s from %s' % (key, inputfile)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
+    # print 'checklist: %s' % checklist
+
     # Get a dictionary of checklist values from the vocabfile
-    matchingvocabdict = matching_vocab_dict_from_file(checklist, vocabfileat)
+    matchingvocabdict = matching_vocab_dict_from_file(checklist, vocabfile, key)
+
+    # print 'matchingvocabdict: %s' % matchingvocabdict
 
     if matchingvocabdict is None or len(matchingvocabdict)==0:
         message = 'No matching values of %s from %s found in %s' % \
-            (termname, inputfile, vocabfileat)
+            (key, inputfile, vocabfile)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -165,9 +181,11 @@ def term_recommendation_reporter(options):
     # Get a dictionary of the recommended values from the matchingvocabdict
     recommended = term_values_recommended(matchingvocabdict)
 
+    # print 'recommended: %s' % recommended
+
     if recommended is None or len(recommended)==0:
         message = 'Vocabulary %s has no recommended values for %s from %s' % \
-            (vocabfile, termname, inputfile)
+            (vocabfile, key, inputfile)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -175,7 +193,7 @@ def term_recommendation_reporter(options):
     # TODO: Use Allan's DQ report framework
     # Validation, Improvement, Measure
     # Create a series of term reports
-    success = term_recommendation_report(outputfile, recommended, format=format)
+    success = term_recommendation_report(outputfile, recommended, key, format=format)
 
     matchingvocablist = keys_list(matchingvocabdict)
     newvalues = not_in_list(matchingvocablist, checklist)
@@ -186,7 +204,7 @@ def term_recommendation_reporter(options):
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
-    s = '%s_recommendation_report_file' % termname
+    s = '%s_recommendation_report_file' % key
     artifacts[s] = outputfile
     returnvals = [workspace, outputfile, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
@@ -208,8 +226,11 @@ def _getoptions():
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
 
-    help = "name of the term (required)"
-    parser.add_argument("-t", "--termname", help=help)
+    help = 'field with the distinct values in the vocabulary file (required)'
+    parser.add_argument("-s", "--separator", help=help)
+
+    help = 'string that separates fields in the key (optional)'
+    parser.add_argument("-k", "--key", help=help)
 
     help = 'report file format (e.g., csv or txt) (optional; default csv)'
     parser.add_argument("-f", "--format", help=help)
@@ -224,12 +245,13 @@ def main():
     optdict = {}
 
     if options.inputfile is None or len(options.inputfile)==0 or \
-       options.termname is None or len(options.termname)==0 or \
+       options.key is None or len(options.key)==0 or \
        options.vocabfile is None or len(options.vocabfile)==0:
         s =  'syntax:\n'
         s += 'python term_recommendation_reporter.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -v ./data/vocabularies/country.txt'
+        s += ' -s |'
         s += ' -w ./workspace'
         s += ' -o testtermrecommendationout.txt'
         s += ' -t country'
@@ -240,9 +262,10 @@ def main():
 
     optdict['inputfile'] = options.inputfile
     optdict['vocabfile'] = options.vocabfile
+    optdict['key'] = options.key
+    optdict['separator'] = options.separator
     optdict['workspace'] = options.workspace
     optdict['outputfile'] = options.outputfile
-    optdict['termname'] = options.termname
     optdict['format'] = options.format
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict

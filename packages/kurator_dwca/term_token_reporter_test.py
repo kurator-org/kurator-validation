@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_token_reporter_test.py 2016-05-27T22:02-03:00"
+__version__ = "term_token_reporter_test.py 2016-09-08T13:43+02:00"
 
 # This file contains unit test for the term_token_reporter function.
 #
@@ -67,14 +67,14 @@ class TermCounterTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=term_token_reporter(inputs)
-#        print 'response1:\n%s' % response
+        # print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
         # Test with missing inputfile
         inputs['termname'] = 'locality'
         response=term_token_reporter(inputs)
-#        print 'response2:\n%s' % response
+        # print 'response2:\n%s' % response
         s = 'success without input file'
         self.assertFalse(response['success'], s)
 
@@ -82,7 +82,7 @@ class TermCounterTestCase(unittest.TestCase):
         inputs = {}
         inputs['inputfile'] = inputfile
         response=term_token_reporter(inputs)
-#        print 'response3:\n%s' % response
+        # print 'response3:\n%s' % response
         s = 'success without term name'
         self.assertFalse(response['success'], s)
 
@@ -91,7 +91,7 @@ class TermCounterTestCase(unittest.TestCase):
         inputs['inputfile'] = inputfile
         inputs['termname'] = 'locality'
         response=term_token_reporter(inputs)
-#        print 'response4:\n%s' % response
+        # print 'response4:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
         # Remove the file created by this test, as the Framework does not know about it
@@ -104,7 +104,7 @@ class TermCounterTestCase(unittest.TestCase):
         outputfile = self.framework.outputfile
         workspace = self.framework.testdatapath
         termname = 'locality'
-        
+
         inputs = {}
         inputs['inputfile'] = inputfile
         inputs['outputfile'] = outputfile
@@ -112,9 +112,9 @@ class TermCounterTestCase(unittest.TestCase):
         inputs['termname'] = termname
 
         # Extract tokens from term
-#        print 'inputs:\n%s' % inputs
+        # print 'inputs:\n%s' % inputs
         response=term_token_reporter(inputs)
-#        print 'response:\n%s' % response
+        # print 'response:\n%s' % response
         tokens = response['tokens']
         s = 'no tokens for term %s from file %s' % \
             (termname, inputfile)
@@ -130,6 +130,7 @@ class TermCounterTestCase(unittest.TestCase):
         s = 'parameter count (%s) for response not correct' % parametercount
         self.assertEqual(parametercount, expected, s)
 
+        # print 'tokenlist: %s' % tokens['tokenlist']
         distincttokencount = 38
         s = 'distincttokencount (%s) not as expected (%s)' % \
             (len(tokens['tokenlist']), distincttokencount)

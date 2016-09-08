@@ -1,1 +1,1 @@
-verbatim	standard	vetted	error	misplaced	unresolved	source	commentPhysicalObject	PhysicalObject	1					StillImage	StillImage	1					MovingImage	MovingImage	1					Sound	Sound	1					Text	Text	1					Event	Event	1					specimen	PhysicalObject	1	Type is a synonym for a basisOfRecord.	1			
+type	standard	vetted	error	misplaced	unresolved	source	commentPhysicalObject	PhysicalObject	1					StillImage	StillImage	1					MovingImage	MovingImage	1					Sound	Sound	1					Text	Text	1					Event	Event	1					specimen	PhysicalObject	1	Type is a synonym for a basisOfRecord.	1			

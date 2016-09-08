@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwinize_header.py 2016-08-04T14:26+02:00"
+__version__ = "darwinize_header.py 2016-09-08T13:52+02:00"
 
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
@@ -49,6 +49,8 @@ def darwinize_header(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
+    # print '%s options: %s' % (__version__, options)
+
     setup_actor_logging(options)
 
     logging.debug( 'Started %s' % __version__ )
@@ -95,7 +97,7 @@ def darwinize_header(options):
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file not found'
+        message = 'Input file %s not found' % inputfile
         returnvals = [outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)

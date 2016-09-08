@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2016-09-01T16:23+02:00"
+__version__ = "vocab_appender.py 2016-09-08T16:22+02:00"
 
 from dwca_utils import read_header
 from dwca_utils import response
@@ -23,7 +23,6 @@ from dwca_vocab_utils import vocabheader
 from dwca_vocab_utils import writevocabheader
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
-from dwca_vocab_utils import defaultvocabkey
 from dwca_terms import vocabfieldlist
 import os
 import csv
@@ -38,18 +37,18 @@ def vocab_appender(options):
         workspace - path to a directory to work in (optional)
         vocabfile - full path to the file containing the vocabulary (required)
         checkvaluelist - a list of candidate key values to append (optional)
-        key - the field name that holds the distinct values in the vocabulary file
-            (optional; default None)
+        key - list of fields to extract from the input file (required)
+        separator - string to use as the value separator in the string (default '|')
     returns a dictionary with information about the results
         workspace - path to a directory worked in
-        vocabfile - full path to the file containing the vocabulary
+        vocabfile - full path to the file containing the vocabulary to append to
         addedvalues - new key values added to the vocabulary file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
-    setup_actor_logging(options)
+    # print '%s options: %s' % (__version__, options)
 
-    print '%s options: %s' % (__version__, options)
+    setup_actor_logging(options)
 
     logging.debug( 'Started %s' % __version__ )
     logging.debug( 'options: %s' % options )
@@ -59,6 +58,7 @@ def vocab_appender(options):
 
     # outputs
     workspace = None
+    vocabfile = None
     addedvalues = None
     success = False
     message = None
@@ -73,29 +73,20 @@ def vocab_appender(options):
         workspace = './'
 
     try:
-        vocabfile = options['vocabfile']
+        key = options['key']
     except:
-        vocabfile = None
+        key = None
 
-    if vocabfile is None or len(vocabfile)==0:
-        message = 'No vocab file given'
+    if key is None or len(key)==0:
+        message = 'No key in vocab_appender'
         returnvals = [workspace, vocabfile, addedvalues, success, message]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
-    # Look to see if vocab file is at the absolute path or in the workspace.
-    vocabfileat = None
-    if os.path.isfile(vocabfile) == True:
-        vocabfileat = vocabfile
-    else:
-        vocabfileat = workspace+'/'+vocabfile
-
-    vocabfile = vocabfileat
-    
     try:
-        key = options['key']
+        separator = options['separator']
     except:
-        key = defaultvocabkey
+        separator = None
 
     try:
         checkvaluelist = options['checkvaluelist']
@@ -108,9 +99,19 @@ def vocab_appender(options):
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
+    try:
+        vocabfile = options['vocabfile']
+    except:
+        vocabfile = None
+
+    if vocabfile is None or len(vocabfile)==0:
+        message = 'No vocab file given'
+        returnvals = [workspace, vocabfile, addedvalues, success, message]
+        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
     # If vocab file doesn't exist, create it with a header consisting of fieldnames
     # constructed from key
-    
     isfile = os.path.isfile(vocabfile)
     dialect = vocab_dialect()
     fieldnames = vocabheader(key)
@@ -162,6 +163,9 @@ def _getoptions():
     parser.add_argument("-c", "--checkvaluelist", help=help)
 
     help = 'field with the distinct values in the vocabulary file (required)'
+    parser.add_argument("-s", "--separator", help=help)
+
+    help = 'string that separates fields in the key (optional)'
     parser.add_argument("-k", "--key", help=help)
 
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
@@ -187,6 +191,7 @@ def main():
         s += ' -c "Oceania|United States|US|Hawaii|Honolulu|Honolulu'
         s += '|North Pacific Ocean|Hawaiian Islands|Oahu, '
         s += '|United States||WA|Chelan Co.||||"'
+        s += ' -s |'
         s += ' -k "continent|country|countrycode|stateprovince|'
         s += 'county|municipality|waterbody|islandgroup|island"'
         s += ' -l DEBUG'
@@ -196,7 +201,8 @@ def main():
     optdict['vocabfile'] = options.vocabfile
     optdict['workspace'] = options.workspace
     optdict['checkvaluelist'] = checkvaluelist
-    optdict['key'] = key
+    optdict['key'] = options.key
+    optdict['separator'] = options.separator
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

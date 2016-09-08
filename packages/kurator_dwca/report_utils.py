@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2016-08-22T16:07+02:00"
+__version__ = "report_utils.py 2016-09-06T16:03+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -27,20 +27,29 @@ __version__ = "report_utils.py 2016-08-22T16:07+02:00"
 from dwca_utils import csv_dialect
 from dwca_utils import tsv_dialect
 from dwca_terms import vocabfieldlist
-from dwca_terms import defaultvocabkey
+from dwca_vocab_utils import vocabheader
 import logging
 import unittest
-import csv
 import os.path
+try:
+    # need to install unicodecsv for this to be used
+    # pip install unicodecsv
+    import unicodecsv as csv
+except ImportError:
+    import warnings
+    warnings.warn("can't import `unicodecsv` encoding errors may occur")
+    import csv
 
-def term_recommendation_report(reportfile, recommendationdict, key=None, format=None):
+def term_recommendation_report(reportfile, recommendationdict, key, separator='|', 
+    format=None):
     """Write a term recommendation report.
     parameters:
         reportfile - full path to the output report file (optional)
         recommendationdict - dictionary of term recommendations (required)
         format - string signifying the csv.dialect of the report file ('csv' or 'txt')
-        key - the field name that holds the distinct values in the vocabulary file
-            (optional; default None)
+        key - the field or separator-separated fieldnames that hold the distinct values 
+              in the vocabulary file (required)
+        separator - string to use as the value separator in the string (default '|')
     returns:
         success - True if the report was written, else False
     """
@@ -49,9 +58,7 @@ def term_recommendation_report(reportfile, recommendationdict, key=None, format=
         logging.debug('No term recommendations given in term_recommendation_report()')
         return False
 
-    if key is None or len(key.strip())==0:
-        key = defaultvocabkey
-    fieldnames = [key] + vocabfieldlist
+    fieldnames = vocabheader(key, separator)
 
     if format=='csv' or format is None:
         dialect = csv_dialect()
@@ -70,14 +77,19 @@ def term_recommendation_report(reportfile, recommendationdict, key=None, format=
         with open(reportfile, 'a') as csvfile:
             writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
             for datakey, value in recommendationdict.iteritems():
-                writer.writerow({key:datakey, 
+                row = {key:datakey, 
                     'standard':value['standard'], \
                     'vetted':value['vetted'], \
                     'error':value['error'], \
                     'misplaced':value['misplaced'], \
                     'unresolved':value['unresolved'], \
                     'source':value['source'], \
-                    'comment':value['comment'] })
+                    'comment':value['comment'] }
+                fields = key.split(separator)
+                if len(fields) > 1:
+                    for field in fields:
+                        row[field] = value[field]
+                writer.writerow(row)
         logging.debug('Report written to %s in term_recommendation_report()' % reportfile)
     else:
         # Print the report to stdout

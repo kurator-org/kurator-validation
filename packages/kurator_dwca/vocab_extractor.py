@@ -14,11 +14,12 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-08-31T21:57+02:00"
+__version__ = "vocab_extractor.py 2016-09-08T16:18+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
-from dwca_vocab_utils import distinct_term_values_from_file
+from dwca_utils import extract_values_from_file
+from dwca_utils import lstripstr
 import os
 import logging
 import argparse
@@ -29,8 +30,7 @@ def vocab_extractor(options):
         loglevel - level at which to log (e.g., DEBUG) (optional)
         inputfile - full path to the input file (required)
         workspace - path to a directory to work in (optional)
-        terms - string of separator-separated terms for which to find distinct values
-            (e.g., 'year', 'country|stateProvince|county') (required)
+        terms - list of fields to extract from the input file (required)
         separator - string that separates the values in terms (e.g., '|') 
             (optional; default None)
     returns a dictionary with information about the results
@@ -39,9 +39,9 @@ def vocab_extractor(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
-    setup_actor_logging(options)
+    # print '%s options: %s' % (__version__, options)
 
-    print '%s options: %s' % (__version__, options)
+    setup_actor_logging(options)
 
     logging.debug( 'Started %s' % __version__ )
     logging.debug( 'options: %s' % options )
@@ -97,9 +97,12 @@ def vocab_extractor(options):
     except:
         separator = None
 
-    extractedvalues = distinct_term_values_from_file(inputfile, terms, \
-        separator=separator)
-    print 'extractedvalues: %s' % extractedvalues
+    # Extract the distinct values from the inputfile, applying the function to strip
+    # white space and make lower case.
+    extractedvalues = extract_values_from_file(inputfile, terms, separator=separator, \
+        function=lstripstr)
+#    extractedvalues = extract_values_from_file(inputfile, terms, separator=separator)
+
     success = True
     returnvals = [workspace, extractedvalues, success, message]
     logging.debug('Finishing %s' % __version__)

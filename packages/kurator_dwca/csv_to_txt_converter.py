@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_to_txt_converter.py 2016-08-04T13:22+02:00"
+__version__ = "csv_to_txt_converter.py 2016-09-08T13:51+02:00"
 
 from dwca_utils import csv_to_txt
 from dwca_utils import response
@@ -35,6 +35,8 @@ def csv_to_txt_converter(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
+    # print '%s options: %s' % (__version__, options)
+
     setup_actor_logging(options)
 
     logging.debug( 'Started %s' % __version__ )
@@ -76,7 +78,7 @@ def csv_to_txt_converter(options):
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file not found'
+        message = 'Input file %s not found' % inputfile
         returnvals = [outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
