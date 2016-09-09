@@ -733,13 +733,21 @@ def extract_values_from_file(inputfile, fields, separator='|', function=None, *a
 
     # Search for fields based on a cleaned header
     cleanheader = clean_header(read_header(inputfile))
+    # print 'cleanheader: %s' % cleanheader
 
+    # print 'fields: %s' % fields
+    cleanfields = []
     # Search for fields based on cleaned fields to match cleaned header
-    cleanfields = clean_header(fields)
+    if function is not None:
+        for field in fields:
+            cleanfields.append( function(field, *args, **kwargs) )
+    else:
+        cleanfields = fields
+    # print 'cleanfields: %s' % cleanfields
 
     # Extract values from the rows in the input file
     for row in read_csv_row(inputfile, inputdialect, inputencoding, fieldnames=cleanheader):
-#        print 'row: %s' % row
+        # print 'row: %s' % row
         try:
             value = extract_values_from_row(row, cleanfields, separator)
             if value is not None:

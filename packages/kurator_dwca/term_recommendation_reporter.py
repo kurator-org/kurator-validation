@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter.py 2016-09-08T16:04+02:00"
+__version__ = "term_recommendation_reporter.py 2016-09-08T17:54+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -155,8 +155,11 @@ def term_recommendation_reporter(options):
         outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     # Get a list of distinct values of the term in the input file
-    dialect = csv_file_dialect(inputfile)
-    checklist = extract_values_from_file(inputfile, [key], separator, dialect=dialect)
+    fields = key.split(separator)
+
+    # print 'fields: %s separator: %s' % (fields, separator)
+
+    checklist = extract_values_from_file(inputfile, fields, separator)
 
     if checklist is None or len(checklist)==0:
         message = 'No values of %s from %s' % (key, inputfile)
@@ -251,10 +254,10 @@ def main():
         s += 'python term_recommendation_reporter.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -v ./data/vocabularies/country.txt'
-        s += ' -s |'
+        s += ' -s "|"'
         s += ' -w ./workspace'
         s += ' -o testtermrecommendationout.txt'
-        s += ' -t country'
+        s += ' -k "country"'
         s += ' -f csv'
         s += ' -l DEBUG'
         print '%s' % s

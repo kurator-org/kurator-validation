@@ -11,7 +11,7 @@
 #
 # Example command-line usage:
 # kurator -f dwca_geography_cleaner.yaml 
-#         -p url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
+#         -p dwca_url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
 #         -p workspace=./workspace
 #         -l DEBUG (optional)
 #
@@ -37,7 +37,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_geography_cleaner.yaml 2016-08-26T14:14+02:00"
+# __version__ = "dwca_geography_cleaner.yaml 2016-09-09T15:12+02:00"
 
 imports:
 
@@ -52,11 +52,14 @@ components:
 - id: MakeWorkspace
   type: PythonActor
   properties:
+    # Inline python code to run.
     code: |
         import uuid
         import os
+        # The function to run when an on_start message is received. Accepts a dictionary
+        # of options.
         def on_start(options):
-            print 'Started MakeWorkspace'
+            print '### Started MakeWorkspace ###'
             print 'MakeWorkspace options: %s' % options
             if options.has_key('workspace') == False:
                 options['workspace'] ='./workspace_'+str(uuid.uuid1())
@@ -69,23 +72,46 @@ components:
 - id: ArchiveDownloader
   type: PythonActor
   properties:
-    # The location of the actor source code 
-    # kurator_dwca/downloader.py
+    # The location of the actor source code
     module: kurator_dwca.downloader
-    # The function to invoke when the actor receives an onData message.
+    # The function to invoke in the module when the actor receives an onData message.
     onData: downloader
-    # A list of parameters to get from the workflow parameters configuration or the 
-    # options dictionary passed from the upstream actor.
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
     inputs:
-        # Get the url from the url parameter defined in the Workflow.
-        url: url
-        # Get the workspace for this actor from the workspace in the options dictionary.
-        workspace : workspace
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
     parameters:
-        # Download to a specific file name in the workspace received from upstream.
-        outputfile: 'dwca.zip'
-        # Invoking python logging causes thread exceptions.
-#        loglevel: 'DEBUG'
+      # Get the url for the options dictionary from the url parameter defined 
+      # in the Workflow. It is not declared here.
+      # Note: Would like to establish the command line source of a parameter here, within
+      # the actor.
+
+      # Set the outputfile to a specific file name.
+      # Note: Would like to be able to specify that this file should go in the workspace
+      outputfile: 'dwca.zip'
+      # Set the log level in the actor explicitly
+      # Note: Invoking logging in the Python actor causes kurator-akka exceptions.
+      #loglevel: 'DEBUG'
+#Error in atexit._run_exitfuncs:
+#Traceback (most recent call last):
+#  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/atexit.py", line 24, in _run_exitfuncs
+#    func(*targs, **kargs)
+#  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/threading.py", line 297, in _MainThread__exitfunc
+#    t.join()
+#  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/threading.py", line 128, in join
+#    raise RuntimeError("cannot join current thread")
+#RuntimeError: cannot join current thread
+#Error in sys.exitfunc:
+#Traceback (most recent call last):
+#  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/atexit.py", line 24, in _run_exitfuncs
+#  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/threading.py", line 297, in _MainThread__exitfunc
+#  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/threading.py", line 128, in join
+#RuntimeError: cannot join current thread
+      # Invoking python logging causes thread exceptions.
+    # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref MakeWorkspace
 
@@ -94,156 +120,137 @@ components:
   type: PythonActor
   properties:
     # The location of the actor source code 
-    # kurator_dwca/dwca_core_to_tsv.py
     module: kurator_dwca.dwca_core_to_tsv
-    # The function to invoke when the actor receives an onData message.
+    # The function to invoke in the module when the actor receives an onData message.
     onData: dwca_core_to_tsv
-    # A list of parameters to get from the workflow parameters configuration or the 
-    # options dictionary passed from the upstream actor.
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
     inputs:
-        # Get the inputfile for this actor from the outputfile in the options dictionary.
-        outputfile: inputfile
-        # Get the workspace for this actor from the workspace in the options dictionary.
-        workspace : workspace
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      outputfile: inputfile
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
     parameters:
-        # Extract the core to a specific file name in the workspace received from upstream.
-        outputfile: 'dwca_extractedoccurrences.txt'
+      # Set the outputfile to a specific file name.
+      # Note: Would like to be able to specify that this file should go in the workspace
+      outputfile: 'dwca_extractedoccurrences.txt'
+    # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref ArchiveDownloader
 
-# Extract the distinct geography combinations into a file.
-- id: GeogExtractor
+# Inline python actor to demonstrate actor iteration. Passes an options dictionary 
+# including the inputfile and a term to downstream listeners for each term in a list.
+- id: VocabList
   type: PythonActor
   properties:
-    # The location of the actor source code 
-    # kurator_dwca/vocab_extractor.py
-    module: kurator_dwca.vocab_extractor
-    # The function to invoke when the actor receives an onData message.
-    onData: vocab_extractor
-    # A list of parameters to get from the workflow parameters configuration or the 
-    # options dictionary passed from the upstream actor.
+    # Inline python code to run.
+    code: |
+        # The function to run when an on_data message is received. Accepts a dictionary
+        # of options.
+        def on_data(options):
+            print '### Started VocabList ###'
+            print 'VocabList options: %s' % options
+            termlist = ['continent', 'country', 'stateProvince', 'waterBody', 
+                'islandGroup', 'island']
+            for term in termlist:
+                yield { 'inputfile':options['inputfile'], 
+                        'workspace':options['workspace'], 
+                        'termname':term }
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
     inputs:
-        # Get the inputfile for this actor from the outputfile in the options dictionary.
-        outputfile: inputfile
-        # Get the workspace for this actor from the workspace in the options dictionary.
-        workspace: workspace
-    parameters:
-        # Extract a specific combination of Darwin Core terms from the input file.
-        terms: 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
-        # Separator to use between field names in the key.
-        separator: '|'
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      outputfile: inputfile
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
+    # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref DWCAtoTSVWriter
 
-# Append the distinct geography combinations to a vocabulary file.
-- id: GeogAppender
+# Create a term count report.
+- id: VocabReporter
   type: PythonActor
   properties:
     # The location of the actor source code 
-    # kurator_dwca/vocab_appender.py
-    module: kurator_dwca.vocab_appender
-    # The function to invoke when the actor receives an onData message.
-    onData: vocab_appender
-    # A list of parameters to get from the workflow parameters configuration or the 
-    # options dictionary passed from the upstream actor.
+    module: kurator_dwca.term_count_reporter
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: term_count_reporter
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
     inputs:
-        # Get the workspace for this actor from the workspace in the options dictionary.
-        workspace: workspace
-        # Get the checkvaluelist for this actor from the extractedvalues in the options dictionary.
-        extractedvalues: checkvaluelist
+      # Get the inputfile for this actor from the inputfile in the options dictionary.
+      inputfile: inputfile
+      # Get the termname for this actor from the termname in the options dictionary.
+      termname: termname
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace: workspace
     parameters:
-        # Extract the vocabulary to a specific file name in the workspace received from upstream.
-        vocabfile: 'extractedgeography.txt'
-        # Key to use for the vocabulary file.
-        key: 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
+      # Set the format for output files.
+      format: 'csv'
+    # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref GeogExtractor
-
-# Download dwc_geography.txt file containing geography key to standard geography lookup.
-- id: GeographyDownloader
-  type: PythonActor
-  properties:
-    # The location of the actor source code 
-    # kurator_dwca/downloader.py
-    module: kurator_dwca.downloader
-    # The function to invoke when the actor receives an onData message.
-    onData: downloader
-    # A list of parameters to get from the workflow parameters configuration or the 
-    # options dictionary passed from the upstream actor.
-    inputs:
-        # Get the workspace for this actor from the workspace in the options dictionary.
-        workspace : workspace
-    parameters:
-        # Get the file from a specific URL.
-        url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/dwc_geography.txt'
-        # Download to a specific file name in the workspace received from upstream.
-        outputfile : 'dwc_geography.txt'
-    listensTo:
-      - !ref GeogAppender
-
-# Inline python actor to construct a full path to the vocabulary file required by
-# the GeogReporter.
-- id: MakeGeogVocabFile
-  type: PythonActor
-  properties:
-    # The location of the actor source code 
-    # kurator_dwca/geog_recommendation_reporter.py
-    module: kurator_dwca.path_maker
-    # The function to invoke when the actor receives an onData message.
-    onData: path_maker
-    inputs:
-        # Get the workspace for this actor from the workspace in the options dictionary.
-        workspace: workspace
-#        workspace: path
-    parameters:
-        filename: 'dwc_geography.txt'
-    listensTo:
-      - !ref MakeWorkspace
+      - !ref VocabList
 
 # Report on the geography recommendations.
 - id: GeogReporter
   type: PythonActor
   properties:
     # The location of the actor source code 
-    # kurator_dwca/geog_recommendation_reporter.py
-    module: kurator_dwca.geog_recommendation_reporter
-    # The function to invoke when the actor receives an onData message.
-    onData: geog_recommendation_reporter
+    module: kurator_dwca.term_recommendation_reporter
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: term_recommendation_reporter
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
     inputs:
-        # Get the workspace for this actor from the workspace in the options dictionary.
-        workspace: workspace
-        # Get the vocabfile for this actor from the outputfile in the options dictionary.
-        outputfile: vocabfile
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace: workspace
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      outputfile: inputfile
     parameters:
-        inputfile: 'dwca_extractedoccurrences.txt'
-        geogoutputfile: 'distinctgeogrecommendations.txt'
-        geogrowoutputfile: 'byrecordgeogrecommentations.txt'
-        vocabfile: '.ws/dwc_geography.txt'
-        format: 'txt'
+      # Set the inputfile to a specific file name.
+      # Note: Would like to be able to specify that this file should go in the workspace
+      inputfile: 'dwca_extractedoccurrences.txt'
+      # Set the vocabfile to a specific file name.
+      # Note: Would like to be able to specify that this file should go in the workspace
+      vocabfile: 'dwc_geography.txt'
+      # Set the outputfile to a specific file name.
+      # Note: Would like to be able to specify that this file should go in the workspace
+      outputfile: 'geogrecommendations.txt'
+      # Set the format for output files.
+      format: 'txt'
+      # Set the field combination to report on.
+      key: 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
+      # Set the separator for the key.
+      separator: '|'
+    # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref MakeWorkspace
+      - !ref DWCAtoTSVWriter
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
   type: PythonActor
   properties:
+    # Inline python code to run.
     code: |
+        # The function to run when an on_data message is received. Accepts a dictionary
+        # of options.
         def on_data(options):
             print 'WrapUp options: %s' % options
-            print '### Finished Workflow ###'
+            print '### Finished Wrapup ###'
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
     inputs:
         # Get the workspace for this actor from the workspace in the options dictionary.
         workspace: workspace
-        # Full path to the distinct geog output file.
-        geogoutputfile: geogoutputfile
-        # Full path to the record geog output file.
-        geogrowoutputfile: geogrowoutputfile
+        # Full path to the output file.
+        outputfile: outputfile
         # Success status of the upstream actor.
         success: success
         # Status message from the upstream actor.
         message: message
         # Dictionary of persistent objects created.
         artifacts: artifacts
+    # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref GeogReporter
 
@@ -254,97 +261,119 @@ components:
     actors:
       # Actors invoked in the workflow.
       - !ref MakeWorkspace
-#      - !ref ArchiveDownloader
-#      - !ref DWCAtoTSVWriter
+      - !ref ArchiveDownloader
+      - !ref DWCAtoTSVWriter
+      - !ref VocabList
+      - !ref VocabReporter
+      - !ref GeogReporter
+      - !ref WrapUp
 #      - !ref GeogExtractor
 #      - !ref GeogAppender
 #      - !ref GeographyDownloader
 #      - !ref MakeGeogVocabFile
-      - !ref GeogReporter
-      - !ref WrapUp
-#      - !ref CountryDownloader
-#      - !ref CountryCodeDownloader
-#      - !ref CountryReporter
-#      - !ref CountryCountsReporter
-    # The parameters defined here enter the workflow from the command line and get 
-    # delivered in the options dictionaries of the given actors
+    # Each parameter defined here enters the workflow from the command line and is 
+    # delivered in the options dictionary of the specified actor.
     parameters:
-#       url:
-#         actor: !ref MakeWorkspace
-#         parameter: url
-       url:
-         # Set the url key in the input options from the command line.
-         actor: !ref ArchiveDownloader
-         parameter: url
-       workspace:
-         # Set the workspace for Makeworkspace from the command line if given
-         # there.
-         actor: !ref MakeWorkspace
-         parameter: workspace
-#       vocabfile:
-#         actor: !ref CountryReporter
-#         parameter: vocabfile
+      # Accept a parameter called dwca_url from the command line.
+      dwca_url:
+        # Set the url in the options dictionary of ArchiveDownloader from the value of
+        # the dwca_url parameter given on the command line.
+        actor: !ref ArchiveDownloader
+        parameter: url
+      # Accept a parameter called workspace from the command line.
+      workspace:
+        # Set the workspace in the options dictionary of MakeWorkspace from the value of
+        # the workspace parameter given on the command line.
+        actor: !ref MakeWorkspace
+        parameter: workspace
 
-# Report on the recommendation from the country vocabulary for the Country field in the 
-# Darwin Core archive.
-#- id: CountryReporter
+## Extract the distinct geography combinations into a file.
+#- id: GeogExtractor
 #  type: PythonActor
 #  properties:
-#    module: kurator_dwca.term_recommendation_reporter
-#    onData: term_recommendation_reporter
+#    # The location of the actor source code 
+#    module: kurator_dwca.vocab_extractor
+#    # The function to invoke in the module when the actor receives an onData message.
+#    onData: vocab_extractor
+#    # A list of parameters to get from the options dictionary passed from an 
+#    # upstream actor.
 #    inputs:
+#        # Get the inputfile for this actor from the outputfile in the options dictionary.
 #        outputfile: inputfile
+#        # Get the workspace for this actor from the workspace in the options dictionary.
 #        workspace: workspace
 #    parameters:
-#        vocabfile: 'country.txt'
-#        outputfile: 'countryreport.txt'
-#        termname: 'country'
-#        format: 'txt'
+#        # Extract a specific combination of Darwin Core terms from the input file.
+#        terms: 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
+#        # Separator to use between field names in the key.
+#        separator: '|'
+#    # The "upstream" actor from which to receive a message.
 #    listensTo:
 #      - !ref DWCAtoTSVWriter
-
-# Report on terms counts in the Darwin Core Archive.
-#- id: CountryCountsReporter
+#
+## Append the distinct geography combinations to a vocabulary file.
+#- id: GeogAppender
 #  type: PythonActor
 #  properties:
-#    module: kurator_dwca.term_count_reporter
-#    onData: term_count_reporter
+#    # The location of the actor source code 
+#    module: kurator_dwca.vocab_appender
+#    # The function to invoke in the module when the actor receives an onData message.
+#    onData: vocab_appender
+#    # A list of parameters to get from the options dictionary passed from an 
+#    # upstream actor.
 #    inputs:
-#        outputfile: inputfile
+#        # Get the workspace for this actor from the workspace in the options dictionary.
 #        workspace: workspace
+#        # Get the checkvaluelist for this actor from the extractedvalues in the options dictionary.
+#        extractedvalues: checkvaluelist
 #    parameters:
-#        termname: 'country'
-#        format: 'txt'
-#        outputfile: 'countrycountreport.txt'
+#        # Extract the vocabulary to a specific file name in the workspace received from upstream.
+#        vocabfile: 'extractedgeography.txt'
+#        # Key to use for the vocabulary file.
+#        key: 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
+#    # The "upstream" actor from which to receive a message.
 #    listensTo:
-#      - !ref DWCAtoTSVWriter
-
-# Download country.txt file containing lowercase verbatim country lookup to country code.
-#- id: CountryDownloader
+#      - !ref GeogExtractor
+#
+## Download dwc_geography.txt file containing geography key to standard geography lookup.
+#- id: GeographyDownloader
 #  type: PythonActor
 #  properties:
+#    # The location of the actor source code 
 #    module: kurator_dwca.downloader
+#    # The function to invoke in the module when the actor receives an onData message.
 #    onData: downloader
+#    # A list of parameters to get from the options dictionary passed from an 
+#    # upstream actor.
 #    inputs:
+#        # Get the workspace for this actor from the workspace in the options dictionary.
 #        workspace : workspace
 #    parameters:
-#        url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/country.txt'
-#        outputfile : 'country.txt'
+#        # Get the file from a specific URL.
+#        url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/dwc_geography.txt'
+#        # Download to a specific file name in the workspace received from upstream.
+#        outputfile : 'dwc_geography.txt'
+#    # The "upstream" actor from which to receive a message.
+#    listensTo:
+#      - !ref GeogAppender
+#
+## Inline python actor to construct a full path to the vocabulary file required by
+## the GeogReporter.
+#- id: MakeGeogVocabFile
+#  type: PythonActor
+#  properties:
+#    # The location of the actor source code 
+#    module: kurator_dwca.path_maker
+#    # The function to invoke in the module when the actor receives an onData message.
+#    onData: path_maker
+#    # A list of parameters to get from the options dictionary passed from an 
+#    # upstream actor.
+#    inputs:
+#        # Get the workspace for this actor from the workspace in the options dictionary.
+#        workspace: workspace
+#        #workspace: path
+#    parameters:
+#        filename: 'dwc_geography.txt'
+#    # The "upstream" actor from which to receive a message.
 #    listensTo:
 #      - !ref MakeWorkspace
-
-# Download countrycode.txt file containing country code to country name and 
-# continent lookup.
-#- id: CountryCodeDownloader
-#  type: PythonActor
-#  properties:
-#    module: kurator_dwca.downloader
-#    onData: downloader
-#    inputs:
-#        workspace : workspace
-#    parameters:
-#        url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/countrycode.txt'
-#        outputfile : 'countrycode.txt'
-#    listensTo:
-#      - !ref CountryDownloader
-
