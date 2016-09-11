@@ -4,7 +4,7 @@ python csv_fieldcount_checker_test.py
 python csv_to_txt_converter_test.py
 python darwin_cloud_collector_test.py
 python darwinize_header_test.py
-python downloader_test.py
+#python downloader_test.py
 python dwc_terms_recommendation_reporter_test.py
 python dwca_core_to_tsv_test.py
 python dwca_utils.py
@@ -12,8 +12,8 @@ python dwca_vocab_utils.py
 python dwcareader_utils.py
 python report_utils.py
 python slugify_test.py
-python term_count_reporter_test.py
 python term_counter_test.py
+python term_value_count_reporter_test.py
 python term_recommendation_reporter_test.py
 python term_token_reporter_test.py
 python text_file_aggregator_test.py

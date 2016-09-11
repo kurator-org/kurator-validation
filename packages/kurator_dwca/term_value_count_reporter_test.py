@@ -14,19 +14,19 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_count_reporter_test.py 2016-06-11T20:29-03:00"
+__version__ = "term_value_count_reporter_test.py 2016-09-11T17:38+02:00"
 
-# This file contains unit tests for the term_count_reporter function.
+# This file contains unit tests for the term_value_count_reporter function.
 #
 # Example:
 #
-# python term_count_reporter_test.py
+# python term_value_count_reporter_test.py
 
-from term_count_reporter import term_count_reporter
+from term_value_count_reporter import term_value_count_reporter
 import os
 import unittest
 
-class TermCountReporterFramework():
+class TermValueCountReporterFramework():
     """Test framework for the term recommendation reporter."""
     # location for the test inputs and outputs
     testdatapath = './data/tests/'
@@ -44,10 +44,10 @@ class TermCountReporterFramework():
             os.remove(testreportfile)
         return True
 
-class TermCountReporterTestCase(unittest.TestCase):
+class TermValueCountReporterTestCase(unittest.TestCase):
     """Unit tests."""
     def setUp(self):
-        self.framework = TermCountReporterFramework()
+        self.framework = TermValueCountReporterFramework()
 
     def tearDown(self):
         self.framework.dispose()
@@ -67,7 +67,7 @@ class TermCountReporterTestCase(unittest.TestCase):
         # Test with missing required inputs
         # Test with no inputs
         inputs = {}
-        response=term_count_reporter(inputs)
+        response=term_value_count_reporter(inputs)
 #        print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
@@ -76,7 +76,7 @@ class TermCountReporterTestCase(unittest.TestCase):
         inputs['inputfile'] = testinputfile
         inputs['outputfile'] = testreportfile
         inputs['workspace'] = workspace
-        response=term_count_reporter(inputs)
+        response=term_value_count_reporter(inputs)
 #        print 'response2:\n%s' % response
         s = 'success without termname'
         self.assertFalse(response['success'], s)
@@ -86,7 +86,7 @@ class TermCountReporterTestCase(unittest.TestCase):
         inputs['termname'] = 'year'
         inputs['outputfile'] = testreportfile
         inputs['workspace'] = workspace
-        response=term_count_reporter(inputs)
+        response=term_value_count_reporter(inputs)
 #        print 'response3:\n%s' % response
         s = 'success without input file'
         self.assertFalse(response['success'], s)
@@ -95,7 +95,7 @@ class TermCountReporterTestCase(unittest.TestCase):
         inputs = {}
         inputs['inputfile'] = testinputfile
         inputs['termname'] = 'year'
-        response=term_count_reporter(inputs)
+        response=term_value_count_reporter(inputs)
 #        print 'response4:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
@@ -103,8 +103,8 @@ class TermCountReporterTestCase(unittest.TestCase):
         if os.path.isfile(response['outputfile']):
             os.remove(response['outputfile'])
 
-    def test_term_count_reporter(self):
-        print 'testing term_count_reporter'
+    def test_term_value_count_reporter(self):
+        print 'testing term_value_count_reporter'
         testinputfile = self.framework.testinputfile
         testreportfile = self.framework.testreportfile
         workspace = self.framework.testdatapath
@@ -119,7 +119,7 @@ class TermCountReporterTestCase(unittest.TestCase):
 
         # Create the report
 #        print 'inputs:\n%s' % inputs
-        response=term_count_reporter(inputs)
+        response=term_value_count_reporter(inputs)
 #        print 'response:\n%s' % response
         success = response['success']
         s = 'term report failed: %s' % response['message']
@@ -130,5 +130,5 @@ class TermCountReporterTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(outputfile), outputfile + ' does not exist')
 
 if __name__ == '__main__':
-    print '=== term_count_reporter_test.py ==='
+    print '=== term_value_count_reporter_test.py ==='
     unittest.main()

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_count_reporter.py 2016-09-11T15:10+02:00"
+__version__ = "term_value_count_reporter.py 2016-09-11T17:35+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -27,7 +27,7 @@ import csv
 import uuid
 import argparse
 
-def term_count_reporter(options):
+def term_value_count_reporter(options):
     """Extract a list of the distinct values of a given term in a text file along with 
        the number of times each occurs.
     options - a dictionary of parameters
@@ -119,9 +119,12 @@ def term_count_reporter(options):
     
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
+    # Get the list of values for the field given by termname along with their counts.
     counts = extract_value_counts_from_file(inputfile, [termname])
     # print 'counts: %s' % counts
-    success = term_count_report(outputfile, counts, format)
+
+    #Try to create the report for the term value counts.
+    success = term_value_count_report(outputfile, counts, format)
     if success==True:
         s = '%s_count_report_file' % termname
         artifacts[s] = outputfile
@@ -131,8 +134,8 @@ def term_count_reporter(options):
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
-def term_count_report(reportfile, termcountlist, format=None):
-    """Write a term count report.
+def term_value_count_report(reportfile, termcountlist, format=None):
+    """Write a report of the counts of values for the term.
     parameters:
         reportfile - full path to the output report file
         termcountlist - list of terms with counts (required)
@@ -153,7 +156,7 @@ def term_count_report(reportfile, termcountlist, format=None):
     else:
         dialect = tsv_dialect()
 
-    countreportfieldlist = ['term', 'count']
+    countreportfieldlist = ['value', 'count']
 
     with open(reportfile, 'w') as csvfile:
         writer = csv.DictWriter(csvfile, dialect=dialect, \
@@ -168,7 +171,7 @@ def term_count_report(reportfile, termcountlist, format=None):
         writer = csv.DictWriter(csvfile, dialect=dialect, \
             fieldnames=countreportfieldlist)
         for item in termcountlist:
-            writer.writerow({'term':item[0].encode('utf-8'), 'count':item[1] })
+            writer.writerow({'value':item[0].encode('utf-8'), 'count':item[1] })
     return True
 
 def _getoptions():
@@ -202,7 +205,7 @@ def main():
     if options.inputfile is None or len(options.inputfile)==0 or \
        options.termname is None or len(options.termname)==0:
         s =  'syntax:\n'
-        s += 'python term_count_reporter.py'
+        s += 'python term_value_count_reporter.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -o testtermcountout.txt'
         s += ' -w ./workspace'
@@ -221,7 +224,7 @@ def main():
     print 'optdict: %s' % optdict
 
     # Get distinct values of termname from inputfile
-    response=term_count_reporter(optdict)
+    response=term_value_count_reporter(optdict)
     print '\nresponse: %s' % response
 
 if __name__ == '__main__':
