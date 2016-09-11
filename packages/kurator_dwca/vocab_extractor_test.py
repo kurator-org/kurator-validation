@@ -95,7 +95,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         # Test with missing optional inputs
         inputs = {}
         inputs['inputfile'] = testfile
-        inputs['terms'] = ['year']
+        inputs['termlist'] = ['year']
         response=vocab_extractor(inputs)
 #        print 'response4:\n%s' % response
         s = 'no output file produced with required inputs'
@@ -130,7 +130,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         
         inputs = {}
         inputs['inputfile'] = testfile
-        inputs['terms'] = term
+        inputs['termlist'] = term
 
         # Extract distinct values of term
 #        print 'inputs:\n%s' % inputs
@@ -143,7 +143,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         self.assertEqual(values, expected, s)
 
         term = ['fieldNumber']
-        inputs['terms'] = term
+        inputs['termlist'] = term
 #        print 'inputs:\n%s' % inputs
         response=vocab_extractor(inputs)
         values = response['extractedvalues']
@@ -155,7 +155,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         testfile = self.framework.testfile2
         term = ['month']
         inputs['inputfile'] = testfile
-        inputs['terms'] = term
+        inputs['termlist'] = term
 #        print 'inputs:\n%s' % inputs
         response=vocab_extractor(inputs)
         values = response['extractedvalues']
@@ -170,7 +170,7 @@ class VocabExtractorTestCase(unittest.TestCase):
 
         inputs = {}
         inputs['inputfile'] = testfile
-        inputs['terms'] = terms
+        inputs['termlist'] = terms
 
         # Extract distinct values of term
         response=vocab_extractor(inputs)
@@ -183,7 +183,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         self.assertEqual(values, expected, s)
 
         terms = ['country', 'stateProvince']
-        inputs['terms'] = terms
+        inputs['termlist'] = terms
         inputs['separator'] = '|'
         response=vocab_extractor(inputs)
         values = response['extractedvalues']
@@ -199,7 +199,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         self.assertEqual(values, expected, s)
 
         terms = ['family']
-        inputs['terms'] = terms
+        inputs['termlist'] = terms
         inputs['separator'] = ''
         response=vocab_extractor(inputs)
         s = 'values of key %s not extracted correctly from %s' % (terms, testfile)
@@ -213,7 +213,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         terms = ['country', 'stateProvince']
         testfile = self.framework.testfile3
         inputs['inputfile'] = testfile
-        inputs['terms'] = terms
+        inputs['termlist'] = terms
         inputs['separator'] = '|'
         response=vocab_extractor(inputs)
         s = 'values of key %s not extracted correctly from %s' % (terms, testfile)

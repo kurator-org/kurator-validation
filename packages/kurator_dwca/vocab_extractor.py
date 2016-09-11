@@ -30,8 +30,8 @@ def vocab_extractor(options):
         loglevel - level at which to log (e.g., DEBUG) (optional)
         inputfile - full path to the input file (required)
         workspace - path to a directory to work in (optional)
-        terms - list of fields to extract from the input file (required)
-        separator - string that separates the values in terms (e.g., '|') 
+        termlist - list of fields to extract from the input file (required)
+        separator - string that separates the values in termlist (e.g., '|') 
             (optional; default None)
     returns a dictionary with information about the results
         workspace - path to a directory worked in
@@ -70,28 +70,28 @@ def vocab_extractor(options):
         inputfile = None
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given'
+        message = 'No input file given in %s' % __version__
         returnvals = [workspace, extractedvalues, success, message]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
     if not os.path.isfile(inputfile):
-        message = 'Input file %s not found' % inputfile
+        message = 'Input file %s not found in %s' % (inputfile, __version__)
         returnvals = [workspace, extractedvalues, success, message]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
     try:
-        terms = options['terms']
+        termlist = options['termlist']
     except:
-        terms = None
+        termlist = None
 
-    if terms is None or len(terms)==0:
-        message = 'No terms given'
+    if termlist is None or len(termlist)==0:
+        message = 'No termlist given in %s' % __version__
         returnvals = [workspace, extractedvalues, success, message]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
-        
+
     try:
         separator = options['separator']
     except:
@@ -99,9 +99,8 @@ def vocab_extractor(options):
 
     # Extract the distinct values from the inputfile, applying the function to strip
     # white space and make lower case.
-    extractedvalues = extract_values_from_file(inputfile, terms, separator=separator, \
+    extractedvalues = extract_values_from_file(inputfile, termlist, separator=separator, \
         function=lstripstr)
-#    extractedvalues = extract_values_from_file(inputfile, terms, separator=separator)
 
     success = True
     returnvals = [workspace, extractedvalues, success, message]
@@ -118,8 +117,8 @@ def _getoptions():
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
 
-    help = "terms (required)"
-    parser.add_argument("-t", "--terms", help=help)
+    help = "termlist (required)"
+    parser.add_argument("-t", "--term list", help=help)
 
     help = "separator (optional)"
     parser.add_argument("-s", "--separator", help=help)
@@ -134,19 +133,18 @@ def main():
     optdict = {}
 
     if options.inputfile is None or len(options.inputfile)==0 or \
-       options.terms is None or len(options.terms)==0:
+       options.termlist is None or len(options.termlist)==0:
         s =  'syntax examples:\n'
         s += 'python vocab_extractor.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -w ./workspace'
         s += ' -t year'
-        s += ' -s |'
         s += ' -l DEBUG\n'
         print '%s' % s
         s += 'python vocab_extractor.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -w ./workspace'
-        s += '"country|stateprovince|county"'
+        s += '"country|stateprovince"'
         s += ' -s "|"'
         s += ' -l DEBUG'
         print '%s' % s
@@ -154,12 +152,12 @@ def main():
 
     optdict['inputfile'] = options.inputfile
     optdict['workspace'] = options.workspace
-    optdict['terms'] = options.terms
+    optdict['termlist'] = options.termlist
     optdict['separator'] = options.separator
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 
-    # Get distinct values of terms from inputfile
+    # Get distinct values of a list of terms from inputfile
     response=vocab_extractor(optdict)
     print '\nresponse: %s' % response
 

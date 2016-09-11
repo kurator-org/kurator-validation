@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-09-11T15:10+02:00"
+__version__ = "dwca_utils.py 2016-09-11T20:26+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -811,6 +811,7 @@ def extract_value_counts_from_file(inputfile, fields, separator='|',
         # print 'row: %s' % row
         try:
             value = extract_values_from_row(row, cleanfields, separator)
+            # print 'value: %s' % value
             if value is not None:
                 if function is not None:
                     newvalue = function(value, *args, **kwargs)
@@ -840,6 +841,9 @@ def extract_values_from_row(row, fields, separator='|'):
     if fields is None or len(fields)==0:
         return None
 
+    if separator is None:
+        separator = '|'
+
     values = ''
 
     n = 0
@@ -848,12 +852,14 @@ def extract_values_from_row(row, fields, separator='|'):
             value = row[field]
         except:
             value = ''
+
         if n==0:
             values = value
             n = 1
         else:
             values += separator+value
-    if len(values)==0:
+
+    if len(values) == 0:
         return None
     return values
 

@@ -68,6 +68,18 @@ components:
             return options
 
 # Download dwc_geography.txt file containing geography key to standard geography lookup.
+# Note: Calling downloader twice in a workflow can cause an exception, but it is 
+#   Running the wrokflow a second time does not cause the exception to occur:
+#   Error: Traceback (most recent call last):
+#   File "<string>", line 1, in <module>
+#   File "/Users/johnwieczorek/Projects/kurator-validation/packages/kurator_dwca/downloader.py", line 33, in <module>
+#   import requests
+#   File "__pyclasspath__/requests/__init__$py.class", line 53, in <module>
+#   ...
+#   java.lang.IllegalMonitorStateException: java.lang.IllegalMonitorStateException: attempt to unlock read lock, not locked by current thread
+#
+# Note: Calling downloader on an https url causes the following warning:
+#   __pyclasspath__/requests/packages/urllib3/util/ssl_.py:307: SNIMissingWarning: An HTTPS request has been made, but the SNI (Subject Name Indication) extension to TLS is not available on this platform. This may cause the server to present an incorrect TLS certificate, which can cause validation failures. For more information, see https://urllib3.readthedocs.org/en/latest/security.html#snimissingwarning.
 - id: GeographyDownloader
   type: PythonActor
   properties:
@@ -172,8 +184,8 @@ components:
         def on_data(options):
             print '### Started VocabList ###'
             print 'VocabList options: %s' % options
-            termlist = ['continent', 'country', 'countrycode', 'waterBody', 
-                'islandGroup', 'island']
+            termlist = [['continent'], ['country'], ['countrycode'], ['waterBody'], 
+                ['islandGroup'], ['island']]
             for term in termlist:
                 yield { 'inputfile':options['inputfile'], 
                         'workspace':options['workspace'], 
@@ -194,16 +206,16 @@ components:
   type: PythonActor
   properties:
     # The location of the actor source code 
-    module: kurator_dwca.term_count_reporter
+    module: kurator_dwca.term_value_count_reporter
     # The function to invoke in the module when the actor receives an onData message.
-    onData: term_count_reporter
+    onData: term_value_count_reporter
     # A list of parameters to get from the options dictionary passed from an 
     # upstream actor.
     inputs:
       # Get the inputfile for this actor from the inputfile in the options dictionary.
       inputfile: inputfile
       # Get the termname for this actor from the termname in the options dictionary.
-      termname: termname
+      termname: termlist
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace: workspace
     parameters:

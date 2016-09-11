@@ -37,7 +37,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_geography_assessor.yaml 2016-09-11T17:04+02:00"
+# __version__ = "dwca_geography_assessor.yaml 2016-09-11T19:16+02:00"
 
 imports:
 
@@ -172,8 +172,16 @@ components:
         def on_data(options):
             print '### Started VocabList ###'
             print 'VocabList options: %s' % options
-            termlist = ['continent', 'country', 'countrycode', 'waterBody', 
-                'islandGroup', 'island']
+            termlist = [ \
+                ['continent'], \
+                ['country'], \
+                ['countrycode'], \
+                ['waterBody'], \
+                ['islandGroup'], \
+                ['island'], \
+                ['continent', 'country', 'countrycode', 'stateprovince', 'county', 
+                 'municipality', 'waterbody', 'islandgroup', 'island'] \
+                ]
             for term in termlist:
                 yield { 'inputfile':options['inputfile'], 
                         'workspace':options['workspace'], 
@@ -194,16 +202,16 @@ components:
   type: PythonActor
   properties:
     # The location of the actor source code 
-    module: kurator_dwca.term_count_reporter
+    module: kurator_dwca.term_value_count_reporter
     # The function to invoke in the module when the actor receives an onData message.
-    onData: term_count_reporter
+    onData: term_value_count_reporter
     # A list of parameters to get from the options dictionary passed from an 
     # upstream actor.
     inputs:
       # Get the inputfile for this actor from the inputfile in the options dictionary.
       inputfile: inputfile
       # Get the termname for this actor from the termname in the options dictionary.
-      termname: termname
+      termname: termlist
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace: workspace
     parameters:

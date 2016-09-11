@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_value_count_reporter_test.py 2016-09-11T17:38+02:00"
+__version__ = "term_value_count_reporter_test.py 2016-09-11T20:26+02:00"
 
 # This file contains unit tests for the term_value_count_reporter function.
 #
@@ -36,12 +36,20 @@ class TermValueCountReporterFramework():
 
     # output data files from tests, remove these in dispose()
     testreportfile = 'test_term_count_report_file.csv'
+    testreportfile2 = 'test_term_count_report_file2.csv'
+    testreportfile3 = 'test_term_count_report_file3.csv'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
         testreportfile = self.testdatapath+self.testreportfile
+        testreportfile2 = self.testdatapath+self.testreportfile2
+        testreportfile3 = self.testdatapath+self.testreportfile3
         if os.path.isfile(testreportfile):
             os.remove(testreportfile)
+        if os.path.isfile(testreportfile2):
+            os.remove(testreportfile2)
+        if os.path.isfile(testreportfile3):
+            os.remove(testreportfile3)
         return True
 
 class TermValueCountReporterTestCase(unittest.TestCase):
@@ -68,7 +76,7 @@ class TermValueCountReporterTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=term_value_count_reporter(inputs)
-#        print 'response1:\n%s' % response
+        # print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
@@ -77,26 +85,26 @@ class TermValueCountReporterTestCase(unittest.TestCase):
         inputs['outputfile'] = testreportfile
         inputs['workspace'] = workspace
         response=term_value_count_reporter(inputs)
-#        print 'response2:\n%s' % response
+        # print 'response2:\n%s' % response
         s = 'success without termname'
         self.assertFalse(response['success'], s)
 
         # Test with missing inputfile
         inputs = {}
-        inputs['termname'] = 'year'
+        inputs['termlist'] = ['year']
         inputs['outputfile'] = testreportfile
         inputs['workspace'] = workspace
         response=term_value_count_reporter(inputs)
-#        print 'response3:\n%s' % response
+        # print 'response3:\n%s' % response
         s = 'success without input file'
         self.assertFalse(response['success'], s)
 
         # Test with missing optional inputs
         inputs = {}
         inputs['inputfile'] = testinputfile
-        inputs['termname'] = 'year'
+        inputs['termlist'] = ['year']
         response=term_value_count_reporter(inputs)
-#        print 'response4:\n%s' % response
+        # print 'response4:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
         # Remove the file created by this test, as the Framework does not know about it
@@ -107,26 +115,59 @@ class TermValueCountReporterTestCase(unittest.TestCase):
         print 'testing term_value_count_reporter'
         testinputfile = self.framework.testinputfile
         testreportfile = self.framework.testreportfile
+        testreportfile2 = self.framework.testreportfile2
+        testreportfile3 = self.framework.testreportfile3
         workspace = self.framework.testdatapath
         outputfile = '%s/%s' % (workspace.rstrip('/'), testreportfile)
-        termname = 'year'
+        termlist = ['year']
         
         inputs = {}
         inputs['inputfile'] = testinputfile
-        inputs['termname'] = termname
+        inputs['termlist'] = termlist
         inputs['workspace'] = workspace
         inputs['outputfile'] = testreportfile
 
         # Create the report
-#        print 'inputs:\n%s' % inputs
+        # print 'inputs:\n%s' % inputs
         response=term_value_count_reporter(inputs)
-#        print 'response:\n%s' % response
+        # print 'response:\n%s' % response
         success = response['success']
         s = 'term report failed: %s' % response['message']
         self.assertTrue(success, s)
 
         outputfile = response['outputfile']
-#        print 'response:\n%s' % response
+        # print 'response:\n%s' % response
+        self.assertTrue(os.path.isfile(outputfile), outputfile + ' does not exist')
+
+        termlist = ['country', 'stateprovince']
+        inputs['termlist'] = termlist
+        inputs['outputfile'] = testreportfile2
+        # Create the report
+        # print 'inputs:\n%s' % inputs
+        response=term_value_count_reporter(inputs)
+        # print 'response:\n%s' % response
+        success = response['success']
+        s = 'term report failed: %s' % response['message']
+        self.assertTrue(success, s)
+
+        outputfile = response['outputfile']
+        # print 'response:\n%s' % response
+        self.assertTrue(os.path.isfile(outputfile), outputfile + ' does not exist')
+
+        termlist = ['continent', 'country', 'countrycode', 'stateprovince', 'county', 
+                 'municipality', 'waterbody', 'islandgroup', 'island']
+        inputs['termlist'] = termlist
+        inputs['outputfile'] = testreportfile3
+        # Create the report
+        # print 'inputs:\n%s' % inputs
+        response=term_value_count_reporter(inputs)
+        # print 'response:\n%s' % response
+        success = response['success']
+        s = 'term report failed: %s' % response['message']
+        self.assertTrue(success, s)
+
+        outputfile = response['outputfile']
+        #print 'response:\n%s' % response
         self.assertTrue(os.path.isfile(outputfile), outputfile + ' does not exist')
 
 if __name__ == '__main__':
