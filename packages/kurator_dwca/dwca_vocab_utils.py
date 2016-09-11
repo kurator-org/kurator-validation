@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-09-06T16:42+02:00"
+__version__ = "dwca_vocab_utils.py 2016-09-10T13:50+02:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -27,7 +27,6 @@ from dwca_utils import lstripstr
 from dwca_utils import csv_file_dialect
 from dwca_utils import read_header
 from dwca_utils import clean_header
-from dwca_utils import slugify
 from dwca_utils import tsv_dialect
 from dwca_utils import dialect_attributes
 from dwca_utils import extract_values_from_file
@@ -374,59 +373,6 @@ def compose_key_from_row(row, fields, separator='|'):
     values=compose_key_from_list(vallist)
 
     return values
-
-def distinct_term_counts_from_file(inputfile, termname, dialect=None):
-    """Get the list of distinct values of a term and the number of times each occurs in
-       the input file.
-    parameters:
-        inputfile - full path to the input file (required)
-        termname - field name to get distinct values of (required) 
-        dialect - csv.dialect object with the attributes of the vocabulary lookup file
-            (default None)
-    returns:
-        a list of distinct values of the term, sorted by the number of occurrences of the 
-        value in descending order (most commonly found term value first).
-    """
-    if inputfile is None or len(inputfile)==0:
-        logging.debug('Input file not given for distinct_term_counts_from_file()')
-        return None
-
-    if os.path.isfile(inputfile) == False:
-        # It's actually OK if the file does not exist. Just return None
-        s = 'Input file %s not found for distinct_term_counts_from_file()' % inputfile
-        logging.debug(s)
-        return None
-
-    if dialect is None:
-        dialect = csv_file_dialect(inputfile)
-
-    header = read_header(inputfile, dialect)
-
-    if header is None:
-        s = 'No header found for input file %s' % inputfile
-        s += ' in distinct_term_counts_from_file()'
-        logging.debug(s)
-        return None
-
-    if termname not in header:
-        s = 'Term "%s" not found in header for input file %s' % (termname, inputfile)
-        s += ' in distinct_term_counts_from_file()'
-        logging.debug(s)
-        return None
-
-    values = {}
-
-    with open(inputfile, 'rU') as csvfile:
-        dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=header)
-        # Read the header
-        dr.next()
-        for row in dr:
-            if row[termname] in values:
-                values[row[termname]] += 1
-            else:
-                values[row[termname]] = 1
-
-    return sorted(values.iteritems(), key=itemgetter(1), reverse=True)
 
 def terms_not_in_dwc(checklist, casesensitive=True):
     """From a list of terms, get those that are not Darwin Core terms.

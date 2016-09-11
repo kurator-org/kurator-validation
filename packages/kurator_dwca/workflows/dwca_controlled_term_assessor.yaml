@@ -1,24 +1,25 @@
 #####################################################################################
-# dwca_term_values.yaml
+# dwca_assess_controlled_terms.yaml
 #####################################################################################
 #
 # This workflow:
 #    - downloads a Darwin Core Archive from a URL
 #    - extracts the core file of a Darwin Core Archive to a tab-separated text file
-#    - extracts distinct values and their record counts for each field in a set 
-#      of fields from the text file
+#    - extracts distinct values of a set of fields from the text file
 #    - writes the distinct value lists to report files
 #
 # Example command-line usage:
-# kurator -f dwca_term_values.yaml 
-#         -p workspace=./wstermvalues
-#         -p dwca_url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
+# kurator -f dwca_assess_controlled_terms.yaml 
+#         -p workspace=./wscontermassess
+#         -p url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
 #         -l DEBUG (optional)
 #
 # Requires:
 # jython pip install requests
 # jython pip install python-dwca-reader
 # jython pip install py
+# jython pip install unicodecsv
+# jython pip install unidecode
 #
 #####################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,7 +36,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_term_values.yaml 2016-09-11T17:04+02:00"
+# __version__ = "dwca_assess_controlled_terms.yaml 2016-09-11T17:04+02:00"
 
 imports:
 
@@ -65,8 +66,9 @@ components:
                 os.makedirs(options['workspace'])
             return options
 
-# Download file into workspace from URL given by url parameter.
-- id: Downloader
+# Download a Darwin Core archive from a URL given by workflow-defined url parameter. 
+# Download occurs in workspace provided by the upstream actor.
+- id: ArchiveDownloader
   type: PythonActor
   properties:
     # The location of the actor source code
@@ -76,10 +78,20 @@ components:
     # A list of parameters to get from the options dictionary passed from an 
     # upstream actor.
     inputs:
-      # Get the url for this actor from the url in the options dictionary
-      url: url
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
+    parameters:
+      # Get the url for the options dictionary from the url parameter defined 
+      # in the Workflow. It is not declared here.
+      # Note: Would like to establish the command line source of a parameter here, within
+      # the actor.
+
+      # Set the outputfile to a specific file name.
+      # Note: Would like to be able to specify that this file should go in the workspace
+      outputfile: 'dwca.zip'
+      # Invoking python logging causes thread exceptions.
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref MakeWorkspace
@@ -88,7 +100,7 @@ components:
 - id: DWCAtoTSVWriter
   type: PythonActor
   properties:
-    # The location of the actor source code
+    # The location of the actor source code 
     module: kurator_dwca.dwca_core_to_tsv
     # The function to invoke in the module when the actor receives an onData message.
     onData: dwca_core_to_tsv
@@ -99,33 +111,22 @@ components:
       outputfile: inputfile
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
+    parameters:
+      # Set the outputfile to a specific file name.
+      # Note: Would like to be able to specify that this file should go in the workspace
+      outputfile: 'dwca_extractedoccurrences.txt'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref Downloader
+      - !ref ArchiveDownloader
 
-# Inline python actor to demonstrate actor iteration. Passes an options dictionary 
-# including the source tsv file and a term to downstream listener for each of a set of
-# terms.
-- id: VocabList
+# Create reports for the fields that have controlled vocabulary recommendations.
+- id: ControlledTermReporter
   type: PythonActor
   properties:
-    # Inline python code to run.
-    code: |
-        def on_data(options):
-            print '### Started VocabList ###'
-            print 'VocabList options: %s' % options
-            termlist = ['continent', 'country', 'stateProvince', \
-                'waterBody', 'islandGroup', 'island', \
-                'class', 'order', 'family', 'genus', 'scientificName', \
-                'type', 'language', 'license', 'basisOfRecord', 'sex', 'lifeStage', \
-                'reproductiveCondition', 'establishmentMeans', 'occurrenceStatus', \
-                'preparations', 'disposition', 'organismScope', 'month', 'day', \
-                'geodeticDatum', 'georeferenceVerificationStatus', \
-                'identificationQualifier', 'typeStatus', \
-                'identificationVerificationStatus', 'taxonRank', 'nomenclaturalCode', \
-                'taxonomicStatus', 'nomenclaturalStatus']
-            for term in termlist:
-                yield { 'inputfile':options['inputfile'], 'workspace':options['workspace'], 'termname':term }
+    # The location of the actor source code 
+    module: kurator_dwca.dwc_terms_recommendation_reporter
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: dwc_terms_recommendation_reporter
     # A list of parameters to get from the options dictionary passed from an 
     # upstream actor.
     inputs:
@@ -133,35 +134,14 @@ components:
       outputfile: inputfile
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace: workspace
+    parameters:
+      # Directory where the vocabulary files can be found.
+      vocabdir: '../data/vocabularies/'
+      # Set the format for output files.
+      format: 'txt'
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref DWCAtoTSVWriter
-
-# Create a vocabulary report for every generated VocabList.
-- id: VocabReporter
-  type: PythonActor
-  properties:
-    # The location of the actor source code
-    module: kurator_dwca.term_count_reporter
-    # The function to invoke in the module when the actor receives an onData message.
-    onData: term_count_reporter
-    # A list of parameters to get from the options dictionary passed from an 
-    # upstream actor.
-    inputs:
-      # Get the inputfile for this actor from the inputfile in the options dictionary.
-      inputfile: inputfile
-      # Get the termname for this actor from the termname in the options dictionary.
-      termname: termname
-      # Get the workspace for this actor from the workspace in the options dictionary.
-      workspace: workspace
-    # A list of parameters to get from the parameters defined at the workflow level or
-    # to set explicitly from values given in this section.
-    parameters:
-      # Set the format for output files.
-      format: 'csv'
-    # The "upstream" actor from which to receive a message.
-    listensTo:
-      - !ref VocabList
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
@@ -169,40 +149,43 @@ components:
   properties:
     # Inline python code to run.
     code: |
+        # The function to run when an on_data message is received. Accepts a dictionary
+        # of options.
         def on_data(options):
             print 'WrapUp options: %s' % options
-            print '### Finished WrapUp ###'
+            print '### Finished Wrapup ###'
     # A list of parameters to get from the options dictionary passed from an 
     # upstream actor.
     inputs:
-      # Get the workspace for this actor from the workspace in the options dictionary.
-      workspace: workspace
-      # Get the outputfile for this actor from the outputfile in the options dictionary.
-      outputfile: outputfile
+        # Get the workspace for this actor from the workspace in the options dictionary.
+        workspace: workspace
+        # Full path to the output file.
+        outputfile: outputfile
+        # Success status of the upstream actor.
+        success: success
+        # Status message from the upstream actor.
+        message: message
+        # Dictionary of persistent objects created.
+        artifacts: artifacts
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref VocabReporter
+      - !ref ControlledTermReporter
 
-# The named workflow
-- id: DwCAVocabExtractor
+- id: DwCAControlledTermsReporter
   type: Workflow
   properties:
     actors:
-      # Actors invoked in the workflow.
       - !ref MakeWorkspace
-      - !ref Downloader
+      - !ref ArchiveDownloader
       - !ref DWCAtoTSVWriter
-      - !ref VocabList
-      - !ref VocabReporter
+      - !ref ControlledTermReporter
       - !ref WrapUp
-    # Each parameter defined here enters the workflow from the command line and is 
-    # delivered in the options dictionary of the specified actor.
     parameters:
       # Accept a parameter called dwca_url from the command line.
       dwca_url:
-        # Set the url in the options dictionary of MakeWorkspace from the value of
+        # Set the url in the options dictionary of ArchiveDownloader from the value of
         # the dwca_url parameter given on the command line.
-        actor: !ref MakeWorkspace
+        actor: !ref ArchiveDownloader
         parameter: url
       # Accept a parameter called workspace from the command line.
       workspace:

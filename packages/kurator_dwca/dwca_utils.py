@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-09-08T11:22+02:00"
+__version__ = "dwca_utils.py 2016-09-11T15:10+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -31,7 +31,7 @@ import unittest
 import re
 import logging
 import codecs
-from slugify import slugify
+from operator import itemgetter
 
 try:
     # need to install unicodecsv for this to be used
@@ -401,7 +401,7 @@ def header_map(header):
     headermap = {}
 
     for field in header:
-        cleanfield = slugify(field)
+        cleanfield = field.strip().lower()
         headermap[cleanfield]=field
 
     return headermap
@@ -423,7 +423,7 @@ def clean_header(header):
 
     # Clean each field in the header and append it to the cleanheader
     for field in header:
-        cleanfield = slugify(field)
+        cleanfield = field.strip().lower()
         if len(cleanfield)==0:
             cleanfield = 'field%s' % i
 
@@ -731,18 +731,12 @@ def extract_values_from_file(inputfile, fields, separator='|', function=None, *a
     # Create a set into which to put the distinct values
     values = set()
 
-    # Search for fields based on a cleaned header
+    # Create a cleaned version of the header
     cleanheader = clean_header(read_header(inputfile))
     # print 'cleanheader: %s' % cleanheader
 
-    # print 'fields: %s' % fields
-    cleanfields = []
-    # Search for fields based on cleaned fields to match cleaned header
-    if function is not None:
-        for field in fields:
-            cleanfields.append( function(field, *args, **kwargs) )
-    else:
-        cleanfields = fields
+    # Create a cleaned version of fields
+    cleanfields = clean_header(fields)
     # print 'cleanfields: %s' % cleanfields
 
     # Extract values from the rows in the input file
@@ -759,6 +753,79 @@ def extract_values_from_file(inputfile, fields, separator='|', function=None, *a
         except:
             pass
     return sorted(list(values))
+
+def extract_value_counts_from_file(inputfile, fields, separator='|', 
+    function=None, *args, **kwargs):
+    """Get the values of a list of fields from a file.
+    parameters:
+        inputfile - full path to the input file (required)
+        fields - list of fields to extract from the input file (required)
+        separator - string to separate values the output string (default '|')
+        function - function to call for each value extracted (default None)
+        params - unnamed parameters to function as tuple (optional)
+        args - named parameters to function as dictionary (optional)
+    returns:
+        values - the extracted values of the fields in the list, concatenated with
+            separator between values
+    """
+    if inputfile is None or len(inputfile) == 0:
+        logging.debug('No input file given in extract_value_counts_from_file().')
+        return None
+
+    if os.path.isfile(inputfile) == False:
+        s = 'File %s not found in extract_value_counts_from_file().' % inputfile
+        logging.debug(s)
+        return None
+
+    # Determine the dialect of the input file
+    inputdialect = csv_file_dialect(inputfile)
+    # print 'inputdialect: %s' % dialect_attributes(inputdialect)
+    if inputdialect is None:
+        s = 'Unable to determine file dialect for %s '% inputfile
+        s += ' in extract_value_counts_from_file().'
+        logging.debug(s)
+        return None
+
+    # Determine the encoding of the input file
+    inputencoding = csv_file_encoding(inputfile)
+    # print 'inputencoding: %s' % inputencoding
+    if inputencoding is None:
+        s = 'Unable to determine file encoding for %s' % inputfile
+        s += ' in extract_value_counts_from_file().' 
+        logging.debug(s)
+        return None
+
+    # Create a cleaned version of the header
+    cleanheader = clean_header(read_header(inputfile))
+    # print 'cleanheader: %s' % cleanheader
+
+    # Create a cleaned version of fields
+    cleanfields = clean_header(fields)
+    # print 'cleanfields: %s' % cleanfields
+
+    # Create a set into which to put the distinct values
+    values = {}
+
+    # Extract values from the rows in the input file
+    for row in read_csv_row(inputfile, inputdialect, inputencoding, fieldnames=cleanheader):
+        # print 'row: %s' % row
+        try:
+            value = extract_values_from_row(row, cleanfields, separator)
+            if value is not None:
+                if function is not None:
+                    newvalue = function(value, *args, **kwargs)
+                    if newvalue in values:
+                        values[newvalue] += 1
+                    else:
+                        values[newvalue] = 1
+                else:
+                    if value in values:
+                        values[value] += 1
+                    else:
+                        values[value] = 1
+        except:
+            pass
+    return sorted(values.iteritems(), key=itemgetter(1), reverse=True)
 
 def extract_values_from_row(row, fields, separator='|'):
     """Get the values of a list of fields from a row.
@@ -1402,8 +1469,15 @@ class DWCAUtilsTestCase(unittest.TestCase):
         print 'testing header_map'
         header = ['b ', ' a', 'c	']
         result = header_map(header)
-        self.assertEqual(result, {'b':'b ', 'a':' a', 'c':'c	'}, \
-            'header failed to be cleaned properly')
+        expected = {'b':'b ', 'a':' a', 'c':'c	'}
+        s = 'header map: %s not as \nexpected: %s' % (result, expected)
+        self.assertEqual(result, expected, s)
+
+        header = ['B ', ' A', ' c	']
+        result = header_map(header)
+        expected = {'b':'B ', 'a':' A', 'c':' c	'}
+        s = 'header map: %s not as \nexpected: %s' % (result, expected)
+        self.assertEqual(result, expected, s)
 
     def test_clean_header(self):
         print 'testing clean_header'
@@ -1662,7 +1736,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s += ' from %s' % extractvaluesfile1
         self.assertEqual(found, expected,s)
 
-        fields = ['CollectionCode']
+        fields = ['CollectionCode ']
         found = extract_values_from_file(extractvaluesfile1, fields)
         expected = ['FilteredPush']
         s = 'Extracted values:\n%s' % found
@@ -1670,7 +1744,14 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s += ' from %s' % extractvaluesfile1
         self.assertEqual(found, expected,s)
 
-        fields = ['CollectionCode ']
+        fields = ['CollectionCode']
+        found = extract_values_from_file(extractvaluesfile1, fields)
+        s = 'Extracted values:\n%s' % found
+        s += ' not as expected:\n%s' % expected
+        s += ' from %s' % extractvaluesfile1
+        self.assertEqual(found, expected,s)
+
+        fields = ['collectionCode']
         found = extract_values_from_file(extractvaluesfile1, fields)
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
@@ -1706,6 +1787,35 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'united states|hawaii', 
             'united states|washington'
             ]
+        s = 'Extracted values:\n%s' % found
+        s += ' not as expected:\n%s' % expected
+        s += ' from %s' % extractvaluesfile1
+        self.assertEqual(found, expected,s)
+
+    def test_extract_value_counts_from_file(self):
+        print 'testing extract_value_counts_from_file'
+        extractvaluesfile1 = self.framework.extractvaluesfile1
+
+        fields = ['country']
+        found = extract_value_counts_from_file(extractvaluesfile1, fields)
+        expected = [('United States', 8)]
+        s = 'Extracted values:\n%s' % found
+        s += ' not as expected:\n%s' % expected
+        s += ' from %s' % extractvaluesfile1
+        self.assertEqual(found, expected,s)
+
+        fields = ['stateProvince']
+        found = extract_value_counts_from_file(extractvaluesfile1, fields)
+        expected = [('California', 5), ('Washington', 1), ('Colorado', 1), ('Hawaii', 1)]
+        s = 'Extracted values:\n%s' % found
+        s += ' not as expected:\n%s' % expected
+        s += ' from %s' % extractvaluesfile1
+        self.assertEqual(found, expected,s)
+
+        fields = ['country', 'stateProvince']
+        found = extract_value_counts_from_file(extractvaluesfile1, fields)
+        expected = [('United States|California', 5), ('United States|Colorado', 1), 
+            ('United States|Washington', 1), ('United States|Hawaii', 1)]
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1

@@ -14,13 +14,13 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_count_reporter.py 2016-09-08T14:03+02:00"
+__version__ = "term_count_reporter.py 2016-09-11T15:10+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 from dwca_utils import csv_dialect
 from dwca_utils import tsv_dialect
-from dwca_vocab_utils import distinct_term_counts_from_file
+from dwca_utils import extract_value_counts_from_file
 import logging
 import os
 import csv
@@ -119,7 +119,8 @@ def term_count_reporter(options):
     
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
-    counts = distinct_term_counts_from_file(inputfile, termname)
+    counts = extract_value_counts_from_file(inputfile, [termname])
+    # print 'counts: %s' % counts
     success = term_count_report(outputfile, counts, format)
     if success==True:
         s = '%s_count_report_file' % termname

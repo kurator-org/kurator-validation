@@ -1,5 +1,5 @@
 #####################################################################################
-# dwca_geography_cleaner.yaml
+# dwca_geography_assessor.yaml
 #####################################################################################
 #
 # This workflow:
@@ -10,8 +10,8 @@
 #    - writes the recommended geography changes for input records to a report file
 #
 # Example command-line usage:
-# kurator -f dwca_geography_cleaner.yaml 
-#         -p workspace=./wsgeogclean
+# kurator -f dwca_geography_assessor.yaml 
+#         -p workspace=./wsgeogassess
 #         -p dwca_url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
 #         -l DEBUG (optional)
 #
@@ -37,7 +37,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_geography_cleaner.yaml 2016-09-11T17:04+02:00"
+# __version__ = "dwca_geography_assessor.yaml 2016-09-11T17:04+02:00"
 
 imports:
 
@@ -214,7 +214,7 @@ components:
       - !ref VocabList
 
 # Create report on geography recommendations.
-- id: GeogReporter
+- id: GeographyReporter
   type: PythonActor
   properties:
     # The location of the actor source code 
@@ -237,7 +237,7 @@ components:
       vocabfile: 'dwc_geography.txt'
       # Set the outputfile to a specific file name.
       # Note: Would like to be able to specify that this file should go in the workspace
-      outputfile: 'geogrecommendations.txt'
+      outputfile: 'geography_recommendations.txt'
       # Set the format for output files.
       format: 'txt'
       # Set the field combination to report on.
@@ -274,10 +274,10 @@ components:
         artifacts: artifacts
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref GeogReporter
+      - !ref GeographyReporter
 
 # The named workflow
-- id: DwCAGeogExtractor
+- id: DwCAGeographyAssessor
   type: Workflow
   properties:
     actors:
@@ -288,11 +288,8 @@ components:
       - !ref DWCAtoTSVWriter
       - !ref VocabList
       - !ref VocabReporter
-      - !ref GeogReporter
+      - !ref GeographyReporter
       - !ref WrapUp
-#      - !ref GeogExtractor
-#      - !ref GeogAppender
-#      - !ref MakeGeogVocabFile
     # Each parameter defined here enters the workflow from the command line and is 
     # delivered in the options dictionary of the specified actor.
     parameters:
@@ -308,72 +305,3 @@ components:
         # the workspace parameter given on the command line.
         actor: !ref MakeWorkspace
         parameter: workspace
-
-## Extract the distinct geography combinations into a file.
-#- id: GeogExtractor
-#  type: PythonActor
-#  properties:
-#    # The location of the actor source code 
-#    module: kurator_dwca.vocab_extractor
-#    # The function to invoke in the module when the actor receives an onData message.
-#    onData: vocab_extractor
-#    # A list of parameters to get from the options dictionary passed from an 
-#    # upstream actor.
-#    inputs:
-#        # Get the inputfile for this actor from the outputfile in the options dictionary.
-#        outputfile: inputfile
-#        # Get the workspace for this actor from the workspace in the options dictionary.
-#        workspace: workspace
-#    parameters:
-#        # Extract a specific combination of Darwin Core terms from the input file.
-#        terms: 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
-#        # Separator to use between field names in the key.
-#        separator: '|'
-#    # The "upstream" actor from which to receive a message.
-#    listensTo:
-#      - !ref DWCAtoTSVWriter
-#
-## Append the distinct geography combinations to a vocabulary file.
-#- id: GeogAppender
-#  type: PythonActor
-#  properties:
-#    # The location of the actor source code 
-#    module: kurator_dwca.vocab_appender
-#    # The function to invoke in the module when the actor receives an onData message.
-#    onData: vocab_appender
-#    # A list of parameters to get from the options dictionary passed from an 
-#    # upstream actor.
-#    inputs:
-#        # Get the workspace for this actor from the workspace in the options dictionary.
-#        workspace: workspace
-#        # Get the checkvaluelist for this actor from the extractedvalues in the options dictionary.
-#        extractedvalues: checkvaluelist
-#    parameters:
-#        # Extract the vocabulary to a specific file name in the workspace received from upstream.
-#        vocabfile: 'extractedgeography.txt'
-#        # Key to use for the vocabulary file.
-#        key: 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
-#    # The "upstream" actor from which to receive a message.
-#    listensTo:
-#      - !ref GeogExtractor
-#
-## Inline python actor to construct a full path to the vocabulary file required by
-## the GeogReporter.
-#- id: MakeGeogVocabFile
-#  type: PythonActor
-#  properties:
-#    # The location of the actor source code 
-#    module: kurator_dwca.path_maker
-#    # The function to invoke in the module when the actor receives an onData message.
-#    onData: path_maker
-#    # A list of parameters to get from the options dictionary passed from an 
-#    # upstream actor.
-#    inputs:
-#        # Get the workspace for this actor from the workspace in the options dictionary.
-#        workspace: workspace
-#        #workspace: path
-#    parameters:
-#        filename: 'dwc_geography.txt'
-#    # The "upstream" actor from which to receive a message.
-#    listensTo:
-#      - !ref MakeWorkspace

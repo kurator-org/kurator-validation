@@ -14,11 +14,11 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_counter.py 2016-09-08T14:07+02:00"
+__version__ = "vocab_counter.py 2016-09-11T17:18+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
-from dwca_vocab_utils import distinct_term_counts_from_file
+from dwca_utils import extract_value_counts_from_file
 import os.path
 import logging
 import argparse
@@ -36,7 +36,7 @@ def vocab_counter(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     """
-    # print '%s options: %s' % (__version__, options)
+    print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 
@@ -79,7 +79,7 @@ def vocab_counter(options):
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
-    extractedvalues = distinct_term_counts_from_file(inputfile, termname)
+    extractedvalues = extract_value_counts_from_file(inputfile, [termname])
     success = True
     returnvals = [extractedvalues, success, message]
     options['vocab_counter_response'] = response(returnvars, returnvals)

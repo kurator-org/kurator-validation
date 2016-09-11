@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_counter_test.py 2016-05-11T22:52-03:00"
+__version__ = "vocab_counter_test.py 2016-09-11T14:06+02:00"
 
 # This file contains unit test for the vocab_counter function.
 #
@@ -70,14 +70,14 @@ class VocabCounterTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=vocab_counter(inputs)
-#        print 'response1:\n%s' % response
+        # print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
         # Test with missing termname
         inputs['inputfile'] = testfile
         response=vocab_counter(inputs)
-#        print 'response2:\n%s' % response
+        # print 'response2:\n%s' % response
         s = 'success without termname'
         self.assertFalse(response['success'], s)
 
@@ -85,7 +85,7 @@ class VocabCounterTestCase(unittest.TestCase):
         inputs = {}
         inputs['termname'] = 'year'
         response=vocab_counter(inputs)
-#        print 'response3:\n%s' % response
+        # print 'response3:\n%s' % response
         s = 'success without input file'
         self.assertFalse(response['success'], s)
 
@@ -121,16 +121,26 @@ class VocabCounterTestCase(unittest.TestCase):
         inputs['termname'] = term
 
         # Extract distinct values of term
-#        print 'inputs:\n%s' % inputs
+        # print 'inputs:\n%s' % inputs
         response=vocab_counter(inputs)
-#        print 'response:\n%s' % response
+        # print 'response:\n%s' % response
         values = response['extractedvalues']
-        s = 'values of term %s not extracted correctly from %s' % (term, testfile)
-        self.assertEqual(len(response['extractedvalues']), 4, s)
+        found = len(response['extractedvalues'])
+        expected = 4
+        s = 'length of extractedvalues %s ' % term
+        s += ' from %s not as expected %s' % (testfile, expected)
+        self.assertEqual(found, expected, s)
+
         y, c = response['extractedvalues'][0]
-        self.assertEqual(y, '1990', s)
-        self.assertEqual(c, 5, s)
-        self.assertEqual(c, 5, s)
+        expected = '1990'
+        s = '%s term: %s' % (term, y)
+        s += ' from %s not as expected %s' % (testfile, expected)
+        self.assertEqual(y, expected, s)
+
+        expected = 5
+        s = 'count of term %s: %s ' % (term, c)
+        s += ' from %s not as expected %s' % (testfile, expected)
+        self.assertEqual(c, expected, s)
 
 if __name__ == '__main__':
     print '=== vocab_counter_test.py ==='
