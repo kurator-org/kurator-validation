@@ -14,12 +14,12 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-09-08T16:18+02:00"
+__version__ = "vocab_extractor.py 2016-09-12T11:58+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 from dwca_utils import extract_values_from_file
-from dwca_utils import lstripstr
+from dwca_utils import ustripstr
 import os
 import logging
 import argparse
@@ -100,7 +100,7 @@ def vocab_extractor(options):
     # Extract the distinct values from the inputfile, applying the function to strip
     # white space and make lower case.
     extractedvalues = extract_values_from_file(inputfile, termlist, separator=separator, \
-        function=lstripstr)
+        function=ustripstr)
 
     success = True
     returnvals = [workspace, extractedvalues, success, message]

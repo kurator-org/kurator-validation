@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_value_count_reporter.py 2016-09-11T20:26+02:00"
+__version__ = "term_value_count_reporter.py 2016-09-12T11:28+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -47,7 +47,7 @@ def term_value_count_reporter(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     """
-    # print '%s options: %s' % (__version__, options)
+    print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 
@@ -140,7 +140,7 @@ def term_value_count_reporter(options):
     # print 'counts: %s' % counts
 
     #Try to create the report for the term value counts.
-    success = term_value_count_report(outputfile, counts, format)
+    success = term_value_count_report(outputfile, counts, termname=rootname, format=format)
     if success==True:
         s = '%s_count_report_file' % rootname
         artifacts[s] = outputfile
@@ -150,11 +150,12 @@ def term_value_count_reporter(options):
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
-def term_value_count_report(reportfile, termcountlist, format=None):
+def term_value_count_report(reportfile, termcountlist, termname='value', format=None):
     """Write a report of the counts of values for the term.
     parameters:
         reportfile - full path to the output report file
         termcountlist - list of terms with counts (required)
+        termname - name of the term for which counts were made (optional; default 'value')
         format - string signifying the csv.dialect of the report file ('csv' or 'txt')
     returns:
         success - True if the report was written, else False
@@ -172,7 +173,7 @@ def term_value_count_report(reportfile, termcountlist, format=None):
     else:
         dialect = tsv_dialect()
 
-    countreporttermlist = ['value', 'count']
+    countreporttermlist = [termname, 'count']
 
     with open(reportfile, 'w') as csvfile:
         writer = csv.DictWriter(csvfile, dialect=dialect, \
@@ -187,7 +188,7 @@ def term_value_count_report(reportfile, termcountlist, format=None):
         writer = csv.DictWriter(csvfile, dialect=dialect, \
             fieldnames=countreporttermlist)
         for item in termcountlist:
-            writer.writerow({'value':item[0].encode('utf-8'), 'count':item[1] })
+            writer.writerow({termname:item[0].encode('utf-8'), 'count':item[1] })
     return True
 
 def _getoptions():

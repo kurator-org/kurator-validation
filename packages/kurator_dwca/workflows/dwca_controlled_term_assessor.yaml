@@ -36,13 +36,38 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_assess_controlled_terms.yaml 2016-09-11T17:04+02:00"
+# __version__ = "dwca_assess_controlled_terms.yaml 2016-09-13T10:19+02:00"
 
 imports:
 
 - classpath:/org/kurator/akka/types.yaml
 
+# Definitions of the Workflow and actors
 components:
+
+### The named workflow ###
+- id: DwCAControlledTermsReporter
+  type: Workflow
+  properties:
+    actors:
+      - !ref MakeWorkspace
+      - !ref ArchiveDownloader
+      - !ref DWCAtoTSVWriter
+      - !ref ControlledTermReporter
+      - !ref WrapUp
+    parameters:
+      # Accept a parameter called dwca_url from the command line.
+      dwca_url:
+        # Set the url in the options dictionary of ArchiveDownloader from the value of
+        # the dwca_url parameter given on the command line.
+        actor: !ref ArchiveDownloader
+        parameter: url
+      # Accept a parameter called workspace from the command line.
+      workspace:
+        # Set the workspace in the options dictionary of MakeWorkspace from the value of
+        # the workspace parameter given on the command line.
+        actor: !ref MakeWorkspace
+        parameter: workspace
 
 # Inline python actor to make a workspace on the fly to use for writing temporary 
 # if one is not supplied in the workflow-defined parameters. It creates a unique
@@ -85,11 +110,11 @@ components:
     parameters:
       # Get the url for the options dictionary from the url parameter defined 
       # in the Workflow. It is not declared here.
-      # Note: Would like to establish the command line source of a parameter here, within
+      # NOTE: Would like to establish the command line source of a parameter here, within
       # the actor.
 
       # Set the outputfile to a specific file name.
-      # Note: Would like to be able to specify that this file should go in the workspace
+      # NOTE: Would like to be able to specify that this file should go in the workspace
       outputfile: 'dwca.zip'
       # Invoking python logging causes thread exceptions.
     # The "upstream" actor from which to receive a message.
@@ -111,9 +136,11 @@ components:
       outputfile: inputfile
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
     parameters:
       # Set the outputfile to a specific file name.
-      # Note: Would like to be able to specify that this file should go in the workspace
+      # NOTE: Would like to be able to specify that this file should go in the workspace
       outputfile: 'dwca_extractedoccurrences.txt'
     # The "upstream" actor from which to receive a message.
     listensTo:
@@ -134,6 +161,8 @@ components:
       outputfile: inputfile
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace: workspace
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
     parameters:
       # Directory where the vocabulary files can be found.
       vocabdir: '../data/vocabularies/'
@@ -170,26 +199,3 @@ components:
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref ControlledTermReporter
-
-- id: DwCAControlledTermsReporter
-  type: Workflow
-  properties:
-    actors:
-      - !ref MakeWorkspace
-      - !ref ArchiveDownloader
-      - !ref DWCAtoTSVWriter
-      - !ref ControlledTermReporter
-      - !ref WrapUp
-    parameters:
-      # Accept a parameter called dwca_url from the command line.
-      dwca_url:
-        # Set the url in the options dictionary of ArchiveDownloader from the value of
-        # the dwca_url parameter given on the command line.
-        actor: !ref ArchiveDownloader
-        parameter: url
-      # Accept a parameter called workspace from the command line.
-      workspace:
-        # Set the workspace in the options dictionary of MakeWorkspace from the value of
-        # the workspace parameter given on the command line.
-        actor: !ref MakeWorkspace
-        parameter: workspace

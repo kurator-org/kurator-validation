@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-09-10T13:50+02:00"
+__version__ = "dwca_vocab_utils.py 2016-09-12T11:58+02:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -23,7 +23,6 @@ __version__ = "dwca_vocab_utils.py 2016-09-10T13:50+02:00"
 #
 # python dwca_vocab_utils.py
 
-from dwca_utils import lstripstr
 from dwca_utils import csv_file_dialect
 from dwca_utils import read_header
 from dwca_utils import clean_header

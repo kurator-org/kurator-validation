@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-09-11T20:26+02:00"
+__version__ = "dwca_utils.py 2016-09-12T11:57+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -57,12 +57,12 @@ ENCODINGS = ['utf_8', 'latin_1', 'ascii', 'cp1252', 'mac_roman', 'utf_16', 'big5
         'mac_turkish', 'ptcp154', 'shift_jis', 'shift_jis_2004', 'shift_jisx0213', 
         'utf_16_be', 'utf_16_le', 'utf_7']
 
-def lstripstr(s):
-    ''' Create a stripped, lowercase version of an input string or empty string if input
+def ustripstr(s):
+    ''' Create a stripped, uppercase version of an input string or empty string if input
         is None.'''
     if s is None:
         return ''
-    return s.strip().lower()
+    return s.strip().upper()
 
 def setup_actor_logging(options):
     """Set up logging based on 'loglevel' in a dictionary.
@@ -1778,20 +1778,20 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s += ' from %s' % extractvaluesfile1
         self.assertEqual(found, expected,s)
 
-        found = extract_values_from_file(extractvaluesfile1, fields, function=lstripstr)
-        expected = ['filteredpush']
+        found = extract_values_from_file(extractvaluesfile1, fields, function=ustripstr)
+        expected = ['FILTEREDPUSH']
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
         self.assertEqual(found, expected,s)
 
         fields = ['country', 'stateProvince']
-        found = extract_values_from_file(extractvaluesfile1, fields, function=lstripstr)
+        found = extract_values_from_file(extractvaluesfile1, fields, function=ustripstr)
         expected = [
-            'united states|california', 
-            'united states|colorado', 
-            'united states|hawaii', 
-            'united states|washington'
+            'UNITED STATES|CALIFORNIA', 
+            'UNITED STATES|COLORADO', 
+            'UNITED STATES|HAWAII', 
+            'UNITED STATES|WASHINGTON'
             ]
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected

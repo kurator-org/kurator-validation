@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor_test.py 2016-09-08T16:18+02:00"
+__version__ = "vocab_extractor_test.py 2016-09-12T12:03+02:00"
 
 # This file contains unit test for the vocab_extractor function.
 #
@@ -159,10 +159,10 @@ class VocabExtractorTestCase(unittest.TestCase):
 #        print 'inputs:\n%s' % inputs
         response=vocab_extractor(inputs)
         values = response['extractedvalues']
-        expected = ['5', '6', 'v', 'vi']
+        expected = ['5', '6', 'V', 'VI']
 #        print 'response:\n%s' % response
         s = 'values of term %s:\n%s\n' % (term, values)
-        s += 'not as expected: %s from %s' % (term, testfile)
+        s += 'not as expected: %s from %s' % (expected, testfile)
         self.assertEqual(values, expected, s)
 
         testfile = self.framework.testfile1
@@ -177,9 +177,9 @@ class VocabExtractorTestCase(unittest.TestCase):
 #        print 'response1: %s' % response
         values = response['extractedvalues']
 #        print '%s values: %s' % (term, values)
-        expected = ['united states']
-        s = 'country values: %s\n' % values
-        s += 'do not match expectation: %s' % expected
+        expected = ['UNITED STATES']
+        s = 'values of term %s:\n%s\n' % (term, values)
+        s += 'not as expected: %s from %s' % (expected, testfile)
         self.assertEqual(values, expected, s)
 
         terms = ['country', 'stateProvince']
@@ -189,10 +189,10 @@ class VocabExtractorTestCase(unittest.TestCase):
         values = response['extractedvalues']
 #        print 'values: %s' % values
         expected = [
-            'united states|california', 
-            'united states|colorado', 
-            'united states|hawaii',
-            'united states|washington'
+            'UNITED STATES|CALIFORNIA', 
+            'UNITED STATES|COLORADO', 
+            'UNITED STATES|HAWAII',
+            'UNITED STATES|WASHINGTON'
             ]
         s = 'country|stateprovince values: %s\n' % values
         s += 'do not match expectation: %s' % expected
@@ -205,7 +205,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         s = 'values of key %s not extracted correctly from %s' % (terms, testfile)
         values = response['extractedvalues']
 #        print 'values: %s' % values
-        expected = ['asteraceae']
+        expected = ['ASTERACEAE']
         s = 'family values: %s\n' % values
         s += 'do not match expectation: %s' % expected
         self.assertEqual(values, expected, s)
@@ -219,7 +219,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         s = 'values of key %s not extracted correctly from %s' % (terms, testfile)
         values = response['extractedvalues']
 #        print 'values: %s' % values
-        expected = ['mozambique|maputo', u'south africa|kwa-zulu natal']
+        expected = ['MOZAMBIQUE|MAPUTO', U'SOUTH AFRICA|KWA-ZULU NATAL']
         s = 'country|stateprovince values: %s\n' % values
         s += 'do not match expectation: %s' % expected
         self.assertEqual(values, expected, s)

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender_test.py 2016-09-08T16:17+02:00"
+__version__ = "vocab_appender_test.py 2016-09-12T11:58+02:00"
 
 # This file contains unit test for the vocab_appender function.
 #
@@ -25,7 +25,6 @@ __version__ = "vocab_appender_test.py 2016-09-08T16:17+02:00"
 from vocab_appender import vocab_appender
 from dwca_utils import read_header
 from dwca_utils import extract_values_from_file
-from dwca_utils import lstripstr
 from dwca_vocab_utils import compose_key_from_list
 from dwca_terms import geogkeytermlist
 import os
