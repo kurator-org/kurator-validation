@@ -37,7 +37,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_geography_cleaner.yaml 2016-09-13T10:20+02:00"
+# __version__ = "dwca_geography_cleaner.yaml 2016-09-13T18:18+02:00"
 
 imports:
 
@@ -58,7 +58,7 @@ components:
       - !ref ArchiveDownloader
       - !ref DWCAtoTSVWriter
       - !ref VocabList
-      - !ref VocabReporter
+      - !ref VocabCountReporter
       - !ref GeogReporter
       - !ref WrapUp
     # Each parameter defined here enters the workflow from the command line and is 
@@ -101,7 +101,7 @@ components:
 
 # Download dwc_geography.txt file containing geography key to standard geography lookup.
 # NOTE: Calling downloader twice in a workflow can cause an exception, but it is 
-#   Running the wrokflow a second time does not cause the exception to occur:
+#   Running the workflow a second time does not cause the exception to occur:
 #   Error: Traceback (most recent call last):
 #   File "<string>", line 1, in <module>
 #   File "/Users/johnwieczorek/Projects/kurator-validation/packages/kurator_dwca/downloader.py", line 33, in <module>
@@ -131,7 +131,7 @@ components:
     parameters:
       # Get the file from a specific URL.
       url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/dwc_geography.txt'
-      # Download to a specific file name in the workspace received from upstream.
+      # Download to a specific file name within the workspace.
       outputfile : 'dwc_geography.txt'
     # The "upstream" actor from which to receive a message.
     listensTo:
@@ -156,7 +156,7 @@ components:
       # Get the file from a specific URL.
       url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/country.txt'
       # url : 'https://raw.githubusercontent.com/gbif/parsers/master/src/main/resources/dictionaries/parse/countryName.txt'
-      # Download to a specific file name in the workspace received from upstream.
+      # Download to a specific file name within the workspace.
       outputfile : 'country.txt'
     # The "upstream" actor from which to receive a message.
     listensTo:
@@ -185,11 +185,11 @@ components:
       # the actor.
 
       # Set the outputfile to a specific file name.
-      # NOTE: Would like to be able to specify that this file should go in the workspace
+      # Download to a specific file name within the workspace.
       outputfile: 'dwca.zip'
       # Set the log level in the actor explicitly
-      # NOTE: Invoking logging in the Python actor causes kurator-akka exceptions.
-      #loglevel: '  '
+      # NOTE: Invoking logging in the Python actor causes kurator-akka thread exceptions.
+      #loglevel: 'DEBUG'
 #Error in atexit._run_exitfuncs:
 #Traceback (most recent call last):
 #  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/atexit.py", line 24, in _run_exitfuncs
@@ -228,8 +228,7 @@ components:
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
-      # Set the outputfile to a specific file name.
-      # NOTE: Would like to be able to specify that this file should go in the workspace
+      # Set the outputfile to a specific file name within the workspace.
       outputfile: 'dwca_extractedoccurrences.txt'
     # The "upstream" actor from which to receive a message.
     listensTo:
@@ -267,7 +266,7 @@ components:
       - !ref DWCAtoTSVWriter
 
 # Create a term count report.
-- id: VocabReporter
+- id: VocabCountReporter
   type: PythonActor
   properties:
     # The location of the actor source code 
@@ -312,14 +311,11 @@ components:
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
-      # Set the inputfile to a specific file name.
-      # NOTE: Would like to be able to specify that this file should go in the workspace
+      # Set the inputfile to a specific file name within the workspace.
       inputfile: 'dwca_extractedoccurrences.txt'
-      # Set the vocabfile to a specific file name.
-      # NOTE: Would like to be able to specify that this file should go in the workspace
+      # Set the vocabfile to a specific file name within the workspace.
       vocabfile: 'dwc_geography.txt'
-      # Set the outputfile to a specific file name.
-      # NOTE: Would like to be able to specify that this file should go in the workspace
+      # Set the outputfile to a specific file name within the workspace.
       outputfile: 'geogrecommendations.txt'
       # Set the format for output files.
       format: 'txt'

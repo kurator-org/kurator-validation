@@ -20,7 +20,7 @@ from dwca_utils import response
 from dwca_utils import setup_actor_logging
 from dwca_utils import csv_file_dialect
 from dwca_utils import extract_values_from_file
-from dwca_vocab_utils import matching_vocab_dict_from_file
+from dwca_vocab_utils import missing_vocab_list_from_file
 from dwca_vocab_utils import term_values_recommended
 from dwca_vocab_utils import not_in_list
 from dwca_vocab_utils import keys_list
@@ -197,9 +197,6 @@ def term_recommendation_reporter(options):
     # Validation, Improvement, Measure
     # Create a series of term reports
     success = term_recommendation_report(outputfile, recommended, key, format=format)
-
-    matchingvocablist = keys_list(matchingvocabdict)
-    newvalues = not_in_list(matchingvocablist, checklist)
 
     if outputfile is not None and not os.path.isfile(outputfile):
         message = 'Failed to write results to output file %s' % outputfile

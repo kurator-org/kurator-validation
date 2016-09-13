@@ -36,7 +36,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_assess_controlled_terms.yaml 2016-09-13T10:19+02:00"
+# __version__ = "dwca_assess_controlled_terms.yaml 2016-09-13T18:22+02:00"
 
 imports:
 
@@ -111,12 +111,13 @@ components:
       # Get the url for the options dictionary from the url parameter defined 
       # in the Workflow. It is not declared here.
       # NOTE: Would like to establish the command line source of a parameter here, within
-      # the actor.
+      # the actor, for the sake of clarity when reading the workflow.
 
-      # Set the outputfile to a specific file name.
-      # NOTE: Would like to be able to specify that this file should go in the workspace
+      # Set the outputfile to a specific file name within the workspace.
       outputfile: 'dwca.zip'
-      # Invoking python logging causes thread exceptions.
+      # Set the log level in the actor explicitly
+      # NOTE: Invoking logging in the Python actor causes kurator-akka thread exceptions.
+      #loglevel: 'DEBUG'
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref MakeWorkspace
@@ -139,8 +140,7 @@ components:
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
-      # Set the outputfile to a specific file name.
-      # NOTE: Would like to be able to specify that this file should go in the workspace
+      # Set the outputfile to a specific file name within the workspace.
       outputfile: 'dwca_extractedoccurrences.txt'
     # The "upstream" actor from which to receive a message.
     listensTo:

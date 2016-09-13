@@ -148,8 +148,8 @@ components:
       # NOTE: Would like to be able to specify that this file should go in the workspace
       outputfile: 'dwca.zip'
       # Set the log level in the actor explicitly
-      # NOTE: Invoking logging in the Python actor causes kurator-akka exceptions.
-      #loglevel: '  '
+      # NOTE: Invoking logging in the Python actor causes kurator-akka thread exceptions.
+      #loglevel: 'DEBUG'
 #Error in atexit._run_exitfuncs:
 #Traceback (most recent call last):
 #  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/atexit.py", line 24, in _run_exitfuncs

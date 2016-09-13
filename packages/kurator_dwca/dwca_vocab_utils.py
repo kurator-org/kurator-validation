@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-09-12T11:58+02:00"
+__version__ = "dwca_vocab_utils.py 2016-09-13T12:25+02:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -152,7 +152,7 @@ def vocab_dialect():
 
 def matching_vocab_dict_from_file(checklist, vocabfile, key, separator='|', dialect=None):
     """Given a checklist of values, get matching values from a vocabulary file. Values
-       can match exactly, or they can match after making lower case and stripping 
+       can match exactly, or they can match after making them upper case and stripping 
        whitespace.
     parameters:
         checklist - list of values to get from the vocabfile (required)
@@ -185,7 +185,7 @@ def matching_vocab_dict_from_file(checklist, vocabfile, key, separator='|', dial
         # If the value is in the vocabulary, get the vocabulary entry for it
         if value in vocabdict:
             matchingvocabdict[value]=vocabdict[value]
-        # Otherwise try look in the vocabulary for a version of the value as lower case
+        # Otherwise look in the vocabulary for a version of the value as upper case
         # and stripped of leading and trailing white space.
         else:
             terms = value.split(separator)
@@ -193,16 +193,69 @@ def matching_vocab_dict_from_file(checklist, vocabfile, key, separator='|', dial
             n=0
             for term in terms:
                 if n==0:
-                    newvalue = term.strip().lower()
+                    newvalue = term.strip().upper()
                     n=1
                 else:
-                    newvalue = newvalue + separator + term.strip().lower()
+                    newvalue = newvalue + separator + term.strip().upper()
             # If the simplified version of the value is in the dictionary, get the 
             # vocabulary entry for it.
             if newvalue in vocabdict:
                 matchingvocabdict[value]=vocabdict[newvalue]
 
     return matchingvocabdict
+
+def missing_vocab_list_from_file(checklist, vocabfile, key, separator='|', dialect=None):
+    """Given a checklist of values, get values not found in the given vocabulary file. 
+       Values can match exactly, or they can match after making them upper case and 
+       stripping whitespace.
+    parameters:
+        checklist - list of values to get from the vocabfile (required)
+        vocabfile - full path to the vocabulary lookup file (required)
+        key - the field or separator-separated fieldnames that hold the distinct values 
+              in the vocabulary file (required)
+        separator - string to use as the value separator in the string (default '|')
+        dialect - csv.dialect object with the attributes of the vocabulary lookup file 
+            (default None)
+    returns:
+        missingvocabdict - values in the checklist not found in the vocabulary file
+    """
+    if checklist is None or len(checklist)==0:
+        logging.debug('No list of values given in missing_vocab_list_from_file()')
+        return None
+
+    vocabdict = vocab_dict_from_file(vocabfile, key, separator, dialect)
+    if vocabdict is None or len(vocabdict)==0:
+        logging.debug('No vocabdict constructed in missing_vocab_list_from_file()')
+        return None
+
+#    print 'vocabdict: %s vocabfile: %s key: %s separator: %s' % \
+#        (vocabdict, vocabfile, key, separator)
+
+    missingvocabset = set()
+
+    # Look through every value in the checklist
+    for value in checklist:
+        # If the value is not in the vocabulary, put it in the missingvocabset
+        if value not in vocabdict:
+            missingvocabset.add(vocabdict[value])
+        # Otherwise look in the vocabulary for a version of the value as upper case
+        # and stripped of leading and trailing white space.
+        else:
+            terms = value.split(separator)
+            newvalue = ''
+            n=0
+            for term in terms:
+                if n==0:
+                    newvalue = term.strip().upper()
+                    n=1
+                else:
+                    newvalue = newvalue + separator + term.strip().upper()
+            # If the simplified version of the value is in the dictionary, get the 
+            # vocabulary entry for it.
+            if newvalue not in vocabdict:
+                missingvocabset.add(vocabdict[newvalue])
+
+    return sorted(list(missingvocabset))
 
 def vetted_vocab_dict_from_file(vocabfile, key, separator='|', dialect=None):
     """Get the vetted vocabulary as a dictionary from a file.

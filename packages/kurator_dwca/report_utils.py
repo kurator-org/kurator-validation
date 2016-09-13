@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2016-09-06T16:03+02:00"
+__version__ = "report_utils.py 2016-09-13T16:15+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -104,6 +104,63 @@ def term_recommendation_report(reportfile, recommendationdict, key, separator='|
                 value['unresolved'], \
                 value['source'], \
                 value['comment'])
+    return True
+
+def term_list_report(reportfile, termlist, key, separator='|', format=None):
+    """Write a report with a list of terms.
+    parameters:
+        reportfile - full path to the output report file (optional)
+        termlist - list of terms to report (required)
+        format - string signifying the csv.dialect of the report file ('csv' or 'txt')
+        key - the field or separator-separated fieldnames that hold the distinct values 
+              in the vocabulary file (required)
+        separator - string to use as the value separator in the string (default '|')
+    returns:
+        success - True if the report was written, else False
+    """
+#    print 'reportfile: %s\term_list_report: %s' % (reportfile, term_list_report)
+    if termlist is None or len(termlist)==0:
+        logging.debug('No term list given in term_list_report()')
+        return False
+
+    fieldnames = vocabheader(key, separator)
+
+    if format=='csv' or format is None:
+        dialect = csv_dialect()
+    else:
+        dialect = tsv_dialect()
+
+    if reportfile is not None and len(reportfile)>0:
+        with open(reportfile, 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
+            writer.writeheader()
+
+        if os.path.isfile(reportfile) == False:
+            logging.debug('reportfile: %s not created' % reportfile)
+            return False
+
+        with open(reportfile, 'a') as csvfile:
+            writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
+            for value in termlist:
+                row = {key:value, 
+                    'standard':'', \
+                    'vetted':'0', \
+                    'error':'', \
+                    'misplaced':'', \
+                    'unresolved':'0', \
+                    'source':'', \
+                    'comment':'' }
+                fields = key.split(separator)
+                if len(fields) > 1:
+                    for field in fields:
+                        row[field] = value[field]
+                writer.writerow(row)
+        logging.debug('Report written to %s in term_list_report()' % reportfile)
+    else:
+        # Print the report to stdout
+        print '%s\tstandard\tvetted\terror\tmisplaced\tunresolved\tsource\tcomment' % key
+        for value in termlist:
+            print '%s' % value
     return True
 
 class ReportUtilsFramework():
