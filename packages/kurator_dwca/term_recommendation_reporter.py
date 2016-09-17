@@ -22,6 +22,7 @@ from dwca_utils import csv_file_dialect
 from dwca_utils import extract_values_from_file
 from dwca_vocab_utils import missing_vocab_list_from_file
 from dwca_vocab_utils import term_values_recommended
+from dwca_vocab_utils import matching_vocab_dict_from_file
 from dwca_vocab_utils import not_in_list
 from dwca_vocab_utils import keys_list
 from report_utils import term_recommendation_report
