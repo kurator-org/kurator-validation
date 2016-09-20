@@ -37,7 +37,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_geography_assessor.yaml 2016-09-13T10:19+02:00"
+# __version__ = "dwca_geography_assessor.yaml 2016-09-20T11:49+02:00"
 
 imports:
 
@@ -51,14 +51,21 @@ components:
   type: Workflow
   properties:
     actors:
-      # Actors invoked in the workflow.
+      # Actors invoked in the workflow. Every actor that will be invoked must be on this
+      # list. Though the order does not matter, it is helpful to keep the list in more
+      # or less the order in which they'll be invoked, for clarity.
       - !ref MakeWorkspace
       - !ref GeographyDownloader
+      - !ref CountryDownloader
       - !ref ArchiveDownloader
       - !ref DWCAtoTSVWriter
       - !ref VocabList
-      - !ref VocabReporter
+      - !ref VocabCountReporter
       - !ref GeographyReporter
+      - !ref GeographyCountReporter
+      - !ref MissingGeographyReporter
+      - !ref CountryCountReporter
+      - !ref MissingCountryReporter
       - !ref WrapUp
     # Each parameter defined here enters the workflow from the command line and is 
     # delivered in the options dictionary of the specified actor.
@@ -92,10 +99,16 @@ components:
         def on_start(options):
             print '### Started MakeWorkspace ###'
             print 'MakeWorkspace options: %s' % options
+            options['success']=True
             if options.has_key('workspace') == False:
                 options['workspace'] ='./workspace_'+str(uuid.uuid1())
             if not os.path.exists(options['workspace']):
                 os.makedirs(options['workspace'])
+            if not os.path.exists(options['workspace']):
+                options['success']=False
+                options['message']='Unable to create workspace at %s' % options[workspace]
+            else:
+                options['message']='Created workspace %s' % options['workspace']
             return options
 
 # Download dwc_geography.txt file containing geography key to standard geography lookup.
@@ -111,16 +124,53 @@ components:
     inputs:
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
       # Get the file from a specific URL.
       url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/dwc_geography.txt'
       # Download to a specific file name in the workspace received from upstream.
-      outputfile : 'dwc_geography.txt'
+      outputfile : 'lookup_geography.txt'
+      # Show the name of the upstream actor.
+      messagefrom: 'MakeWorkspace'
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref MakeWorkspace
+
+# Download dwc_countries.txt file containing raw country to standard country lookup.
+- id: CountryDownloader
+  type: PythonActor
+  properties:
+    # The location of the actor source code 
+    module: kurator_dwca.downloader
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: downloader
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
+    inputs:
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
+    parameters:
+      # Get the file from a specific URL.
+      url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/country.txt'
+      # url : 'https://raw.githubusercontent.com/gbif/parsers/master/src/main/resources/dictionaries/parse/countryName.txt'
+      # Download to a specific file name within the workspace.
+      outputfile : 'lookup_country.txt'
+      # Show the name of the upstream actor.
+      messagefrom: 'GeographyDownloader'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref GeographyDownloader
 
 # Download a Darwin Core archive from a URL given by workflow-defined url parameter. 
 # Download occurs in workspace provided by the upstream actor.
@@ -136,6 +186,10 @@ components:
     inputs:
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
@@ -165,10 +219,11 @@ components:
 #  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/threading.py", line 297, in _MainThread__exitfunc
 #  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/threading.py", line 128, in join
 #RuntimeError: cannot join current thread
-      # Invoking python logging causes thread exceptions.
+      # Show the name of the upstream actor.
+      messagefrom: 'CountryDownloader'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref GeographyDownloader
+      - !ref CountryDownloader
 
 # Extract core file into a tab-separated value file in workspace from Darwin Core archive.
 - id: DWCAtoTSVWriter
@@ -185,12 +240,18 @@ components:
       outputfile: inputfile
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
       # Set the outputfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       outputfile: 'dwca_extractedoccurrences.txt'
+      # Show the name of the upstream actor.
+      messagefrom: 'ArchiveDownloader'
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref ArchiveDownloader
@@ -209,31 +270,34 @@ components:
             print 'VocabList options: %s' % options
             termlist = [ \
                 ['continent'], \
-                ['country'], \
                 ['countrycode'], \
                 ['waterBody'], \
                 ['islandGroup'], \
-                ['island'], \
-                ['continent', 'country', 'countrycode', 'stateprovince', 'county', 
-                 'municipality', 'waterbody', 'islandgroup', 'island'] \
+                ['island']
                 ]
             for term in termlist:
+                filename = 'count_'+term[0]+'.csv'
                 yield { 'inputfile':options['inputfile'], 
                         'workspace':options['workspace'], 
-                        'termname':term }
+                        'termlist':term,
+                        'outputfile':filename,
+                        'messagefrom':'VocabList' }
     # A list of parameters to get from the options dictionary passed from an 
     # upstream actor.
     inputs:
       # Get the inputfile for this actor from the outputfile in the options dictionary.
-      outputfile: inputfile
+      # outputfile: inputfile
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
+    parameters:
+      # Set the inputfile to a specific file name.
+      inputfile: 'dwca_extractedoccurrences.txt'
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref DWCAtoTSVWriter
 
 # Create a term count report.
-- id: VocabReporter
+- id: VocabCountReporter
   type: PythonActor
   properties:
     # The location of the actor source code 
@@ -245,10 +309,12 @@ components:
     inputs:
       # Get the inputfile for this actor from the inputfile in the options dictionary.
       inputfile: inputfile
-      # Get the termname for this actor from the termname in the options dictionary.
-      termname: termlist
+      # Get the termlist for this actor from the termlist in the options dictionary.
+      termlist: termlist
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace: workspace
+      # Get the outputfile for this actor from the outputfile in the options dictionary.
+      outputfile: outputfile
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
@@ -271,8 +337,10 @@ components:
     inputs:
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace: workspace
-      # Get the inputfile for this actor from the outputfile in the options dictionary.
-      outputfile: inputfile
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
@@ -281,19 +349,184 @@ components:
       inputfile: 'dwca_extractedoccurrences.txt'
       # Set the vocabfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
-      vocabfile: 'dwc_geography.txt'
+      vocabfile: 'lookup_geography.txt'
       # Set the outputfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
-      outputfile: 'geography_recommendations.txt'
+      outputfile: 'recommended_geography.txt'
       # Set the format for output files.
       format: 'txt'
       # Set the field combination to report on.
       key: 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
       # Set the separator for the key.
       separator: '|'
+      # Show the name of the upstream actor.
+      messagefrom: 'DWCAtoTSVWriter'
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref DWCAtoTSVWriter
+
+# Create a term count report.
+- id: GeographyCountReporter
+  type: PythonActor
+  properties:
+    # The location of the actor source code 
+    module: kurator_dwca.term_value_count_reporter
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: term_value_count_reporter
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
+    inputs:
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      # outputfile: inputfile
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace: workspace
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
+    parameters:
+      # Set the inputfile to a specific file name.
+      inputfile: 'dwca_extractedoccurrences.txt'
+      # Set the outputfile to a specific file name.
+      outputfile: 'count_geography.csv'
+      # Set the format for output files.
+      format: 'csv'
+      # Get the termlist for this actor explicitly from here.
+      termlist: ['continent', 'country', 'countrycode', 'stateprovince', 'county', 
+                 'municipality', 'waterbody', 'islandgroup', 'island']
+      # Show the name of the upstream actor.
+      messagefrom: 'GeographyReporter'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref GeographyReporter
+
+# Create report on country recommendations. Note that it may be very rare that an unknown
+# country string arises, as the country vocabulary from 
+# https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/country.txt contains
+# values found in the corpus of GBIF plus VertNet migrators.
+- id: MissingGeographyReporter
+  type: PythonActor
+  properties:
+    # The location of the actor source code 
+    module: kurator_dwca.term_unknown_reporter
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: term_unknown_reporter
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
+    inputs:
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace: workspace
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      outputfile: inputfile
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
+    parameters:
+      # Set the inputfile to a specific file name.
+      # NOTE: Would like to be able to specify that this file should go in the workspace
+      inputfile: 'count_geography.csv'
+      # Set the vocabfile to a specific file name.
+      # NOTE: Would like to be able to specify that this file should go in the workspace
+      vocabfile: 'lookup_geography.txt'
+      # Set the outputfile to a specific file name within the workspace.
+      outputfile: 'new_geography.txt'
+      # Set the format for output files.
+      format: 'txt'
+      # Set the field combination to report on.
+      key: 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
+      # Set the separator for the key.
+      separator: '|'
+      # Show the name of the upstream actor.
+      messagefrom: 'GeographyCountReporter'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref GeographyCountReporter
+
+# Create a term count report.
+- id: CountryCountReporter
+  type: PythonActor
+  properties:
+    # The location of the actor source code 
+    module: kurator_dwca.term_value_count_reporter
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: term_value_count_reporter
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
+    inputs:
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      # outputfile: inputfile
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace: workspace
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
+    parameters:
+      # Set the inputfile to a specific file name.
+      inputfile: 'dwca_extractedoccurrences.txt'
+      # Set the outputfile to a specific file name.
+      outputfile: 'count_country.csv'
+      # Set the format for output files.
+      format: 'csv'
+      # Get the termlist for this actor explicitly from here.
+      termlist: ['country']
+      # Show the name of the upstream actor.
+      messagefrom: 'MissingGeographyReporter'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref MissingGeographyReporter
+
+# Create report on country recommendations. Note that it may be very rare that an unknown
+# country string arises, as the country vocabulary from 
+# https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/country.txt contains
+# values found in the corpus of GBIF plus VertNet migrators.
+- id: MissingCountryReporter
+  type: PythonActor
+  properties:
+    # The location of the actor source code 
+    module: kurator_dwca.term_unknown_reporter
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: term_unknown_reporter
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
+    inputs:
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace: workspace
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      outputfile: inputfile
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
+    parameters:
+      # Set the inputfile to a specific file name.
+      # NOTE: Would like to be able to specify that this file should go in the workspace
+      inputfile: 'count_country.csv'
+      # Set the vocabfile to a specific file name.
+      # NOTE: Would like to be able to specify that this file should go in the workspace
+      vocabfile: 'lookup_country.txt'
+      # Set the outputfile to a specific file name within the workspace.
+      outputfile: 'country_not_found.txt'
+      # Set the format for output files.
+      format: 'txt'
+      # Set the field combination to report on.
+      key: 'country'
+      # Set the separator for the key.
+      separator: '|'
+      # Show the name of the upstream actor.
+      messagefrom: 'CountryCountReporter'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref CountryCountReporter
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
@@ -313,12 +546,15 @@ components:
         workspace: workspace
         # Full path to the output file.
         outputfile: outputfile
-        # Success status of the upstream actor.
-        success: success
-        # Status message from the upstream actor.
-        message: message
+        # Get the success state from the options dictionary of the previous step
+        success: previoussuccess
+        # Get the message from the options dictionary of the previous step
+        message: previousmessage
         # Dictionary of persistent objects created.
         artifacts: artifacts
+    parameters:
+      # Show the name of the upstream actor.
+      messagefrom: 'MissingCountryReporter'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref GeographyReporter
+      - !ref MissingCountryReporter

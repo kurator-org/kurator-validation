@@ -13,6 +13,7 @@ python dwcareader_utils.py
 python report_utils.py
 python slugify_test.py
 python term_counter_test.py
+python term_unknown_reporter_test.py
 python term_value_count_reporter_test.py
 python term_recommendation_reporter_test.py
 python term_token_reporter_test.py

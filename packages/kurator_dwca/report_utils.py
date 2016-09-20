@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2016-09-13T16:15+02:00"
+__version__ = "report_utils.py 2016-09-19T13:53+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -152,8 +152,10 @@ def term_list_report(reportfile, termlist, key, separator='|', format=None):
                     'comment':'' }
                 fields = key.split(separator)
                 if len(fields) > 1:
+                    # print 'report row: %s' % row
+                    # print 'fields: %s' % fields
                     for field in fields:
-                        row[field] = value[field]
+                        row[field] = value
                 writer.writerow(row)
         logging.debug('Report written to %s in term_list_report()' % reportfile)
     else:

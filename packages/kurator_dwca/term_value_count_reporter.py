@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_value_count_reporter.py 2016-09-12T11:28+02:00"
+__version__ = "term_value_count_reporter.py 2016-09-20T11:56+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -39,7 +39,7 @@ def term_value_count_reporter(options):
         termlist - list of fields from which to extract values from the 
             input file (required)
         separator - string that separates the values in terms (e.g., '|') 
-            (optional; default None)
+            (optional; default '|')
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
         outputfile - actual full path to the output tsv file
@@ -87,11 +87,15 @@ def term_value_count_reporter(options):
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
+    # Look to see if the input file is at the absolute path or in the workspace.
     if os.path.isfile(inputfile) == False:
-        message = 'Input file %s not found in %s' % (inputfile, __version__)
-        returnvals = [workspace, outputfile, success, message, artifacts]
-        logging.debug('message:\n%s' % message)
-        return response(returnvars, returnvals)
+        if os.path.isfile(workspace+'/'+inputfile) == True:
+            inputfile = workspace+'/'+inputfile
+        else:
+            message = 'Input file %s not found' % inputfile
+            returnvals = [workspace, outputfile, success, message, artifacts]
+            logging.debug('message:\n%s' % message)
+            return response(returnvars, returnvals)
 
     try:
         termlist = options['termlist']
@@ -107,7 +111,7 @@ def term_value_count_reporter(options):
     try:
         separator = options['separator']
     except:
-        separator = None
+        separator = '|'
 
     try:
         format = options['format']
@@ -123,13 +127,16 @@ def term_value_count_reporter(options):
         outputfile = None
 
     rootname = ''
+    termname = ''
     n = 0
     for f in termlist:
         if n == 0:
             rootname += f
+            termname += f
             n = 1
         else:
             rootname += '_'+f
+            termname += separator+f
     if outputfile is None or len(outputfile)==0:
         outputfile = '%s_count_report_%s.%s' % (rootname, str(uuid.uuid1()), format)
 
@@ -140,7 +147,7 @@ def term_value_count_reporter(options):
     # print 'counts: %s' % counts
 
     #Try to create the report for the term value counts.
-    success = term_value_count_report(outputfile, counts, termname=rootname, format=format)
+    success = term_value_count_report(outputfile, counts, termname=termname, format=format)
     if success==True:
         s = '%s_count_report_file' % rootname
         artifacts[s] = outputfile

@@ -14,26 +14,23 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter.py 2016-09-20T11:56+02:00"
+__version__ = "term_unknown_reporter.py 2016-09-20T11:56+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 from dwca_utils import csv_file_dialect
 from dwca_utils import extract_values_from_file
+from dwca_utils import ustripstr
 from dwca_vocab_utils import missing_vocab_list_from_file
-from dwca_vocab_utils import matching_vocab_dict_from_file
-from dwca_vocab_utils import term_values_recommended
-from dwca_vocab_utils import not_in_list
-from dwca_vocab_utils import keys_list
-from report_utils import term_recommendation_report
+from report_utils import term_list_report
 from slugify import slugify
 import os.path
 import logging
 import argparse
 
-def term_recommendation_reporter(options):
-    """Report a list of recommended standardizations for the values of a given term in
-       an input file.
+def term_unknown_reporter(options):
+    """Report a list of recommended values from a field in an input file that are not
+       in a given vocabulary.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the tsvfile (optional)
@@ -88,7 +85,7 @@ def term_recommendation_reporter(options):
         key = None
 
     if key is None or len(key)==0:
-        message = 'No key in term_recommendation_reporter'
+        message = 'No key in term_unknown_reporter'
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -160,7 +157,7 @@ def term_recommendation_reporter(options):
 
     # print 'fields: %s separator: %s' % (fields, separator)
 
-    checklist = extract_values_from_file(inputfile, fields, separator)
+    checklist = extract_values_from_file(inputfile, [key], separator, function=ustripstr)
 
     if checklist is None or len(checklist)==0:
         message = 'No values of %s from %s' % (key, inputfile)
@@ -170,26 +167,15 @@ def term_recommendation_reporter(options):
 
     # print 'checklist: %s' % checklist
 
-    # Get a dictionary of checklist values from the vocabfile
-    matchingvocabdict = matching_vocab_dict_from_file(checklist, vocabfile, key)
+    # Get a dictionary of checklist values not found in the vocabfile
+    missingvocablist = missing_vocab_list_from_file(checklist, vocabfile, key)
 
-    # print 'matchingvocabdict: %s' % matchingvocabdict
+    # print 'missingvocablist: %s' % missingvocablist
 
-    if matchingvocabdict is None or len(matchingvocabdict)==0:
-        message = 'No matching values of %s from %s found in %s' % \
+    if missingvocablist is None or len(missingvocablist)==0:
+        message = 'No missing values of %s from %s found in %s' % \
             (key, inputfile, vocabfile)
-        returnvals = [workspace, outputfile, success, message, artifacts]
-        logging.debug('message:\n%s' % message)
-        return response(returnvars, returnvals)
-
-    # Get a dictionary of the recommended values from the matchingvocabdict
-    recommended = term_values_recommended(matchingvocabdict)
-
-    # print 'recommended: %s' % recommended
-
-    if recommended is None or len(recommended)==0:
-        message = 'Vocabulary %s has no recommended values for %s from %s' % \
-            (vocabfile, key, inputfile)
+        success = True
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -197,7 +183,7 @@ def term_recommendation_reporter(options):
     # TODO: Use Allan's DQ report framework
     # Validation, Improvement, Measure
     # Create a series of term reports
-    success = term_recommendation_report(outputfile, recommended, key, format=format)
+    success = term_list_report(outputfile, missingvocablist, key, format=format)
 
     if outputfile is not None and not os.path.isfile(outputfile):
         message = 'Failed to write results to output file %s' % outputfile
@@ -205,7 +191,7 @@ def term_recommendation_reporter(options):
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
-    s = '%s_recommendation_report_file' % key
+    s = '%s_unknown_report_file' % key
     artifacts[s] = outputfile
     returnvals = [workspace, outputfile, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
@@ -249,12 +235,12 @@ def main():
        options.key is None or len(options.key)==0 or \
        options.vocabfile is None or len(options.vocabfile)==0:
         s =  'syntax:\n'
-        s += 'python term_recommendation_reporter.py'
+        s += 'python term_unknown_reporter.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -v ./data/vocabularies/country.txt'
         s += ' -s "|"'
         s += ' -w ./workspace'
-        s += ' -o testtermrecommendationout.txt'
+        s += ' -o testmissingcountry.txt'
         s += ' -k "country"'
         s += ' -f csv'
         s += ' -l DEBUG'
@@ -272,7 +258,7 @@ def main():
     print 'optdict: %s' % optdict
 
     # Report recommended standardizations for values of a given term from the inputfile
-    response=term_recommendation_reporter(optdict)
+    response=term_unknown_reporter(optdict)
     print '\nresponse: %s' % response
 
 if __name__ == '__main__':

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2016-09-08T14:01+02:00"
+__version__ = "dwca_core_to_tsv.py 2016-09-13T23:27+02:00"
 
 from dwcareader_utils import short_term_names
 from dwca_utils import tsv_dialect
@@ -155,7 +155,7 @@ def dwca_core_to_tsv(options):
 
     success = True
     if success==True:
-        artifacts['outputfile'] = outputfile
+        artifacts['dwca_core_to_tsv_outputfile'] = outputfile
 
     returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)

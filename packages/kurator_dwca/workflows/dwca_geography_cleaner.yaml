@@ -37,7 +37,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_geography_cleaner.yaml 2016-09-13T18:18+02:00"
+# __version__ = "dwca_geography_cleaner.yaml 2016-09-13T122:48+02:00"
 
 imports:
 
@@ -51,7 +51,9 @@ components:
   type: Workflow
   properties:
     actors:
-      # Actors invoked in the workflow.
+      # Actors invoked in the workflow. Every actor that will be invoked must be on this
+      # list. Though the order does not matter, it is helpful to keep the list in more
+      # or less the order in which they'll be invoked, for clarity.
       - !ref MakeWorkspace
       - !ref GeographyDownloader
       - !ref CountryDownloader
@@ -60,6 +62,7 @@ components:
       - !ref VocabList
       - !ref VocabCountReporter
       - !ref GeogReporter
+      - !ref CountryReporter
       - !ref WrapUp
     # Each parameter defined here enters the workflow from the command line and is 
     # delivered in the options dictionary of the specified actor.
@@ -327,6 +330,42 @@ components:
     listensTo:
       - !ref DWCAtoTSVWriter
 
+# Create report on country recommendations.
+- id: CountryReporter
+  type: PythonActor
+  properties:
+    # The location of the actor source code 
+    module: kurator_dwca.term_recommendation_reporter
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: term_recommendation_reporter
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
+    inputs:
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace: workspace
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      outputfile: inputfile
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
+    parameters:
+      # Set the inputfile to a specific file name.
+      # NOTE: Would like to be able to specify that this file should go in the workspace
+      inputfile: 'country_counts.csv'
+      # Set the vocabfile to a specific file name.
+      # NOTE: Would like to be able to specify that this file should go in the workspace
+      vocabfile: 'country.txt'
+      # Set the outputfile to a specific file name within the workspace.
+      outputfile: 'country_recommendations.txt'
+      # Set the format for output files.
+      format: 'txt'
+      # Set the field combination to report on.
+      key: 'country'
+      # Set the separator for the key.
+      separator: '|'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref GeogReporter
+
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
   type: PythonActor
@@ -353,5 +392,5 @@ components:
         artifacts: artifacts
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref GeogReporter
+      - !ref CountryReporter
 

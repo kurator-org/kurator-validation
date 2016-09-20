@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-09-13T12:25+02:00"
+__version__ = "dwca_vocab_utils.py 2016-09-13T18:57+02:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -235,25 +235,21 @@ def missing_vocab_list_from_file(checklist, vocabfile, key, separator='|', diale
 
     # Look through every value in the checklist
     for value in checklist:
-        # If the value is not in the vocabulary, put it in the missingvocabset
-        if value not in vocabdict:
-            missingvocabset.add(vocabdict[value])
-        # Otherwise look in the vocabulary for a version of the value as upper case
-        # and stripped of leading and trailing white space.
+        terms = value.split(separator)
+        newvalue = ''
+        n=0
+        for term in terms:
+            if n==0:
+                newvalue = term.strip().upper()
+                n=1
+            else:
+                newvalue = newvalue + separator + term.strip().upper()
+        # If value or newvaule is in the vocabulary, nevermind
+        if value in vocabdict or newvalue in vocabdict:
+            pass
+        # Otherwise, add the upper case, stripped value to the list
         else:
-            terms = value.split(separator)
-            newvalue = ''
-            n=0
-            for term in terms:
-                if n==0:
-                    newvalue = term.strip().upper()
-                    n=1
-                else:
-                    newvalue = newvalue + separator + term.strip().upper()
-            # If the simplified version of the value is in the dictionary, get the 
-            # vocabulary entry for it.
-            if newvalue not in vocabdict:
-                missingvocabset.add(vocabdict[newvalue])
+            missingvocabset.add(newvalue)
 
     return sorted(list(missingvocabset))
 

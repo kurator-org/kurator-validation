@@ -36,7 +36,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_assess_controlled_terms.yaml 2016-09-13T18:22+02:00"
+# __version__ = "dwca_assess_controlled_terms.yaml 2016-09-13T21:01+02:00"
 
 imports:
 
@@ -49,12 +49,17 @@ components:
 - id: DwCAControlledTermsReporter
   type: Workflow
   properties:
+    # Actors invoked in the workflow. Every actor that will be invoked must be on this
+    # list. Though the order does not matter, it is helpful to keep the list in more
+    # or less the order in which they'll be invoked, for clarity.
     actors:
       - !ref MakeWorkspace
       - !ref ArchiveDownloader
       - !ref DWCAtoTSVWriter
       - !ref ControlledTermReporter
       - !ref WrapUp
+    # Each parameter defined here enters the workflow from the command line and is 
+    # delivered in the options dictionary of the specified actor.
     parameters:
       # Accept a parameter called dwca_url from the command line.
       dwca_url:

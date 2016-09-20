@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-09-12T11:57+02:00"
+__version__ = "dwca_utils.py 2016-09-15T13:52+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -712,7 +712,7 @@ def extract_values_from_file(inputfile, fields, separator='|', function=None, *a
 
     # Determine the dialect of the input file
     inputdialect = csv_file_dialect(inputfile)
-    # print 'inputdialect: %s' % dialect_attributes(inputdialect)
+    # print 'inputfile: %s inputdialect: %s' % (inputfile, dialect_attributes(inputdialect))
     if inputdialect is None:
         s = 'Unable to determine file dialect for %s in extract_values_from_file().' \
             % inputfile
@@ -737,6 +737,7 @@ def extract_values_from_file(inputfile, fields, separator='|', function=None, *a
 
     # Create a cleaned version of fields
     cleanfields = clean_header(fields)
+    # print 'fields: %s' % fields
     # print 'cleanfields: %s' % cleanfields
 
     # Extract values from the rows in the input file
@@ -747,6 +748,7 @@ def extract_values_from_file(inputfile, fields, separator='|', function=None, *a
             if value is not None:
                 if function is not None:
                     newvalue = function(value, *args, **kwargs)
+                    # print 'newvalue: %s' % newvalue
                     values.add(newvalue)
                 else:
                     values.add(value)
