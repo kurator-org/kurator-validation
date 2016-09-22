@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_value_count_reporter.py 2016-09-20T11:56+02:00"
+__version__ = "term_value_count_reporter.py 2016-09-22T16:04+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -35,7 +35,7 @@ def term_value_count_reporter(options):
         workspace - path to a directory for the tsvfile (optional)
         inputfile - full path to the input file (required)
         outputfile - name of the output file, without path (optional)
-        format - output file format (e.g., 'csv' or 'txt') (optional)
+        format - output file format (e.g., 'csv' or 'txt') (optional; default 'csv')
         termlist - list of fields from which to extract values from the 
             input file (required)
         separator - string that separates the values in terms (e.g., '|') 
@@ -165,7 +165,7 @@ def term_value_count_report(reportfile, termcountlist, termname='value', format=
         termname - name of the term for which counts were made (optional; default 'value')
         format - string signifying the csv.dialect of the report file ('csv' or 'txt')
     returns:
-        success - True if the report was written, else False
+        success - True if report was written or if there is nothing to write, else False
     """
     if reportfile is None or len(reportfile)==0:
         logging.debug('No report file given in term_count_report()')
@@ -173,7 +173,7 @@ def term_value_count_report(reportfile, termcountlist, termname='value', format=
 
     if termcountlist is None or len(termcountlist)==0:
         logging.debug('No term count list given in term_count_report()')
-        return False
+        return True
 
     if format=='csv' or format is None:
         dialect = csv_dialect()

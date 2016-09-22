@@ -16,7 +16,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_terms.py 2016-09-05T19:20+02:00"
+__version__ = "dwca_terms.py 2016-09-21T15:08+02:00"
 
 # This file contains definitions of standard sets of Darwin Core terms.
 
@@ -90,7 +90,7 @@ controlledtermlist = [
     'type', 'language', 'license', 'basisOfRecord', 'sex', 'lifeStage', 
     'reproductiveCondition', 'establishmentMeans', 'occurrenceStatus', 'preparations', 
     'disposition', 'organismScope', 'month', 'day', 'geodeticDatum', 
-    'georeferenceVerificationStatus', 'identificationQualifier', 'typeStatus', 
+    'georeferenceVerificationStatus', 'identificationQualifier', 
     'identificationVerificationStatus', 'taxonRank', 'nomenclaturalCode', 
     'taxonomicStatus', 'nomenclaturalStatus']	
 

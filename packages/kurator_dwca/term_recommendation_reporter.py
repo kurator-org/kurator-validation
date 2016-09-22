@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter.py 2016-09-20T11:56+02:00"
+__version__ = "term_recommendation_reporter.py 2016-09-22T16:36+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -110,14 +110,13 @@ def term_recommendation_reporter(options):
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
-
     # Look to see if the input file is at the absolute path or in the workspace.
     if os.path.isfile(inputfile) == False:
         if os.path.isfile(workspace+'/'+inputfile) == True:
             inputfile = workspace+'/'+inputfile
         else:
             message = 'Input file %s not found' % inputfile
-            returnvals = [workspace, outputfile, success, message, artifacts]
+            returnvals = [workspace, outputfile, True, message, artifacts]
             logging.debug('message:\n%s' % message)
             return response(returnvars, returnvals)
 
@@ -165,7 +164,7 @@ def term_recommendation_reporter(options):
 
     if checklist is None or len(checklist)==0:
         message = 'No values of %s from %s' % (key, inputfile)
-        returnvals = [workspace, outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, True, message, artifacts]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
@@ -179,7 +178,7 @@ def term_recommendation_reporter(options):
     if matchingvocabdict is None or len(matchingvocabdict)==0:
         message = 'No matching values of %s from %s found in %s' % \
             (key, inputfile, vocabfile)
-        returnvals = [workspace, outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, True, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
@@ -191,7 +190,7 @@ def term_recommendation_reporter(options):
     if recommended is None or len(recommended)==0:
         message = 'Vocabulary %s has no recommended values for %s from %s' % \
             (vocabfile, key, inputfile)
-        returnvals = [workspace, outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, True, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 

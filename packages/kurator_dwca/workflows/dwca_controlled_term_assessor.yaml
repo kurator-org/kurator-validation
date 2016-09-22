@@ -1,5 +1,5 @@
 #####################################################################################
-# dwca_assess_controlled_terms.yaml
+# dwca_controlled_term_assessor.yaml
 #####################################################################################
 #
 # This workflow:
@@ -7,10 +7,25 @@
 #    - extracts the core file of a Darwin Core Archive to a tab-separated text file
 #    - extracts distinct values of a set of fields from the text file
 #    - writes the distinct value lists to report files
+      - !ref MakeWorkspace
+      - !ref DownloadControlledVocabularyFiles
+      - !ref DownloadArchive
+      - !ref ExtractArchiveCore
+      - !ref CountControlledVocabularyValues
+      - !ref RecommendVocabularyValues
+      - !ref WrapUp
+#    - creates a given directory as a workspace
+#    - downloads lookup files for controlled vocabulary terms
+#    - downloads a given Darwin Core Archive from a URL
+#    - extracts the core file of a Darwin Core Archive to a tab-separated text file
+#    - extracts distinct values of controlled vocabulary values from text file
+#    - reports counts of controlled vocabulary values
+#    - reports recommendations for controlled vocabulary values
+#    - wraps up the workflow
 #
 # Example command-line usage:
-# kurator -f dwca_assess_controlled_terms.yaml 
-#         -p workspace=./wscontermassess
+# kurator -f dwca_controlled_term_assessor.yaml 
+#         -p workspace=./testworkspace
 #         -p url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
 #         -l DEBUG (optional)
 #
@@ -36,7 +51,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_assess_controlled_terms.yaml 2016-09-13T21:01+02:00"
+# __version__ = "dwca_controlled_term_assessor.yaml 2016-09-22T119:34+02:00"
 
 imports:
 
@@ -46,26 +61,28 @@ imports:
 components:
 
 ### The named workflow ###
-- id: DwCAControlledTermsReporter
+- id: DwCAControlledTermAssessor
   type: Workflow
   properties:
-    # Actors invoked in the workflow. Every actor that will be invoked must be on this
-    # list. Though the order does not matter, it is helpful to keep the list in more
-    # or less the order in which they'll be invoked, for clarity.
     actors:
+      # Actors invoked in the workflow. Every actor that will be invoked must be on this
+      # list. Though the order does not matter, it is helpful to keep the list in more
+      # or less the order in which they'll be invoked, for clarity.
       - !ref MakeWorkspace
-      - !ref ArchiveDownloader
-      - !ref DWCAtoTSVWriter
-      - !ref ControlledTermReporter
+      - !ref DownloadControlledVocabularyFiles
+      - !ref DownloadArchive
+      - !ref ExtractArchiveCore
+      - !ref CountControlledVocabularyValues
+      - !ref RecommendVocabularyValues
       - !ref WrapUp
     # Each parameter defined here enters the workflow from the command line and is 
     # delivered in the options dictionary of the specified actor.
     parameters:
       # Accept a parameter called dwca_url from the command line.
       dwca_url:
-        # Set the url in the options dictionary of ArchiveDownloader from the value of
+        # Set the url in the options dictionary of DownloadArchive from the value of
         # the dwca_url parameter given on the command line.
-        actor: !ref ArchiveDownloader
+        actor: !ref DownloadArchive
         parameter: url
       # Accept a parameter called workspace from the command line.
       workspace:
@@ -88,17 +105,75 @@ components:
         # The function to run when an on_start message is received. Accepts a dictionary
         # of options.
         def on_start(options):
-            print '### Started MakeWorkspace ###'
-            print 'MakeWorkspace options: %s' % options
+            actor = 'MakeWorkspace'
+            print '### Started %s ###' % actor
+            for key, value in options.iteritems():
+                print '%s: %s' % (key, value)
+            options['success']=True
             if options.has_key('workspace') == False:
                 options['workspace'] ='./workspace_'+str(uuid.uuid1())
             if not os.path.exists(options['workspace']):
                 os.makedirs(options['workspace'])
+            if not os.path.exists(options['workspace']):
+                options['success']=False
+                options['message']='Unable to create workspace at %s' % options[workspace]
+            else:
+                options['message']='Created workspace %s' % options['workspace']
             return options
+
+# Inline python actor to download lookup files for all DwC terms recommended to follow
+# controlled vocabularies.
+- id: DownloadControlledVocabularyFiles
+  type: PythonActor
+  properties:
+    # Inline python code to run.
+    code: |
+        # The function to run when an on_data message is received. Accepts a dictionary
+        # of options.
+        from kurator_dwca.downloader import downloader
+        from kurator_dwca.dwca_terms import controlledtermlist
+        def on_data(options):
+            actor = 'DownloadControlledVocabularyFiles'
+            print '### Started %s ###' % actor
+            for key, value in options.iteritems():
+                print '%s: %s' % (key, value)
+            termlist = controlledtermlist
+            outputoptions = {}
+            outputoptions['success'] = True
+            outputoptions['message'] = None
+            outputoptions['workspace'] = options['workspace']
+            outputoptions['artifacts'] = {}
+            for term in termlist:
+                url = 'https://raw.githubusercontent.com/'
+                url += 'tucotuco/DwCVocabs/master/kurator/'
+                url += '%s.txt' % term.lower()
+                filename = 'vocab_'+term.lower()+'.csv'
+                downloaderoptions = {}
+                downloaderoptions['workspace'] = options['workspace'] 
+                downloaderoptions['outputfile'] = filename
+                downloaderoptions['url'] = url
+                results = downloader(downloaderoptions)
+                if results['success'] == False:
+                    outputoptions['success'] = False
+                    outputoptions['message'] = results['message']
+                    return outputoptions
+                artifact_key = '%s_vocab_file' % term
+                outputoptions['artifacts'][artifact_key] = results['outputfile']
+            return outputoptions
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
+    inputs:
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      # outputfile: inputfile
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref MakeWorkspace
 
 # Download a Darwin Core archive from a URL given by workflow-defined url parameter. 
 # Download occurs in workspace provided by the upstream actor.
-- id: ArchiveDownloader
+- id: DownloadArchive
   type: PythonActor
   properties:
     # The location of the actor source code
@@ -116,19 +191,18 @@ components:
       # Get the url for the options dictionary from the url parameter defined 
       # in the Workflow. It is not declared here.
       # NOTE: Would like to establish the command line source of a parameter here, within
-      # the actor, for the sake of clarity when reading the workflow.
+      # the actor.
 
-      # Set the outputfile to a specific file name within the workspace.
+      # Set the outputfile to a specific file name.
+      # Download to a specific file name within the workspace.
       outputfile: 'dwca.zip'
-      # Set the log level in the actor explicitly
-      # NOTE: Invoking logging in the Python actor causes kurator-akka thread exceptions.
-      #loglevel: 'DEBUG'
+      # Invoking python logging causes thread exceptions.
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref MakeWorkspace
+      - !ref DownloadControlledVocabularyFiles
 
 # Extract core file into a tab-separated value file in workspace from Darwin Core archive.
-- id: DWCAtoTSVWriter
+- id: ExtractArchiveCore
   type: PythonActor
   properties:
     # The location of the actor source code 
@@ -149,33 +223,132 @@ components:
       outputfile: 'dwca_extractedoccurrences.txt'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref ArchiveDownloader
+      - !ref DownloadArchive
 
-# Create reports for the fields that have controlled vocabulary recommendations.
-- id: ControlledTermReporter
+# Inline python actor to create distinct value counts all DwC terms recommended to follow
+# controlled vocabularies.
+- id: CountControlledVocabularyValues
   type: PythonActor
   properties:
-    # The location of the actor source code 
-    module: kurator_dwca.dwc_terms_recommendation_reporter
-    # The function to invoke in the module when the actor receives an onData message.
-    onData: dwc_terms_recommendation_reporter
+    # Inline python code to run.
+    code: |
+        # The function to run when an on_data message is received. Accepts a dictionary
+        # of options.
+        from kurator_dwca.dwca_utils import read_header
+        from kurator_dwca.dwca_utils import clean_header
+        from kurator_dwca.dwca_terms import controlledtermlist
+        from kurator_dwca.term_value_count_reporter import term_value_count_reporter
+        def on_data(options):
+            actor = 'CountControlledVocabularyValues'
+            print '### Started %s ###' % actor
+            for key, value in options.iteritems():
+                print '%s: %s' % (key, value)
+            header = read_header(options['inputfile'])
+            cleanheader = clean_header(header)
+            cleancontrolledtermlist = clean_header(controlledtermlist)
+            termlist = []
+            for term in cleancontrolledtermlist:
+                if term in cleanheader:
+                    termlist.append(term)
+            outputoptions = {}
+            outputoptions['success'] = True
+            outputoptions['message'] = None
+            outputoptions['workspace'] = options['workspace']
+            outputoptions['artifacts'] = {}
+            for term in termlist:
+                filename = 'count_'+term.lower()+'.csv'
+                counteroptions = {}
+                counteroptions['workspace'] = options['workspace'] 
+                counteroptions['inputfile'] = options['inputfile']
+                counteroptions['outputfile'] = filename
+                counteroptions['termlist'] = [term]
+                results = term_value_count_reporter(counteroptions)
+                if results['success'] == False:
+                    outputoptions['success'] = False
+                    outputoptions['message'] = results['message']
+                    return outputoptions
+                else:
+                    artifact_key = '%s_count_file' % term
+                    outputoptions['artifacts'][artifact_key] = results['outputfile']
+            return outputoptions
     # A list of parameters to get from the options dictionary passed from an 
     # upstream actor.
     inputs:
       # Get the inputfile for this actor from the outputfile in the options dictionary.
       outputfile: inputfile
       # Get the workspace for this actor from the workspace in the options dictionary.
-      workspace: workspace
-    # A list of parameters to get from the parameters defined at the workflow level or
-    # to set explicitly from values given in this section.
-    parameters:
-      # Directory where the vocabulary files can be found.
-      vocabdir: '../data/vocabularies/'
-      # Set the format for output files.
-      format: 'txt'
+      workspace : workspace
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
+      # Get the artifact dictionary from the options dictionary of the previous step
+      artifacts: previousartifacts
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref DWCAtoTSVWriter
+      - !ref ExtractArchiveCore
+
+# Inline python actor to report non-standard values that have a recommended standard 
+# value based on the vocabulary lookup files.
+- id: RecommendVocabularyValues
+  type: PythonActor
+  properties:
+    # Inline python code to run.
+    code: |
+        # The function to run when an on_data message is received. Accepts a dictionary
+        # of options.
+        from kurator_dwca.dwca_utils import clean_header
+        from kurator_dwca.dwca_terms import controlledtermlist
+        from kurator_dwca.term_recommendation_reporter import term_recommendation_reporter
+        def on_data(options):
+            actor = 'RecommendVocabularyValues'
+            print '### Started %s ###' % actor
+            for key, value in options.iteritems():
+                print '%s: %s' % (key, value)
+            outputoptions = {}
+            outputoptions['success'] = True
+            outputoptions['message'] = None
+            outputoptions['workspace'] = options['workspace']
+            outputoptions['artifacts'] = {}
+            termlist = clean_header(controlledtermlist)
+            for term in termlist:
+                outfilename = 'recommended_'+term.lower()+'.csv'
+                infilename = 'count_'+term.lower()+'.csv'
+                vocabfile = 'vocab_'+term.lower()+'.csv'
+                counteroptions = {}
+                counteroptions['workspace'] = options['workspace'] 
+                counteroptions['inputfile'] = infilename
+                counteroptions['outputfile'] = outfilename
+                counteroptions['vocabfile'] = vocabfile
+                counteroptions['key'] = term
+                results = term_recommendation_reporter(counteroptions)
+                if results['success'] == False:
+                    outputoptions['success'] = False
+                    outputoptions['message'] = results['message']
+                    return outputoptions
+                else:
+                    artifact_key = '%s_recommended_file' % term
+                    outputoptions['artifacts'][artifact_key] = results['outputfile']
+            return outputoptions
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
+    inputs:
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      # outputfile: inputfile
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
+      # Get the artifact dictionary from the options dictionary of the previous step
+      artifacts: previousartifacts
+    parameters:
+      # Set the inputfile to a specific file name within the workspace.
+      inputfile: 'dwca_extractedoccurrences.txt'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref CountControlledVocabularyValues
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
@@ -186,21 +359,34 @@ components:
         # The function to run when an on_data message is received. Accepts a dictionary
         # of options.
         def on_data(options):
-            print 'WrapUp options: %s' % options
+            actor = 'WrapUp'
+            print '### Started %s ###' % actor
+            for key, value in options.iteritems():
+                if key == 'artifacts':
+                    print 'artifacts:'
+                    keylist = []
+                    for akey, avalue in options[key].iteritems():
+                        keylist.append(akey)
+                    sortedkeylist = sorted(keylist)
+                    for skey in sortedkeylist:
+                        print '  %s: %s' % (skey, options[key][skey])
+                else:
+                    print '%s: %s' % (key, value)
             print '### Finished Wrapup ###'
     # A list of parameters to get from the options dictionary passed from an 
     # upstream actor.
     inputs:
         # Get the workspace for this actor from the workspace in the options dictionary.
         workspace: workspace
-        # Full path to the output file.
-        outputfile: outputfile
-        # Success status of the upstream actor.
-        success: success
-        # Status message from the upstream actor.
-        message: message
+        # Get the success state from the options dictionary of the previous step
+        success: previoussuccess
+        # Get the message from the options dictionary of the previous step
+        message: previousmessage
         # Dictionary of persistent objects created.
         artifacts: artifacts
+    parameters:
+      # Show the name of the upstream actor.
+      messagefrom: 'RecommendVocabularyValues'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref ControlledTermReporter
+      - !ref RecommendVocabularyValues

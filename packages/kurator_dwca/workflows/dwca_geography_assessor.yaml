@@ -3,11 +3,18 @@
 #####################################################################################
 #
 # This workflow:
-#    - downloads a Darwin Core Archive from a URL
+#    - creates a given directory as a workspace
+#    - downloads a geography lookup file
+#    - downloads a country lookup file
+#    - downloads a given Darwin Core Archive from a URL
 #    - extracts the core file of a Darwin Core Archive to a tab-separated text file
-#    - extracts distinct combinations of geography from the text file
-#    - writes the distinct combinations of geography to change to a report file
-#    - writes the recommended geography changes for input records to a report file
+#    - extracts distinct values of various geography fields
+#    - reports recommendations for geography
+#    - reports counts of distinct geography combinations
+#    - reports combinations of geography not found in the geography lookup file
+#    - reports counts of distinct original country values
+#    - reports countries not found in the country lookup file
+#    - wraps up the workflow
 #
 # Example command-line usage:
 # kurator -f dwca_geography_assessor.yaml 
@@ -37,7 +44,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_geography_assessor.yaml 2016-09-20T11:49+02:00"
+# __version__ = "dwca_geography_assessor.yaml 2016-09-21T10:42+02:00"
 
 imports:
 
@@ -256,8 +263,7 @@ components:
     listensTo:
       - !ref ArchiveDownloader
 
-# Inline python actor to demonstrate actor iteration. Passes an options dictionary 
-# including the inputfile and a term to downstream listeners for each term in a list.
+# Inline python actor to generate an options dictionary for each of a list of terms.
 - id: VocabList
   type: PythonActor
   properties:
