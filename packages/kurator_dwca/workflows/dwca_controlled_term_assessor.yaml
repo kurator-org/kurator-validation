@@ -3,17 +3,6 @@
 #####################################################################################
 #
 # This workflow:
-#    - downloads a Darwin Core Archive from a URL
-#    - extracts the core file of a Darwin Core Archive to a tab-separated text file
-#    - extracts distinct values of a set of fields from the text file
-#    - writes the distinct value lists to report files
-      - !ref MakeWorkspace
-      - !ref DownloadControlledVocabularyFiles
-      - !ref DownloadArchive
-      - !ref ExtractArchiveCore
-      - !ref CountControlledVocabularyValues
-      - !ref RecommendVocabularyValues
-      - !ref WrapUp
 #    - creates a given directory as a workspace
 #    - downloads lookup files for controlled vocabulary terms
 #    - downloads a given Darwin Core Archive from a URL
@@ -51,7 +40,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_controlled_term_assessor.yaml 2016-09-22T119:34+02:00"
+# __version__ = "dwca_controlled_term_assessor.yaml 2016-09-22T22:40+02:00"
 
 imports:
 
@@ -282,8 +271,6 @@ components:
       success: previoussuccess
       # Get the message from the options dictionary of the previous step
       message: previousmessage
-      # Get the artifact dictionary from the options dictionary of the previous step
-      artifacts: previousartifacts
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref ExtractArchiveCore
@@ -341,8 +328,6 @@ components:
       success: previoussuccess
       # Get the message from the options dictionary of the previous step
       message: previousmessage
-      # Get the artifact dictionary from the options dictionary of the previous step
-      artifacts: previousartifacts
     parameters:
       # Set the inputfile to a specific file name within the workspace.
       inputfile: 'dwca_extractedoccurrences.txt'
@@ -382,8 +367,6 @@ components:
         success: previoussuccess
         # Get the message from the options dictionary of the previous step
         message: previousmessage
-        # Dictionary of persistent objects created.
-        artifacts: artifacts
     parameters:
       # Show the name of the upstream actor.
       messagefrom: 'RecommendVocabularyValues'
