@@ -16,7 +16,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_terms.py 2016-09-21T15:08+02:00"
+__version__ = "dwca_terms.py 2016-09-23T18:13+02:00"
 
 # This file contains definitions of standard sets of Darwin Core terms.
 
@@ -78,12 +78,12 @@ taxonkeytermlist = [
 
 # Terms that make up a distinct event date combination
 eventkeytermlist = [
-    'eventdate', 'verbatimeventdate','year','month','day']
+    'eventdate', 'verbatimEventDate','year','month','day']
 
 # Terms that make up a distinct coordinates combination
 coordinateskeytermlist = [
-    'decimallatitude', 'decimallongitude', 'verbatimlatitude','verbatimlongitude',
-    'verbatimcoordinates']
+    'decimalLatitude', 'decimalLongitude', 'verbatimLatitude','verbatimLongitude',
+    'verbatimCoordinates']
 
 # Terms that are recommended comply with a controlled vocabulary
 controlledtermlist = [
@@ -94,15 +94,15 @@ controlledtermlist = [
     'identificationVerificationStatus', 'taxonRank', 'nomenclaturalCode', 
     'taxonomicStatus', 'nomenclaturalStatus']	
 
-# Fields in the header of a vocabulary lookup file
-vocabfieldlist = ['standard', 'vetted', 'error', 'misplaced',
-    'unresolved', 'source', 'comment']
+# Standard fields in the header of a vocabulary lookup file
+vocabfieldlist = ['standard', 'vetted']
+#vocabfieldlist = ['standard', 'vetted', 'error', 'misplaced',
+#    'unresolved', 'source', 'comment']
 
-# Dictionary defining the default vaues of a new vocabulary file entry
-vocabrowdict = {'standard':'', 'vetted':0, 'error':'', 'misplaced':'',
-    'unresolved':0, 'source':'', 'comment':''}
+# Extra fields in the header of a geography vocabulary lookup file
+geogvocabaddedfieldlist = ['error', 'misplaced', 'unresolved', 'source', 'comment']
 
-# Darwin Cloud terms - concepts commonly found in source data that can be processed into 
-# Darwin Core
-darwincloudterms = [
-    ]
+# Dictionary defining the default values of a new vocabulary file entry
+vocabrowdict = { 'standard':'', 'vetted':0 }
+#vocabrowdict = {'standard':'', 'vetted':0, 'error':'', 'misplaced':'',
+#    'unresolved':0, 'source':'', 'comment':''}

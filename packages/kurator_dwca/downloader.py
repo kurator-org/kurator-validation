@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader.py 2016-09-08T14:00+02:00"
+__version__ = "downloader.py 2016-09-23T121:00+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -46,7 +46,7 @@ def downloader(options):
         message - an explanation of the results
         artifacts - a dictionary of persistent objects created
     """
-    print '%s options: %s' % (__version__, options)
+    # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 

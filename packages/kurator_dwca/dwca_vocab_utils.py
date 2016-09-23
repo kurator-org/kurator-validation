@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-09-13T18:57+02:00"
+__version__ = "dwca_vocab_utils.py 2016-09-23T20:59+02:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -27,6 +27,7 @@ from dwca_utils import csv_file_dialect
 from dwca_utils import read_header
 from dwca_utils import clean_header
 from dwca_utils import tsv_dialect
+from dwca_utils import ustripstr
 from dwca_utils import dialect_attributes
 from dwca_utils import extract_values_from_file
 from dwca_terms import simpledwctermlist
@@ -34,6 +35,7 @@ from dwca_terms import vocabfieldlist
 from dwca_terms import vocabrowdict
 from dwca_terms import controlledtermlist
 from dwca_terms import geogkeytermlist
+from dwca_terms import geogvocabaddedfieldlist
 from operator import itemgetter
 import os.path
 import glob
@@ -57,7 +59,7 @@ def geogvocabheader():
         fieldnames -  a list of field names in the header
     '''
     geogkey = compose_key_from_list(geogkeytermlist)
-    return ['geogkey'] + geogkeytermlist + vocabfieldlist
+    return ['geogkey'] + geogkeytermlist + vocabfieldlist + geogvocabaddedfieldlist
 
 def vocabheader(key, separator='|'):
     ''' Construct the header row for a vocabulary file. Begin with a field name equal to 
@@ -422,7 +424,7 @@ def compose_key_from_row(row, fields, separator='|'):
 
     return values
 
-def terms_not_in_dwc(checklist, casesensitive=True):
+def terms_not_in_dwc(checklist, casesensitive=False):
     """From a list of terms, get those that are not Darwin Core terms.
     parameters:
         checklist - list of values to check against Darwin Core (required)
@@ -431,26 +433,17 @@ def terms_not_in_dwc(checklist, casesensitive=True):
         a sorted list of non-Darwin Core terms from the checklist
     """
     # No need to check if checklist is given, not_in_list() does that
-    if casesensitive:
+    if casesensitive==True:
         return not_in_list(simpledwctermlist, checklist)
+
     lowerdwc = []
     for term in simpledwctermlist:
-        lowerdwc.append(term.lower())
-    lowerchecklist = []
-    lookup = {}
-    for term in checklist:
-        lterm = term.lower()
-        lowerchecklist.append(lterm)
-        lookup[lterm] = term
-    notfound = not_in_list(lowerdwc, lowerchecklist)
-    count = len(notfound)
-    i = 0
-    while i < count:
-        notfound[i] = lookup[notfound[i]]
-        i += 1
+        lowerdwc.append(ustripstr(term))
+
+    notfound = not_in_list(lowerdwc,checklist,function=ustripstr)
     return notfound
 
-def terms_not_in_darwin_cloud(checklist, dwccloudfile, vetted=True):
+def terms_not_in_darwin_cloud(checklist, dwccloudfile, vetted=True, casesensitive=False):
     """Get the list of distinct values in a checklist that are not in the Darwin Cloud
        vocabulary. Verbatim values in the Darwin Cloud vocabulary should be lower-case and
        stripped already, so that is what must be matched here. The Darwin Cloud vocabulary
@@ -465,19 +458,22 @@ def terms_not_in_darwin_cloud(checklist, dwccloudfile, vetted=True):
     if checklist is None or len(checklist)==0:
         logging.debug('No checklist given in terms_not_in_darwin_cloud()')
         return None
-    thelist = []
-    for term in checklist:
-        thelist.append(term.lower())
     # No need to check if dwccloudfile is given and exists, vocab_dict_from_file() and
     # vetted_vocab_dict_from_file() do that.
     if vetted==True:
-        darwinclouddict = vetted_vocab_dict_from_file(dwccloudfile, 'verbatim')
+        darwinclouddict = vetted_vocab_dict_from_file(dwccloudfile, 'fieldname')
     else:
-        darwinclouddict = vocab_dict_from_file(dwccloudfile, 'verbatim')
-    darwincloudlist = []
-    for term in darwinclouddict:
-        darwincloudlist.append(term)
-    return not_in_list(darwincloudlist, thelist)
+        darwinclouddict = vocab_dict_from_file(dwccloudfile, 'fieldname')
+    dwcloudlist = []
+    for key, value in darwinclouddict.iteritems():
+        dwcloudlist.append(key)
+    if casesensitive==True:
+        return not_in_list(dwcloudlist, checklist)
+    lowerdwclist = []
+    for term in dwcloudlist:
+        lowerdwclist.append(ustripstr(term))
+    notfound = not_in_list(lowerdwclist, checklist, function=ustripstr)
+    return notfound
 
 def darwinize_list(termlist, dwccloudfile):
     """Translate the terms in a list to standard Darwin Core terms.
@@ -492,37 +488,45 @@ def darwinize_list(termlist, dwccloudfile):
         return None
     # No need to check if dwccloudfile is given and exists, vetted_vocab_dict_from_file() 
     # does that.
-    darwinclouddict = vetted_vocab_dict_from_file(dwccloudfile, 'verbatim')
+    darwinclouddict = vetted_vocab_dict_from_file(dwccloudfile, 'fieldname')
     if darwinclouddict is None:
         logging.debug('No Darwin Cloud terms in darwinize_list()')
         return None
     thelist = []
     for term in termlist:
-        thelist.append(term.lower().strip())
-#    print 'dwccloudfile: %s' % dwccloudfile
-#    print 'thelist: %s' % thelist
-#    print 'darwinclouddict: %s' % darwinclouddict
+        thelist.append(ustripstr(term))
     darwinizedlist = []
     i = 0
     j = 1
     for term in thelist:
-        if term in darwinclouddict and len(darwinclouddict[term]['standard'].strip()) > 0:
-            newterm = darwinclouddict[term]['standard']
-#            print 'term: %s newterm: %s' % (term, newterm)
+        if term in darwinclouddict:
+            if darwinclouddict[term]['standard'] is not None and \
+                len(darwinclouddict[term]['standard'].strip()) > 0:
+                newterm = darwinclouddict[term]['standard']
+            else:
+                newterm = termlist[i].strip()
         else:
             newterm = termlist[i].strip()
             if len(newterm) == 0:
-                newterm = 'unnamedcolumn_%s' % j
+                newterm = 'UNNAMED_COLUMN_%s' % j
                 j += 1
         darwinizedlist.append(newterm)
         i += 1
     return darwinizedlist
 
-def not_in_list(targetlist, checklist):
+def not_in_list(targetlist, checklist, function=None, *args, **kwargs):
     """Get the list of distinct values in a checklist that are not in a target list.
+       Optionally pass a function to use on the items in the checklist before determining
+       equality.
+    Example:
+       not_in_list(a,b,function=ustripstr) would return all of the stripped, uppercased
+       items in b that are not in a. The items in a do not have the function applied.
     parameters:
         targetlist - list to check to see if the value already exists there (required)
         checklist - list of values to check against the target list (required)
+        function - function to call for each value to compare (default None)
+        args - unnamed parameters to function as tuple (optional)
+        kwargs - named parameters to function as dictionary (optional)
     returns:
         a sorted list of distinct new values not in the target list
     """
@@ -536,9 +540,18 @@ def not_in_list(targetlist, checklist):
 
     newlist = []
 
-    for v in checklist:
-        if v not in targetlist:
-            newlist.append(v)
+    if function is None:
+        for v in checklist:
+            if v not in targetlist:
+                newlist.append(v)
+    else:
+        for v in checklist:
+            try:
+                newvalue = function(v, *args, **kwargs)
+            except:
+                newvalue = v
+            if newvalue not in targetlist:
+                newlist.append(newvalue)
 
     if '' in newlist:
         newlist.remove('')
@@ -673,9 +686,9 @@ class DWCAVocabUtilsFramework():
 
     # following are files used as input during the tests, don't remove these
     compositetestfile = testdatapath + 'test_eight_specimen_records.csv'
-    monthvocabfile = testdatapath + 'test_vocab_month.txt'
+    monthvocabfile = vocabpath + 'month.txt'
     geogvocabfile = vocabpath + 'dwc_geography.txt'
-    darwincloudfile = vocabpath + 'dwc_cloud.txt'
+    darwincloudfile = vocabpath + 'darwin_cloud.txt'
 
     # following are files output during the tests, remove these in dispose()
     csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
@@ -753,9 +766,12 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         dialect = vocab_dialect()
         monthvocabfile = self.framework.monthvocabfile
         header = read_header(monthvocabfile, dialect)
+        found = len(header)
+        expected = 3
+        s = 'Found %s fields in header. Expected %s' % (found, expected)
 #        print 'len(header)=%s len(model)=%s\nheader:\n%s\nmodel:\n%s' \
 #            % (len(header), len(vocabfieldlist), header, vocabfieldlist)
-        self.assertEqual(len(header), 8, 'incorrect number of fields in header')
+        self.assertEqual(found, expected, s)
 
         expected = ['month'] + vocabfieldlist
         s = 'File: %s\nheader: %s\n' % (monthvocabfile, header)
@@ -767,10 +783,10 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         dialect = vocab_dialect()
         geogvocabfile = self.framework.geogvocabfile
         header = read_header(geogvocabfile, dialect)
-        expected = geogvocabheader()
+        expected = clean_header(geogvocabheader())
 
-        s = 'File: %s\nheader: %s\n' % (geogvocabfile, header)
-        s += 'not as expected: %s' % expected
+        s = 'File: %s\nheader:\n%s\n' % (geogvocabfile, header)
+        s += 'not as expected:\n%s' % expected
         self.assertEqual(header, expected, s)
 
     def test_vocab_dict_from_file(self):
@@ -783,47 +799,18 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
 #            (monthvocabfile, len(monthdict), expected)
 #        self.assertEqual(len(monthdict), expected, s)
 
-        seek = 'vi'
+        seek = 'VI'
         s = "%s not found in month dictionary:\n%s" % (seek, monthdict)
-        self.assertTrue('vi' in monthdict, s)
-        field = 'comment'
-        expected = ''
-        found = monthdict[seek][field]
-        s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
-        s += "for vocab value %s" % seek
-        self.assertEqual(found, expected, s)
+        self.assertTrue('VI' in monthdict, s)
+
         field = 'vetted'
-        expected = '0'
+        expected = '1'
         found = monthdict[seek][field]
         s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
         s += "for vocab value %s" % seek
         self.assertEqual(found, expected, s)
         field = 'standard'
-        expected = ''
-        found = monthdict[seek][field]
-        s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
-        s += "for vocab value %s" % seek
-        self.assertEqual(found, expected, s)
-        field = 'unresolved'
-        expected = '0'
-        found = monthdict[seek][field]
-        s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
-        s += "for vocab value %s" % seek
-        self.assertEqual(found, expected, s)
-        field = 'source'
-        expected = ''
-        found = monthdict[seek][field]
-        s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
-        s += "for vocab value %s" % seek
-        self.assertEqual(found, expected, s)
-        field = 'error'
-        expected = ''
-        found = monthdict[seek][field]
-        s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
-        s += "for vocab value %s" % seek
-        self.assertEqual(found, expected, s)
-        field = 'misplaced'
-        expected = '0'
+        expected = '6'
         found = monthdict[seek][field]
         s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
         s += "for vocab value %s" % seek
@@ -832,12 +819,7 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         seek = '5'
         s = "%s not found in month dictionary:\n%s" % (seek, monthdict)
         self.assertTrue(seek in monthdict, s)
-        field = 'comment'
-        expected = ''
-        found = monthdict[seek][field]
-        s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
-        s += "for vocab value %s" % seek
-        self.assertEqual(found, expected, s)
+
         field = 'vetted'
         expected = '1'
         found = monthdict[seek][field]
@@ -850,91 +832,60 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
         s += "for vocab value %s" % seek
         self.assertEqual(found, expected, s)
-        field = 'unresolved'
-        expected = ''
-        found = monthdict[seek][field]
-        s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
-        s += "for vocab value %s" % seek
-        self.assertEqual(found, expected, s)
-        field = 'source'
-        expected = ''
-        found = monthdict[seek][field]
-        s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
-        s += "for vocab value %s" % seek
-        self.assertEqual(found, expected, s)
-        field = 'error'
-        expected = ''
-        found = monthdict[seek][field]
-        s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
-        s += "for vocab value %s" % seek
-        self.assertEqual(found, expected, s)
-        field = 'misplaced'
-        expected = ''
-        found = monthdict[seek][field]
-        s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
-        s += "for vocab value %s" % seek
-        self.assertEqual(found, expected, s)
 
     def test_matching_vocab_dict_from_file(self):
         print 'testing vocab_dict_from_file'
         monthvocabfile = self.framework.monthvocabfile
-        checklist = ['vi', '5', 'fdsf']
+        checklist = ['VI', '5', 'fdsf']
         monthdict = matching_vocab_dict_from_file(checklist, monthvocabfile, 'month')
 #        print 'matchingmonthdict:\n%s' % monthdict
         s = 'month vocab at %s does has %s matching items in it instead of 2' % \
             (monthvocabfile, len(monthdict))
         self.assertEqual(len(monthdict), 2, s)
 
-        self.assertTrue('vi' in monthdict,"'vi' not found in month dictionary")
-        self.assertEqual(monthdict['vi']['comment'], '', 
-            "value of 'comment' not equal to '' for vocab value 'vi'")
-        self.assertEqual(monthdict['vi']['vetted'], '0', 
-            "value of 'vetted' not equal to 0 for vocab value 'vi'")
-        self.assertEqual(monthdict['vi']['standard'], '', 
-            "value of 'standard' not equal to '' for vocab value 'vi'")
-        self.assertEqual(monthdict['vi']['unresolved'], '0', 
-            "value of 'unresolved' not equal to 0 for vocab value 'vi'")
-        self.assertEqual(monthdict['vi']['source'], '', 
-            "value of 'source' not equal to '' for vocab value 'vi'")
-        self.assertEqual(monthdict['vi']['error'], '', 
-            "value of 'error' not equal to '' for vocab value 'vi'")
-        self.assertEqual(monthdict['vi']['misplaced'], '0', 
-            "value of 'misplaced' not equal to '0' for vocab value 'vi'")
+        self.assertTrue('VI' in monthdict,"'VI' not found in month dictionary")
+        self.assertEqual(monthdict['VI']['vetted'], '1', 
+            "value of 'vetted' not equal to 1 for vocab value 'VI'")
+        self.assertEqual(monthdict['VI']['standard'], '6', 
+            "value of 'standard' not equal to '6' for vocab value 'VI'")
 
         self.assertTrue('5' in monthdict,"'5' not found in month dictionary")
-        self.assertEqual(monthdict['5']['comment'], '', 
-            "value of 'comment' not equal to '' for vocab value '5'")
         self.assertEqual(monthdict['5']['vetted'], '1', 
             "value of 'vetted' not equal to 1 for vocab value '5'")
         self.assertEqual(monthdict['5']['standard'], '5', 
             "value of 'standard' not equal to '5' for vocab value '5'")
-        self.assertEqual(monthdict['5']['unresolved'], '', 
-            "value of 'unresolved' not equal to '' for vocab value '5'")
-        self.assertEqual(monthdict['5']['source'], '', 
-            "value of 'source' not equal to '' for vocab value '5'")
-        self.assertEqual(monthdict['5']['error'], '', 
-            "value of 'error' not equal to '' for vocab value '5'")
-        self.assertEqual(monthdict['5']['misplaced'], '', 
-            "value of 'misplaced' not equal to '' for vocab value '5'")
 
     def test_terms_not_in_dwc(self):
         print 'testing terms_not_in_dwc'
         checklist = ['eventDate', 'verbatimEventDate', 'year', 'month', 'day', 
-        'earliestDateCollected', '', 'latestDateCollected']
-        notdwc = terms_not_in_dwc(checklist)
-        expectedlist = ['earliestDateCollected', 'latestDateCollected']
+        'earliestDateCollected', '', 'latestDateCollected', 'YEAR', 'Year']
+        notdwc = terms_not_in_dwc(checklist, casesensitive=True)
+        expectedlist = ['YEAR', 'Year', 'earliestDateCollected', 'latestDateCollected']
         s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
         self.assertEqual(notdwc, expectedlist, s)
 
-        checklist = ['catalogNumber','catalognumber']
+        checklist = ['eventDate', 'verbatimEventDate', 'year', 'month', 'day', 
+        'earliestDateCollected', '', 'latestDateCollected', 'YEAR', 'Year']
         notdwc = terms_not_in_dwc(checklist)
-        expectedlist = ['catalognumber']
+        expectedlist = ['EARLIESTDATECOLLECTED', 'LATESTDATECOLLECTED']
+        s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
+        self.assertEqual(notdwc, expectedlist, s)
+
+        checklist = ['catalogNumber','catalognumber', 'JUNK']
+        notdwc = terms_not_in_dwc(checklist, casesensitive=True)
+        expectedlist = ['JUNK', 'catalognumber']
+#        print 'notdwc: %s\nexpected: %s' % (notdwc, expectedlist)
+        s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
+        self.assertEqual(notdwc, expectedlist, s)
+
+        notdwc = terms_not_in_dwc(checklist, casesensitive=False)
+        expectedlist = ['JUNK']
 #        print 'notdwc: %s\nexpected: %s' % (notdwc, expectedlist)
         s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
         self.assertEqual(notdwc, expectedlist, s)
 
         notdwc = terms_not_in_dwc(checklist)
-        expectedlist = ['catalognumber']
+        expectedlist = ['JUNK']
 #        print 'notdwc: %s\nexpected: %s' % (notdwc, expectedlist)
         s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
         self.assertEqual(notdwc, expectedlist, s)
@@ -944,7 +895,19 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         checklist = ['stuff', 'nonsense', 'Year']
         darwincloudfile = self.framework.darwincloudfile
         notdwc = terms_not_in_darwin_cloud(checklist, darwincloudfile)
-        expectedlist = ['nonsense', 'stuff']
+        expectedlist = ['NONSENSE', 'STUFF']
+        s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
+        self.assertEqual(notdwc, expectedlist, s)
+
+        notdwc = terms_not_in_darwin_cloud(checklist, darwincloudfile, vetted=True, 
+            casesensitive=True)
+        expectedlist = ['Year', 'nonsense', 'stuff']
+        s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
+        self.assertEqual(notdwc, expectedlist, s)
+
+        notdwc = terms_not_in_darwin_cloud(checklist, darwincloudfile, vetted=True, 
+            casesensitive=False)
+        expectedlist = ['NONSENSE', 'STUFF']
         s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
         self.assertEqual(notdwc, expectedlist, s)
 
@@ -954,8 +917,22 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
             'lifestage', 'Id']
         darwincloudfile = self.framework.darwincloudfile
         notdwc = darwinize_list(checklist, darwincloudfile)
-        expectedlist = ['STUFF', 'Nonsense', 'year', 'unnamedcolumn_1', 'day', 'month', \
+        expectedlist = ['STUFF', 'Nonsense', 'year', 'UNNAMED_COLUMN_1', 'day', 'month', \
             'lifeStage', 'Id']
+        s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
+        self.assertEqual(notdwc, expectedlist, s)
+
+        checklist = ['InstitutionCode ', 'collectioncode', 'DATASETNAME']
+        darwincloudfile = self.framework.darwincloudfile
+        notdwc = darwinize_list(checklist, darwincloudfile)
+        expectedlist = ['institutionCode', 'collectionCode', 'datasetName']
+        s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
+        self.assertEqual(notdwc, expectedlist, s)
+
+        checklist = [u'catalogNumber ', u'InstitutionCode ', u'CollectionCode ', u'Id']
+        darwincloudfile = self.framework.darwincloudfile
+        notdwc = darwinize_list(checklist, darwincloudfile)
+        expectedlist = ['catalogNumber', 'institutionCode', 'collectionCode', 'Id']
         s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
         self.assertEqual(notdwc, expectedlist, s)
 
@@ -1030,8 +1007,7 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         header = vocabheader(keyfields)
 #        print 'vocabheader:\n%s' % header
         expected = ['country|stateprovince|county', 'country', 'stateprovince', 
-            'county', 'standard', 'vetted', 'error', 'misplaced', 'unresolved', 'source', 
-            'comment']
+            'county'] + vocabfieldlist
         s = 'header:\n%s\nnot as expected:\n%s' % (header,expected)
         self.assertEqual(header, expected, s)
 
@@ -1065,15 +1041,13 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
     def test_term_values_recommended(self):
         print 'testing term_values_recommended'
         monthvocabfile = self.framework.monthvocabfile
-        monthdict = vocab_dict_from_file(monthvocabfile, 'month')
+        monthdict = { 
+            'V': {'vetted':'1', 'standard':'5'}, 
+            'junk': {'vetted':'0', 'standard':None} 
+            }
         recommended = term_values_recommended(monthdict)
-#        print 'monthdict:\n%s\nrecommended:\n%s' % (monthdict, recommended)
-        expected = {
-            'v': {'comment': '', 'vetted': '1', 'standard': '5', 
-                'unresolved': '', 'source': '', 'error': '', 'misplaced': ''},
-            'V': {'comment': '', 'vetted': '1', 'standard': '5', 
-                'unresolved': '', 'source': '', 'error': '', 'misplaced': ''} 
-                }
+        # print 'monthdict:\n%s\nrecommended:\n%s' % (monthdict, recommended)
+        expected = { 'V': {'vetted': '1', 'standard': '5'} }
         s = 'added_values:\n%s\nnot as expected:\n%s' \
             % (recommended, expected)
         self.assertEqual(recommended, expected, s)

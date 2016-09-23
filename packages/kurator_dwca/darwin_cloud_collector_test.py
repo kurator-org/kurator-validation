@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector_test.py 2016-05-27T21:59-03:00"
+__version__ = "darwin_cloud_collector_test.py 2016-09-23T20:59+02:00"
 
 # This file contains unit test for the darwin_cloud_collector function.
 #
@@ -151,10 +151,7 @@ class DarwinCloudCollectorTestCase(unittest.TestCase):
         response=darwin_cloud_collector(inputs)
 #        print 'response1:\n%s' % response
         addedvalues = response['addedvalues']
-        expected = ['CollectionCode ', 'DatasetName ', 'Id', 'InstitutionCode ', 
-            'catalogNumber ', 'decimalLatitude ', 'decimalLongitude ', 'family ', 
-            'fieldNumber ', 'geodeticDatum ', 'reproductiveCondition ', 
-            'scientificName ', 'scientificNameAuthorship ']
+        expected = ['ID']
 #        print 'addedvalues:\n%s expected: %s' % (addedvalues,expected)
         s = 'From: %s\nFound:\n%s\nExpected:\n%s' % (testfile1, addedvalues, expected)
         self.assertEqual(addedvalues, expected, s)
@@ -165,12 +162,13 @@ class DarwinCloudCollectorTestCase(unittest.TestCase):
         response=darwin_cloud_collector(inputs)
 #        print 'response2:\n%s' % response
         addedvalues = response['addedvalues']
-        expected = ['BCID','basisOfIdentification','dayCollected','dayIdentified', 
-        'extractionID','fundingSource','geneticTissueType','length','microHabitat',
-        'monthCollected','monthIdentified','permitInformation','plateID','preservative',
-        'previousTissueID','principalInvestigator','sampleOwnerInstitutionCode','species',
-        'subSpecies','substratum','tissueStorageID','weight','wellID','wormsID',
-        'yearCollected','yearIdentified']
+        expected = ['BASISOFIDENTIFICATION', 'BCID', 'DAYCOLLECTED', 'DAYIDENTIFIED', 
+            'EXTRACTIONID', 'FUNDINGSOURCE', 'GENETICTISSUETYPE', 'LENGTH', 
+            'MICROHABITAT', 'MONTHCOLLECTED', 'MONTHIDENTIFIED', 'PERMITINFORMATION', 
+            'PLATEID', 'PRESERVATIVE', 'PREVIOUSTISSUEID', 'PRINCIPALINVESTIGATOR', 
+            'SAMPLEOWNERINSTITUTIONCODE', 'SPECIES', 'SUBSPECIES', 'SUBSTRATUM', 
+            'TISSUESTORAGEID', 'WEIGHT', 'WELLID', 'WORMSID', 'YEARCOLLECTED', 
+            'YEARIDENTIFIED']
 #        print 'addedvalues:\n%s\nexpected:\n%s' % (addedvalues,expected)
         s = 'From: %s\nFound:\n%s\nExpected:\n%s' % (testfile2, addedvalues, expected)
         self.assertEqual(addedvalues, expected, s)

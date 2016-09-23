@@ -1,1 +1,17 @@
-establishmentmeans	standard	vetted	error	misplaced	unresolved	source	commentinvasive	invasive	1					managed	managed	1					native	native	1					unknown	unknown	1					?	unknown	1					captive	managed	1					cultivated	managed	1					domestic	managed	1					domesticated	managed	1					wild caught	native	1					
+establishmentmeans	standard	vetted
+?	unknown	1
+ACCIDENTAL TRANSPORT	introduced	1
+CAPTIVE	managed	1
+CULTIVATED	managed	1
+DOMESTIC	managed	1
+DOMESTIC?	unknown	1
+DOMESTICATED	managed	1
+ESCAPED FROM CAPTIVITY	introduced	1
+INVASIVE	invasive	1
+MANAGED	managed	1
+NATIVE	native	1
+PURCHASED	unknown	1
+UNCERTAIN	unknown	1
+UNKNOWN	unknown	1
+WILD	native	1
+WILD CAUGHT	native	1

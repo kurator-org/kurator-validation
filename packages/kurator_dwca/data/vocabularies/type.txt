@@ -1,1 +1,10 @@
-type	standard	vetted	error	misplaced	unresolved	source	commentPhysicalObject	PhysicalObject	1					StillImage	StillImage	1					MovingImage	MovingImage	1					Sound	Sound	1					Text	Text	1					Event	Event	1					specimen	PhysicalObject	1	Type is a synonym for a basisOfRecord.	1			
+type	standard	vetted
+EVENT	Event	1
+HYSICALOBJECT	PhysicalObject	1
+LITERATURE	Text	1
+MOVINGIMAGE	MovingImage	1
+PHYSICALOBJECT	PhysicalObject	1
+SOUND	Sound	1
+SPECIMEN	PhysicalObject	1
+STILLIMAGE	StillImage	1
+TEXT	Text	1

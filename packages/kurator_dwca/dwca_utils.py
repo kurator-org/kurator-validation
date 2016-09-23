@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-09-15T13:52+02:00"
+__version__ = "dwca_utils.py 2016-09-23T20:06+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -689,15 +689,16 @@ def csv_file_encoding(inputfile):
     # Encoding not determined
     return None
 
-def extract_values_from_file(inputfile, fields, separator='|', function=None, *args, **kwargs):
+def extract_values_from_file(inputfile, fields, separator='|', 
+        function=None, *args, **kwargs):
     """Get the values of a list of fields from a file.
     parameters:
         inputfile - full path to the input file (required)
         fields - list of fields to extract from the input file (required)
         separator - string to separate values the output string (default '|')
         function - function to call for each value extracted (default None)
-        params - unnamed parameters to function as tuple (optional)
-        args - named parameters to function as dictionary (optional)
+        args - unnamed parameters to function as tuple (optional)
+        kwargs - named parameters to function as dictionary (optional)
     returns:
         values - the extracted values of the fields in the list, concatenated with
             separator between values
@@ -757,15 +758,15 @@ def extract_values_from_file(inputfile, fields, separator='|', function=None, *a
     return sorted(list(values))
 
 def extract_value_counts_from_file(inputfile, fields, separator='|', 
-    function=None, *args, **kwargs):
+        function=None, *args, **kwargs):
     """Get the values of a list of fields from a file.
     parameters:
         inputfile - full path to the input file (required)
         fields - list of fields to extract from the input file (required)
         separator - string to separate values the output string (default '|')
         function - function to call for each value extracted (default None)
-        params - unnamed parameters to function as tuple (optional)
-        args - named parameters to function as dictionary (optional)
+        args - unnamed parameters to function as tuple (optional)
+        kwargs - named parameters to function as dictionary (optional)
     returns:
         values - the extracted values of the fields in the list, concatenated with
             separator between values

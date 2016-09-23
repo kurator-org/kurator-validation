@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwinize_header.py 2016-09-08T13:52+02:00"
+__version__ = "darwinize_header.py 2016-09-23T21:00+02:00"
 
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
@@ -126,6 +126,9 @@ def darwinize_header(options):
     encoding = csv_file_encoding(inputfile)
     header = read_header(inputfile)
     dwcheader = darwinize_list(header, dwccloudfile)
+    # print 'dialect:\n%s' % dialect_attributes(dialect)
+    # print 'header:\n%s' % header
+    # print 'dwcheader:\n%s' % dwcheader
 
     # Write the new header to the outputfile
     if write_header(outputfile, dwcheader, dialect) == False:
@@ -133,8 +136,6 @@ def darwinize_header(options):
         returnvals = [outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
-#    print 'dialect:\n%s' % dialect_attributes(dialect)
-#    print 'header:\n%s' % header
 
     # Read the rows of the input file, append them to the output file after the 
     # header with columns in the same order.

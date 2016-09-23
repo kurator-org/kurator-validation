@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector.py 2016-09-08T13:51+02:00"
+__version__ = "darwin_cloud_collector.py 2016-09-23T20:59+02:00"
 
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
@@ -99,10 +99,10 @@ def darwin_cloud_collector(options):
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     header = read_header(inputfile)
-    nondwc = terms_not_in_dwc(header)
+    nondwc = terms_not_in_dwc(header, casesensitive=False)
 
     dialect = vocab_dialect()
-    addedvalues = distinct_vocabs_to_file(outputfile, nondwc, 'verbatim', dialect=dialect)
+    addedvalues = distinct_vocabs_to_file(outputfile, nondwc, 'fieldname', dialect=dialect)
     success = True
     artifacts['darwin_cloud_collector_file'] = outputfile
     returnvals = [addedvalues, outputfile, success, message, artifacts]

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter.py 2016-09-22T16:36+02:00"
+__version__ = "term_recommendation_reporter.py 2016-09-23T16:36+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging

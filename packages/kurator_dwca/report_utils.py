@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2016-09-19T13:53+02:00"
+__version__ = "report_utils.py 2016-09-23T21:00+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -78,13 +78,16 @@ def term_recommendation_report(reportfile, recommendationdict, key, separator='|
             writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
             for datakey, value in recommendationdict.iteritems():
                 row = {key:datakey, 
-                    'standard':value['standard'], \
-                    'vetted':value['vetted'], \
-                    'error':value['error'], \
-                    'misplaced':value['misplaced'], \
-                    'unresolved':value['unresolved'], \
-                    'source':value['source'], \
-                    'comment':value['comment'] }
+                    'standard':value['standard'], 
+                    'vetted':value['vetted'] }
+#                 row = {key:datakey, 
+#                     'standard':value['standard'], \
+#                     'vetted':value['vetted'], \
+#                     'error':value['error'], \
+#                     'misplaced':value['misplaced'], \
+#                     'unresolved':value['unresolved'], \
+#                     'source':value['source'], \
+#                     'comment':value['comment'] }
                 fields = key.split(separator)
                 if len(fields) > 1:
                     for field in fields:
@@ -142,14 +145,15 @@ def term_list_report(reportfile, termlist, key, separator='|', format=None):
         with open(reportfile, 'a') as csvfile:
             writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
             for value in termlist:
-                row = {key:value, 
-                    'standard':'', \
-                    'vetted':'0', \
-                    'error':'', \
-                    'misplaced':'', \
-                    'unresolved':'0', \
-                    'source':'', \
-                    'comment':'' }
+                row = {key:value, 'standard':'', 'vetted':'0' }
+#                 row = {key:value, 
+#                     'standard':'', \
+#                     'vetted':'0', \
+#                     'error':'', \
+#                     'misplaced':'', \
+#                     'unresolved':'0', \
+#                     'source':'', \
+#                     'comment':'' }
                 fields = key.split(separator)
                 if len(fields) > 1:
                     # print 'report row: %s' % row

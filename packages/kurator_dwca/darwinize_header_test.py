@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwinize_header_test.py 2016-08-04T12:14+02:00"
+__version__ = "darwinize_header_test.py 2016-09-23T21:00+02:00"
 
 # This file contains unit test for the darwinize_header function.
 #
@@ -32,12 +32,13 @@ class DarwinizeHeaderFramework():
     """Test framework for Darwinize Header."""
     # location for the test inputs and outputs
     testdatapath = './data/tests/'
+    vocabpath = './data/vocabularies/'
 
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_eight_records_utf8_lf.csv'
     testfile2 = testdatapath + 'test_three_records_utf8_unix_lf.txt'
     testfile3 = testdatapath + 'test_symbiota_download.csv'
-    dwccloudfile = testdatapath + 'test_dwc_cloud.txt'
+    dwccloudfile = vocabpath + 'darwin_cloud.txt'
 
     # output data files from tests, remove these in dispose()
     outputfile = 'test_darwinizedheader_file.csv'
@@ -235,7 +236,7 @@ class DarwinizeHeaderTestCase(unittest.TestCase):
         'yearIdentified', 'monthIdentified', 'dayIdentified', 'class', 'order', 'family', 
         'infraspecificEpithet', 'vernacularName', 'taxonRemarks', 'geneticTissueType', 
         'plateID', 'wellID', 'extractionID', 'otherCatalogNumbers', 'tissueStorageID', 
-        'BCID', 'unnamedcolumn_1']
+        'BCID', 'UNNAMED_COLUMN_1']
         s = 'From input: %s\nFound:\n%s\nExpected:\n%s' % (testfile2, header, expected)
         self.assertEqual(header, expected, s)
 
@@ -243,11 +244,11 @@ class DarwinizeHeaderTestCase(unittest.TestCase):
         casesensitive = True
         notdwc = terms_not_in_dwc(header, casesensitive)
         expected = [
-        'BCID', 'basisOfIdentification', 'dayIdentified', 'extractionID', 'fundingSource',
-        'geneticTissueType', 'length', 'microHabitat', 'monthIdentified', 
-        'permitInformation', 'plateID', 'preservative', 'principalInvestigator', 
-        'sampleOwnerInstitutionCode', 'substratum', 'tissueStorageID', 'unnamedcolumn_1', 
-        'weight', 'wellID', 'yearIdentified']
+        'BCID', 'UNNAMED_COLUMN_1', 'basisOfIdentification', 'dayIdentified', 
+        'extractionID', 'fundingSource', 'geneticTissueType', 'length', 'microHabitat', 
+        'monthIdentified', 'permitInformation', 'plateID', 'preservative', 
+        'principalInvestigator', 'sampleOwnerInstitutionCode', 'substratum', 
+        'tissueStorageID', 'weight', 'wellID', 'yearIdentified']
         s = 'From input: %s\nFound:\n%s\nExpected:\n%s' % (testfile1, notdwc, expected)
         self.assertEqual(notdwc, expected, s)
 
