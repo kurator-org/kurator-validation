@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-09-23T20:59+02:00"
+__version__ = "dwca_vocab_utils.py 2016-09-24T19:28+02:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -275,7 +275,8 @@ def vetted_vocab_dict_from_file(vocabfile, key, separator='|', dialect=None):
             vetteddict[entry]=thedict[entry]
     return vetteddict
 
-def vocab_dict_from_file(vocabfile, key, separator='|', dialect=None):
+def vocab_dict_from_file(vocabfile, key, separator='|', dialect=None, \
+        function=None, *args, **kwargs):
     """Get a vocabulary as a dictionary from a file.
     parameters:
         vocabfile - path to the vocabulary file (required)
@@ -284,16 +285,22 @@ def vocab_dict_from_file(vocabfile, key, separator='|', dialect=None):
         separator - string to use as the value separator in the string (default '|')
         dialect - csv.dialect object with the attributes of the vocabulary lookup file
             (default None)
+        function - function to call for each value to compare (default None)
+        args - unnamed parameters to function as tuple (optional)
+        kwargs - named parameters to function as dictionary (optional)
+    Example:
+       vocab_dict_from_file(v,k,function=ustripstr) would return all of the stripped, 
+       uppercased keys and their values from the vocabfile v.
     returns:
         vocabdict - dictionary of complete vocabulary records
     """
-
     if key is None or len(key.strip()) == 0:
+        logging.debug('No key given in vocab_dict_from_file().')
         return None
 
     if vocabfile is None or len(vocabfile) == 0:
         logging.debug('No vocabulary file given in vocab_dict_from_file().')
-        return False
+        return None
 
     if os.path.isfile(vocabfile) == False:
         s = 'Vocabulary file %s not found in vocab_dict_from_file().' % vocabfile
@@ -303,20 +310,30 @@ def vocab_dict_from_file(vocabfile, key, separator='|', dialect=None):
     if dialect is None:
         dialect = vocab_dialect()
     
+    # Set up the field names to match the standard vocabulary header
     fieldnames = vocabheader(key, separator)
 
+    # Create a dictionary to hold the vocabulary
     vocabdict = {}
 
-    with open(vocabfile, 'rU') as csvfile:
-        dr = csv.DictReader(csvfile, dialect=dialect, fieldnames=fieldnames)
+    # Open vocab file for reading
+    with open(vocabfile, 'rU') as vfile:
+        dr = csv.DictReader(vfile, dialect=dialect, fieldnames=fieldnames)
         # Read the header
         dr.next()
+        # For every row in the vocabfile
         for row in dr:
+            # Make a complete copy of the row
             rowdict = copy.deepcopy(row)
+            value = row[key]
+            # Remove the key from the row copy
             rowdict.pop(key)
-            for f in vocabfieldlist:
-                rowdict[f]=row[f]
-            vocabdict[row[key]]=rowdict
+            newvalue = value
+            # If we are not supposed to apply a function to the key value
+            if function is not None:
+                newvalue = function(value, *args, **kwargs)
+            vocabdict[newvalue]=rowdict
+                
 #    print 'vocabdict: %s' % vocabdict
     return vocabdict
 
@@ -339,6 +356,33 @@ def term_values_recommended(lookupdict):
                 recommended[key] = value
 
     return recommended
+
+def recommended_value(lookupdict, lookupvalue):
+    """Get recommended standard value for lookupvalue from a lookup dictionary
+    parameters:
+        lookupdict - dictionary of lookup terms from a vocabulary. Dictionary must
+            contain a key for which the value is another dictionary, and that 
+            subdictionary must contain a key 'standard' for which the value is the 
+            recommended value. The subdictionary may contain other keys as desired 
+            (required)
+    returns:
+        subdictionary - dictionary containing the recommended value
+    """
+    if lookupdict is None or len(lookupdict)==0:
+        logging.debug('No lookup dictionary given in recommended_value().')
+        return None
+
+    if lookupvalue is None or len(lookupvalue)==0:
+        logging.debug('No lookup value given in recommended_value().')
+        return None
+
+    try:
+        subdictionary = lookupdict[lookupvalue]
+        return subdictionary
+    except:
+        s = '"%s" not found in lookup dictionary in recommended_value().' % lookupvalue
+        logging.debug(s)
+        return None
 
 def prefix_keys(d, prefix='new_'):
     ''' Change the keys in a dictionary by adding a prefix to each one.
@@ -687,6 +731,7 @@ class DWCAVocabUtilsFramework():
     # following are files used as input during the tests, don't remove these
     compositetestfile = testdatapath + 'test_eight_specimen_records.csv'
     monthvocabfile = vocabpath + 'month.txt'
+    testmonthvocabfile = testdatapath + 'test_month.txt'
     geogvocabfile = vocabpath + 'dwc_geography.txt'
     darwincloudfile = vocabpath + 'darwin_cloud.txt'
 
@@ -792,6 +837,8 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
     def test_vocab_dict_from_file(self):
         print 'testing vocab_dict_from_file'
         monthvocabfile = self.framework.monthvocabfile
+        testmonthvocabfile = self.framework.testmonthvocabfile
+
         monthdict = vocab_dict_from_file(monthvocabfile, 'month')
         expected = 8
 #        print 'monthdict:\n%s' % monthdict
@@ -826,8 +873,44 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
         s += "for vocab value %s" % seek
         self.assertEqual(found, expected, s)
+
         field = 'standard'
         expected = '5'
+        found = monthdict[seek][field]
+        s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
+        s += "for vocab value %s" % seek
+        self.assertEqual(found, expected, s)
+
+        # Check that the entries in the dictionary are converted using the function
+        monthdict = vocab_dict_from_file(testmonthvocabfile, 'month', function=ustripstr)
+        # 'vi' is in the vocabfile, upstripstr should convert it to 'VI' in monthdict
+        # print 'monthdict: %s' % monthdict
+        seek = 'VI'
+
+        field = 'vetted'
+        expected = '1'
+        found = monthdict[seek][field]
+        s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
+        s += "for vocab value %s" % seek
+        self.assertEqual(found, expected, s)
+        field = 'standard'
+        expected = '6'
+        found = monthdict[seek][field]
+        s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
+        s += "for vocab value %s" % seek
+        self.assertEqual(found, expected, s)
+
+        # 'VII' is in the vocabfile, upstripstr should convert it to 'VII' in monthdict
+        seek = 'VII'
+
+        field = 'vetted'
+        expected = '1'
+        found = monthdict[seek][field]
+        s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
+        s += "for vocab value %s" % seek
+        self.assertEqual(found, expected, s)
+        field = 'standard'
+        expected = '7'
         found = monthdict[seek][field]
         s = "value of %s ('%s') not equal to '%s' " % (field, found, expected)
         s += "for vocab value %s" % seek
