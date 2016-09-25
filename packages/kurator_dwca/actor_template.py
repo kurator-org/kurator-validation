@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "actor_template.py 2016-09-25T15:14+02:00"
+__version__ = "actor_template.py 2016-09-25T18:08+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -61,13 +61,13 @@ def dostuffer(options):
         inputfile = None
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given'
+        message = 'No input file given in %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file %s not found' % inputfile
+        message = 'Input file %s not found in %s' % (inputfile, __version__)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
