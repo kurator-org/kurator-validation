@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "actor_template.py 2016-09-08T13:49+02:00"
+__version__ = "actor_template.py 2016-09-25T15:14+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -45,27 +45,16 @@ def dostuffer(options):
     logging.debug( 'Started %s' % __version__ )
     logging.debug( 'options: %s' % options )
 
-    # Make a list for the response
+    # Make a list of keys in the response dictionary
     returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
 
+    ### Standard outputs ###
+    success = False
+    message = None
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
-    # outputs
-    workspace = None
-    outputfile = None
-    success = False
-    message = None
-
-    # inputs
-    try:
-        workspace = options['workspace']
-    except:
-        workspace = None
-
-    if workspace is None or len(workspace)==0:
-        workspace = './'
-
+    ### Required inputs ###
     try:
         inputfile = options['inputfile']
     except:
@@ -82,6 +71,15 @@ def dostuffer(options):
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
+
+    ### Optional inputs ###
+    try:
+        workspace = options['workspace']
+    except:
+        workspace = None
+
+    if workspace is None or len(workspace)==0:
+        workspace = './'
 
     try:
         outputfile = options['outputfile']

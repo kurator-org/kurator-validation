@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2016-09-25T13:03+02:00"
+__version__ = "report_utils.py 2016-09-25T17:31+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -25,6 +25,7 @@ __version__ = "report_utils.py 2016-09-25T13:03+02:00"
 # python report_utils.py
 
 from dwca_utils import csv_dialect
+from dwca_utils import csv_file_dialect
 from dwca_utils import tsv_dialect
 from dwca_utils import ustripstr
 from dwca_utils import read_header
@@ -164,6 +165,108 @@ def row_correct_term(row, fieldname, shouldbe):
         was = row[fieldname]
     row[fieldname] = shouldbe
     row[fieldname+'_orig'] = was
+
+def term_setter_report(inputfile, reportfile, key, constantvalues=None, separator='|', \
+    format=None):
+    """Write a file substituting constants for fields that already exist in an input file 
+       and with added fields with constants for fields that do not already exist in an 
+       inputfile. Field name matching is exact.
+    parameters:
+        inputfile - full path to the input file (required)
+        reportfile - full path to the output file (required)
+        key - field or separator-separated fields to set (required)
+        constantvalues - value or separator-separated values to set the field(s) to 
+            (required)
+        separator - string to use as the key and value separator (optional; default '|')
+        format - string signifying the csv.dialect of the report file ('csv' or 'txt')
+            (optional; default: txt)
+    returns:
+        success - True if the report was written, else False
+    """
+    ### Required parameters ###
+    if reportfile is None or len(reportfile)==0:
+        logging.debug('No reportfile name given in term_setter_report().')
+        return False
+
+    # Read the header from the input file
+    inputheader = read_header(inputfile)
+    if inputheader is None:
+        s = 'Unable to read header from input file %s ' % inputfile
+        logging.debug(s)
+        return False
+
+    if key is None or len(key.strip())==0:
+        s = 'No key given in term_setter_report().'
+        logging.debug(s)
+        return False
+
+    if constantvalues is None or len(constantvalues)==0:
+        s = 'No constantvalues given in term_setter_report().'
+        logging.debug(s)
+        return False
+
+    # Make sure there is a separator for the next step
+    if separator is None or len(separator)==0:
+        separator = '|'
+
+    # Get the fields to set by splitting the key with the separator
+    fields = key.split(separator)
+
+    # Get the values to set by splitting the constantvalues with the separator
+    addedvalues = constantvalues.split(separator)
+
+    # Abort if there is a mismatch in the lengths of the field and constants lists
+    if len(fields) != len(addedvalues):
+        s = 'length of field list: %s ' % key
+        s += 'does not match length of constants list: %s ' % constantvalues
+        s += 'in term_setter_report()'
+        logging.debug(s)
+        return False
+
+    ### Optional parameters ###
+    if format=='txt' or format is None:
+        outputdialect = tsv_dialect()
+    else:
+        outputdialect = csv_dialect()
+
+    # Make an outputheader that is a copy of the inputheader
+    outputheader = inputheader
+    # Add to the output header fields that are not in the inputheader
+    for field in fields:
+        if field not in outputheader:
+            outputheader = outputheader + [field]
+    # Create the outputfile and write the new header to it
+    with open(reportfile, 'w') as outfile:
+        writer = csv.DictWriter(outfile, dialect=outputdialect, fieldnames=outputheader)
+        writer.writeheader()
+
+    # Check to see if the outputfile was created
+    if os.path.isfile(reportfile) == False:
+        s = 'reportfile: %s was not created' % outputfile
+        s += 'in term_setter_report()'
+        logging.debug(s)
+        return False
+
+    # Detrmine the dialect of the input file
+    inputdialect = csv_file_dialect(inputfile)
+
+    # Open the outputfile to append rows with fields set to constant values    
+    with open(reportfile, 'a') as outfile:
+        writer = csv.DictWriter(outfile, dialect=outputdialect, fieldnames=outputheader)
+        # Open the inputfile to read rows
+        with open(inputfile, 'rU') as infile:
+            dr = csv.DictReader(infile, dialect=inputdialect, fieldnames=inputheader)
+            # Read the header
+            dr.next()
+            # Read every row in the inputfile
+            for row in dr:
+                # For every field in the key list
+                for i in range(0,len(fields)):
+                    # Set the value of the ith field to the ith constant
+                    row[fields[i]]=addedvalues[i]
+                # Write the updated row to the outputfile
+                writer.writerow(row)
+    return True
 
 def row_correction_report(inputfile, reportfile, vocabfile, key, constantvalues=None, 
                           separator='|', format=None):
@@ -317,19 +420,24 @@ class ReportUtilsFramework():
     csvreadheaderfile = testdatapath + 'test_eight_specimen_records.csv'
     tsvreadheaderfile = testdatapath + 'test_three_specimen_records.txt'
     testcorrectioninputfile = testdatapath + 'test_specimen_correction.txt'
+    testsetterinputfile = testdatapath + 'test_specimen_correction.txt'
     testmonthvocabfile = testdatapath + 'test_month.txt'
 
     # following are files output during the tests, remove these in dispose()
     testtokenreportfile = testdatapath + 'test_token_report_file.txt'
     testcorrectionreportfile = testdatapath + 'test_correction_report_file.txt'
+    testsetterreportfile = testdatapath + 'test_setter_report_file.txt'
 
     def dispose(self):
         testtokenreportfile = self.testtokenreportfile
         testcorrectionreportfile = self.testcorrectionreportfile
+        testsetterreportfile = self.testsetterreportfile
         if os.path.isfile(testtokenreportfile):
             os.remove(testtokenreportfile)
         if os.path.isfile(testcorrectionreportfile):
             os.remove(testcorrectionreportfile)
+        if os.path.isfile(testsetterreportfile):
+            os.remove(testsetterreportfile)
         return True
 
 class ReportUtilsTestCase(unittest.TestCase):
@@ -352,6 +460,101 @@ class ReportUtilsTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(tsvreadheaderfile), s)
         s = testcorrectioninputfile + ' does not exist'
         self.assertTrue(os.path.isfile(testcorrectioninputfile), s)
+
+    def test_term_setter_report(self):
+        print 'testing term_setter_report'
+        testsetterinputfile = self.framework.testsetterinputfile
+        testsetterreportfile = self.framework.testsetterreportfile
+
+        # Test field addition
+        key = 'institutionCode'
+        result = term_setter_report(testsetterinputfile, testsetterreportfile, 
+            key, constantvalues='CAS')
+        s = 'term_setter_report() result not True '
+        s += 'with inputfile: %s ' % testsetterinputfile
+        s += 'and outputfile: %s' % testsetterreportfile
+        self.assertTrue(result, s)
+        
+        outputheader = read_header(testsetterreportfile)
+        expected = ['ID', 'month', 'country', 'institutionCode']
+        s = 'outputheader: %s not as expected: %s' % (outputheader, expected)
+        self.assertEqual(outputheader, expected, s)
+
+        dialect = tsv_dialect()
+        with open(testsetterreportfile, 'rU') as outfile:
+            dr = csv.DictReader(outfile, dialect=dialect, fieldnames=outputheader)
+            # Read the header
+            dr.next()
+            # Read the first row of data
+            firstrow = dr.next()
+
+        field = 'institutionCode'
+        value = firstrow[field]
+        expected = 'CAS'
+        s = 'Field %s value %s not as expected (%s)' % (field, value, expected)
+        self.assertEqual(value, expected, s)
+
+        # Test field list addition
+        key = 'institutionCode|license'
+        result = term_setter_report(testsetterinputfile, testsetterreportfile, 
+            key, constantvalues='CAS|CC0')
+        s = 'term_setter_report() result not True '
+        s += 'with inputfile: %s ' % testsetterinputfile
+        s += 'and outputfile: %s' % testsetterreportfile
+        self.assertTrue(result, s)
+        
+        outputheader = read_header(testsetterreportfile)
+        expected = ['ID', 'month', 'country', 'institutionCode', 'license']
+        s = 'outputheader: %s not as expected: %s' % (outputheader, expected)
+        self.assertEqual(outputheader, expected, s)
+
+        dialect = tsv_dialect()
+        with open(testsetterreportfile, 'rU') as outfile:
+            dr = csv.DictReader(outfile, dialect=dialect, fieldnames=outputheader)
+            # Read the header
+            dr.next()
+            # Read the first row of data
+            firstrow = dr.next()
+
+        field = 'institutionCode'
+        value = firstrow[field]
+        expected = 'CAS'
+        s = 'Field %s value %s not as expected (%s)' % (field, value, expected)
+        self.assertEqual(value, expected, s)
+
+        field = 'license'
+        value = firstrow[field]
+        expected = 'CC0'
+        s = 'Field %s value %s not as expected (%s)' % (field, value, expected)
+        self.assertEqual(value, expected, s)
+
+        # Test field replacement
+        key = 'country'
+        result = term_setter_report(testsetterinputfile, testsetterreportfile, 
+            key, constantvalues='Argentina')
+        s = 'term_setter_report() result not True '
+        s += 'with inputfile: %s ' % testsetterinputfile
+        s += 'and outputfile: %s' % testsetterreportfile
+        self.assertTrue(result, s)
+        
+        outputheader = read_header(testsetterreportfile)
+        expected = ['ID', 'month', 'country']
+        s = 'outputheader: %s not as expected: %s' % (outputheader, expected)
+        self.assertEqual(outputheader, expected, s)
+
+        dialect = tsv_dialect()
+        with open(testsetterreportfile, 'rU') as outfile:
+            dr = csv.DictReader(outfile, dialect=dialect, fieldnames=outputheader)
+            # Read the header
+            dr.next()
+            # Read the first row of data
+            firstrow = dr.next()
+
+        field = 'country'
+        value = firstrow[field]
+        expected = 'Argentina'
+        s = 'Field %s value %s not as expected (%s)' % (field, value, expected)
+        self.assertEqual(value, expected, s)
 
     def test_row_correction_report(self):
         print 'testing row_correction_report'
@@ -390,39 +593,6 @@ class ReportUtilsTestCase(unittest.TestCase):
         field = 'month'
         value = firstrow[field]
         expected = '6'
-        s = 'Field %s value %s not as expected (%s)' % (field, value, expected)
-        self.assertEqual(value, expected, s)
-
-        key = 'institutionCode'
-        result = row_correction_report(testcorrectioninputfile, \
-            testcorrectionreportfile, None, key, constantvalues='CAS')
-        s = 'row_correction_report() result not True '
-        s += 'with inputfile: %s ' % testcorrectioninputfile
-        s += 'outpufile: %s' % testcorrectionreportfile
-        s += 'and vocabfile: %s' % testmonthvocabfile
-        self.assertTrue(result, s)
-        
-        outputheader = read_header(testcorrectionreportfile)
-        expected = ['ID', 'month', 'country', 'institutionCode']
-        s = 'outputheader: %s not as expected: %s' % (outputheader, expected)
-        self.assertEqual(outputheader, expected, s)
-
-        with open(testcorrectionreportfile, 'rU') as outfile:
-            dr = csv.DictReader(outfile, dialect=dialect, fieldnames=outputheader)
-            # Read the header
-            dr.next()
-            # Read the first row of data
-            firstrow = dr.next()
-
-        field = 'institutionCode'
-        value = firstrow[field]
-        expected = 'CAS'
-        s = 'Field %s value %s not as expected (%s)' % (field, value, expected)
-        self.assertEqual(value, expected, s)
-
-        field = 'month'
-        value = firstrow[field]
-        expected = 'vi'
         s = 'Field %s value %s not as expected (%s)' % (field, value, expected)
         self.assertEqual(value, expected, s)
 
