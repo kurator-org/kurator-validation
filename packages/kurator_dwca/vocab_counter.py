@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_counter.py 2016-09-11T17:18+02:00"
+__version__ = "vocab_counter.py 2016-09-25T23:58+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -24,8 +24,8 @@ import logging
 import argparse
 
 def vocab_counter(options):
-    """Extract a list of the distinct values of a given term in a text file along with 
-       the number of times each occurs.
+    """Extract a dictionary of the distinct values of a given term in a text file along 
+       with the number of times each occurs.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         inputfile - full path to the input file (required)

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dataset_constants_setter.py 2016-09-25T18:25+02:00"
+__version__ = "dataset_constants_setter.py 2016-09-26T11:45+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -25,14 +25,16 @@ import logging
 import argparse
 
 def dataset_constants_setter(options):
-    """Create a copy of an input file with constant values for a list of fields.
+    """Create an output file replacing values in fields of an input file with constants 
+       and adding fields that did not already exist in the input file, filling them with 
+       constants.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
-        workspace - path to a directory for the output file (optional)
+        workspace - path to a directory for the output file (optional; default './')
         inputfile - path to the input file. Either full path or path within the workspace
             (required)
         outputfile - name of the output file, without path (optional)
-        format - output file format (e.g., 'csv' or 'txt') (optional; default txt)
+        format - output file format (e.g., 'csv' or 'txt') (optional; default 'txt')
         key - field or separator-separated fields whose values are to be set to the 
             constantvalues (required)
         separator - string to use as the key and value separator (optional; default '|')
@@ -61,19 +63,25 @@ def dataset_constants_setter(options):
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
+    outputfile = None
+    format = 'txt'
+    key = None
+    separator = '|'
+    constantvalues = None
+
     ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None:
-        workspace = './'
+        pass
 
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given in %s' % __version__
@@ -94,7 +102,7 @@ def dataset_constants_setter(options):
     try:
         key = options['key']
     except:
-        key = None
+        pass
 
     if key is None or len(key)==0:
         message = 'No key in %s' % __version__
@@ -104,24 +112,25 @@ def dataset_constants_setter(options):
 
     ### Optional inputs ###
     try:
+        format = options['format']
+    except:
+        pass
+
+    try:
         separator = options['separator']
     except:
-        separator = None
+        pass
 
     try:
         constantvalues = options['constantvalues']
     except:
-        constantvalues = None
-
-    try:
-        format = options['format']
-    except:
-        format = None
+        pass
 
     try:
         outputfile = options['outputfile']
     except:
-        outputfile = None
+        pass
+
     if outputfile is None:
         outputfile = '%s/%s_corrected_report_%s.%s' % \
           (workspace.rstrip('/'), slugify(key), str(uuid.uuid1()), format)

@@ -14,26 +14,28 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor.py 2016-05-27T15:50-03:00"
+__version__ = "composite_header_constructor.py 2016-09-26T16:30+02:00"
 
 from dwca_utils import read_header
 from dwca_utils import write_header
 from dwca_utils import merge_headers
 from dwca_utils import tsv_dialect
+from dwca_utils import csv_dialect
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 import logging
 import argparse
 
 def composite_header_constructor(options):
-    """Construct a header that contains the distinct column names in two input files and
-       write the header to an outputfile.
+    """Create a file with a header that contains the distinct union of column names from 
+       two input files.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
-        workspace - path to a directory for the outputfile (optional)
+        workspace - path to a directory for the output file (optional; default './')
         inputfile1 - full path to one of the input files (optional)
         inputfile2 - full path to the second input file (optional)
         outputfile - name of the output file, without path (required)
+        format - output file format (e.g., 'csv' or 'txt') (optional; default 'txt')
     returns a dictionary with information about the results
         compositeheader - header combining two inputs
         outputfile - actual full path to the output file
@@ -51,37 +53,40 @@ def composite_header_constructor(options):
     # Make a list for the response
     returnvars = ['compositeheader', 'outputfile', 'success', 'message', 'artifacts']
 
+    ### Standard outputs ###
+    success = False
+    message = None
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
-    # outputs
+    ### Establish variables ###
+    workspace = './'
+    inputfile1 = None
+    inputfile2 = None
+    outputfile = None
+    format = 'txt'
     compositeheader = None
-    success = False
-    message = None
 
-    # inputs
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None or len(workspace)==0:
-        workspace = './'
+        pass
 
     try:
-        file1 = options['inputfile1']
+        inputfile1 = options['inputfile1']
     except:
-        file1 = None
+        pass
 
     try:
-        file2 = options['inputfile2']
+        inputfile2 = options['inputfile2']
     except:
-        file2 = None
+        pass
 
     try:
         outputfile = options['outputfile']
     except:
-        outputfile = None
+        pass
 
     if outputfile is None or len(outputfile)==0:
         message = 'No output file given'
@@ -90,13 +95,17 @@ def composite_header_constructor(options):
 
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
-    header1 = read_header(file1)
-    header2 = read_header(file2)
+    header1 = read_header(inputfile1)
+    header2 = read_header(inputfile2)
 
     compositeheader = merge_headers(header1, header2)
 
-    # Write the resulting header into
-    dialect = tsv_dialect()
+    if format=='txt' or format is None:
+        dialect = tsv_dialect()
+    else:
+        dialect = csv_dialect()
+
+    # Write the resulting header into outputfile
     success = write_header(outputfile, compositeheader, dialect)
     if success == False:
         message = 'Header was not written.'

@@ -25,7 +25,7 @@ import logging
 import argparse
 
 def text_file_splitter(options):
-    """Split a text file into chunks with headers. Put the chunk files in the workspace
+    """Split a text file into chunks with headers. Put the chunk files in the workspace.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         inputfile - full path to the input file (required)

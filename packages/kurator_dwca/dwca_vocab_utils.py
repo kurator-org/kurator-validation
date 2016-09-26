@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-09-24T19:28+02:00"
+__version__ = "dwca_vocab_utils.py 2016-09-25T22:32+02:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -95,12 +95,15 @@ def writevocabheader(fullpath, fieldnames, dialect):
     returns:
         success - True if the header was written to the file, otherwise False
     '''
+    functionname = 'writevocabheader()'
     if fullpath is None or len(fullpath) == 0:
-        logging.debug('No vocabulary file given in writevocabheader().')
+        s = 'No vocabulary file given in %s.' % functionname
+        logging.debug(s)
         return False
 
     if fieldnames is None or len(fieldnames) == 0:
-        logging.debug('No list of field names given in writevocabheader().')
+        s = 'No list of field names given in %s.' % functionname
+        logging.debug(s)
         return False
 
     if dialect is None:
@@ -111,9 +114,12 @@ def writevocabheader(fullpath, fieldnames, dialect):
             writer = csv.DictWriter(outfile, dialect=dialect, fieldnames=fieldnames)
             writer.writeheader()
         except:
-            logging.debug('No header written to file %s in writevocabheader()' % fullpath)
+            s = 'No header written to file %s in %s.' % (fullpath, functionname)
+            logging.debug(s)
             return False
 
+    s = 'Header written to %s in %s.' % (fullpath, functionname)
+    logging.debug(s)
     return True
 
 def compose_key_from_list(alist, separator='|'):
@@ -125,11 +131,11 @@ def compose_key_from_list(alist, separator='|'):
     returns:
         key - composed string with values separated by separator
     """
+    functionname = 'compose_key_from_list()'
     if alist is None or len(alist)==0:
-        logging.debug('No list given in compose_key_from_list()')
+        s = 'No list given in %s.' % functionname
+        logging.debug(s)
         return None
-
-#    print 'alist: %s' % alist
 
     n=0
     for value in alist:
@@ -168,13 +174,16 @@ def matching_vocab_dict_from_file(checklist, vocabfile, key, separator='|', dial
         matchingvocabdict - dictionary of complete vocabulary records matching the values 
             in the checklist
     """
+    functionname = 'matching_vocab_dict_from_file()'
     if checklist is None or len(checklist)==0:
-        logging.debug('No list of values given in matching_vocab_dict_from_file()')
+        s = 'No list of values given in %s.' % functionname
+        logging.debug(s)
         return None
 
     vocabdict = vocab_dict_from_file(vocabfile, key, separator, dialect)
     if vocabdict is None or len(vocabdict)==0:
-        logging.debug('No vocabdict constructed in matching_vocab_dict_from_file()')
+        s = 'No vocabdict constructed in %s' % functionname
+        logging.debug(s)
         return None
 
 #    print 'vocabdict: %s vocabfile: %s key: %s separator: %s' % \
@@ -221,13 +230,16 @@ def missing_vocab_list_from_file(checklist, vocabfile, key, separator='|', diale
     returns:
         missingvocabdict - values in the checklist not found in the vocabulary file
     """
+    functionname = 'missing_vocab_list_from_file()'
     if checklist is None or len(checklist)==0:
-        logging.debug('No list of values given in missing_vocab_list_from_file()')
+        s = 'No list of values given in %s.' % functionname
+        logging.debug(s)
         return None
 
     vocabdict = vocab_dict_from_file(vocabfile, key, separator, dialect)
     if vocabdict is None or len(vocabdict)==0:
-        logging.debug('No vocabdict constructed in missing_vocab_list_from_file()')
+        s = 'No vocabdict constructed in %s.' % functionname
+        logging.debug(s)
         return None
 
 #    print 'vocabdict: %s vocabfile: %s key: %s separator: %s' % \
@@ -294,16 +306,19 @@ def vocab_dict_from_file(vocabfile, key, separator='|', dialect=None, \
     returns:
         vocabdict - dictionary of complete vocabulary records
     """
+    functionname = 'vocab_dict_from_file()'
     if key is None or len(key.strip()) == 0:
-        logging.debug('No key given in vocab_dict_from_file().')
+        s = 'No key given in %s.' % functionname
+        logging.debug(s)
         return None
 
     if vocabfile is None or len(vocabfile) == 0:
-        logging.debug('No vocabulary file given in vocab_dict_from_file().')
+        s = 'No vocabulary file given in %s.' % functionname
+        logging.debug(s)
         return None
 
     if os.path.isfile(vocabfile) == False:
-        s = 'Vocabulary file %s not found in vocab_dict_from_file().' % vocabfile
+        s = 'Vocabulary file %s not found in %s.' % (vocabfile, functionname)
         logging.debug(s)
         return None
 
@@ -344,8 +359,10 @@ def term_values_recommended(lookupdict):
     returns:
         recommended - dictionary of verbatim values and their recommended equivalents
     """
+    functionname = 'term_values_recommended()'
     if lookupdict is None or len(lookupdict)==0:
-        logging.debug('No lookup dictionary given in term_values_recommended().')
+        s = 'No lookup dictionary given in %s.' % functionname
+        logging.debug(s)
         return None
 
     recommended = {}
@@ -368,40 +385,24 @@ def recommended_value(lookupdict, lookupvalue):
     returns:
         subdictionary - dictionary containing the recommended value
     """
+    functionname = 'recommended_value()'
     if lookupdict is None or len(lookupdict)==0:
-        logging.debug('No lookup dictionary given in recommended_value().')
+        s = 'No lookup dictionary given in %s.' % functionname
+        logging.debug(s)
         return None
 
     if lookupvalue is None or len(lookupvalue)==0:
-        logging.debug('No lookup value given in recommended_value().')
+        s = 'No lookup value given in %s.' % functionname
+        logging.debug()
         return None
 
     try:
         subdictionary = lookupdict[lookupvalue]
         return subdictionary
     except:
-        s = '"%s" not found in lookup dictionary in recommended_value().' % lookupvalue
+        s = '"%s" not found in lookup dictionary in %s.' % (lookupvalue, functionname)
         logging.debug(s)
         return None
-
-def prefix_keys(d, prefix='new_'):
-    ''' Change the keys in a dictionary by adding a prefix to each one.
-    parameters:
-        d - dictionary (required)
-        prefix - string to prepend to key names (default 'new_')
-    returns:
-        newd - dictionary with replaced keys
-    '''
-    if d is None or len(d)==0:
-        logging.debug('No dictionary given in prefix_keys().')
-        return None
-
-    newd = {}
-
-    for k in d:
-        newd[prefix+k]=d[k]
-
-    return newd
 
 def compose_dict_from_key(key, fieldlist, separator='|'):
     ''' Create a dictionary from a string, a separator, and an ordered list of the names
@@ -417,12 +418,15 @@ def compose_dict_from_key(key, fieldlist, separator='|'):
         d - dictionary of fields and their values 
             (e.g., {'continent':'', 'country':'United States', 'countryCode':'US' } )
     '''
+    functionname = 'compose_dict_from_key()'
     if key is None or len(key)==0:
-        logging.debug('No key given in compose_dict_from_key()')
+        s = 'No key given in %s.' % functionname
+        logging.debug(s)
         return None
 
     if fieldlist is None or len(fieldlist)==0:
-        logging.debug('No term list given in compose_dict_from_key()')
+        s = 'No term list given in %s.' % functionname
+        logging.debug(s)
         return None
 
     vallist = key.split(separator)
@@ -447,12 +451,15 @@ def compose_key_from_row(row, fields, separator='|'):
     returns:
         values - string of separator-separated values (e.g., '|United States|US')
     '''
+    functionname = 'compose_key_from_row()'
     if row is None or len(row)==0:
-        logging.debug('No row given in compose_key_from_row()')
+        s = 'No row given in %s.' % functionname
+        logging.debug(s)
         return None
 
     if fields is None or len(terms.strip())==0:
-        logging.debug('No terms given in compose_key_from_row()')
+        s = 'No terms given in %s.' % functionname
+        logging.debug(s)
         return None
 
     fieldlist = fields.split(separator)
@@ -499,8 +506,10 @@ def terms_not_in_darwin_cloud(checklist, dwccloudfile, vetted=True, casesensitiv
     returns:
         a sorted list of distinct new values not in the Darwin Cloud vocabulary
     """
+    functionname = 'terms_not_in_darwin_cloud()'
     if checklist is None or len(checklist)==0:
-        logging.debug('No checklist given in terms_not_in_darwin_cloud()')
+        s = 'No checklist given in %s.' % functionname
+        logging.debug(s)
         return None
     # No need to check if dwccloudfile is given and exists, vocab_dict_from_file() and
     # vetted_vocab_dict_from_file() do that.
@@ -527,14 +536,17 @@ def darwinize_list(termlist, dwccloudfile):
     returns:
         a list with all translatable terms translated
     """
+    functionname = 'darwinize_list()'
     if termlist is None or len(termlist)==0:
-        logging.debug('No termlist given in darwinize_list()')
+        s = 'No termlist given in %s.' % functionname
+        logging.debug(s)
         return None
     # No need to check if dwccloudfile is given and exists, vetted_vocab_dict_from_file() 
     # does that.
     darwinclouddict = vetted_vocab_dict_from_file(dwccloudfile, 'fieldname')
     if darwinclouddict is None:
-        logging.debug('No Darwin Cloud terms in darwinize_list()')
+        s = 'No Darwin Cloud terms in %s.' % functionname
+        logging.debug(s)
         return None
     thelist = []
     for term in termlist:
@@ -574,12 +586,15 @@ def not_in_list(targetlist, checklist, function=None, *args, **kwargs):
     returns:
         a sorted list of distinct new values not in the target list
     """
+    functionname = 'not_in_list()'
     if checklist is None or len(checklist)==0:
-        logging.debug('No checklist given in not_in_list()')
+        s = 'No checklist given in %s.' % functionname
+        logging.debug(s)
         return None
 
     if targetlist is None or len(targetlist)==0:
-        logging.debug('No target list given in not_in_list()')
+        s = 'No target list given in %s.' % functionname
+        logging.debug(s)
         return sorted(checklist)
 
     newlist = []
@@ -609,8 +624,10 @@ def keys_list(sourcedict):
     returns:
         an unsorted list of keys from the dictionary
     """
+    functionname = 'keys_list()'
     if sourcedict is None or len(sourcedict)==0:
-        logging.debug('No dictionary given in keys_list()')
+        s = 'No dictionary given in %s.' % functionname
+        logging.debug(s)
         return None
 
     keylist = []
@@ -634,14 +651,12 @@ def distinct_vocabs_to_file(vocabfile, valuelist, key, separator='|', dialect=No
         newvaluelist - a sorted list of distinct verbatim values added to the vocabulary
             lookup file
     """
+    functionname = 'distinct_vocabs_to_file()'
     # print '%s distinct_vocabs_to_file()' % __version__
-    # print 'vocabfile: %s' % vocabfile
-    # print 'valuelist: %s' % valuelist
-    # print 'key: %s' % key
-    # print 'separator: %s' % separator
-
+    
     if vocabfile is None or len(vocabfile.strip())==0:
-        logging.debug('No vocab file given in distinct_vocabs_to_file()')
+        s = 'No vocab file given in %s.' % functionname
+        logging.debug(s)
         return None
 
     # No need to check if valuelist is given, not_in_list() does that
@@ -657,7 +672,7 @@ def distinct_vocabs_to_file(vocabfile, valuelist, key, separator='|', dialect=No
     # print 'newvalueslist: %s' % newvaluelist
 
     if newvaluelist is None or len(newvaluelist) == 0:
-        s = 'No new values found for %s in distinct_vocabs_to_file()' % vocabfile
+        s = 'No new values found for %s in %s' % (vocabfile, functionname)
         logging.debug(s)
         return None
 
@@ -674,7 +689,7 @@ def distinct_vocabs_to_file(vocabfile, valuelist, key, separator='|', dialect=No
             writer.writeheader()
 
     if os.path.isfile(vocabfile) == False:
-        s = 'Vocab file %s not found for distinct_vocabs_to_file()' % vocabfile
+        s = 'Vocab file %s not found in %s.' % (vocabfile, functionname)
         logging.debug(s)
         return None
 
@@ -690,6 +705,8 @@ def distinct_vocabs_to_file(vocabfile, valuelist, key, separator='|', dialect=No
             # print 'row out: %s' % row
             writer.writerow(row)
 
+    s = 'Vocabulary file written to %s in %s.' % (vocabfile, functionname)
+    logging.debug(s)
     return newvaluelist
 
 def compose_key_from_row(row, fields, separator='|'):
@@ -703,14 +720,16 @@ def compose_key_from_row(row, fields, separator='|'):
     returns:
         values - string of separator-separated values (e.g., '|United States|US')
     '''
+    functionname = 'compose_key_from_row()'
     if row is None or len(row)==0:
-        s = 'No row given in compose_key_from_row()'
+        s = 'No row given in %s.' % functionname
         logging.debug(s)
         return None
     if fields is None or len(fields)==0:
-        s = 'No terms given in compose_key_from_row()'
+        s = 'No terms given in %s.' % functionname
         logging.debug(s)
         return None
+
     fieldlist = fields.split(separator)
     vallist=[]
     for t in fieldlist:
@@ -1135,27 +1154,6 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
             % (recommended, expected)
         self.assertEqual(recommended, expected, s)
 
-    def test_prefix_keys(self):
-        print 'testing prefix_keys'
-        d = {}
-        newd = prefix_keys(d)
-        s = 'prefix_keys returned dict for empty input dict'
-        self.assertIsNone(newd, s)
-        
-        thekey = 'akey'
-        d = { thekey:'avalue' }
-        newd = prefix_keys(d)
-        s = 'prefix_keys returned dict with length different from input dict'
-        self.assertEqual(len(d), len(newd), s)
-
-        expected = d[thekey]
-        s = 'expected prefixed key name (%s) not found' % expected
-        try:
-            found = newd['new_'+thekey]
-        except:
-            found = None
-        self.assertIsNotNone(found, s)
-        
     def test_compose_dict_from_key(self):
         print 'testing compose_dict_from_key'
         key = '|United States|US'

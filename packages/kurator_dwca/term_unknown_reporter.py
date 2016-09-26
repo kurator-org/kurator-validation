@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_unknown_reporter.py 2016-09-20T11:56+02:00"
+__version__ = "term_unknown_reporter.py 2016-09-25T23:35+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -29,8 +29,8 @@ import logging
 import argparse
 
 def term_unknown_reporter(options):
-    """Report a list of recommended values from a field in an input file that are not
-       in a given vocabulary.
+    """Report a list of values from a field in an input file that are not in a given 
+       vocabulary.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the tsvfile (optional)

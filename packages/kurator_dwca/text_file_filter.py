@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_filter.py 2016-09-08T14:05+02:00"
+__version__ = "text_file_filter.py 2016-09-25T23:37+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -29,7 +29,7 @@ import argparse
 import csv
 
 def text_file_filter(options):
-    """Filter a text file into a new file with header based on matching values in a term.
+    """Filter a text file into a new file based on matching values in a term.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         inputfile - full path to the input file (required)

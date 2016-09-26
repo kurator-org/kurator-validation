@@ -14,18 +14,13 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter.py 2016-09-23T16:36+02:00"
+__version__ = "term_recommendation_reporter.py 2016-09-26T12:15+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
-from dwca_utils import csv_file_dialect
 from dwca_utils import extract_values_from_file
-from dwca_vocab_utils import missing_vocab_list_from_file
 from dwca_vocab_utils import matching_vocab_dict_from_file
 from dwca_vocab_utils import term_values_recommended
-from dwca_vocab_utils import matching_vocab_dict_from_file
-from dwca_vocab_utils import not_in_list
-from dwca_vocab_utils import keys_list
 from report_utils import term_recommendation_report
 from slugify import slugify
 import os.path
@@ -33,17 +28,17 @@ import logging
 import argparse
 
 def term_recommendation_reporter(options):
-    """Report a list of recommended standardizations for the values of a given term in
-       an input file.
+    """Create a report file listing values for a given term from an input file and their 
+       recommended standard values.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the tsvfile (optional)
         inputfile - path to the input file. Either full path or path within the workspace
             (required)
+        outputfile - name of the output file, without path (optional)
         vocabfile - path to the vocabulary file. Either full path or path within the
            workspace (required)
-        format - output file format (e.g., 'csv' or 'txt') (optional; default csv)
-        outputfile - name of the output file, without path (optional)
+        format - output file format (e.g., 'csv' or 'txt') (optional; default 'txt')
         key - the field or separator-separated fieldnames that hold the distinct values 
               in the vocabulary file (required)
         separator - string to use as the value separator in the string (default '|')
@@ -64,48 +59,34 @@ def term_recommendation_reporter(options):
     # Make a list for the response
     returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
 
+    ### Standard outputs ###
+    success = False
+    message = None
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
-    # outputs
-    workspace = None
-    format = None
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
     outputfile = None
-    success = False
-    message = None
+    vocabfile = None
+    format = 'txt'
+    key = None
+    separator = '|'
 
-    # inputs
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None:
-        workspace = './'
-
-    try:
-        key = options['key']
-    except:
-        key = None
-
-    if key is None or len(key)==0:
-        message = 'No key in term_recommendation_reporter'
-        returnvals = [workspace, outputfile, success, message, artifacts]
-        logging.debug('message:\n%s' % message)
-        return response(returnvars, returnvals)
-
-    try:
-        separator = options['separator']
-    except:
-        separator = None
+        pass
 
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given'
+        message = 'No input file given in %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -115,7 +96,7 @@ def term_recommendation_reporter(options):
         if os.path.isfile(workspace+'/'+inputfile) == True:
             inputfile = workspace+'/'+inputfile
         else:
-            message = 'Input file %s not found' % inputfile
+            message = 'Input file %s not found in %s' % (inputfile, __version__)
             returnvals = [workspace, outputfile, True, message, artifacts]
             logging.debug('message:\n%s' % message)
             return response(returnvars, returnvals)
@@ -123,10 +104,10 @@ def term_recommendation_reporter(options):
     try:
         vocabfile = options['vocabfile']
     except:
-        vocabfile = None
+        pass
 
     if vocabfile is None or len(vocabfile)==0:
-        message = 'No vocab file given'
+        message = 'No vocab file given in %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -141,14 +122,32 @@ def term_recommendation_reporter(options):
     vocabfile = vocabfileat
 
     try:
+        key = options['key']
+    except:
+        pass
+
+    if key is None or len(key)==0:
+        message = 'No key given in %s' % __version__
+        returnvals = [workspace, outputfile, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    ### Optional inputs ###
+    try:
+        separator = options['separator']
+    except:
+        pass
+
+    try:
         format = options['format']
     except:
-        format = None
+        pass
 
     try:
         outputfile = options['outputfile']
     except:
-        outputfile = None
+        pass
+
     if outputfile is None:
         outputfile = '%s/%s_standardization_report_%s.%s' % \
           (workspace.rstrip('/'), slugify(key), str(uuid.uuid1()), format)
@@ -215,23 +214,23 @@ def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
-    help = 'full path to the input file (required)'
-    parser.add_argument("-i", "--inputfile", help=help)
-
-    help = 'full path to the vocab file (required)'
-    parser.add_argument("-v", "--vocabfile", help=help)
-
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'full path to the input file (required)'
+    parser.add_argument("-i", "--inputfile", help=help)
 
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
 
+    help = 'full path to the vocab file (required if constantvalues is None)'
+    parser.add_argument("-v", "--vocabfile", help=help)
+
     help = 'field with the distinct values in the vocabulary file (required)'
-    parser.add_argument("-s", "--separator", help=help)
+    parser.add_argument("-k", "--key", help=help)
 
     help = 'string that separates fields in the key (optional)'
-    parser.add_argument("-k", "--key", help=help)
+    parser.add_argument("-s", "--separator", help=help)
 
     help = 'report file format (e.g., csv or txt) (optional; default csv)'
     parser.add_argument("-f", "--format", help=help)
@@ -248,14 +247,25 @@ def main():
     if options.inputfile is None or len(options.inputfile)==0 or \
        options.key is None or len(options.key)==0 or \
        options.vocabfile is None or len(options.vocabfile)==0:
-        s =  'syntax:\n'
+        s =  'Single field syntax:\n'
         s += 'python term_recommendation_reporter.py'
-        s += ' -i ./data/eight_specimen_records.csv'
-        s += ' -v ./data/vocabularies/country.txt'
-        s += ' -s "|"'
         s += ' -w ./workspace'
-        s += ' -o testtermrecommendationout.txt'
-        s += ' -k "country"'
+        s += ' -i ./data/eight_specimen_records.csv'
+        s += ' -o testcountryrecommendation.txt'
+        s += ' -v ./data/vocabularies/country.txt'
+        s += ' -k country'
+        s += ' -f txt'
+        s += ' -l DEBUG'
+        print '%s' % s
+
+        s =  'Multiple field syntax:\n'
+        s += 'python term_recommendation_reporter.py'
+        s += ' -w ./workspace'
+        s += ' -i ./data/eight_specimen_records.csv'
+        s += ' -o testgeographyrecommendations.txt'
+        s += ' -v ./data/vocabularies/dwc_geography.txt'
+        s += ' -k "continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island"'
+        s += ' -s "|"'
         s += ' -f csv'
         s += ' -l DEBUG'
         print '%s' % s

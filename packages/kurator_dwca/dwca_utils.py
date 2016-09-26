@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-09-23T20:06+02:00"
+__version__ = "dwca_utils.py 2016-09-25T23:57+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -124,15 +124,18 @@ def csv_file_dialect(fullpath):
     parameters:
         fullpath - full path to the file to process (required)
     returns:
-        dialect - a csv.dialect object with the detected attributes
+        dialect - a csv.dialect object with the detected attributes, or None
     """
+    functionname = 'csv_file_dialect()'
     if fullpath is None or len(fullpath) == 0:
-        logging.debug('No file given in csv_file_dialect().')
+        s = 'No file given in %s.' % functionname
+        logging.debug(s)
         return None
 
     # Cannot function without an actual file where full path points
     if os.path.isfile(fullpath) == False:
-        logging.debug('File %s not found in csv_file_dialect().' % fullpath)
+        s = 'File %s not found in %s.' % (fullpath, functionname)
+        logging.debug(s)
         return None
 
     # Let's look at up to readto bytes from the file
@@ -179,7 +182,8 @@ def csv_file_dialect(fullpath):
                 dialect = csv.Sniffer().sniff(sample_text)
             # Sorry, couldn't figure it out
             except csv.Error:
-                logging.debug('Unable to determine csv dialect')
+                s = 'Unable to determine csv dialect in %s' % functionname
+                logging.debug(s)
                 return None
     
     # Fill in some standard values for the remaining dialect attributes        
@@ -189,7 +193,6 @@ def csv_file_dialect(fullpath):
     dialect.skipinitialspace=True
     dialect.strict=False
     dialect.doublequote = found_doublequotes
-
     return dialect
 
 def dialects_equal(dialect1, dialect2):
@@ -198,7 +201,7 @@ def dialects_equal(dialect1, dialect2):
         dialect1 - a csv.dialect object (required)
         dialect2 - a csv.dialect object (required)
     returns:
-        True is the attributes are all the same, otherwise False
+        True if the attributes are all the same, otherwise False
     '''
     if dialect1 is None or dialect2 is None:
         return False
@@ -294,13 +297,16 @@ def read_header(inputfile, dialect=None, encoding=None):
     returns:
         header - a list containing the fields in the original header
     """
+    functionname = 'read_header()'
     if inputfile is None or len(inputfile)==0:
-        logging.debug('No file given in read_header().')
+        s = 'No file given in %s.' % functionname
+        logging.debug(s)
         return None
 
     # Cannot function without an actual file where the full path points
     if os.path.isfile(inputfile) == False:
-        logging.debug('File %s not found in read_header().' % inputfile)
+        s = 'File %s not found in %s.' % (inputfile, functionname)
+        logging.debug(s)
         return None
 
     header = None
@@ -310,8 +316,8 @@ def read_header(inputfile, dialect=None, encoding=None):
         dialect = csv_file_dialect(inputfile)
         # print 'dialect: %s' % dialect_attributes(dialect)
     if dialect is None:
-        logging.debug('Unable to determine file dialect for %s in read_header().' \
-            % inputfile)
+        s = 'Unable to determine file dialect for %s in %s.' % (inputfile, functionname)
+        logging.debug(s)
         return None
 
     # Determine the encoding of the input file
@@ -319,8 +325,8 @@ def read_header(inputfile, dialect=None, encoding=None):
         encoding = csv_file_encoding(inputfile)
         # print 'encoding: %s' % encoding
     if encoding is None:
-        logging.debug('Unable to determine file encoding for %s in read_header().' \
-            % inputfile)
+        s = 'Unable to determine file encoding for %s in %s.' % (inputfile, functionname)
+        logging.debug(s)
         return None
 
     # Open up the file for processing
@@ -342,8 +348,10 @@ def composite_header(fullpath, dialect = None):
     returns:
         compositeheader - a list containing the fields in the header
     """
+    functionname = 'composite_header()'
     if fullpath is None or len(fullpath)==0:
-        logging.debug('No file path given in composite_header().')
+        s = 'No file path given in %s.' % functionname
+        logging.debug(s)
         return None
 
     compositeheader = None
@@ -351,7 +359,8 @@ def composite_header(fullpath, dialect = None):
     files = glob.glob(fullpath)
 
     if files is None:
-        logging.debug('No files found on path %s in composite_header().' % fullpath)
+        s = 'No files found on path %s in %s.' % (fullpath, functionname)
+        logging.debug(s)
         return None
 
     for file in files:
@@ -372,8 +381,10 @@ def write_header(fullpath, fieldnames, dialect):
     returns:
         True if the header was written to file, otherwise False
     """
+    functionname = 'write_header()'
     if fullpath is None or len(fullpath)==0:
-        logging.debug('No output file given in write_header().')
+        s = 'No output file given in %s.' % functionname
+        logging.debug(s)
         return False
 
     with open(fullpath, 'w') as csvfile:
@@ -381,7 +392,7 @@ def write_header(fullpath, fieldnames, dialect):
         try:
             writer.writeheader()
         except:
-            s = 'No header written to output file %s in write_header().' % fullpath
+            s = 'No header written to output file %s in %s.' % (fullpath, functionname)
             logging.debug(s)
             return False
 
@@ -394,8 +405,10 @@ def header_map(header):
     returns:
         headermap - a dictionary of cleanedfield:originalfield pairs
     """
+    functionname = 'header_map()'
     if header is None or len(header)==0:
-        logging.debug('No header given in header_map().')
+        s = 'No header given in %s.' % functionname
+        logging.debug(s)
         return None
 
     headermap = {}
@@ -406,6 +419,37 @@ def header_map(header):
 
     return headermap
 
+def strip_list(inputlist):
+    """Create a list of strings stripped of whitespace from srings in an input list.
+    parameters:
+        inputlist - list of strings (required)
+    returns:
+        outputlist - a list of field names after stripping
+    """
+    functionaname = 'strip_list()'
+    # Cannot function without an inputlist
+    if inputlist is None or len(inputlist)==0:
+        s = 'No list given in %s.' % functionname
+        logging.debug(s)
+        return None
+
+    outputlist = []
+    i=1
+
+    # Strip each string in the inputlist and append it to the outputlist
+    for field in inputlist:
+        if field is not None:
+            cleanstring = field.strip()
+        else:
+            cleanstring = ''
+        if len(cleanstring)==0:
+            cleanstring = 'field_%s' % i
+
+        outputlist.append(cleanstring)
+        i+=1
+
+    return outputlist
+
 def clean_header(header):
     """Construct a header from the cleaned field names in a header.
     parameters:
@@ -413,9 +457,11 @@ def clean_header(header):
     returns:
         cleanheader - a list of field names after cleaning
     """
+    functionaname = 'clean_header()'
     # Cannot function without a header
     if header is None or len(header)==0:
-        logging.debug('No header given in clean_header().')
+        s = 'No header given in %s.' % functionname
+        logging.debug(s)
         return None
 
     cleanheader = []
@@ -440,8 +486,10 @@ def merge_headers(headersofar, headertoadd = None):
     returns:
         a sorted list of fields for the combined header
     """
+    functionname = 'merge_headers()'
     if headersofar is None and headertoadd is None:
-        logging.debug('No header given in merge_headers().')
+        s = 'No header given in %s.' % functionname
+        logging.debug(s)
         return None
 
     composedheader = set()
@@ -459,7 +507,8 @@ def merge_headers(headersofar, headertoadd = None):
                 composedheader.add(addme)
 
     if len(composedheader) == 0:
-        logging.debug('No fields in composed header merge_headers().')
+        s = 'No fields in composed header in %s.' % functionname
+        logging.debug(s)
         return None
 
     return sorted(list(composedheader))
@@ -472,40 +521,44 @@ def csv_to_txt(inputfile, outputfile):
     returns:
         True if finished successfully, otherwise False
     """
+    functionname = 'csv_to_txt()'
     if inputfile is None or len(inputfile) == 0:
-        logging.debug('No input file given in csv_to_txt().')
+        s = 'No input file given in %s.' % functionname
+        logging.debug(s)
         return False
 
     if outputfile is None or len(outputfile) == 0:
-        logging.debug('No output file given in csv_to_txt().')
+        s = 'No output file given in %s.' % functionname
+        logging.debug(s)
         return False
 
     if os.path.isfile(inputfile) == False:
-        logging.debug('File %s not found in csv_to_txt().' % inputfile)
+        s = 'File %s not found in %s.' % (inputfile, functionname)
+        logging.debug(s)
         return False
 
     # Determine the dialect of the input file
     inputdialect = csv_file_dialect(inputfile)
     # print 'inputdialect: %s' % dialect_attributes(inputdialect)
     if inputdialect is None:
-        logging.debug('Unable to determine file dialect for %s in csv_to_txt().' \
-            % inputfile)
+        s = 'Unable to determine file dialect for %s in %s.' % (inputfile, functionname)
+        logging.debug(s)
         return False
 
     # Determine the encoding of the input file
     inputencoding = csv_file_encoding(inputfile)
     # print 'inputencoding: %s' % inputencoding
     if inputencoding is None:
-        logging.debug('Unable to determine file encoding for %s in csv_to_txt().' \
-            % inputfile)
+        s = 'Unable to determine file encoding for %s in %s.' % (inputfile, functionname)
+        logging.debug(s)
         return False
 
     # Get the header from the input file
     inputheader = read_header(inputfile, inputdialect)
     # print 'inputheader: %s' % inputheader
     if inputheader is None:
-        logging.debug('Unable to read header for %s in csv_to_txt().' \
-            % inputfile)
+        s = 'Unable to read header for %s in %s.' % (inputfile, functionname)
+        logging.debug(s)
         return False
 
     with open(outputfile, 'a') as tsvfile:
@@ -514,7 +567,8 @@ def csv_to_txt(inputfile, outputfile):
         for row in read_csv_row(inputfile, inputdialect, inputencoding):
 #            print 'last row read successfully: %s' % row
             writer.writerow(row)
-
+    s = 'File written to %s in %s.' % (outputfile, functionname)
+    logging.debug(s)
     return True
 
 def term_rowcount_from_file(inputfile, termname):
@@ -525,24 +579,27 @@ def term_rowcount_from_file(inputfile, termname):
     returns:
         rowcount - the number of rows with the term populated
     """
+    functionname = 'term_rowcount_from_file()'
     if inputfile is None or len(inputfile) == 0:
-        logging.debug('No input file given in term_rowcount_from_file().')
+        s = 'No input file given in %s.' % functionname
+        logging.debug(s)
         return 0
 
     if termname is None or len(termname) == 0:
-        logging.debug('No term name given in term_rowcount_from_file().')
+        s = 'No term name given in %s.' % functionname
+        logging.debug(s)
         return 0
 
     if os.path.isfile(inputfile) == False:
-        logging.debug('File %s not found in term_rowcount_from_file().' % inputfile)
+        s = 'File %s not found in %s.' % (inputfile, functionname)
+        logging.debug(s)
         return 0
 
     # Determine the dialect of the input file
     inputdialect = csv_file_dialect(inputfile)
     # print 'inputdialect: %s' % dialect_attributes(inputdialect)
     if inputdialect is None:
-        s = 'Unable to determine file dialect for %s in term_rowcount_from_file().' \
-            % inputfile
+        s = 'Unable to determine file dialect for %s in %s.' % (inputfile, functionname)
         logging.debug(s)
         return False
 
@@ -550,8 +607,7 @@ def term_rowcount_from_file(inputfile, termname):
     inputencoding = csv_file_encoding(inputfile)
     # print 'inputencoding: %s' % inputencoding
     if inputencoding is None:
-        s = 'Unable to determine file encoding for %s in term_rowcount_from_file().' \
-            % inputfile
+        s = 'Unable to determine file encoding for %s in %s.' % (inputfile, functionname)
         logging.debug(s)
         return False
 
@@ -562,8 +618,7 @@ def term_rowcount_from_file(inputfile, termname):
     cleanterm = clean_header([termname])[0]
 
     if cleanterm not in cleanheader:
-        s = 'Term %s not found in %s term_rowcount_from_file().' % \
-            (termname, inputfile)
+        s = 'Term %s not found in %s in %s.' % (termname, inputfile, functionname)
         logging.debug(s)
         return 0
 
@@ -588,12 +643,15 @@ def csv_field_checker(inputfile):
         index, row - a tuple composed of the index of the first row that has a different 
             number of fields (1 is the first row after the header) and the row string
     """
+    functionname = 'csv_field_checker()'
     if inputfile is None or len(inputfile) == 0:
-        logging.debug('No input file given in csv_field_checker().')
+        s = 'No input file given in %s.' % functionname
+        logging.debug(s)
         return None
 
     if os.path.isfile(inputfile) == False:
-        logging.debug('File %s not found in csv_field_checker().' % inputfile)
+        s = 'File %s not found in %s.' % (inputfile, functionname)
+        logging.debug(s)
         return None
 
     # Determine the dialect of the input file
@@ -626,12 +684,15 @@ def csv_spurious_newline_condenser(inputfile, outputfile, sub='-'):
     returns:
         False if the removal does not complete successfully, otherwise True
     """
+    functionname = 'csv_spurious_newline_condenser()'
     if inputfile is None or len(inputfile) == 0:
-        logging.debug('No input file given in csv_field_checker().')
+        s = 'No input file given in %s.' % functionname
+        logging.debug(s)
         return None
 
     if os.path.isfile(inputfile) == False:
-        logging.debug('File %s not found in csv_field_checker().' % inputfile)
+        s = 'File %s not found in %s.' % (inputfile, functionname)
+        logging.debug(s)
         return None
 
     # Determine the dialect of the input file
@@ -659,10 +720,13 @@ def csv_spurious_newline_condenser(inputfile, outputfile, sub='-'):
                 elif delimitercount < fieldcount-1:
                     previousline = line
                 else:
-                    s = 'Unable to correctly join line %s from %s' % (i, inputfile)
+                    s = 'Unable to correctly join line %s ' % i
+                    s += 'from %s in %s' % (inputfile, functionname)
                     logging.debug(s)
                     return False
                 i += 1
+    s = 'Output file written to %s in %s.' % (outputfile, functionname)
+    logging.debug(s)
     return True
 
 def csv_file_encoding(inputfile):
@@ -672,26 +736,31 @@ def csv_file_encoding(inputfile):
     returns:
         the best guess at an encoding
     """
+    functionname = 'csv_file_encoding()'
     for e in ENCODINGS:
         try:
             fh = codecs.open(inputfile, 'r', encoding=e)
             fh.readlines()
             fh.seek(0)
         except UnicodeDecodeError:
-            s = 'Encoding error with %s on file %s,' % (e, inputfile)
-            s += ' trying different encoding'
+            s = 'Encoding error using %s on file %s ' % (e, inputfile)
+            s += ' in %s, trying different encoding' % functionname
             logging.debug(s)
         else:
             # Able to read the file in this encoding
-            s = 'Encoding %s surmised for file %s,' % (e, inputfile)
+            s = 'Encoding %s surmised for file %s ' % (e, inputfile)
+            s += 'in %s' % functionname
             logging.debug(s)
             return e
     # Encoding not determined
+    s = 'No appropriate encoding found for file %s ' % inputfile
+    s += 'in %s' % functionname
+    logging.debug(s)
     return None
 
 def extract_values_from_file(inputfile, fields, separator='|', 
         function=None, *args, **kwargs):
-    """Get the values of a list of fields from a file.
+    """Get a list of the values of a list of fields from a file.
     parameters:
         inputfile - full path to the input file (required)
         fields - list of fields to extract from the input file (required)
@@ -703,20 +772,23 @@ def extract_values_from_file(inputfile, fields, separator='|',
         values - the extracted values of the fields in the list, concatenated with
             separator between values
     """
+    functionname = 'extract_values_from_file()'
     if inputfile is None or len(inputfile) == 0:
-        logging.debug('No input file given in extract_values_from_file().')
+        s = 'No input file given in %s.' % functionname
+        logging.debug(s)
         return None
 
     if os.path.isfile(inputfile) == False:
-        logging.debug('File %s not found in extract_values_from_file().' % inputfile)
+        s = 'File %s not found in %s.' % (inputfile, functionname)
+        logging.debug(s)
         return None
 
     # Determine the dialect of the input file
     inputdialect = csv_file_dialect(inputfile)
     # print 'inputfile: %s inputdialect: %s' % (inputfile, dialect_attributes(inputdialect))
     if inputdialect is None:
-        s = 'Unable to determine file dialect for %s in extract_values_from_file().' \
-            % inputfile
+        s = 'Unable to determine dialect for file %s ' % inputfile
+        s += 'in %s.' % functionname
         logging.debug(s)
         return None
 
@@ -724,8 +796,8 @@ def extract_values_from_file(inputfile, fields, separator='|',
     inputencoding = csv_file_encoding(inputfile)
     # print 'inputencoding: %s' % inputencoding
     if inputencoding is None:
-        s = 'Unable to determine file encoding for %s in extract_values_from_file().' \
-            % inputfile
+        s = 'Unable to determine encoding for file %s ' % inputfile
+        s += 'in %s.' % functionname
         logging.debug(s)
         return None
 
@@ -759,7 +831,7 @@ def extract_values_from_file(inputfile, fields, separator='|',
 
 def extract_value_counts_from_file(inputfile, fields, separator='|', 
         function=None, *args, **kwargs):
-    """Get the values of a list of fields from a file.
+    """Get a dictionary of values of a list of fields from a file and their counts.
     parameters:
         inputfile - full path to the input file (required)
         fields - list of fields to extract from the input file (required)
@@ -771,12 +843,14 @@ def extract_value_counts_from_file(inputfile, fields, separator='|',
         values - the extracted values of the fields in the list, concatenated with
             separator between values
     """
+    functionname = 'extract_value_counts_from_file()'
     if inputfile is None or len(inputfile) == 0:
-        logging.debug('No input file given in extract_value_counts_from_file().')
+        s = 'No input file given in %s.' % functionname
+        logging.debug(s)
         return None
 
     if os.path.isfile(inputfile) == False:
-        s = 'File %s not found in extract_value_counts_from_file().' % inputfile
+        s = 'File %s not found in %s.' % (inputfile, functionname)
         logging.debug(s)
         return None
 
@@ -784,8 +858,8 @@ def extract_value_counts_from_file(inputfile, fields, separator='|',
     inputdialect = csv_file_dialect(inputfile)
     # print 'inputdialect: %s' % dialect_attributes(inputdialect)
     if inputdialect is None:
-        s = 'Unable to determine file dialect for %s '% inputfile
-        s += ' in extract_value_counts_from_file().'
+        s = 'Unable to determine dialect for file %s '% inputfile
+        s += ' in %s.' % functionname
         logging.debug(s)
         return None
 
@@ -794,7 +868,7 @@ def extract_value_counts_from_file(inputfile, fields, separator='|',
     # print 'inputencoding: %s' % inputencoding
     if inputencoding is None:
         s = 'Unable to determine file encoding for %s' % inputfile
-        s += ' in extract_value_counts_from_file().' 
+        s += ' in %s.' % functionname
         logging.debug(s)
         return None
 
@@ -926,6 +1000,7 @@ def file_filter_non_printable(inputfile, outputfile, sub = '-'):
     returns:
         False if the translation does not complete successfully, otherwise True
     """
+    functionname = 'file_filter_non_printable()'
     i = 0
     with open(outputfile, 'w') as outdata:
         with open(inputfile, 'rU') as indata:
@@ -933,7 +1008,8 @@ def file_filter_non_printable(inputfile, outputfile, sub = '-'):
                 try:
                     outdata.write( filter_non_printable(line, sub))
                 except:
-                    s = 'Failed to write line %s in %s. Aborting' % (i, inputfile)
+                    s = 'Failed to write line %s ' % i
+                    s += 'in file %s in %s. Aborting.' % (inputfile, functionname)
                     logging.debug(s)
                     return False
                 i += 1
@@ -948,11 +1024,15 @@ def utf8_file_encoder(inputfile, outputfile, encoding=None):
     returns:
         False if the translation does not complete successfully, otherwise True
     """
+    functionname = 'utf8_file_encoder()'
     # Try to determine the encoding of the inputfile.
     if encoding is None or len(encoding.strip()) == 0 or encoding not in ENCODINGS:
         encoding = csv_file_encoding(inputfile)
     if encoding is None:
         # if we can't figure out the encoding, don't do anything.
+        s = 'Unable to determine file encoding for %s' % inputfile
+        s += ' in %s.' % functionname
+        logging.debug(s)
         return None
     i = 0
     with open(outputfile, 'w') as outdata:
@@ -961,7 +1041,8 @@ def utf8_file_encoder(inputfile, outputfile, encoding=None):
                 try:
                     outdata.write( utf8_line_encoder(line, encoding) )
                 except UnicodeDecodeError, e:
-                    s = 'Failed to encode line %s in %s. Aborting' % (i, encoding)
+                    s = 'Failed to encode line %s ' % i
+                    s += 'in %s in encoding %s. Aborting.' % (encoding, functionname)
                     logging.debug(s)
                     return False
                 i += 1

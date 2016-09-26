@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "actor_template.py 2016-09-25T18:08+02:00"
+__version__ = "actor_template.py 2016-09-26T12:01+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -54,11 +54,21 @@ def dostuffer(options):
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
+    outputfile = None
+
     ### Required inputs ###
+    try:
+        workspace = options['workspace']
+    except:
+        pass
+
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given in %s' % __version__
@@ -72,31 +82,25 @@ def dostuffer(options):
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
-    ### Optional inputs ###
-    try:
-        workspace = options['workspace']
-    except:
-        workspace = None
-
-    if workspace is None or len(workspace)==0:
-        workspace = './'
-
     try:
         outputfile = options['outputfile']
     except:
-        outputfile = None
+        pass
+
     if outputfile is None or len(outputfile)==0:
         outputfile='dwca_'+str(uuid.uuid1())+'.zip'
 
     # Construct the output file path in the workspace
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
+    ### Optional inputs ###
+
     # Do the actual work now that the preparation is complete
     success = do_stuff(inputfile, outputfile)
 
     # Add artifacts to the output dictionary if all went well
     if success==True:
-        artifacts['output_file'] = outputfile
+        artifacts['template_output_file'] = outputfile
 
     # Prepare the response dictionary
     returnvals = [workspace, outputfile, success, message, artifacts]
@@ -111,15 +115,20 @@ def do_stuff(inputfile, outputfile):
     returns:
         success - True if the task is completed, otherwise False
     """
+    functionname = 'do_stuff()'
     # Check for required values
     if inputfile is None or len(inputfile)==0:
-        logging.debug('No input file given in do_stuff()')
+        s = 'No input file given in %s.' % functionname
+        logging.debug(s)
         return False
 
     if outputfile is None or len(outputfile)==0:
-        logging.debug('No output file given in do_stuff()')
+        s = 'No output file given in %s.' % functionname
+        logging.debug(s)
         return False
 
+    s = 'Stuff written to %s in %s.' % (outputfile, functionname)
+    logging.debug(s)
     # Success
     return True
 

@@ -14,28 +14,28 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dataset_term_change_reporter.py 2016-09-25T18:25+02:00"
+__version__ = "dataset_term_standardizer.py 2016-09-26T16:24+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
-from report_utils import term_corrector_report
+from report_utils import term_standardizer_report
 from slugify import slugify
 import os.path
 import logging
 import argparse
 
-def dataset_term_change_reporter(options):
-    """Create a report for an input file with key field replaced by standard value and 
-       added field for the original value.
+def dataset_term_standardizer(options):
+    """Create an output file replacing values from an input file for fields given in key 
+       with standard values and adding new fields to hold the original values.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
-        workspace - path to a directory for the output file (optional)
+        workspace - path to a directory for the output file (optional; default './')
         inputfile - path to the input file. Either full path or path within the workspace
             (required)
         outputfile - name of the output file, without path (optional)
         vocabfile - path to the vocabulary file. Either full path or path within the
            workspace (required if constantvalues is None)
-        format - output file format (e.g., 'csv' or 'txt') (optional; default txt)
+        format - output file format (e.g., 'csv' or 'txt') (optional; default 'txt')
         key - field or separator-separated fields whose values are to be set to the 
             constantvalues (required)
         separator - string to use as the key and value separator (optional; default '|')
@@ -62,19 +62,25 @@ def dataset_term_change_reporter(options):
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
+    outputfile = None
+    vocabfile = None
+    format = 'txt'
+    key = None
+    separator = '|'
+
     ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None:
-        workspace = './'
+        pass
 
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given in %s' % __version__
@@ -95,7 +101,7 @@ def dataset_term_change_reporter(options):
     try:
         vocabfile = options['vocabfile']
     except:
-        vocabfile = None
+        pass
 
     if vocabfile is None or len(vocabfile)==0:
         message = 'No vocab file given in %s' % __version__
@@ -115,7 +121,7 @@ def dataset_term_change_reporter(options):
     try:
         key = options['key']
     except:
-        key = None
+        pass
 
     if key is None or len(key)==0:
         message = 'No key given in %s' % __version__
@@ -127,17 +133,18 @@ def dataset_term_change_reporter(options):
     try:
         separator = options['separator']
     except:
-        separator = None
+        pass
 
     try:
         format = options['format']
     except:
-        format = None
+        pass
 
     try:
         outputfile = options['outputfile']
     except:
-        outputfile = None
+        pass
+
     if outputfile is None:
         outputfile = '%s/%s_changed_report_%s.%s' % \
           (workspace.rstrip('/'), slugify(key), str(uuid.uuid1()), format)
@@ -147,7 +154,7 @@ def dataset_term_change_reporter(options):
     # Get a list of distinct values of the term in the input file
     fields = key.split(separator)
 
-    success = term_corrector_report(inputfile, outputfile, vocabfile, key, \
+    success = term_standardizer_report(inputfile, outputfile, vocabfile, key, \
         separator=separator, format=format)
 
     if outputfile is not None and not os.path.isfile(outputfile):
@@ -202,13 +209,25 @@ def main():
        ((options.vocabfile is None or len(options.vocabfile)==0) and \
        options.constantvalues is None):
         s =  'Example syntax:\n'
-        s += 'python dataset_term_change_reporter.py'
+        s += 'python dataset_term_standardizer.py'
         s += ' -w ./workspace'
         s += ' -i ./data/eight_specimen_records.csv'
-        s += ' -o testtermchangeoutput.csv'
+        s += ' -o testtermstandardization.csv'
         s += ' -v ./data/vocabularies/country.txt'
         s += ' -k country'
         s += ' -f csv'
+        s += ' -l DEBUG'
+        print '%s' % s
+
+        s =  'Multiple field syntax:\n'
+        s += 'python dataset_term_standardizer.py'
+        s += ' -w ./workspace'
+        s += ' -i ./data/eight_specimen_records.csv'
+        s += ' -o testgeographystandardization.txt'
+        s += ' -v ./data/vocabularies/dwc_geography.txt'
+        s += ' -k "continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island"'
+        s += ' -s "|"'
+        s += ' -f txt'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -224,7 +243,7 @@ def main():
     print 'optdict: %s' % optdict
 
     # Report recommended standardizations for values of a given term from the inputfile
-    response=dataset_term_change_reporter(optdict)
+    response=dataset_term_standardizer(optdict)
     print '\nresponse: %s' % response
 
 if __name__ == '__main__':
