@@ -40,7 +40,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_controlled_term_assessor.yaml 2016-09-22T22:40+02:00"
+# __version__ = "dwca_controlled_term_assessor.yaml 2016-09-27T12:07+02:00"
 
 imports:
 
@@ -69,14 +69,14 @@ components:
     parameters:
       # Accept a parameter called dwca_url from the command line.
       dwca_url:
-        # Set the url in the options dictionary of DownloadArchive from the value of
-        # the dwca_url parameter given on the command line.
+        # Set the url in the options dictionary of DownloadArchive from the value
+        # of the dwca_url parameter given on the command line.
         actor: !ref DownloadArchive
         parameter: url
       # Accept a parameter called workspace from the command line.
       workspace:
-        # Set the workspace in the options dictionary of MakeWorkspace from the value of
-        # the workspace parameter given on the command line.
+        # Set the workspace in the options dictionary of MakeWorkspace from the value
+        # of the workspace parameter given on the command line.
         actor: !ref MakeWorkspace
         parameter: workspace
 

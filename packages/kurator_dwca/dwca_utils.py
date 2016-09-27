@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-09-25T23:57+02:00"
+__version__ = "dwca_utils.py 2016-09-27T11:59+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -457,7 +457,7 @@ def clean_header(header):
     returns:
         cleanheader - a list of field names after cleaning
     """
-    functionaname = 'clean_header()'
+    functionname = 'clean_header()'
     # Cannot function without a header
     if header is None or len(header)==0:
         s = 'No header given in %s.' % functionname
