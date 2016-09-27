@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-09-27T11:59+02:00"
+__version__ = "dwca_utils.py 2016-09-27T15:34+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -835,7 +835,7 @@ def extract_value_counts_from_file(inputfile, fields, separator='|',
     parameters:
         inputfile - full path to the input file (required)
         fields - list of fields to extract from the input file (required)
-        separator - string to separate values the output string (default '|')
+        separator - string to separate values in the output string (default '|')
         function - function to call for each value extracted (default None)
         args - unnamed parameters to function as tuple (optional)
         kwargs - named parameters to function as dictionary (optional)

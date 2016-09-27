@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_value_count_reporter.py 2016-09-22T16:04+02:00"
+__version__ = "term_value_count_reporter.py 2016-09-27T15:40+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -36,9 +36,8 @@ def term_value_count_reporter(options):
         inputfile - full path to the input file (required)
         outputfile - name of the output file, without path (optional)
         format - output file format (e.g., 'csv' or 'txt') (optional; default 'csv')
-        termlist - list of fields from which to extract values from the 
-            input file (required)
-        separator - string that separates the values in terms (e.g., '|') 
+        termlist - list of fields in the field combination to count (required)
+        separator - string that separates the values in in the output (e.g., '|') 
             (optional; default '|')
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
@@ -57,17 +56,21 @@ def term_value_count_reporter(options):
     # Make a list for the response
     returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
 
+    ### Standard outputs ###
+    success = False
+    message = None
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
-    # outputs
-    workspace = None
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
     outputfile = None
-    format = None
-    success = False
-    message = None
+    termlist = None
+    format = 'txt'
+    separator = '|'
 
-    # inputs
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
@@ -108,6 +111,7 @@ def term_value_count_reporter(options):
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
+    ### Optional inputs ###
     try:
         separator = options['separator']
     except:
@@ -202,17 +206,17 @@ def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
-    help = 'full path to the input file (required)'
-    parser.add_argument("-i", "--inputfile", help=help)
-
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'full path to the input file (required)'
+    parser.add_argument("-i", "--inputfile", help=help)
 
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
 
-    help = "termlist (required)"
-    parser.add_argument("-t", "--term list", help=help)
+    help = "list of terms to count (required)"
+    parser.add_argument("-t", "--termlist", help=help)
 
     help = "separator (optional)"
     parser.add_argument("-s", "--separator", help=help)
@@ -230,19 +234,21 @@ def main():
     optdict = {}
 
     if options.inputfile is None or len(options.inputfile)==0 or \
-       options.termname is None or len(options.termname)==0:
-        s =  'syntax:\n'
+       options.termlist is None or len(options.termlist)==0:
+        s =  'Single field syntax:\n'
         s += 'python term_value_count_reporter.py'
+        s += ' -w ./workspace'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -o testtermcountout.txt'
-        s += ' -w ./workspace'
         s += ' -t year'
         s += ' -f csv'
         print '%s' % s
+
+        s =  'Multiple field syntax:\n'
         s += 'python term_value_count_reporter.py'
+        s += ' -w ./workspace'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -o testtermcountout.txt'
-        s += ' -w ./workspace'
         s += ' -t "country|stateprovince"'
         s += ' -s "|"'
         s += ' -f txt'
@@ -250,9 +256,16 @@ def main():
         print '%s' % s
         return
 
+    if options.termlist is not None:
+        termstring = options.termlist
+        separator = options.separator
+        if separator is None:
+            separator = '|'
+        termlist = termstring.split(separator)
+
     optdict['inputfile'] = options.inputfile
     optdict['outputfile'] = options.outputfile
-    optdict['termlist'] = options.termlist
+    optdict['termlist'] = termlist
     optdict['separator'] = options.separator
     optdict['workspace'] = options.workspace
     optdict['format'] = options.format
