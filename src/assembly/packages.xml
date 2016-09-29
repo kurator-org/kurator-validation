@@ -6,6 +6,7 @@
         <format>tar.gz</format>
         <format>zip</format>
     </formats>
+    <baseDirectory>/</baseDirectory>
     <fileSets>
         <fileSet>
             <directory>${project.basedir}/packages</directory>
