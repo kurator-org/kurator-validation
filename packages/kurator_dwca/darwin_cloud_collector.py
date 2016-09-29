@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector.py 2016-09-23T20:59+02:00"
+__version__ = "darwin_cloud_collector.py 2016-09-29T13:57+02:00"
 
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
@@ -49,50 +49,55 @@ def darwin_cloud_collector(options):
     logging.debug( 'options: %s' % options )
 
     # Make a list for the response
-    returnvars = ['addedvalues', 'outputfile', 'success', 'message', 'artifacts']
+    returnvars = ['workspace', 'addedvalues', 'outputfile', 'success', 'message', \
+        'artifacts']
+
+    ### Standard outputs ###
+    success = False
+    message = None
+
+    ### Custom outputs ###
+    addedvalues = None
 
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
-    # outputs
-    addedvalues = None
-    success = False
-    message = None
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
+    outputfile = None
 
-    # inputs
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None or len(workspace)==0:
-        workspace = './'
+        pass
 
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     try:
         outputfile = options['outputfile']
     except:
-        outputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
-        returnvals = [addedvalues, outputfile, success, message, artifacts]
+        returnvals = [workspace, addedvalues, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
         message = 'Input file %s not found' % inputfile
-        returnvals = [addedvalues, outputfile, success, message, artifacts]
+        returnvals = [workspace, addedvalues, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if outputfile is None or len(outputfile)==0:
         message = 'No output file given'
-        returnvals = [addedvalues, outputfile, success, message, artifacts]
+        returnvals = [workspace, addedvalues, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
@@ -105,7 +110,7 @@ def darwin_cloud_collector(options):
     addedvalues = distinct_vocabs_to_file(outputfile, nondwc, 'fieldname', dialect=dialect)
     success = True
     artifacts['darwin_cloud_collector_file'] = outputfile
-    returnvals = [addedvalues, outputfile, success, message, artifacts]
+    returnvals = [workspace, addedvalues, outputfile, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
@@ -113,11 +118,11 @@ def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
-    help = 'full path to the input file (required)'
-    parser.add_argument("-i", "--inputfile", help=help)
-
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'full path to the input file (required)'
+    parser.add_argument("-i", "--inputfile", help=help)
 
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
@@ -135,15 +140,15 @@ def main():
         options.outputfile is None or len(options.outputfile)==0:
         s =  'syntax:\n'
         s += 'python darwin_cloud_collector.py'
+        s += ' -w ./workspace'
         s += ' -i ./data/tests/test_eight_specimen_records.csv'
         s += ' -o dwc_cloud.txt'
-        s += ' -w ./workspace'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
-    optdict['inputfile'] = options.inputfile
     optdict['workspace'] = options.workspace
+    optdict['inputfile'] = options.inputfile
     optdict['outputfile'] = options.outputfile
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict

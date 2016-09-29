@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "utf8_encoder.py 2016-09-08T14:06+02:00"
+__version__ = "utf8_encoder.py 2016-09-29T13:59+02:00"
 
 from dwca_utils import ENCODINGS
 from dwca_utils import utf8_file_encoder
@@ -45,49 +45,52 @@ def utf8_encoder(options):
     logging.debug( 'options: %s' % options )
 
     # Make a list for the response
-    returnvars = ['outputfile', 'success', 'message', 'artifacts']
+    returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
+
+    ### Standard outputs ###
+    success = False
+    message = None
 
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
-    # outputs
-    success = False
-    message = None
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
+    outputfile = None
+    encoding = None
 
-    # inputs
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None or len(workspace)==0:
-        workspace = './'
+        pass
 
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
-
-    try:
-        outputfile = options['outputfile']
-    except:
-        outputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
-        returnvals = [outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
         message = 'Input file %s not found' % inputfile
-        returnvals = [outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
+    try:
+        outputfile = options['outputfile']
+    except:
+        pass
+
     if outputfile is None or len(outputfile)==0:
         message = 'No output file given'
-        returnvals = [outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
@@ -96,18 +99,18 @@ def utf8_encoder(options):
     try:
         encoding = options['encoding']
     except:
-        encoding = None
+        pass
 
     success = utf8_file_encoder(inputfile, outputfile, encoding)
 
     if success == False:
         message = 'Unable to translate %s to utf8 encoding' % inputfile
-        returnvals = [outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
         
     artifacts['utf8_encoded_file'] = outputfile
-    returnvals = [outputfile, success, message, artifacts]
+    returnvals = [workspace, outputfile, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
@@ -115,17 +118,17 @@ def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
-    help = 'full path to the input file (required)'
-    parser.add_argument("-i", "--inputfile", help=help)
-
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
 
-    help = 'current encoding (optional)'
-    parser.add_argument("-e", "--encoding", help=help)
+    help = 'full path to the input file (required)'
+    parser.add_argument("-i", "--inputfile", help=help)
 
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
+
+    help = 'current encoding (optional)'
+    parser.add_argument("-e", "--encoding", help=help)
 
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
@@ -140,16 +143,16 @@ def main():
         options.outputfile is None or len(options.outputfile)==0:
         s =  'syntax:\n'
         s += 'python utf8_encoder.py'
+        s += ' -w ./workspace'
         s += ' -i ./data/tests/test_thirty_records_mac_roman_crlf.csv'
         s += ' -o as_utf8.csv'
-        s += ' -w ./workspace'
         s += ' -e mac_roman'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
-    optdict['inputfile'] = options.inputfile
     optdict['workspace'] = options.workspace
+    optdict['inputfile'] = options.inputfile
     optdict['outputfile'] = options.outputfile
     optdict['encoding'] = options.encoding
     optdict['loglevel'] = options.loglevel

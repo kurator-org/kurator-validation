@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-09-12T11:58+02:00"
+__version__ = "vocab_extractor.py 2016-09-29T13:43+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -28,8 +28,8 @@ def vocab_extractor(options):
     """Extract a list of the distinct values of a set of terms in a text file.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
-        inputfile - full path to the input file (required)
         workspace - path to a directory to work in (optional)
+        inputfile - full path to the input file (required)
         termlist - list of fields to extract from the input file (required)
         separator - string that separates the values in termlist (e.g., '|') 
             (optional; default None)
@@ -46,28 +46,35 @@ def vocab_extractor(options):
     logging.debug( 'Started %s' % __version__ )
     logging.debug( 'options: %s' % options )
 
-    # Make a list for the response
+    # Make a list of keys in the response dictionary
     returnvars = ['workspace', 'extractedvalues', 'success', 'message']
 
-    # outputs
-    workspace = None
-    extractedvalues = None
+    ### Standard outputs ###
     success = False
     message = None
 
-    # inputs
+    ### Custom outputs ###
+    extractedvalues = None
+
+    # Make a dictionary for artifacts left behind
+    artifacts = {}
+
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
+    termlist = None
+    separator = None
+
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None:
-        workspace = './'
+        pass
 
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given in %s' % __version__
@@ -84,7 +91,7 @@ def vocab_extractor(options):
     try:
         termlist = options['termlist']
     except:
-        termlist = None
+        pass
 
     if termlist is None or len(termlist)==0:
         message = 'No termlist given in %s' % __version__
@@ -95,7 +102,7 @@ def vocab_extractor(options):
     try:
         separator = options['separator']
     except:
-        separator = None
+        pass
 
     # Extract the distinct values from the inputfile, applying the function to strip
     # white space and make lower case.
@@ -111,11 +118,11 @@ def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
-    help = 'full path to the input file (required)'
-    parser.add_argument("-i", "--inputfile", help=help)
-
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'full path to the input file (required)'
+    parser.add_argument("-i", "--inputfile", help=help)
 
     help = "termlist (required)"
     parser.add_argument("-t", "--term list", help=help)
@@ -134,24 +141,26 @@ def main():
 
     if options.inputfile is None or len(options.inputfile)==0 or \
        options.termlist is None or len(options.termlist)==0:
-        s =  'syntax examples:\n'
+        s =  'Single term syntax:\n'
         s += 'python vocab_extractor.py'
-        s += ' -i ./data/eight_specimen_records.csv'
         s += ' -w ./workspace'
+        s += ' -i ./data/eight_specimen_records.csv'
         s += ' -t year'
         s += ' -l DEBUG\n'
         print '%s' % s
+
+        s =  'Multiple term syntax:\n'
         s += 'python vocab_extractor.py'
-        s += ' -i ./data/eight_specimen_records.csv'
         s += ' -w ./workspace'
+        s += ' -i ./data/eight_specimen_records.csv'
         s += '"country|stateprovince"'
         s += ' -s "|"'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
-    optdict['inputfile'] = options.inputfile
     optdict['workspace'] = options.workspace
+    optdict['inputfile'] = options.inputfile
     optdict['termlist'] = options.termlist
     optdict['separator'] = options.separator
     optdict['loglevel'] = options.loglevel

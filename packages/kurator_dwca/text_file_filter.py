@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_filter.py 2016-09-28T04:28+02:00"
+__version__ = "text_file_filter.py 2016-09-29T13:05+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -41,10 +41,10 @@ def text_file_filter(options):
     """Filter a text file into a new file based on matching values in a term.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
-        inputfile - full path to the input file (required)
         workspace - the directory in which the output will be written (optional)
+        inputfile - full path to the input file (required)
         outputfile - name of the output file, without path (optional)
-        format - output file format (e.g., 'csv' or 'txt') (optional)
+        format - output file format (e.g., 'csv' or 'txt') (optional; default 'txt')
         termname - the name of the term for which to find distinct values (required)
         matchingvalue - the value to use as a filter for the term (required)
     returns a dictionary with information about the results
@@ -64,63 +64,64 @@ def text_file_filter(options):
     # Make a list for the response
     returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
 
+    ### Standard outputs ###
+    success = False
+    message = None
+
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
-    # outputs
-    workspace = None
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
     outputfile = None
-    format = None
-    success = False
-    message = None
+    format = 'txt'
+    termname = None
     matchingvalue = None
 
-    # inputs
-    try:
-        termname = options['termname']
-    except:
-        termname = None
-
-    if termname is None or len(termname)==0:
-        message = 'No term given'
-        returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message: %s' % message)
-        return response(returnvars, returnvals)
-
-    try:
-        matchingvalue = options['matchingvalue']
-    except:
-        matchingvalue = None
-
-    if matchingvalue is None or len(matchingvalue)==0:
-        message = 'No matching value given for %s' % termname
-        returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message: %s' % message)
-        return response(returnvars, returnvals)
-
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None or len(workspace)==0:
-        workspace = './'
+        pass
 
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
         returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
         message = 'Input file %s not found' % inputfile
         returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message:\n%s' % message)
+        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    try:
+        termname = options['termname']
+    except:
+        pass
+
+    if termname is None or len(termname)==0:
+        message = 'No term given'
+        returnvals = [workspace, outputfile, success, message, artifacts]
+        logging.debug('message: %s' % message)
+        return response(returnvars, returnvals)
+
+    try:
+        matchingvalue = options['matchingvalue']
+    except:
+        pass
+
+    if matchingvalue is None or len(matchingvalue)==0:
+        message = 'No matching value given for %s' % termname
+        returnvals = [workspace, outputfile, success, message, artifacts]
+        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
     # If the termname is not in the header of the inputfile, nothing to do
@@ -128,22 +129,18 @@ def text_file_filter(options):
     if termname not in header:
         message = 'Term %s not found in %s' % (termname, inputfile)
         returnvals = [workspace, outputfile, success, message, artifacts]
-#        logging.debug('message: %s' % message)
+        logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
-#    print 'header: %s' % header
  
     try:
         format = options['format']
     except:
-        format = None
-
-    if format is None:
-        format = 'csv'
+        pass
 
     try:
         outputfile = options['outputfile']
     except:
-        outputfile = None
+        pass
 
     if outputfile is None or len(outputfile)==0:
         outputfile = '%s_count_report_%s.%s' % (termname, str(uuid.uuid1()), format)
@@ -154,12 +151,12 @@ def text_file_filter(options):
     indialect = csv_file_dialect(inputfile)
     
     # Prepare the outputfile
-    if format=='csv' or format is None:
-        outdialect = csv_dialect()
-    else:
+    if format=='txt' or format is None:
         outdialect = tsv_dialect()
+    else:
+        outdialect = csv_dialect()
 
-    # Create the outputfile with the chsen format and the same header as the input
+    # Create the outputfile with the chosen format and the same header as the input
     with open(outputfile, 'w') as outfile:
         writer = csv.DictWriter(outfile, dialect=outdialect, fieldnames=header)
         writer.writeheader()
@@ -195,23 +192,23 @@ def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
-    help = 'full path to the input file (required)'
-    parser.add_argument("-i", "--inputfile", help=help)
-
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
 
+    help = 'full path to the input file (required)'
+    parser.add_argument("-i", "--inputfile", help=help)
+
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
+
+    help = 'report file format (e.g., csv or txt) (optional)'
+    parser.add_argument("-f", "--format", help=help)
 
     help = "name of the term (required)"
     parser.add_argument("-t", "--termname", help=help)
 
     help = "value to match (required)"
     parser.add_argument("-m", "--matchingvalue", help=help)
-
-    help = 'report file format (e.g., csv or txt) (optional)'
-    parser.add_argument("-f", "--format", help=help)
 
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
@@ -225,26 +222,21 @@ def main():
     if options.inputfile is None or len(options.inputfile)==0:
         s =  'syntax:\n'
         s += 'python text_file_filter.py'
+        s += ' -w ./workspace'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -o testfilterout.txt'
-        s += ' -w ./workspace'
-        s += ' -t year'
         s += ' -f txt'
+        s += ' -t year'
         s += ' -m 1990'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
-    try:
-        chunksize = int(str(options.chunksize))
-    except:
-        chunksize = 10000
-
+    optdict['workspace'] = options.workspace
     optdict['inputfile'] = options.inputfile
     optdict['outputfile'] = options.outputfile
-    optdict['termname'] = options.termname
-    optdict['workspace'] = options.workspace
     optdict['format'] = options.format
+    optdict['termname'] = options.termname
     optdict['matchingvalue'] = options.matchingvalue
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict

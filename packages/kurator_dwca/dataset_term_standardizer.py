@@ -59,6 +59,7 @@ def dataset_term_standardizer(options):
     ### Standard outputs ###
     success = False
     message = None
+
     # Make a dictionary for artifacts left behind
     artifacts = {}
 

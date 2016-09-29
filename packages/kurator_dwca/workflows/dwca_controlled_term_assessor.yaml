@@ -14,7 +14,7 @@
 #
 # Example command-line usage:
 # kurator -f dwca_controlled_term_assessor.yaml 
-#         -p workspace=./testworkspace
+#         -p workspace=./dwca_controlled_term_assessor_workspace
 #         -p url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
 #         -l DEBUG (optional)
 #
@@ -40,7 +40,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_controlled_term_assessor.yaml 2016-09-27T12:07+02:00"
+# __version__ = "dwca_controlled_term_assessor.yaml 2016-09-29T14:36+02:00"
 
 imports:
 

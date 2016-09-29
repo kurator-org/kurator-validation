@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_token_reporter.py 2016-09-29T04:26+02:00"
+__version__ = "term_token_reporter.py 2016-09-29T13:40+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -67,29 +67,32 @@ def term_token_reporter(options):
     # Make a list for the response
     returnvars = ['workspace', 'outputfile', 'tokens', 'success', 'message', 'artifacts']
 
+    ### Standard outputs ###
+    success = False
+    message = None
+
+    ### Custom outputs ###
+    tokens = None
+
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
-    # outputs
-    workspace = None
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
     outputfile = None
-    success = False
-    message = None
-    tokens = None
+    termname = None
 
-    # inputs
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None or len(workspace)==0:
-        workspace = './'
+        pass
 
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
@@ -106,7 +109,7 @@ def term_token_reporter(options):
     try:
         termname = options['termname']
     except:
-        termname = None
+        pass
 
     if termname is None or len(termname)==0:
         message = 'No term given'
@@ -117,7 +120,7 @@ def term_token_reporter(options):
     try:
         outputfile = options['outputfile']
     except:
-        outputfile = None
+        pass
 
     if outputfile is None or len(outputfile)==0:
         outputfile = '%s_token_report_%s.txt' % (termname, str(uuid.uuid1()))
@@ -126,6 +129,7 @@ def term_token_reporter(options):
 
     tokens = term_token_count_from_file(inputfile, termname)
     success = token_report(outputfile, tokens)
+
     if success==True:
         s = '%s_token_report_file' % termname
         artifacts[s] = outputfile
@@ -144,8 +148,10 @@ def token_report(reportfile, tokens, dialect=None):
     returns:
         True if the report was written, otherwise False
     """
+    functionname = 'token_report'
     if tokens is None or len(tokens)==0:
-        logging.debug('No token dictionary given in token_report().')
+        s = 'No token dictionary given in %s.' % functionname
+        logging.debug(s)
         return False
 
     if dialect is None:
@@ -158,7 +164,8 @@ def token_report(reportfile, tokens, dialect=None):
             writer.writeheader()
 
         if os.path.isfile(reportfile) == False:
-            logging.debug('File %s not found in term_rowcount_from_file().' % reportfile)
+            s = 'File %s not found in %s.' % (reportfile, functionname)
+            logging.debug(s)
             return False
 
         with open(reportfile, 'a') as csvfile:
@@ -166,7 +173,6 @@ def token_report(reportfile, tokens, dialect=None):
                 fieldnames=tokenreportfieldlist)
 
             for key, value in tokens['tokenlist'].iteritems():
-                logging.debug(' key: %s value: %s' % (key, value))
                 writer.writerow({'token':key, 'rowcount':value['rowcount'], \
                     'totalcount':value['totalcount'] })
     else:
@@ -186,24 +192,27 @@ def term_token_count_from_file(inputfile, termname):
     returns:
         tokens - a dictionary containing the tokens and their counts
     """
+    functionname = 'term_token_count_from_file'
     if inputfile is None or len(inputfile) == 0:
-        logging.debug('No input file given in term_token_count_from_file().')
+        s = 'No input file given in %s.' % functionname
+        logging.debug(s)
         return 0
 
     if termname is None or len(termname) == 0:
-        logging.debug('No term name given in term_token_count_from_file().')
+        s = 'No term name given in %s.' % functionname
+        logging.debug(s)
         return 0
 
     if os.path.isfile(inputfile) == False:
-        logging.debug('File %s not found in term_token_count_from_file().' % inputfile)
+        s = 'File %s not found in %s.' % (inputfile, functionname)
+        logging.debug(s)
         return 0
 
     # Determine the dialect of the input file
     inputdialect = csv_file_dialect(inputfile)
     # print 'inputdialect: %s' % dialect_attributes(inputdialect)
     if inputdialect is None:
-        s = 'Unable to determine file dialect for %s in extract_values_from_file().' \
-            % inputfile
+        s = 'Unable to determine file dialect for %s in %s.' % (inputfile, functionname)
         logging.debug(s)
         return None
 
@@ -211,16 +220,15 @@ def term_token_count_from_file(inputfile, termname):
     inputencoding = csv_file_encoding(inputfile)
     # print 'inputencoding: %s' % inputencoding
     if inputencoding is None:
-        s = 'Unable to determine file encoding for %s in extract_values_from_file().' \
-            % inputfile
+        s = 'Unable to determine file encoding for %s in %s.' % (inputfile, functionname)
         logging.debug(s)
         return None
 
     inputheader = read_header(inputfile, inputdialect)
 
     if termname not in inputheader:
-        s = 'Term %s not found in file %s '
-        s += 'in term_token_count_from_file().' % (termname, inputfile)
+        s = 'Term %s not found in file %s ' % (termname, inputfile)
+        s += 'in %s.' % functionname
         logging.debug(s)
         return None
 
@@ -274,11 +282,11 @@ def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
-    help = 'full path to the input file (required)'
-    parser.add_argument("-i", "--inputfile", help=help)
-
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'full path to the input file (required)'
+    parser.add_argument("-i", "--inputfile", help=help)
 
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
@@ -299,18 +307,18 @@ def main():
        options.termname is None or len(options.termname)==0:
         s =  'syntax:\n'
         s += 'python term_token_reporter.py'
-        s += ' -i ./data/eight_specimen_records.csv'
         s += ' -w ./workspace'
+        s += ' -i ./data/eight_specimen_records.csv'
         s += ' -o testtermtokenout.txt'
         s += ' -t locality'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
+    optdict['workspace'] = options.workspace
     optdict['inputfile'] = options.inputfile
     optdict['outputfile'] = options.outputfile
     optdict['termname'] = options.termname
-    optdict['workspace'] = options.workspace
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dataset_constants_setter.py 2016-09-26T11:45+02:00"
+__version__ = "dataset_constants_setter.py 2016-09-29T13:41+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -60,6 +60,9 @@ def dataset_constants_setter(options):
     ### Standard outputs ###
     success = False
     message = None
+
+    ### Custom outputs ###
+
     # Make a dictionary for artifacts left behind
     artifacts = {}
 

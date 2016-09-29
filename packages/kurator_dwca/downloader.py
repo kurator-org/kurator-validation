@@ -14,31 +14,25 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader.py 2016-09-23T121:00+02:00"
+__version__ = "downloader.py 2016-09-29T12:09+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 import logging
 import uuid
 import argparse
-
-# Uses the HTTP requests package
-#   pip install requests
-# Uses the unicodecsv package in dwca_utils
-#   pip install unicodecsv
-#
-# For workflows
-#   jython pip install requests
-#   jython pip install unicodecsv
-import requests
+try:
+    from urllib.request import urlretrieve  # Python 3
+except ImportError:
+    from urllib import urlretrieve  # Python 2
 
 def downloader(options):
-    """Download a file from a URL.
+    """Download a files from a list of URLs.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the outputfile (optional)
-        outputfile - name of the output file, without path (optional)
         url - URL to the file to download (required)
+        outputfile - name of the output file, without path (optional)
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
         outputfile - actual full path to the output file
@@ -56,39 +50,44 @@ def downloader(options):
     # Make a list for the response
     returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
 
-    # Make a dictionary for artifacts left behind
-    artifacts = {}
-
-    # outputs
+    ### Standard outputs ###
     success = False
     message = None
 
-    # inputs
+    # Make a dictionary for artifacts left behind
+    artifacts = {}
+
+    ### Establish variables ###
+    workspace = './'
+    url = None
+    outputfile = None
+
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None or len(workspace)==0:
-        workspace = './'
-
-    try:
-        outputfile = options['outputfile']
-    except:
-        outputfile = None
-    if outputfile is None or len(outputfile)==0:
-        outputfile='dwca_'+str(uuid.uuid1())+'.zip'
+        pass
 
     try:
         url = options['url']
     except:
-        url = None
+        pass
+
+    try:
+        outputfile = options['outputfile']
+    except:
+        pass
+
+    if outputfile is None or len(outputfile)==0:
+        outputfile='dwca_'+str(uuid.uuid1())+'.zip'
 
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     success = download_file(url, outputfile)
+
     if success==True:
-        artifacts['downloaded_file'] = outputfile
+        artifact_key = 'downloaded_file_%s' % outputfile
+        artifacts[artifact_key] = outputfile
 
     returnvals = [workspace, outputfile, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
@@ -103,32 +102,24 @@ def download_file(url, outputfile):
     returns:
         success - True if the file was downloaded, False if the request was unsuccessful
     """
+    functionname = download_file
     if url is None or len(url)==0:
-        logging.info('No URL given in download_file()')
+        s = 'No URL given in %s' % functionname
+        logging.info(s)
         return False
 
     if outputfile is None or len(outputfile)==0:
-        logging.info('No output file given in download_file()')
+        s = 'No output file given in %s' % functionname
+        logging.info(s)
         return False
 
     try:
-        # Note that calls to https destinations will log an InsecureRequestWarning. To 
-        # avoid these warnings, enable certificate verification on the operating system 
-        # and remove the verify=False parameter in the requests.get() call.
-        r = requests.get(url, stream=True, verify=False)
+        urlretrieve(url, outputfile)
     except Exception, e:
-        s = 'Exception while attempting requests.get(url) in download_file(): %s' % e
+        s = 'Exception while attempting urlretrieve(%s, %s):\n%s\n' % (url, outputfile, e)
+        s += 'in %s' % functionname
         logging.warning(s)
         return False
-    if not r.ok:
-        s = 'Return value of requests.get(url) not ok in download_file(): %s' % r
-        logging.warning(s)
-        return False
-
-    # Example outputfile: './workspace/test_ccber_mammals_dwc_archive.zip'
-    with open(outputfile, 'wb') as handle:
-        for block in r.iter_content(1024):
-            handle.write(block)
 
     return True
 
@@ -136,11 +127,11 @@ def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
-    help = 'URL of the file to download (required)'
-    parser.add_argument("-u", "--url", help=help)
-
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'URL of the file to download (required)'
+    parser.add_argument("-u", "--url", help=help)
 
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
@@ -157,15 +148,15 @@ def main():
     if options.url is None or len(options.url)==0:
         s =  'syntax:\n'
         s += 'python downloader.py'
-        s += ' -u http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals'
         s += ' -w ./workspace'
+        s += ' -u http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals'
         s += ' -o test_ccber_mammals_dwc_archive.zip'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
-    optdict['url'] = options.url
     optdict['workspace'] = options.workspace
+    optdict['url'] = options.url
     optdict['outputfile'] = options.outputfile
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict

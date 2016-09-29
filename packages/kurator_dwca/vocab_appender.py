@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2016-09-08T16:22+02:00"
+__version__ = "vocab_appender.py 2016-09-29T13:43+02:00"
 
 from dwca_utils import read_header
 from dwca_utils import response
@@ -54,59 +54,67 @@ def vocab_appender(options):
     logging.debug( 'options: %s' % options )
 
     # Make a list for the response
-    returnvars = ['workspace', 'vocabfile', 'addedvalues', 'success', 'message']
+    returnvars = ['workspace', 'vocabfile', 'addedvalues', 'success', 'message', \
+        'artifacts']
 
-    # outputs
-    workspace = None
-    vocabfile = None
-    addedvalues = None
+    ### Standard outputs ###
     success = False
     message = None
 
-    # inputs
+    ### Custom outputs ###
+    addedvalues = None
+
+    # Make a dictionary for artifacts left behind
+    artifacts = {}
+
+    ### Establish variables ###
+    workspace = './'
+    vocabfile = None
+    checkvaluelist = None
+    key = None
+    separator = '|'
+
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None:
-        workspace = './'
+        pass
 
     try:
         key = options['key']
     except:
-        key = None
+        pass
 
     if key is None or len(key)==0:
         message = 'No key in vocab_appender'
-        returnvals = [workspace, vocabfile, addedvalues, success, message]
+        returnvals = [workspace, vocabfile, addedvalues, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     try:
         separator = options['separator']
     except:
-        separator = None
+        pass
 
     try:
         checkvaluelist = options['checkvaluelist']
     except:
-        checkvaluelist = None
+        pass
 
     if checkvaluelist is None or len(checkvaluelist)==0:
         message = 'No values to check'
-        returnvals = [workspace, vocabfile, addedvalues, success, message]
+        returnvals = [workspace, vocabfile, addedvalues, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     try:
         vocabfile = options['vocabfile']
     except:
-        vocabfile = None
+        pass
 
     if vocabfile is None or len(vocabfile)==0:
         message = 'No vocab file given'
-        returnvals = [workspace, vocabfile, addedvalues, success, message]
+        returnvals = [workspace, vocabfile, addedvalues, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
@@ -131,21 +139,26 @@ def vocab_appender(options):
     if fieldnames != header:
         message = 'header for new values:\n%s\n' % fieldnames
         message += 'does not match vocabulary file header: %s' % header
-        returnvals = [workspace, vocabfile, addedvalues, success, message]
+        returnvals = [workspace, vocabfile, addedvalues, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if key != header[0]:
         message = 'key in the header (%s)' % header[0]
         message += ' does not match vocabulary specified key: %s' % key
-        returnvals = [workspace, vocabfile, addedvalues, success, message]
+        returnvals = [workspace, vocabfile, addedvalues, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     addedvalues = distinct_vocabs_to_file(vocabfile, checkvaluelist, key=key)
 
     success = True
-    returnvals = [workspace, vocabfile, addedvalues, success, message]
+
+    # Add artifacts to the output dictionary if all went well
+    s = '%s_vocab_file' % key
+    artifacts[s] = vocabfile
+
+    returnvals = [workspace, vocabfile, addedvalues, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
     
@@ -153,20 +166,20 @@ def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
-    help = 'full path to the vocabulary file (required)'
-    parser.add_argument("-v", "--vocabfile", help=help)
-
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'full path to the vocabulary file (required)'
+    parser.add_argument("-v", "--vocabfile", help=help)
 
     help = 'list of potential values to add to vocabulary (required)'
     parser.add_argument("-c", "--checkvaluelist", help=help)
 
-    help = 'field with the distinct values in the vocabulary file (required)'
-    parser.add_argument("-s", "--separator", help=help)
-
     help = 'string that separates fields in the key (optional)'
     parser.add_argument("-k", "--key", help=help)
+
+    help = 'field with the distinct values in the vocabulary file (required)'
+    parser.add_argument("-s", "--separator", help=help)
 
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
@@ -186,20 +199,20 @@ def main():
         or theList is None or len(theList)==0 or key is None or len(key)==0:
         s =  'syntax:\n'
         s += 'python vocab_appender.py'
-        s += ' -v ./workspace/dwcgeography.txt'
         s += ' -w ./workspace'
+        s += ' -v ./workspace/dwcgeography.txt'
         s += ' -c "Oceania|United States|US|Hawaii|Honolulu|Honolulu'
         s += '|North Pacific Ocean|Hawaiian Islands|Oahu, '
         s += '|United States||WA|Chelan Co.||||"'
-        s += ' -s |'
         s += ' -k "continent|country|countrycode|stateprovince|'
         s += 'county|municipality|waterbody|islandgroup|island"'
+        s += ' -s |'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
-    optdict['vocabfile'] = options.vocabfile
     optdict['workspace'] = options.workspace
+    optdict['vocabfile'] = options.vocabfile
     optdict['checkvaluelist'] = checkvaluelist
     optdict['key'] = options.key
     optdict['separator'] = options.separator

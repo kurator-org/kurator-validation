@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator.py 2016-09-29T04:28+02:00"
+__version__ = "text_file_aggregator.py 2016-09-29T13:42+02:00"
 
 from dwca_utils import composite_header
 from dwca_utils import csv_file_dialect
@@ -43,9 +43,12 @@ def text_file_aggregator(options):
        same. Write a file containing the joined files with one header line.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
-        inputpath - full path to the input file set (required)
-        outputfile - name of the output file, without path (optional)
         workspace - path to a directory for the outputfile (optional)
+        inputpath - full path to the input file set. The file extension of the outputfile
+            will be the substring following the last '.' in the inputpath.
+            Example: ./workspace/thefiles.txt will produce an output file ending in
+            '.txt' (required) 
+        outputfile - name of the output file, without path (optional)
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
         outputfile - actual full path to the output file
@@ -65,40 +68,31 @@ def text_file_aggregator(options):
     returnvars = ['workspace', 'outputfile', 'aggregaterowcount', 'success', 'message', 
         'artifacts']
 
+    ### Standard outputs ###
+    success = False
+    message = None
+
+    ### Custom outputs ###
+    aggregaterowcount = None
+
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
-    # outputs
-    success = False
-    aggregaterowcount = None
-    aggregateheader = None
-    message = None
-    dialect = None
-    extension = ''
+    ### Establish variables ###
+    workspace = './'
+    inputpath = None
+    outputfile = None
 
-    # inputs
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None or len(workspace)==0:
-        workspace = './'
-
-    try:
-        outputfile = options['outputfile']
-    except:
-        outputfile = None
-    if outputfile is None or len(outputfile)==0:
-        outputfile='aggregate_'+str(uuid.uuid1())+extension
-
-    # Construct the output file path in the workspace
-    outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
+        pass
 
     try:
         inputpath = options['inputpath']
     except:
-        inputpath = None
+        pass
 
     if inputpath is None or len(inputpath)==0:
         message = 'No input file given'
@@ -108,18 +102,19 @@ def text_file_aggregator(options):
         return response(returnvars, returnvals)
 
     try:
-        inputdialect = options['inputdialect']
+        outputfile = options['outputfile']
     except:
-        inputdialect = None
+        pass
 
-    if inputdialect == 'tsv':
-        dialect = tsv_dialect()
-        extension = '.tsv'
-    elif inputdialect == 'excel' or inputdialect == 'csv.excel': 
-        dialect = csv.excel
-        extension = '.csv'
+    if outputfile is None or len(outputfile)==0:
+        # Get the extension as the substring of the inputpath following the last '.'
+        extension = inputpath.split('.')[-1]
+        outputfile='aggregate_'+str(uuid.uuid1())+extension
 
-    aggregateheader = composite_header(inputpath, dialect)
+    # Construct the output file path in the workspace
+    outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
+
+    aggregateheader = composite_header(inputpath, dialect=None)
     aggregaterowcount = 0
 
     # Open a file to write the aggregated results
@@ -129,8 +124,7 @@ def text_file_aggregator(options):
         writer.writeheader()
         files = glob.glob(inputpath)
         for file in files:
-            if inputdialect is None:
-                dialect = csv_file_dialect(file)
+            dialect = csv_file_dialect(file)
             with open(file, 'rU') as inputfile:
                 reader = csv.DictReader(inputfile, dialect=dialect)
                 for line in reader:
@@ -157,11 +151,11 @@ def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
-    help = 'full path to the input files directory (required)'
-    parser.add_argument("-i", "--inputpath", help=help)
-
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'full path to the input files directory (required)'
+    parser.add_argument("-i", "--inputpath", help=help)
 
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
@@ -185,9 +179,9 @@ def main():
         print '%s' % s
         return
 
+    optdict['workspace'] = options.workspace
     optdict['inputpath'] = options.inputpath
     optdict['outputfile'] = options.outputfile
-    optdict['workspace'] = options.workspace
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

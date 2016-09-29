@@ -18,7 +18,7 @@
 #
 # Example command-line usage:
 # kurator -f dwca_geography_assessor.yaml 
-#         -p workspace=./wsgeogassess
+#         -p workspace=./dwca_geography_assessor_workspace
 #         -p dwca_url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
 #         -l DEBUG (optional)
 #
@@ -44,7 +44,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_geography_assessor.yaml 2016-09-21T10:42+02:00"
+# __version__ = "dwca_geography_assessor.yaml 2016-09-29T14:34+02:00"
 
 imports:
 
@@ -62,26 +62,26 @@ components:
       # list. Though the order does not matter, it is helpful to keep the list in more
       # or less the order in which they'll be invoked, for clarity.
       - !ref MakeWorkspace
-      - !ref GeographyDownloader
-      - !ref CountryDownloader
-      - !ref ArchiveDownloader
-      - !ref DWCAtoTSVWriter
-      - !ref VocabList
-      - !ref VocabCountReporter
-      - !ref GeographyReporter
-      - !ref GeographyCountReporter
-      - !ref MissingGeographyReporter
-      - !ref CountryCountReporter
-      - !ref MissingCountryReporter
+      - !ref DownloadGeographyLookup
+      - !ref DownloadCountryLookup
+      - !ref DownloadArchive
+      - !ref ExtractOccurrenceCore
+      - !ref MakeVocabFieldList
+      - !ref CreateVocabCountReport
+      - !ref CreateGeographyReport
+      - !ref CreateGeographyCountReport
+      - !ref CreateMissingGeographyReport
+      - !ref CreateCountryCountReport
+      - !ref CreateMissingCountryReport
       - !ref WrapUp
     # Each parameter defined here enters the workflow from the command line and is 
     # delivered in the options dictionary of the specified actor.
     parameters:
       # Accept a parameter called dwca_url from the command line.
       dwca_url:
-        # Set the url in the options dictionary of ArchiveDownloader from the value of
+        # Set the url in the options dictionary of DownloadArchive from the value of
         # the dwca_url parameter given on the command line.
-        actor: !ref ArchiveDownloader
+        actor: !ref DownloadArchive
         parameter: url
       # Accept a parameter called workspace from the command line.
       workspace:
@@ -119,7 +119,7 @@ components:
             return options
 
 # Download dwc_geography.txt file containing geography key to standard geography lookup.
-- id: GeographyDownloader
+- id: DownloadGeographyLookup
   type: PythonActor
   properties:
     # The location of the actor source code 
@@ -149,7 +149,7 @@ components:
       - !ref MakeWorkspace
 
 # Download dwc_countries.txt file containing raw country to standard country lookup.
-- id: CountryDownloader
+- id: DownloadCountryLookup
   type: PythonActor
   properties:
     # The location of the actor source code 
@@ -174,14 +174,14 @@ components:
       # Download to a specific file name within the workspace.
       outputfile : 'lookup_country.txt'
       # Show the name of the upstream actor.
-      messagefrom: 'GeographyDownloader'
+      messagefrom: 'DownloadGeographyLookup'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref GeographyDownloader
+      - !ref DownloadGeographyLookup
 
 # Download a Darwin Core archive from a URL given by workflow-defined url parameter. 
 # Download occurs in workspace provided by the upstream actor.
-- id: ArchiveDownloader
+- id: DownloadArchive
   type: PythonActor
   properties:
     # The location of the actor source code
@@ -211,29 +211,14 @@ components:
       # Set the log level in the actor explicitly
       # NOTE: Invoking logging in the Python actor causes kurator-akka thread exceptions.
       #loglevel: 'DEBUG'
-#Error in atexit._run_exitfuncs:
-#Traceback (most recent call last):
-#  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/atexit.py", line 24, in _run_exitfuncs
-#    func(*targs, **kargs)
-#  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/threading.py", line 297, in _MainThread__exitfunc
-#    t.join()
-#  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/threading.py", line 128, in join
-#    raise RuntimeError("cannot join current thread")
-#RuntimeError: cannot join current thread
-#Error in sys.exitfunc:
-#Traceback (most recent call last):
-#  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/atexit.py", line 24, in _run_exitfuncs
-#  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/threading.py", line 297, in _MainThread__exitfunc
-#  File "/Users/johnwieczorek/bin/kurator-akka.jar/Lib/threading.py", line 128, in join
-#RuntimeError: cannot join current thread
       # Show the name of the upstream actor.
-      messagefrom: 'CountryDownloader'
+      messagefrom: 'DownloadCountryLookup'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref CountryDownloader
+      - !ref DownloadCountryLookup
 
 # Extract core file into a tab-separated value file in workspace from Darwin Core archive.
-- id: DWCAtoTSVWriter
+- id: ExtractOccurrenceCore
   type: PythonActor
   properties:
     # The location of the actor source code 
@@ -258,13 +243,13 @@ components:
       # NOTE: Would like to be able to specify that this file should go in the workspace
       outputfile: 'dwca_extractedoccurrences.txt'
       # Show the name of the upstream actor.
-      messagefrom: 'ArchiveDownloader'
+      messagefrom: 'DownloadArchive'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref ArchiveDownloader
+      - !ref DownloadArchive
 
 # Inline python actor to generate an options dictionary for each of a list of terms.
-- id: VocabList
+- id: MakeVocabFieldList
   type: PythonActor
   properties:
     # Inline python code to run.
@@ -272,8 +257,8 @@ components:
         # The function to run when an on_data message is received. Accepts a dictionary
         # of options.
         def on_data(options):
-            print '### Started VocabList ###'
-            print 'VocabList options: %s' % options
+            print '### Started MakeVocabFieldList ###'
+            print 'MakeVocabFieldList options: %s' % options
             termlist = [ \
                 ['continent'], \
                 ['countrycode'], \
@@ -287,7 +272,7 @@ components:
                         'workspace':options['workspace'], 
                         'termlist':term,
                         'outputfile':filename,
-                        'messagefrom':'VocabList' }
+                        'messagefrom':'MakeVocabFieldList' }
     # A list of parameters to get from the options dictionary passed from an 
     # upstream actor.
     inputs:
@@ -300,10 +285,10 @@ components:
       inputfile: 'dwca_extractedoccurrences.txt'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref DWCAtoTSVWriter
+      - !ref ExtractOccurrenceCore
 
 # Create a term count report.
-- id: VocabCountReporter
+- id: CreateVocabCountReport
   type: PythonActor
   properties:
     # The location of the actor source code 
@@ -328,10 +313,10 @@ components:
       format: 'csv'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref VocabList
+      - !ref MakeVocabFieldList
 
 # Create report on geography recommendations.
-- id: GeographyReporter
+- id: CreateGeographyReport
   type: PythonActor
   properties:
     # The location of the actor source code 
@@ -366,13 +351,13 @@ components:
       # Set the separator for the key.
       separator: '|'
       # Show the name of the upstream actor.
-      messagefrom: 'DWCAtoTSVWriter'
+      messagefrom: 'ExtractOccurrenceCore'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref DWCAtoTSVWriter
+      - !ref ExtractOccurrenceCore
 
 # Create a term count report.
-- id: GeographyCountReporter
+- id: CreateGeographyCountReport
   type: PythonActor
   properties:
     # The location of the actor source code 
@@ -403,16 +388,16 @@ components:
       termlist: ['continent', 'country', 'countrycode', 'stateprovince', 'county', 
                  'municipality', 'waterbody', 'islandgroup', 'island']
       # Show the name of the upstream actor.
-      messagefrom: 'GeographyReporter'
+      messagefrom: 'CreateGeographyReport'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref GeographyReporter
+      - !ref CreateGeographyReport
 
 # Create report on country recommendations. Note that it may be very rare that an unknown
 # country string arises, as the country vocabulary from 
 # https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/country.txt contains
 # values found in the corpus of GBIF plus VertNet migrators.
-- id: MissingGeographyReporter
+- id: CreateMissingGeographyReport
   type: PythonActor
   properties:
     # The location of the actor source code 
@@ -448,13 +433,13 @@ components:
       # Set the separator for the key.
       separator: '|'
       # Show the name of the upstream actor.
-      messagefrom: 'GeographyCountReporter'
+      messagefrom: 'CreateGeographyCountReport'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref GeographyCountReporter
+      - !ref CreateGeographyCountReport
 
 # Create a term count report.
-- id: CountryCountReporter
+- id: CreateCountryCountReport
   type: PythonActor
   properties:
     # The location of the actor source code 
@@ -484,16 +469,16 @@ components:
       # Get the termlist for this actor explicitly from here.
       termlist: ['country']
       # Show the name of the upstream actor.
-      messagefrom: 'MissingGeographyReporter'
+      messagefrom: 'CreateMissingGeographyReport'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref MissingGeographyReporter
+      - !ref CreateMissingGeographyReport
 
 # Create report on country recommendations. Note that it may be very rare that an unknown
 # country string arises, as the country vocabulary from 
 # https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/country.txt contains
 # values found in the corpus of GBIF plus VertNet migrators.
-- id: MissingCountryReporter
+- id: CreateMissingCountryReport
   type: PythonActor
   properties:
     # The location of the actor source code 
@@ -529,10 +514,10 @@ components:
       # Set the separator for the key.
       separator: '|'
       # Show the name of the upstream actor.
-      messagefrom: 'CountryCountReporter'
+      messagefrom: 'CreateCountryCountReport'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref CountryCountReporter
+      - !ref CreateCountryCountReport
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
@@ -560,7 +545,7 @@ components:
         artifacts: artifacts
     parameters:
       # Show the name of the upstream actor.
-      messagefrom: 'MissingCountryReporter'
+      messagefrom: 'CreateMissingCountryReport'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref MissingCountryReporter
+      - !ref CreateMissingCountryReport

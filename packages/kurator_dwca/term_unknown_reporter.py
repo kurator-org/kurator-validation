@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_unknown_reporter.py 2016-09-25T23:35+02:00"
+__version__ = "term_unknown_reporter.py 2016-09-29T12:47+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -38,8 +38,8 @@ def term_unknown_reporter(options):
             (required)
         vocabfile - path to the vocabulary file. Either full path or path within the
            workspace (required)
-        format - output file format (e.g., 'csv' or 'txt') (optional; default csv)
         outputfile - name of the output file, without path (optional)
+        format - output file format (e.g., 'csv' or 'txt') (optional; default csv)
         key - the field or separator-separated fieldnames that hold the distinct values 
               in the vocabulary file (required)
         separator - string to use as the value separator in the string (default '|')
@@ -60,52 +60,38 @@ def term_unknown_reporter(options):
     # Make a list for the response
     returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
 
-    # Make a dictionary for artifacts left behind
-    artifacts = {}
-
-    # outputs
-    workspace = None
-    format = None
-    outputfile = None
+    ### Standard outputs ###
     success = False
     message = None
 
-    # inputs
+    # Make a dictionary for artifacts left behind
+    artifacts = {}
+
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
+    vocabfile = None
+    outputfile = None
+    format = 'txt'
+    key = None
+    separator = '|'
+
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None:
-        workspace = './'
-
-    try:
-        key = options['key']
-    except:
-        key = None
-
-    if key is None or len(key)==0:
-        message = 'No key in term_unknown_reporter'
-        returnvals = [workspace, outputfile, success, message, artifacts]
-        logging.debug('message:\n%s' % message)
-        return response(returnvars, returnvals)
-
-    try:
-        separator = options['separator']
-    except:
-        separator = None
+        pass
 
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
-
 
     # Look to see if the input file is at the absolute path or in the workspace.
     if os.path.isfile(inputfile) == False:
@@ -120,7 +106,7 @@ def term_unknown_reporter(options):
     try:
         vocabfile = options['vocabfile']
     except:
-        vocabfile = None
+        pass
 
     if vocabfile is None or len(vocabfile)==0:
         message = 'No vocab file given'
@@ -138,14 +124,31 @@ def term_unknown_reporter(options):
     vocabfile = vocabfileat
 
     try:
+        key = options['key']
+    except:
+        pass
+
+    if key is None or len(key)==0:
+        message = 'No key in term_unknown_reporter'
+        returnvals = [workspace, outputfile, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    try:
+        separator = options['separator']
+    except:
+        pass
+
+    try:
         format = options['format']
     except:
-        format = None
+        pass
 
     try:
         outputfile = options['outputfile']
     except:
-        outputfile = None
+        pass
+
     if outputfile is None:
         outputfile = '%s/%s_standardization_report_%s.%s' % \
           (workspace.rstrip('/'), slugify(key), str(uuid.uuid1()), format)
@@ -201,26 +204,26 @@ def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
+    help = 'directory for the output file (optional)'
+    parser.add_argument("-w", "--workspace", help=help)
+
     help = 'full path to the input file (required)'
     parser.add_argument("-i", "--inputfile", help=help)
 
     help = 'full path to the vocab file (required)'
     parser.add_argument("-v", "--vocabfile", help=help)
 
-    help = 'directory for the output file (optional)'
-    parser.add_argument("-w", "--workspace", help=help)
-
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
 
-    help = 'field with the distinct values in the vocabulary file (required)'
-    parser.add_argument("-s", "--separator", help=help)
+    help = 'report file format (e.g., csv or txt) (optional; default csv)'
+    parser.add_argument("-f", "--format", help=help)
 
     help = 'string that separates fields in the key (optional)'
     parser.add_argument("-k", "--key", help=help)
 
-    help = 'report file format (e.g., csv or txt) (optional; default csv)'
-    parser.add_argument("-f", "--format", help=help)
+    help = 'field with the distinct values in the vocabulary file (required)'
+    parser.add_argument("-s", "--separator", help=help)
 
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
@@ -236,24 +239,24 @@ def main():
        options.vocabfile is None or len(options.vocabfile)==0:
         s =  'syntax:\n'
         s += 'python term_unknown_reporter.py'
+        s += ' -w ./workspace'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -v ./data/vocabularies/country.txt'
-        s += ' -s "|"'
-        s += ' -w ./workspace'
         s += ' -o testmissingcountry.txt'
-        s += ' -k "country"'
         s += ' -f csv'
+        s += ' -k "country"'
+        s += ' -s "|"'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
+    optdict['workspace'] = options.workspace
     optdict['inputfile'] = options.inputfile
     optdict['vocabfile'] = options.vocabfile
-    optdict['key'] = options.key
-    optdict['separator'] = options.separator
-    optdict['workspace'] = options.workspace
     optdict['outputfile'] = options.outputfile
     optdict['format'] = options.format
+    optdict['key'] = options.key
+    optdict['separator'] = options.separator
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

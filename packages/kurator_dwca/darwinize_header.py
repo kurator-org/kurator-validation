@@ -14,11 +14,8 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwinize_header.py 2016-09-23T21:00+02:00"
+__version__ = "darwinize_header.py 2016-09-29T13:58+02:00"
 
-from dwca_vocab_utils import vocab_dialect
-from dwca_vocab_utils import distinct_vocabs_to_file
-from dwca_vocab_utils import terms_not_in_dwc
 from dwca_vocab_utils import darwinize_list
 from dwca_utils import dialect_attributes
 from dwca_utils import read_header
@@ -31,7 +28,6 @@ from dwca_utils import setup_actor_logging
 import os
 import logging
 import argparse
-import commands
 import csv
 
 def darwinize_header(options):
@@ -57,66 +53,69 @@ def darwinize_header(options):
     logging.debug( 'options: %s' % options )
 
     # Make a list for the response
-    returnvars = ['outputfile', 'success', 'message', 'artifacts']
+    returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
+
+    ### Standard outputs ###
+    success = False
+    message = None
 
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
-    # outputs
-    success = False
-    message = None
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
+    dwccloudfile = None
+    outputfile = None
 
-    # inputs
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None or len(workspace)==0:
-        workspace = './'
+        pass
 
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
-
-    try:
-        dwccloudfile = options['dwccloudfile']
-    except:
-        dwccloudfile = None
-
-    try:
-        outputfile = options['outputfile']
-    except:
-        outputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
-        returnvals = [outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
         message = 'Input file %s not found' % inputfile
-        returnvals = [outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
+    try:
+        dwccloudfile = options['dwccloudfile']
+    except:
+        pass
+
     if dwccloudfile is None or len(dwccloudfile)==0:
         message = 'No Darwin Cloud vocabulary file given'
-        returnvals = [outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(dwccloudfile) == False:
         message = 'Darwin Cloud vocabulary file not found'
-        returnvals = [outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
+    try:
+        outputfile = options['outputfile']
+    except:
+        pass
+
     if outputfile is None or len(outputfile)==0:
         message = 'No output file given'
-        returnvals = [outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
@@ -133,7 +132,7 @@ def darwinize_header(options):
     # Write the new header to the outputfile
     if write_header(outputfile, dwcheader, dialect) == False:
         message = 'Unable to write header to output file'
-        returnvals = [outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
@@ -147,7 +146,7 @@ def darwinize_header(options):
 
     success = True
     artifacts['darwinized_header_file'] = outputfile
-    returnvals = [outputfile, success, message, artifacts]
+    returnvals = [workspace, outputfile, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
@@ -155,11 +154,11 @@ def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
-    help = 'full path to the input file (required)'
-    parser.add_argument("-i", "--inputfile", help=help)
-
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'full path to the input file (required)'
+    parser.add_argument("-i", "--inputfile", help=help)
 
     help = 'full path to the Darwin Cloud vocabulary file (required)'
     parser.add_argument("-v", "--dwccloudfile", help=help)
@@ -180,16 +179,16 @@ def main():
         options.outputfile is None or len(options.outputfile)==0:
         s =  'syntax:\n'
         s += 'python darwinize_header.py'
+        s += ' -w ./workspace'
         s += ' -i ./data/tests/test_eight_specimen_records.csv'
         s += ' -v ./data/vocabularies/dwc_cloud.txt'
         s += ' -o darwinized.csv'
-        s += ' -w ./workspace'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
-    optdict['inputfile'] = options.inputfile
     optdict['workspace'] = options.workspace
+    optdict['inputfile'] = options.inputfile
     optdict['dwccloudfile'] = options.dwccloudfile
     optdict['outputfile'] = options.outputfile
     optdict['loglevel'] = options.loglevel

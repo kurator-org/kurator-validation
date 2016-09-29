@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_value_count_reporter.py 2016-09-29T04:23+02:00"
+__version__ = "term_value_count_reporter.py 2016-09-29T12:52+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -36,7 +36,6 @@ except ImportError:
     import warnings
     warnings.warn("can't import `unicodecsv` encoding errors may occur")
     import csv
-
 
 def term_value_count_reporter(options):
     """Extract a list of the distinct values of a given term in a text file along with 
@@ -77,23 +76,20 @@ def term_value_count_reporter(options):
     workspace = './'
     inputfile = None
     outputfile = None
-    termlist = None
     format = 'txt'
+    termlist = None
     separator = '|'
 
     ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None or len(workspace)==0:
-        workspace = './'
+        pass
 
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given in %s' % __version__
@@ -114,7 +110,7 @@ def term_value_count_reporter(options):
     try:
         termlist = options['termlist']
     except:
-        termlist = None
+        pass
 
     if termlist is None or len(termlist)==0:
         message = 'No field list given in %s.' % __version__
@@ -126,12 +122,12 @@ def term_value_count_reporter(options):
     try:
         separator = options['separator']
     except:
-        separator = '|'
+        pass
 
     try:
         format = options['format']
     except:
-        format = None
+        pass
 
     if format is None:
         format = 'csv'
@@ -139,7 +135,7 @@ def term_value_count_reporter(options):
     try:
         outputfile = options['outputfile']
     except:
-        outputfile = None
+        pass
 
     rootname = ''
     termname = ''
@@ -182,12 +178,15 @@ def term_value_count_report(reportfile, termcountlist, termname='value', format=
     returns:
         success - True if report was written or if there is nothing to write, else False
     """
+    functionname = 'term_value_count_report'
     if reportfile is None or len(reportfile)==0:
-        logging.debug('No report file given in term_count_report()')
+        s = 'No report file given in %s.' % functionname
+        logging.debug(s)
         return False
 
     if termcountlist is None or len(termcountlist)==0:
-        logging.debug('No term count list given in term_count_report()')
+        s = 'No term count list given in %s.' % functionname
+        logging.debug(s)
         return True
 
     if format=='csv' or format is None:
@@ -203,7 +202,8 @@ def term_value_count_report(reportfile, termcountlist, termname='value', format=
         writer.writeheader()
 
     if os.path.isfile(reportfile) == False:
-        logging.debug('reportfile: %s not created' % reportfile)
+        s = 'reportfile: %s not created in %s' % (reportfile, functionname)
+        logging.debug(s)
         return False
 
     with open(reportfile, 'a') as csvfile:
@@ -231,14 +231,14 @@ def _getoptions():
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
 
+    help = 'report file format (e.g., csv or txt) (optional)'
+    parser.add_argument("-f", "--format", help=help)
+
     help = "list of terms to count (required)"
     parser.add_argument("-t", "--termlist", help=help)
 
     help = "separator (optional)"
     parser.add_argument("-s", "--separator", help=help)
-
-    help = 'report file format (e.g., csv or txt) (optional)'
-    parser.add_argument("-f", "--format", help=help)
 
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
@@ -256,8 +256,8 @@ def main():
         s += ' -w ./workspace'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -o testtermcountout.txt'
-        s += ' -t year'
         s += ' -f csv'
+        s += ' -t year'
         print '%s' % s
 
         s =  'Multiple field syntax:\n'
@@ -265,9 +265,9 @@ def main():
         s += ' -w ./workspace'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -o testtermcountout.txt'
+        s += ' -f txt'
         s += ' -t "country|stateprovince"'
         s += ' -s "|"'
-        s += ' -f txt'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -279,12 +279,12 @@ def main():
             separator = '|'
         termlist = termstring.split(separator)
 
+    optdict['workspace'] = options.workspace
     optdict['inputfile'] = options.inputfile
     optdict['outputfile'] = options.outputfile
+    optdict['format'] = options.format
     optdict['termlist'] = termlist
     optdict['separator'] = options.separator
-    optdict['workspace'] = options.workspace
-    optdict['format'] = options.format
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

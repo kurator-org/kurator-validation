@@ -43,49 +43,51 @@ def csv_to_txt_converter(options):
     logging.debug( 'options: %s' % options )
 
     # Make a list for the response
-    returnvars = ['outputfile', 'success', 'message', 'artifacts']
+    returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']
+
+    ### Standard outputs ###
+    success = False
+    message = None
 
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
-    # outputs
-    success = False
-    message = None
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
+    outputfile = None
 
-    # inputs
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None or len(workspace)==0:
-        workspace = './'
+        pass
 
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     try:
         outputfile = options['outputfile']
     except:
-        outputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
-        returnvals = [outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
         message = 'Input file %s not found' % inputfile
-        returnvals = [outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if outputfile is None or len(outputfile)==0:
         message = 'No output file given'
-        returnvals = [outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
@@ -95,12 +97,12 @@ def csv_to_txt_converter(options):
 
     if success == False:
         message = 'Unable to convert %s to txt format' % inputfile
-        returnvals = [outputfile, success, message, artifacts]
+        returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
         
     artifacts['txt_converted_file'] = outputfile
-    returnvals = [outputfile, success, message, artifacts]
+    returnvals = [workspace, outputfile, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
@@ -108,11 +110,11 @@ def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
-    help = 'full path to the input file (required)'
-    parser.add_argument("-i", "--inputfile", help=help)
-
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'full path to the input file (required)'
+    parser.add_argument("-i", "--inputfile", help=help)
 
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
@@ -130,15 +132,15 @@ def main():
         options.outputfile is None or len(options.outputfile)==0:
         s =  'syntax:\n'
         s += 'python csv_to_txt_converter.py'
+        s += ' -w ./workspace'
         s += ' -i ./data/tests/test_thirty_records_mac_roman_crlf.csv'
         s += ' -o as_csv.csv'
-        s += ' -w ./workspace'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
-    optdict['inputfile'] = options.inputfile
     optdict['workspace'] = options.workspace
+    optdict['inputfile'] = options.inputfile
     optdict['outputfile'] = options.outputfile
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict

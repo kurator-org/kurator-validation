@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2016-09-22T15:58+02:00"
+__version__ = "dwca_core_to_tsv.py 2016-09-29T13:46+02:00"
 
 from dwcareader_utils import short_term_names
 from dwca_utils import tsv_dialect
@@ -34,13 +34,13 @@ from dwca.read import DwCAReader
 from dwca.read import GBIFResultsReader
 
 def dwca_core_to_tsv(options):
-    """Save the core of the archive to a tsv file with short DwC term names as headers.
+    """Save the core of the archive to a tsv file with DwC term names as headers.
     options - a dictionary of parameters
         loglevel - the level at which to log (e.g., DEBUG)
         workspace - path to a directory for the outputfile (optional)
         inputfile - full path to the input Darwin Core archive file (required)
         outputfile - file name of the tsv output file, no path (optional)
-        archivetype - the archive type ('standard' or 'gbif') (optional)
+        archivetype - archive type ('standard' or 'gbif') (optional; default 'standard')
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
         outputfile - actual full path to the output tsv file
@@ -60,28 +60,32 @@ def dwca_core_to_tsv(options):
     returnvars = ['workspace', 'outputfile', 'rowcount', 'success', 'message', 
         'artifacts']
 
-    # Make a dictionary for artifacts left behind
-    artifacts = {}
-
-    # outputs
-    outputfile = None
-    rowcount = None
+    ### Standard outputs ###
     success = False
     message = None
 
-    # inputs
+    ### Custom outputs ###
+    rowcount = None
+
+    # Make a dictionary for artifacts left behind
+    artifacts = {}
+
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
+    outputfile = None
+    archivetype = 'standard'
+
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None or len(workspace)==0:
-        workspace = './'
+        pass
 
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
         message = 'No input file given'
@@ -102,21 +106,21 @@ def dwca_core_to_tsv(options):
     try:
         outputfile = options['outputfile']
     except:
-        outputfile = None
+        pass
 
     if outputfile is None or len(outputfile)==0:
         outputfile = 'dwca_%s.txt' %  str(uuid.uuid1())
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     try:
-        type = options['archivetype']
+        archivetype = options['archivetype']
     except:
-        type = 'standard'
+        pass
 
     # Note: The DwCAReader creates a temporary directory of its own and cleans it up
     # Make a reader based on whether the archive is standard or a GBIF download.
     dwcareader = None
-    if type=='gbif':
+    if archivetype=='gbif':
         try:
             dwcareader = GBIFResultsReader(inputfile)
         except Exception, e:
@@ -169,17 +173,17 @@ def _getoptions():
     """Parse command line options and return them."""
     parser = argparse.ArgumentParser()
 
-    help = 'full path to the input file (required)'
-    parser.add_argument("-i", "--inputfile", help=help)
-
     help = 'directory for the output file (optional)'
     parser.add_argument("-w", "--workspace", help=help)
+
+    help = 'full path to the input file (required)'
+    parser.add_argument("-i", "--inputfile", help=help)
 
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
 
     help = "type of Darwin Core archive ('gbif', 'standard') (optional)"
-    parser.add_argument("-t", "--type", help=help)
+    parser.add_argument("-t", "--archivetype", help=help)
 
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
@@ -197,19 +201,16 @@ def main():
     if inputfile is None or len(inputfile)==0:
         s =  'syntax:\n'
         s += 'python dwca_core_to_tsv.py'
-        s += ' -i ./data/dwca-uwymv_herp.zip'
         s += ' -w ./workspace'
+        s += ' -i ./data/dwca-uwymv_herp.zip'
         s += ' -o testout.txt'
         s += ' -t standard'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
-    if archivetype is None:
-        archivetype = 'standard'
-
-    optdict['inputfile'] = inputfile
     optdict['workspace'] = options.workspace
+    optdict['inputfile'] = inputfile
     optdict['outputfile'] = outputfile
     optdict['archivetype'] = archivetype
     optdict['loglevel'] = options.loglevel

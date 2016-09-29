@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor.py 2016-09-26T16:30+02:00"
+__version__ = "composite_header_constructor.py 2016-09-29T13:53+02:00"
 
 from dwca_utils import read_header
 from dwca_utils import write_header
@@ -51,11 +51,13 @@ def composite_header_constructor(options):
     logging.debug( 'options: %s' % options )
 
     # Make a list for the response
-    returnvars = ['compositeheader', 'outputfile', 'success', 'message', 'artifacts']
+    returnvars = ['workspace', 'compositeheader', 'outputfile', 'success', 'message', \
+        'artifacts']
 
     ### Standard outputs ###
     success = False
     message = None
+
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
@@ -90,7 +92,7 @@ def composite_header_constructor(options):
 
     if outputfile is None or len(outputfile)==0:
         message = 'No output file given'
-        returnvals = [compositeheader, outputfile, success, message, artifacts]
+        returnvals = [workspace, compositeheader, outputfile, success, message, artifacts]
         return response(returnvars, returnvals)
 
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
@@ -109,7 +111,7 @@ def composite_header_constructor(options):
     success = write_header(outputfile, compositeheader, dialect)
     if success == False:
         message = 'Header was not written.'
-        returnvals = [compositeheader, outputfile, success, message, artifacts]
+        returnvals = [workspace, compositeheader, outputfile, success, message, artifacts]
         return response(returnvars, returnvals)
 
     if compositeheader is not None:
@@ -117,7 +119,7 @@ def composite_header_constructor(options):
 
     artifacts['composite_header_file'] = outputfile
 
-    returnvals = [compositeheader, outputfile, success, message, artifacts]
+    returnvals = [workspace, compositeheader, outputfile, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
  

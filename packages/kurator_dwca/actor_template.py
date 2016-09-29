@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "actor_template.py 2016-09-26T12:01+02:00"
+__version__ = "actor_template.py 2016-09-29T13:41+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -51,6 +51,10 @@ def dostuffer(options):
     ### Standard outputs ###
     success = False
     message = None
+
+    ### Custom outputs ###
+    # Intialize any other output variables here so that the response calls no about them
+
     # Make a dictionary for artifacts left behind
     artifacts = {}
 
