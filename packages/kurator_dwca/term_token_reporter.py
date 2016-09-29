@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_token_reporter.py 2016-09-08T14:04+02:00"
+__version__ = "term_token_reporter.py 2016-09-29T04:26+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -29,6 +29,15 @@ import csv
 import uuid
 import logging
 import argparse
+try:
+    # need to install unicodecsv for this to be used
+    # pip install unicodecsv
+    # jython pip install unicodecsv for use in workflows
+    import unicodecsv as csv
+except ImportError:
+    import warnings
+    warnings.warn("can't import `unicodecsv` encoding errors may occur")
+    import csv
 
 tokenreportfieldlist = ['token', 'rowcount', 'totalcount']
 

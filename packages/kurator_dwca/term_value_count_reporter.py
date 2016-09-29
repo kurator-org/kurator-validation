@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_value_count_reporter.py 2016-09-27T15:40+02:00"
+__version__ = "term_value_count_reporter.py 2016-09-29T04:23+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -26,6 +27,16 @@ import os
 import csv
 import uuid
 import argparse
+try:
+    # need to install unicodecsv for this to be used
+    # pip install unicodecsv
+    # jython pip install unicodecsv for use in workflows
+    import unicodecsv as csv
+except ImportError:
+    import warnings
+    warnings.warn("can't import `unicodecsv` encoding errors may occur")
+    import csv
+
 
 def term_value_count_reporter(options):
     """Extract a list of the distinct values of a given term in a text file along with 
@@ -199,7 +210,12 @@ def term_value_count_report(reportfile, termcountlist, termname='value', format=
         writer = csv.DictWriter(csvfile, dialect=dialect, \
             fieldnames=countreporttermlist)
         for item in termcountlist:
-            writer.writerow({termname:item[0].encode('utf-8'), 'count':item[1] })
+            # Note: This throws an exception in Python 2.7.6 if termname:item[0] if the 
+            # content includes non-ascii characters. Example, for 'Querétaro'
+            #   UnicodeDecodeError: 'ascii' codec can't decode byte 0xc3 in 
+            #   position 4: ordinal not in range(128)
+#            writer.writerow({termname:item[0].encode('utf-8'), 'count':item[1] })
+            writer.writerow({termname:item[0], 'count':item[1] })
     return True
 
 def _getoptions():

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator.py 2016-09-08T14:04+02:00"
+__version__ = "text_file_aggregator.py 2016-09-29T04:28+02:00"
 
 from dwca_utils import composite_header
 from dwca_utils import csv_file_dialect
@@ -28,6 +28,15 @@ import csv
 import uuid
 import logging
 import argparse
+try:
+    # need to install unicodecsv for this to be used
+    # pip install unicodecsv
+    # jython pip install unicodecsv for use in workflows
+    import unicodecsv as csv
+except ImportError:
+    import warnings
+    warnings.warn("can't import `unicodecsv` encoding errors may occur")
+    import csv
 
 def text_file_aggregator(options):
     """Join the contents of files in a given path. Headers are not assumed to be the
