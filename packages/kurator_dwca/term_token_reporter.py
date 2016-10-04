@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,35 +15,37 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_token_reporter.py 2016-09-29T13:40+02:00"
+__version__ = "term_token_reporter.py 2016-10-04T15:29+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 from dwca_utils import csv_file_dialect
 from dwca_utils import csv_file_encoding
 from dwca_utils import read_header
+from dwca_utils import write_header
 from dwca_utils import read_csv_row
 from dwca_utils import tsv_dialect
 import os
 import re
-import csv
 import uuid
 import logging
 import argparse
+
+# Replace the system csv with unicodecsv. All invocations of csv will use unicodecsv,
+# which supports reading and writing unicode streams.
 try:
-    # need to install unicodecsv for this to be used
-    # pip install unicodecsv
-    # jython pip install unicodecsv for use in workflows
     import unicodecsv as csv
 except ImportError:
     import warnings
-    warnings.warn("can't import `unicodecsv` encoding errors may occur")
-    import csv
+    s = "The unicodecsv package is required.\n"
+    s += "pip install unicodecsv\n"
+    s += "jython pip install unicodecsv"
+    warnings.warn(s)
 
 tokenreportfieldlist = ['token', 'rowcount', 'totalcount']
 
 def term_token_reporter(options):
-    """Get a dictionary of counts of tokens for a given term in an input file.
+    ''' Get a dictionary of counts of tokens for a given term in an input file.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the outputfile (optional)
@@ -56,7 +59,7 @@ def term_token_reporter(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -95,13 +98,13 @@ def term_token_reporter(options):
         pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given'
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, outputfile, tokens, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file %s not found' % inputfile
+        message = 'Input file %s not found. %s' % (inputfile, __version__)
         returnvals = [workspace, outputfile, tokens, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -112,7 +115,7 @@ def term_token_reporter(options):
         pass
 
     if termname is None or len(termname)==0:
-        message = 'No term given'
+        message = 'No term given. %s' % __version__
         returnvals = [workspace, outputfile, tokens, success, message, artifacts]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
@@ -139,7 +142,7 @@ def term_token_reporter(options):
     return response(returnvars, returnvals)
 
 def token_report(reportfile, tokens, dialect=None):
-    """Write a term token report to a file.
+    ''' Write a term token report to a file.
     parameters:
         reportfile - full path to the report file (optional)
         tokens - dictionary of token occurrences (required) (see output from 
@@ -147,8 +150,9 @@ def token_report(reportfile, tokens, dialect=None):
         dialect - csv.dialect object with the attributes of the report file (default None)
     returns:
         True if the report was written, otherwise False
-    """
-    functionname = 'token_report'
+    '''
+    functionname = 'token_report()'
+
     if tokens is None or len(tokens)==0:
         s = 'No token dictionary given in %s.' % functionname
         logging.debug(s)
@@ -158,10 +162,8 @@ def token_report(reportfile, tokens, dialect=None):
         dialect = tsv_dialect()
     
     if reportfile is not None:
-        with open(reportfile, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, dialect=dialect, \
-                fieldnames=tokenreportfieldlist)
-            writer.writeheader()
+        # Create the outputfile and write the new header to it
+        write_header(reportfile, tokenreportfieldlist, dialect)
 
         if os.path.isfile(reportfile) == False:
             s = 'File %s not found in %s.' % (reportfile, functionname)
@@ -183,23 +185,24 @@ def token_report(reportfile, tokens, dialect=None):
 
     return True
 
-def term_token_count_from_file(inputfile, termname):
-    """Make a dictionary of tokens for a given term in a file along with the number of 
+def term_token_count_from_file(inputfile, termname, dialect=None, encoding=None):
+    ''' Make a dictionary of tokens for a given term in a file along with the number of 
        times each occurs.
     parameters:
         inputfile - full path to the input file (required)
         termname - term for which to count rows (required)
+        dialect - csv.dialect object with the attributes of the input files, which must
+           all have the same dialect if dialect is given, otherwise it will be detected
+           (default None)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
     returns:
         tokens - a dictionary containing the tokens and their counts
-    """
-    functionname = 'term_token_count_from_file'
+    '''
+    functionname = 'term_token_count_from_file()'
+
     if inputfile is None or len(inputfile) == 0:
         s = 'No input file given in %s.' % functionname
-        logging.debug(s)
-        return 0
-
-    if termname is None or len(termname) == 0:
-        s = 'No term name given in %s.' % functionname
         logging.debug(s)
         return 0
 
@@ -208,23 +211,24 @@ def term_token_count_from_file(inputfile, termname):
         logging.debug(s)
         return 0
 
-    # Determine the dialect of the input file
-    inputdialect = csv_file_dialect(inputfile)
-    # print 'inputdialect: %s' % dialect_attributes(inputdialect)
-    if inputdialect is None:
-        s = 'Unable to determine file dialect for %s in %s.' % (inputfile, functionname)
+    if termname is None or len(termname) == 0:
+        s = 'No term name given in %s.' % functionname
         logging.debug(s)
-        return None
+        return 0
+
+    # Determine the dialect of the input file
+    if dialect is None:
+        dialect = csv_file_dialect(inputfile)
+        # csv_file_dialect() always returns a dialect if there is an input file.
+        # No need to check.
 
     # Determine the encoding of the input file
-    inputencoding = csv_file_encoding(inputfile)
-    # print 'inputencoding: %s' % inputencoding
-    if inputencoding is None:
-        s = 'Unable to determine file encoding for %s in %s.' % (inputfile, functionname)
-        logging.debug(s)
-        return None
+    if encoding is None:
+        encoding = csv_file_encoding(inputfile)
+        # csv_file_encoding() always returns an encoding if there is an input file.
+        # No need to check.
 
-    inputheader = read_header(inputfile, inputdialect)
+    inputheader = read_header(inputfile, dialect=dialect, encoding=encoding)
 
     if termname not in inputheader:
         s = 'Term %s not found in file %s ' % (termname, inputfile)
@@ -237,7 +241,7 @@ def term_token_count_from_file(inputfile, termname):
     populatedrowcount = 0
     tokens = { 'tokenlist':{} }
 
-    for row in read_csv_row(inputfile, inputdialect, inputencoding):
+    for row in read_csv_row(inputfile, dialect, encoding):
         try:
             value = row[termname]
         except:
@@ -279,7 +283,7 @@ def term_token_count_from_file(inputfile, termname):
     return tokens
 
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

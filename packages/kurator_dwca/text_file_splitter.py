@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_splitter.py 2016-09-08T14:05+02:00"
+__version__ = "text_file_splitter.py 2016-10-02T16:02+02:00"
 
 from dwca_utils import split_path
 from dwca_utils import response
@@ -25,11 +26,11 @@ import logging
 import argparse
 
 def text_file_splitter(options):
-    """Split a text file into chunks with headers. Put the chunk files in the workspace.
+    ''' Split a text file into chunks with headers. Put the chunk files in the workspace.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
-        inputfile - full path to the input file (required)
         workspace - the directory in which the output will be written (optional)
+        inputfile - full path to the input file (required)
         chunksize - the maximum number of records in an output file (optional)
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
@@ -38,7 +39,7 @@ def text_file_splitter(options):
         rowcount - the number of rows in the file that was split, not counting header
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -49,48 +50,51 @@ def text_file_splitter(options):
     # Make a list for the response
     returnvars = ['workspace', 'filepattern', 'chunks', 'rowcount', 'success', 'message']
 
-    # outputs
-    filepattern = None
-    chunks = None
-    rowcount = None
+    ### Standard outputs ###
     success = False
     message = None
 
-    # inputs
-    try:
-        chunksize = options['chunksize']
-    except:
-        chunksize = 10000
+    ### Custom outputs ###
+    filepattern = None
+    chunks = None
+    rowcount = None
 
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
+    termname = None
+    chunksize = 10000
+
+    ### Required inputs ###
     try:
         workspace = options['workspace']
     except:
-        workspace = None
-
-    if workspace is None or len(workspace)==0:
-        workspace = './'
+        pass
 
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given'
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, filepattern, chunks, rowcount, success, message]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if not os.path.isfile(inputfile):
-        message = 'Input file %s not found' % inputfile
+        message = 'Input file %s not found. %s' % (inputfile, __version__)
         returnvals = [workspace, filepattern, chunks, rowcount, success, message]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
-    # local variables
+    try:
+        chunksize = options['chunksize']
+    except:
+        pass
+
     path = None
     fileext = None
-
     path, fileext, filepattern = split_path(inputfile)
 
     # Open the file in universal mode
@@ -140,7 +144,7 @@ def text_file_splitter(options):
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'full path to the input file (required)'

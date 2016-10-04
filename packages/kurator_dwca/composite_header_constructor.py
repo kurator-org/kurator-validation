@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor.py 2016-09-29T13:53+02:00"
+__version__ = "composite_header_constructor.py 2016-10-04T15:41+02:00"
 
 from dwca_utils import read_header
 from dwca_utils import write_header
@@ -27,8 +28,8 @@ import logging
 import argparse
 
 def composite_header_constructor(options):
-    """Create a file with a header that contains the distinct union of column names from 
-       two input files.
+    ''' Create a file with a header that contains the distinct union of column names from 
+        two input files.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the output file (optional; default './')
@@ -42,7 +43,7 @@ def composite_header_constructor(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -91,12 +92,14 @@ def composite_header_constructor(options):
         pass
 
     if outputfile is None or len(outputfile)==0:
-        message = 'No output file given'
+        message = 'No output file given. %s' % __version__
         returnvals = [workspace, compositeheader, outputfile, success, message, artifacts]
         return response(returnvars, returnvals)
 
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
+    # Read the headers of the two files and let read_header figure out the dialects and
+    # encodings.
     header1 = read_header(inputfile1)
     header2 = read_header(inputfile2)
 
@@ -110,7 +113,7 @@ def composite_header_constructor(options):
     # Write the resulting header into outputfile
     success = write_header(outputfile, compositeheader, dialect)
     if success == False:
-        message = 'Header was not written.'
+        message = 'Header was not written. %s' % __version__
         returnvals = [workspace, compositeheader, outputfile, success, message, artifacts]
         return response(returnvars, returnvals)
 
@@ -124,7 +127,7 @@ def composite_header_constructor(options):
     return response(returnvars, returnvals)
  
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'full path to first input file'

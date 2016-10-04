@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "actor_template.py 2016-09-29T13:41+02:00"
+__version__ = "actor_template.py 2016-10-02T16:02+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -24,8 +25,8 @@ import uuid
 import argparse
 
 def dostuffer(options):
-    """Generic actor showing patterns for logging, input dictionary, and output dictionary
-       with artifacts.
+    ''' Generic actor showing patterns for logging, input dictionary, and output dictionary
+        with artifacts.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the outputfile (optional)
@@ -37,7 +38,7 @@ def dostuffer(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the results
         artifacts - a dictionary of persistent objects created
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -75,13 +76,13 @@ def dostuffer(options):
         pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given in %s' % __version__
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file %s not found in %s' % (inputfile, __version__)
+        message = 'Input file %s not found. %s' % (inputfile, __version__)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -112,14 +113,15 @@ def dostuffer(options):
     return response(returnvars, returnvals)
 
 def do_stuff(inputfile, outputfile):
-    """Generic function with input and output.
+    ''' Generic function with input and output.
     parameters:
         inputfile - the full path to the input file
         outputfile - the full path to the output file
     returns:
         success - True if the task is completed, otherwise False
-    """
+    '''
     functionname = 'do_stuff()'
+
     # Check for required values
     if inputfile is None or len(inputfile)==0:
         s = 'No input file given in %s.' % functionname
@@ -137,7 +139,7 @@ def do_stuff(inputfile, outputfile):
     return True
 
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'full path to the input file (required)'

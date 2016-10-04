@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "downloader.py 2016-09-29T12:09+02:00"
+__version__ = "downloader.py 2016-10-02T16:02+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -27,7 +28,7 @@ except ImportError:
     from urllib import urlretrieve  # Python 2
 
 def downloader(options):
-    """Download a files from a list of URLs.
+    ''' Download a files from a list of URLs.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the outputfile (optional)
@@ -39,7 +40,7 @@ def downloader(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the results
         artifacts - a dictionary of persistent objects created
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -86,23 +87,23 @@ def downloader(options):
     success = download_file(url, outputfile)
 
     if success==True:
-        artifact_key = 'downloaded_file_%s' % outputfile
-        artifacts[artifact_key] = outputfile
+        artifacts['downloaded_file'] = outputfile
 
     returnvals = [workspace, outputfile, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def download_file(url, outputfile):
-    """Get a file from a URL.
+    ''' Get a file from a URL.
     parameters:
         url - the url to download from
             (e.g., 'http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals')
         outputfile - the full path to the location for the output file
     returns:
         success - True if the file was downloaded, False if the request was unsuccessful
-    """
-    functionname = download_file
+    '''
+    functionname = 'download_file()'
+
     if url is None or len(url)==0:
         s = 'No URL given in %s' % functionname
         logging.info(s)
@@ -117,14 +118,14 @@ def download_file(url, outputfile):
         urlretrieve(url, outputfile)
     except Exception, e:
         s = 'Exception while attempting urlretrieve(%s, %s):\n%s\n' % (url, outputfile, e)
-        s += 'in %s' % functionname
+        s += '%s' % functionname
         logging.warning(s)
         return False
 
     return True
 
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

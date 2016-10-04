@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,31 +15,35 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_filter.py 2016-09-29T13:05+02:00"
+__version__ = "text_file_filter.py 2016-10-04T15:28+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 from dwca_utils import read_header
+from dwca_utils import write_header
 from dwca_utils import csv_file_dialect
+from dwca_utils import csv_file_encoding
+from dwca_utils import read_csv_row
 from dwca_utils import csv_dialect
 from dwca_utils import tsv_dialect
 import os
 import uuid
 import logging
 import argparse
-import csv
+
+# Replace the system csv with unicodecsv. All invocations of csv will use unicodecsv,
+# which supports reading and writing unicode streams.
 try:
-    # need to install unicodecsv for this to be used
-    # pip install unicodecsv
-    # jython pip install unicodecsv for use in workflows
     import unicodecsv as csv
 except ImportError:
     import warnings
-    warnings.warn("can't import `unicodecsv` encoding errors may occur")
-    import csv
+    s = "The unicodecsv package is required.\n"
+    s += "pip install unicodecsv\n"
+    s += "jython pip install unicodecsv"
+    warnings.warn(s)
 
 def text_file_filter(options):
-    """Filter a text file into a new file based on matching values in a term.
+    ''' Filter a text file into a new file based on matching values in a term.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - the directory in which the output will be written (optional)
@@ -53,7 +58,7 @@ def text_file_filter(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -91,13 +96,13 @@ def text_file_filter(options):
         pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given'
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file %s not found' % inputfile
+        message = 'Input file %s not found. %s' % (inputfile, __version__)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -108,7 +113,7 @@ def text_file_filter(options):
         pass
 
     if termname is None or len(termname)==0:
-        message = 'No term given'
+        message = 'No term given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
@@ -119,15 +124,22 @@ def text_file_filter(options):
         pass
 
     if matchingvalue is None or len(matchingvalue)==0:
-        message = 'No matching value given for %s' % termname
+        message = 'No matching value given for %s. %s' % (termname, __version__)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
-    # If the termname is not in the header of the inputfile, nothing to do
-    header = read_header(inputfile)
+    # Determine the file dialect
+    inputdialect = csv_file_dialect(inputfile)
+
+    # Determine the file encoding
+    inputencoding = csv_file_encoding(inputfile)
+    
+    # If the termname is not in the header of the inputfile, nothing to do.
+    header = read_header(inputfile, dialect=inputdialect, encoding=inputencoding)
+
     if termname not in header:
-        message = 'Term %s not found in %s' % (termname, inputfile)
+        message = 'Term %s not found in %s. %s' % (termname, inputfile, __version__)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
@@ -147,37 +159,32 @@ def text_file_filter(options):
     
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
-    # Determine the file dialect
-    indialect = csv_file_dialect(inputfile)
-    
     # Prepare the outputfile
     if format=='txt' or format is None:
-        outdialect = tsv_dialect()
+        outputdialect = tsv_dialect()
     else:
-        outdialect = csv_dialect()
+        outputdialect = csv_dialect()
 
-    # Create the outputfile with the chosen format and the same header as the input
-    with open(outputfile, 'w') as outfile:
-        writer = csv.DictWriter(outfile, dialect=outdialect, fieldnames=header)
-        writer.writeheader()
+    # Create the outputfile and write the new header to it
+    write_header(outputfile, header, outputdialect)
 
     # Check to see that the file was created
     if os.path.isfile(outputfile) == False:
-        message = 'Outputfile %s was not created' % outputfile
+        message = 'Outputfile %s was not created. %s' % (outputfile, __version__)
         returnvals = [workspace, outputfile, success, message, artifacts]
         return response(returnvars, returnvals)
 
     # Open the outputfile to start writing matching rows
     with open(outputfile, 'a') as outfile:
-        writer = csv.DictWriter(outfile, dialect=outdialect, fieldnames=header)
-        with open(inputfile, 'rU') as infile:
-            dr = csv.DictReader(infile, dialect=indialect, fieldnames=header)
-            # Iterate though the entire input file
-            for row in dr:
-                # Determine if the term value matches the criterion
-#                print 'row: %s' % row
-                if row[termname] == matchingvalue:
-                    writer.writerow(row)
+        writer = csv.DictWriter(outfile, dialect=outputdialect, encoding='utf-8', 
+            fieldnames=header)
+
+        # Iterate through all rows in the input file
+        for row in read_csv_row(inputfile, dialect=inputdialect, encoding=inputencoding, 
+            header=True, fieldnames=header):
+            # Write rows where the term value matches the criterion
+            if row[termname] == matchingvalue:
+                writer.writerow(row)
 
     success = True
     s = '%s_filtered_file' % termname
@@ -189,7 +196,7 @@ def text_file_filter(options):
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

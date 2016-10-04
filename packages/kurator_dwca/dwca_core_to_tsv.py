@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,17 +15,28 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2016-09-29T13:46+02:00"
+__version__ = "dwca_core_to_tsv.py 2016-10-04T15:09+02:00"
 
 from dwcareader_utils import short_term_names
 from dwca_utils import tsv_dialect
 from dwca_utils import response
+from dwca_utils import write_header
 from dwca_utils import setup_actor_logging
-import csv
 import uuid
 import os
 import logging
 import argparse
+
+# Replace the system csv with unicodecsv. All invocations of csv will use unicodecsv,
+# which supports reading and writing unicode streams.
+try:
+    import unicodecsv as csv
+except ImportError:
+    import warnings
+    s = "The unicodecsv package is required.\n"
+    s += "pip install unicodecsv\n"
+    s += "jython pip install unicodecsv"
+    warnings.warn(s)
 
 # Python Darwin Core Archive Reader from 
 #   https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
@@ -34,7 +46,7 @@ from dwca.read import DwCAReader
 from dwca.read import GBIFResultsReader
 
 def dwca_core_to_tsv(options):
-    """Save the core of the archive to a tsv file with DwC term names as headers.
+    ''' Save the core of the archive to a tsv file with DwC term names as headers.
     options - a dictionary of parameters
         loglevel - the level at which to log (e.g., DEBUG)
         workspace - path to a directory for the outputfile (optional)
@@ -48,7 +60,7 @@ def dwca_core_to_tsv(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -88,7 +100,7 @@ def dwca_core_to_tsv(options):
         pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given'
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -98,7 +110,7 @@ def dwca_core_to_tsv(options):
         if os.path.isfile(workspace+'/'+inputfile) == True:
             inputfile = workspace+'/'+inputfile
         else:
-            message = 'Input file %s not found' % inputfile
+            message = 'Input file %s not found. %s' % (inputfile, __version__)
             returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
             logging.debug('message:\n%s' % message)
             return response(returnvars, returnvals)
@@ -124,20 +136,21 @@ def dwca_core_to_tsv(options):
         try:
             dwcareader = GBIFResultsReader(inputfile)
         except Exception, e:
-            message = 'Error %s reading GBIF archive: %s' % (inputfile, e)
+            message = 'Error %s ' % e
+            message += 'reading GBIF archive: %s. %s' % (inputfile, __version__)
             returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
             logging.debug('message:\n%s' % message)
             return response(returnvars, returnvals)
     try:
         dwcareader = DwCAReader(inputfile)
     except Exception, e:
-        message = 'Error %s reading archive: %s' % (inputfile, e)
+        message = 'Error %s reading archive %s. %s' % (e, inputfile, __version__)
         returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if dwcareader is None:
-        message = 'No viable archive found at %s' % inputfile
+        message = 'No viable archive found at %s. %s' % (inputfile, __version__)
         returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -145,9 +158,13 @@ def dwca_core_to_tsv(options):
     termnames=list(dwcareader.descriptor.core.terms)
     shorttermnames=short_term_names(termnames)
     dialect = tsv_dialect()
-    with open(outputfile, 'w') as thefile:
-        writer = csv.DictWriter(thefile, dialect=dialect, fieldnames=shorttermnames)
-        writer.writeheader()
+
+    success = write_header(outputfile, shorttermnames, dialect)
+    if success == False:
+        message = 'Unable to write header to %s. %s' % (outputfile, __version__)
+        returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
 
     rowcount = 0
     with open(outputfile, 'a') as thefile:
@@ -170,7 +187,7 @@ def dwca_core_to_tsv(options):
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +15,8 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "utf8_encoder.py 2016-09-29T13:59+02:00"
+__version__ = "utf8_encoder.py 2016-10-04T12:01+02:00"
 
-from dwca_utils import ENCODINGS
 from dwca_utils import utf8_file_encoder
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -25,7 +25,7 @@ import logging
 import argparse
 
 def utf8_encoder(options):
-    """Translate input file from its current encoding to utf8.
+    ''' Translate input file from its current encoding to utf8.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the outputfile (optional)
@@ -36,7 +36,7 @@ def utf8_encoder(options):
         outputfile - actual full path to the output file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -72,13 +72,13 @@ def utf8_encoder(options):
         pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given'
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file %s not found' % inputfile
+        message = 'Input file %s not found. %s' % (inputfile, __version__)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -89,7 +89,7 @@ def utf8_encoder(options):
         pass
 
     if outputfile is None or len(outputfile)==0:
-        message = 'No output file given'
+        message = 'No output file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -104,7 +104,7 @@ def utf8_encoder(options):
     success = utf8_file_encoder(inputfile, outputfile, encoding)
 
     if success == False:
-        message = 'Unable to translate %s to utf8 encoding' % inputfile
+        message = 'Unable to translate %s to utf8 encoding. %s' % (inputfile, __version__)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -115,7 +115,7 @@ def utf8_encoder(options):
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parse command line options and return them."""
+    '''Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

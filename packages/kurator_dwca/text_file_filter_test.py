@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_filter_test.py 2016-07-21T16:04+02:00"
+__version__ = "text_file_filter_test.py 2016-10-04T14:49+02:00"
 
 # This file contains unit tests for the text_file_filter function.
 #
@@ -25,9 +25,22 @@ __version__ = "text_file_filter_test.py 2016-07-21T16:04+02:00"
 from text_file_filter import text_file_filter
 from dwca_utils import read_header
 from dwca_utils import csv_file_dialect
+from dwca_utils import csv_file_encoding
+from dwca_utils import read_csv_row
+from dwca_utils import count_rows
 import os
 import unittest
-import csv
+
+# Replace the system csv with unicodecsv. All invocations of csv will use unicodecsv,
+# which supports reading and writing unicode streams.
+try:
+    import unicodecsv as csv
+except ImportError:
+    import warnings
+    s = "The unicodecsv package is required.\n"
+    s += "pip install unicodecsv\n"
+    s += "jython pip install unicodecsv"
+    warnings.warn(s)
 
 class TextFileFilterFramework():
     """Test framework for the text file filter."""
@@ -149,23 +162,25 @@ class TextFileFilterTestCase(unittest.TestCase):
 
         header = read_header(outputfile)
         dialect = csv_file_dialect(outputfile)
-        with open(outputfile, 'rU') as outfile:
-            dr = csv.DictReader(outfile, dialect=dialect, fieldnames=header)
-            rows = 0
-            matches = 0
-            for row in dr:
-                rows += 1
-#                print 'row: %s' % row
-                if row[termname] == matchingvalue:
-                    matches +=1
-        expected = 6
-        s = 'Number of rows in output (%s) not as expected (%s)' % (rows, expected)
-        self.assertEqual(rows, expected, s)
+        encoding = csv_file_encoding(outputfile)
+
+        matches = 0
+        # Iterate through all rows in the input file
+        for row in read_csv_row(outputfile, dialect=dialect, encoding=encoding, 
+            header=True, fieldnames=header):
+            #print 'row: %s' % row
+            if row[termname] == matchingvalue:
+                matches +=1
         expected = 5
         s = 'Number of matches in output (%s) not as expected (%s)' % (matches, expected)
         self.assertEqual(matches, expected, s)
 
-
+        matches = count_rows(outputfile)
+        expected = 7
+        s = 'Number of matches of %s in %s ' % (matchingvalue, outputfile)
+        s += 'was %s, not as expected (%s) ' % (matches, expected)
+        self.assertEqual(matches, expected, s)
+        
 if __name__ == '__main__':
     print '=== text_file_filter_test.py ==='
     unittest.main()

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2016-09-29T13:43+02:00"
+__version__ = "vocab_appender.py 2016-10-04T15:25+02:00"
 
 from dwca_utils import read_header
 from dwca_utils import response
@@ -25,13 +26,23 @@ from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
 from dwca_terms import vocabfieldlist
 import os
-import csv
 import logging
 import argparse
 
+# Replace the system csv with unicodecsv. All invocations of csv will use unicodecsv,
+# which supports reading and writing unicode streams.
+try:
+    import unicodecsv as csv
+except ImportError:
+    import warnings
+    s = "The unicodecsv package is required.\n"
+    s += "pip install unicodecsv\n"
+    s += "jython pip install unicodecsv"
+    warnings.warn(s)
+
 def vocab_appender(options):
-    """Given a set of distinct key values for a given term, append any not already in the 
-       given vocabulary file as new entries.
+    ''' Given a set of distinct key values for a given term, append any not already in the 
+        given vocabulary file as new entries.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory to work in (optional)
@@ -45,7 +56,7 @@ def vocab_appender(options):
         addedvalues - new key values added to the vocabulary file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -86,7 +97,7 @@ def vocab_appender(options):
         pass
 
     if key is None or len(key)==0:
-        message = 'No key in vocab_appender'
+        message = 'No key given. %s' % __version__
         returnvals = [workspace, vocabfile, addedvalues, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -102,7 +113,7 @@ def vocab_appender(options):
         pass
 
     if checkvaluelist is None or len(checkvaluelist)==0:
-        message = 'No values to check'
+        message = 'No values to check. %s' % __version__
         returnvals = [workspace, vocabfile, addedvalues, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -113,7 +124,7 @@ def vocab_appender(options):
         pass
 
     if vocabfile is None or len(vocabfile)==0:
-        message = 'No vocab file given'
+        message = 'No vocab file given.' % __version__
         returnvals = [workspace, vocabfile, addedvalues, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -131,21 +142,23 @@ def vocab_appender(options):
     if filesize == 0:
         writevocabheader(vocabfile, fieldnames, dialect)
 
-    # Now we should have a vocab file with a header at least
-    header = read_header(vocabfile, dialect)
+    # Now we should have a vocab file in utf-8 with a header at least
+    header = read_header(vocabfile, dialect, 'utf-8')
 
     # The header for the values we are trying to add has to match the header for the 
     # vocabulary file. If not, the vocabulary structure will be compromised.
     if fieldnames != header:
         message = 'header for new values:\n%s\n' % fieldnames
-        message += 'does not match vocabulary file header: %s' % header
+        message += 'does not match vocabulary file header: %s\n' % header
+        message += '%s' % __version__
         returnvals = [workspace, vocabfile, addedvalues, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if key != header[0]:
         message = 'key in the header (%s)' % header[0]
-        message += ' does not match vocabulary specified key: %s' % key
+        message += ' does not match vocabulary-specified key: %s\n' % key
+        message += '%s' % __version__
         returnvals = [workspace, vocabfile, addedvalues, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -163,7 +176,7 @@ def vocab_appender(options):
     return response(returnvars, returnvals)
     
 def _getoptions():
-    """Parse command line options and return them."""
+    '''Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

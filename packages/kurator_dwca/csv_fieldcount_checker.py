@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_fieldcount_checker.py 2016-09-08T13:50+02:00"
+__version__ = "csv_fieldcount_checker.py 2016-10-02T16:02+02:00"
 
 from dwca_utils import csv_field_checker
 from dwca_utils import response
@@ -24,19 +25,21 @@ import logging
 import argparse
 
 def csv_fieldcount_checker(options):
-    """Get the first row in a csv file where the number of fields is less than the number
-       of fields in the header.
+    ''' Get the first row in a csv file where the number of fields is less than the number
+        of fields in the header.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
+        workspace - path to a directory for the output artifacts (optional)
         inputfile - full path to the input file (required)
     returns a dictionary with information about the results
+        workspace - path to a directory for the output artifacts
         firstbadrowindex - the line number of the first row in the inputfile where the 
             field count does not match
         row - the content of the first line in the inputfile where the field count does
             not match.
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -45,48 +48,60 @@ def csv_fieldcount_checker(options):
     logging.debug( 'options: %s' % options )
 
     # Make a list for the response
-    returnvars = ['firstbadrowindex', 'row', 'success', 'message']
+    returnvars = ['workspace', 'firstbadrowindex', 'row', 'success', 'message']
 
-    # outputs
-    firstbadrowindex = 0
-    row = None
+    ### Standard outputs ###
     success = False
     message = None
 
-    # inputs
+    ### Custom outputs ###
+    firstbadrowindex = 0
+    row = None
+
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
+
+    ### Required inputs ###
+    try:
+        workspace = options['workspace']
+    except:
+        pass
+
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given'
-        returnvals = [firstbadrowindex, row, success, message]
+        message = 'No input file given. %s' % __version__
+        returnvals = [workspace, firstbadrowindex, row, success, message]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file %s not found' % inputfile
-        returnvals = [firstbadrowindex, row, success, message]
+        message = 'Input file %s not found. %s' % (inputfile, __version__)
+        returnvals = [workspace, firstbadrowindex, row, success, message]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     result = csv_field_checker(inputfile)
+
     if result is not None:
         firstbadrowindex = result[0]
         row = result[1]
-        message = 'Row with incorrect number fields found.'
-        returnvals = [firstbadrowindex, row, success, message]
+        message = 'Row with incorrect number fields found. %s' % __version__
+        returnvals = [workspace, firstbadrowindex, row, success, message]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     success = True
-    returnvals = [firstbadrowindex, row, success, message]
+    returnvals = [workspace, firstbadrowindex, row, success, message]
     logging.info('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'full path to the input file'

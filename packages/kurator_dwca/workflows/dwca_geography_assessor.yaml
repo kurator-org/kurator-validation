@@ -431,7 +431,8 @@ components:
       # Set the field combination to report on.
       key: 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
       # Set the separator for the key.
-      separator: '|'
+      # In this case, the whole string with |s is the key, so we do not want a separator.
+      separator: None
       # Show the name of the upstream actor.
       messagefrom: 'CreateGeographyCountReport'
     # The "upstream" actor from which to receive a message.

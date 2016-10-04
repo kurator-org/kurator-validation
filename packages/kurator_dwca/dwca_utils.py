@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-09-27T15:34+02:00"
+__version__ = "dwca_utils.py 2016-10-04T16:03+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -25,37 +25,40 @@ __version__ = "dwca_utils.py 2016-09-27T15:34+02:00"
 #
 # python dwca_utils.py
 
+from chardet.universaldetector import UniversalDetector
+from operator import itemgetter
 import os.path
 import glob
 import unittest
-import re
 import logging
-import codecs
-from operator import itemgetter
 
+# Replace the system csv with unicodecsv. All invocations of csv will use unicodecsv,
+# which supports reading and writing unicode streams.
 try:
-    # need to install unicodecsv for this to be used
-    # pip install unicodecsv
-    # jython pip install unicodecsv for use in workflows
     import unicodecsv as csv
 except ImportError:
     import warnings
-    warnings.warn("can't import `unicodecsv` encoding errors may occur")
-    import csv
+    s = "The unicodecsv package is required.\n"
+    s += "pip install unicodecsv\n"
+    s += "jython pip install unicodecsv"
+    warnings.warn(s)
 
-ENCODINGS = ['utf_8', 'latin_1', 'ascii', 'cp1252', 'mac_roman', 'utf_16', 'big5', 
-        'big5hkscs', 'cp037', 'cp424', 'cp437', 'cp500', 'cp737', 'cp775', 'cp850', 
-        'cp852', 'cp855', 'cp856', 'cp857', 'cp860', 'cp861', 'cp862', 'cp863', 'cp864', 
-        'cp865', 'cp866', 'cp869', 'cp874', 'cp875', 'cp932', 'cp949', 'cp950', 'cp1006', 
-        'cp1026', 'cp1140', 'cp1250', 'cp1251', 'cp1253', 'cp1254', 'cp1255', 'cp1256', 
-        'cp1257', 'cp1258', 'euc_jp', 'euc_jis_2004', 'euc_jisx0213', 'euc_kr', 'gb2312', 
-        'gbk', 'gb18030', 'hz', 'iso2022_jp', 'iso2022_jp_1', 'iso2022_jp_2', 
-        'iso2022_jp_2004', 'iso2022_jp_3', 'iso2022_jp_ext', 'iso2022_kr', 'iso8859_2', 
-        'iso8859_3', 'iso8859_4', 'iso8859_5', 'iso8859_6', 'iso8859_7', 'iso8859_8', 
-        'iso8859_9', 'iso8859_10', 'iso8859_13', 'iso8859_14', 'iso8859_15', 'johab', 
-        'koi8_r', 'koi8_u', 'mac_cyrillic', 'mac_greek', 'mac_iceland', 'mac_latin2', 
-        'mac_turkish', 'ptcp154', 'shift_jis', 'shift_jis_2004', 'shift_jisx0213', 
-        'utf_16_be', 'utf_16_le', 'utf_7']
+# def safe_unicode(obj, *args):
+#     ''' Return the unicode representation of obj.'''
+#     try:
+#         return unicode(obj, *args)
+#     except UnicodeDecodeError:
+#         # obj is byte string
+#         ascii_text = str(obj).encode('string_escape')
+#         return unicode(ascii_text)
+
+# def safe_str(obj):
+#     ''' Return the byte string representation of obj.'''
+#     try:
+#         return str(obj)
+#     except UnicodeEncodeError:
+#         # obj is unicode
+#         return unicode(obj).encode('unicode_escape')
 
 def ustripstr(s):
     ''' Create a stripped, uppercase version of an input string or empty string if input
@@ -65,12 +68,12 @@ def ustripstr(s):
     return s.strip().upper()
 
 def setup_actor_logging(options):
-    """Set up logging based on 'loglevel' in a dictionary.
+    ''' Set up logging based on 'loglevel' in a dictionary.
     parameters:
         options - dictionary in which to look for loglevel (required)
     returns:
         None
-    """
+    '''
     try:
         loglevel = options['loglevel']
     except:
@@ -83,13 +86,14 @@ def setup_actor_logging(options):
             logging.basicConfig(level=logging.INFO)
             logging.info('Log level set to INFO')
 
+
 def tsv_dialect():
-    """Get a dialect object with tab-separated value properties.
+    ''' Get a dialect object with tab-separated value properties.
     parameters:
         None
     returns:
         dialect - a csv.dialect object with TSV attributes
-    """
+    '''
     dialect = csv.excel_tab
     dialect.lineterminator='\r'
     dialect.delimiter='\t'
@@ -102,12 +106,12 @@ def tsv_dialect():
     return dialect
     
 def csv_dialect():
-    """Get a dialect object with CSV properties.
+    ''' Get a dialect object with CSV properties.
     parameters:
         None
     returns:
         dialect - a csv.dialect object with CSV attributes
-    """
+    '''
     dialect = csv.excel
     dialect.lineterminator='\r'
     dialect.delimiter=','
@@ -120,13 +124,14 @@ def csv_dialect():
     return dialect
 
 def csv_file_dialect(fullpath):
-    """Detect the dialect of a CSV or TXT data file.
+    ''' Detect the dialect of a CSV or TXT data file.
     parameters:
         fullpath - full path to the file to process (required)
     returns:
         dialect - a csv.dialect object with the detected attributes, or None
-    """
+    '''
     functionname = 'csv_file_dialect()'
+
     if fullpath is None or len(fullpath) == 0:
         s = 'No file given in %s.' % functionname
         logging.debug(s)
@@ -150,9 +155,6 @@ def csv_file_dialect(fullpath):
         # Try to read the specified part of the file
         try:
             buf = file.read(readto)
-#            s = 'csv_file_dialect()'
-#            s += ' buf:\n%s' % buf
-#            logging.debug(s)
             # See if the buffer has any doubled double quotes in it. If so, infer that the 
             # dialect doublequote value should be true.
             if buf.find('""')>0:
@@ -162,7 +164,6 @@ def csv_file_dialect(fullpath):
             # buffer has a tab in it, let's treat it as a TSV file 
             if buf.find('\t')>0:
                 return tsv_dialect()
-#            dialect = csv.Sniffer().sniff(file.read(readto))
             # Otherwise let's see what we can find invoking the Sniffer.
             logging.debug('Forced to use csv.Sniffer()')
             dialect = csv.Sniffer().sniff(buf, delimiters=',\t|')
@@ -172,7 +173,7 @@ def csv_file_dialect(fullpath):
             try:
                 file.seek(0)
                 s = 'csv_file_dialect()'
-                s += ' Re-sniffing with tab to %s' % (readto)
+                s += ' Re-sniffing %s to %s' % (fullpath, readto)
                 logging.debug(s)
                 sample_text = ''.join(file.readline() for x in xrange(2,4,1))
                 # See if the buffer has any doubled double quotes in it. If so, infer that the 
@@ -180,11 +181,11 @@ def csv_file_dialect(fullpath):
                 if sample_text.find('""')>0:
                     found_doublequotes = True
                 dialect = csv.Sniffer().sniff(sample_text)
-            # Sorry, couldn't figure it out
+            # Sorry, couldn't figure it out. Let's treat it as csv
             except csv.Error:
                 s = 'Unable to determine csv dialect in %s' % functionname
                 logging.debug(s)
-                return None
+                return csv_dialect()
     
     # Fill in some standard values for the remaining dialect attributes        
     if dialect.escapechar is None:
@@ -290,14 +291,17 @@ def dialect_attributes(dialect):
     return s
 
 def read_header(inputfile, dialect=None, encoding=None):
-    """Get the header line of a CSV or TXT data file.
+    ''' Get the header line of a CSV or TXT data file.
     parameters:
         inputfile - full path to the input file (required)
         dialect - csv.dialect object with the attributes of the input file (default None)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
     returns:
         header - a list containing the fields in the original header
-    """
+    '''
     functionname = 'read_header()'
+
     if inputfile is None or len(inputfile)==0:
         s = 'No file given in %s.' % functionname
         logging.debug(s)
@@ -314,48 +318,106 @@ def read_header(inputfile, dialect=None, encoding=None):
     # If no explicit dialect for the file is given, figure it out from the file
     if dialect is None:
         dialect = csv_file_dialect(inputfile)
-        # print 'dialect: %s' % dialect_attributes(dialect)
-    if dialect is None:
-        s = 'Unable to determine file dialect for %s in %s.' % (inputfile, functionname)
-        logging.debug(s)
-        return None
+        # csv_file_dialect() always returns a dialect if there is an input file.
+        # No need to check.
 
-    # Determine the encoding of the input file
-    if encoding is None:
+    # Try to determine the encoding of the inputfile.
+    if encoding is None or len(encoding.strip()) == 0:
         encoding = csv_file_encoding(inputfile)
-        # print 'encoding: %s' % encoding
-    if encoding is None:
-        s = 'Unable to determine file encoding for %s in %s.' % (inputfile, functionname)
-        logging.debug(s)
-        return None
+        # csv_file_encoding() always returns an encoding if there is an input file.    
 
     # Open up the file for processing
     with open(inputfile, 'rU') as data:
-        reader = csv.DictReader(utf8_data_encoder(data, encoding), dialect=dialect)
+        reader = csv.DictReader(utf8_data_encoder(data, encoding), dialect=dialect, 
+            encoding=encoding)
         # header is the list as returned by the reader
         header=reader.fieldnames
 
     return header
 
-def composite_header(fullpath, dialect = None):
-    """Get a header that includes all of the fields in headers of a set of files in the 
-       given path.
+def read_rows(inputfile, rowcount, dialect, encoding, header=True, fieldnames=None):
+    ''' Read rows from a csv file. Determine the existence of the file, its dialect, and 
+        its encoding before making a call to this function.
+    parameters:
+        inputfile - full path to the input file (required)
+        rowcount - the number of rows to return
+        dialect - csv.dialect object with the attributes of the input file (required)
+        encoding - a string designating the input file encoding (required) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
+        fieldnames -  list containing the fields in the header (optional)
+        header - True if the file has a header row (optional; default True)
+    returns:
+        rows - a list of row dictionaries
+    '''
+    rows = []
+    i = 0
+    with open(inputfile, 'rU') as data:
+        if fieldnames is None or len(fieldnames)==0:
+            reader = csv.DictReader(utf8_data_encoder(data, encoding), 
+                dialect=dialect, encoding=encoding)
+        else:
+            reader = csv.DictReader(utf8_data_encoder(data, encoding), \
+                dialect=dialect, encoding=encoding, fieldnames=fieldnames)
+            if header==True:
+                reader.next()
+        for row in reader:
+            rows.append(row)
+            i += 1
+            if i == rowcount:
+                return rows
+    return rows
+
+def count_rows(inputfile):
+    ''' Counts rows in a file.
+    parameters:
+        inputfile - full path to the input file (required)
+    returns:
+        count - the number of rows in the file
+    '''
+    with open(inputfile, "r") as f:
+        count = sum(bl.count("\r") for bl in blocks(f))
+
+    if count == 0:
+        with open(inputfile, "r") as f:
+            count = sum(bl.count("\n") for bl in blocks(f))
+    return count+1
+
+def blocks(file, size=65536):
+    ''' Yield blocks of given size in bytes from file.
+    parameters:
+        file - full path to the input file (required)
+        size - block size in bytes
+    returns:
+        b - the bytes in the block
+    '''
+    while True:
+        b = file.read(size)
+        if not b: break
+        yield b
+
+def composite_header(fullpath, dialect=None, encoding=None):
+    ''' Get a header that includes all of the fields in headers of a set of files in the 
+        given path. Files on fullpath are assumed to be in the same dialect and encoding.
     parameters:
         fullpath - full path to the files to process (required) (e.g., './*.txt')
         dialect - csv.dialect object with the attributes of the input files, which must
            all have the same dialect if dialect is given, otherwise it will be detected
            (default None)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
     returns:
         compositeheader - a list containing the fields in the header
-    """
+    '''
     functionname = 'composite_header()'
+
     if fullpath is None or len(fullpath)==0:
         s = 'No file path given in %s.' % functionname
         logging.debug(s)
         return None
 
     compositeheader = None
-    usedialect = dialect
+    useddialect = dialect
+    usedencoding = encoding
     files = glob.glob(fullpath)
 
     if files is None:
@@ -365,30 +427,39 @@ def composite_header(fullpath, dialect = None):
 
     for file in files:
         if dialect is None:
-            usedialect = csv_file_dialect(file)
+            useddialect = csv_file_dialect(file)
+            # csv_file_dialect() always returns a dialect if there is an input file.
+            # No need to check.
 
-        header = read_header(file, usedialect)
+        # Try to determine the encoding of the inputfile.
+        if encoding is None or len(encoding.strip()) == 0:
+            usedencoding = csv_file_encoding(file)
+            # csv_file_encoding() always returns an encoding if there is an input file.    
+
+        header = read_header(file, useddialect, usedencoding)
         compositeheader = merge_headers(compositeheader, header)
 
     return compositeheader
 
 def write_header(fullpath, fieldnames, dialect):
-    """Write the header line of a CSV or TXT data file.
+    ''' Write the header line of a CSV or TXT data file in utf-8 encoding.
     parameters:
         fullpath - full path to the input file (required)
         fieldnames -  list containing the fields in the header (required)
         dialect - csv.dialect object with the attributes of the output file (required)
     returns:
         True if the header was written to file, otherwise False
-    """
+    '''
     functionname = 'write_header()'
+
     if fullpath is None or len(fullpath)==0:
         s = 'No output file given in %s.' % functionname
         logging.debug(s)
         return False
 
     with open(fullpath, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
+        writer = csv.DictWriter(csvfile, dialect=dialect, encoding='utf-8', 
+            fieldnames=fieldnames)
         try:
             writer.writeheader()
         except:
@@ -399,13 +470,14 @@ def write_header(fullpath, fieldnames, dialect):
     return True
 
 def header_map(header):
-    """Construct a map between a header and a cleaned version of the header.
+    ''' Construct a map between a header and a cleaned version of the header.
     parameters:
         header - list of field names to clean (required)
     returns:
         headermap - a dictionary of cleanedfield:originalfield pairs
-    """
+    '''
     functionname = 'header_map()'
+
     if header is None or len(header)==0:
         s = 'No header given in %s.' % functionname
         logging.debug(s)
@@ -420,12 +492,12 @@ def header_map(header):
     return headermap
 
 def strip_list(inputlist):
-    """Create a list of strings stripped of whitespace from srings in an input list.
+    ''' Create a list of strings stripped of whitespace from srings in an input list.
     parameters:
         inputlist - list of strings (required)
     returns:
         outputlist - a list of field names after stripping
-    """
+    '''
     functionaname = 'strip_list()'
     # Cannot function without an inputlist
     if inputlist is None or len(inputlist)==0:
@@ -451,13 +523,14 @@ def strip_list(inputlist):
     return outputlist
 
 def clean_header(header):
-    """Construct a header from the cleaned field names in a header.
+    ''' Construct a header from the cleaned field names in a header.
     parameters:
         header - list of field names (required)
     returns:
         cleanheader - a list of field names after cleaning
-    """
+    '''
     functionname = 'clean_header()'
+
     # Cannot function without a header
     if header is None or len(header)==0:
         s = 'No header given in %s.' % functionname
@@ -478,15 +551,16 @@ def clean_header(header):
 
     return cleanheader
 
-def merge_headers(headersofar, headertoadd = None):
-    """Construct a header from the distinct white-space-stripped fields in two headers.
+def merge_headers(headersofar, headertoadd=None):
+    ''' Construct a header from the distinct white-space-stripped fields in two headers.
     parameters:
         headersofar - first header to merge (required)
-        headertoadd - header to merge with the first header (optional)
+        headertoadd - header to merge with the first header (optional; default None)
     returns:
         a sorted list of fields for the combined header
-    """
+    '''
     functionname = 'merge_headers()'
+
     if headersofar is None and headertoadd is None:
         s = 'No header given in %s.' % functionname
         logging.debug(s)
@@ -513,15 +587,19 @@ def merge_headers(headersofar, headertoadd = None):
 
     return sorted(list(composedheader))
 
-def csv_to_txt(inputfile, outputfile):
-    """Convert an arbitrary csv file into a txt file.
+def csv_to_txt(inputfile, outputfile, dialect=None, encoding=None):
+    ''' Convert an arbitrary csv file into a txt file.
     parameters:
         inputfile - full path to the input file (required)
         outputfile - full path to the converted file (required)
+        dialect - csv.dialect object with the attributes of the input files (default None)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
     returns:
         True if finished successfully, otherwise False
-    """
+    '''
     functionname = 'csv_to_txt()'
+
     if inputfile is None or len(inputfile) == 0:
         s = 'No input file given in %s.' % functionname
         logging.debug(s)
@@ -538,48 +616,52 @@ def csv_to_txt(inputfile, outputfile):
         return False
 
     # Determine the dialect of the input file
-    inputdialect = csv_file_dialect(inputfile)
-    # print 'inputdialect: %s' % dialect_attributes(inputdialect)
-    if inputdialect is None:
-        s = 'Unable to determine file dialect for %s in %s.' % (inputfile, functionname)
-        logging.debug(s)
-        return False
+    if dialect is None:
+        dialect = csv_file_dialect(inputfile)
+        # csv_file_dialect() always returns a dialect if there is an input file.
+        # No need to check.
 
-    # Determine the encoding of the input file
-    inputencoding = csv_file_encoding(inputfile)
-    # print 'inputencoding: %s' % inputencoding
-    if inputencoding is None:
-        s = 'Unable to determine file encoding for %s in %s.' % (inputfile, functionname)
-        logging.debug(s)
-        return False
+    # Try to determine the encoding of the inputfile.
+    if encoding is None or len(encoding.strip()) == 0:
+        encoding = csv_file_encoding(inputfile)
+        # csv_file_encoding() always returns an encoding if there is an input file.    
 
     # Get the header from the input file
-    inputheader = read_header(inputfile, inputdialect)
-    # print 'inputheader: %s' % inputheader
+    inputheader = read_header(inputfile, dialect, encoding)
+
     if inputheader is None:
         s = 'Unable to read header for %s in %s.' % (inputfile, functionname)
         logging.debug(s)
         return False
 
+    outputdialect = tsv_dialect()
     with open(outputfile, 'a') as tsvfile:
-        writer = csv.DictWriter(tsvfile, dialect=tsv_dialect(), fieldnames=inputheader)
+        writer = csv.DictWriter(tsvfile, dialect=outputdialect, encoding='utf-8', 
+            fieldnames=inputheader)
         writer.writeheader()
-        for row in read_csv_row(inputfile, inputdialect, inputencoding):
-#            print 'last row read successfully: %s' % row
+
+        # Iterate through all rows in the input file
+        for row in read_csv_row(inputfile, dialect, encoding, header=True, 
+            fieldnames=inputheader):
             writer.writerow(row)
+
     s = 'File written to %s in %s.' % (outputfile, functionname)
     logging.debug(s)
     return True
 
-def term_rowcount_from_file(inputfile, termname):
-    """Count of the rows that are populated for a given term.
+def term_rowcount_from_file(inputfile, termname, dialect=None, encoding=None):
+    ''' Count of the rows that are populated for a given term.
     parameters:
         inputfile - full path to the input file (required)
         termname - term for which to count rows (required)
+        dialect - csv.dialect object with the attributes of the input files (default None)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
     returns:
         rowcount - the number of rows with the term populated
-    """
+    '''
     functionname = 'term_rowcount_from_file()'
+
     if inputfile is None or len(inputfile) == 0:
         s = 'No input file given in %s.' % functionname
         logging.debug(s)
@@ -596,23 +678,18 @@ def term_rowcount_from_file(inputfile, termname):
         return 0
 
     # Determine the dialect of the input file
-    inputdialect = csv_file_dialect(inputfile)
-    # print 'inputdialect: %s' % dialect_attributes(inputdialect)
-    if inputdialect is None:
-        s = 'Unable to determine file dialect for %s in %s.' % (inputfile, functionname)
-        logging.debug(s)
-        return False
+    if dialect is None:
+        dialect = csv_file_dialect(inputfile)
+        # csv_file_dialect() always returns a dialect if there is an input file.
+        # No need to check.
 
-    # Determine the encoding of the input file
-    inputencoding = csv_file_encoding(inputfile)
-    # print 'inputencoding: %s' % inputencoding
-    if inputencoding is None:
-        s = 'Unable to determine file encoding for %s in %s.' % (inputfile, functionname)
-        logging.debug(s)
-        return False
+    # Try to determine the encoding of the inputfile.
+    if encoding is None or len(encoding.strip()) == 0:
+        encoding = csv_file_encoding(inputfile)
+        # csv_file_encoding() always returns an encoding if there is an input file.    
 
     # Search for fields based on a cleaned header
-    cleanheader = clean_header(read_header(inputfile))
+    cleanheader = clean_header(read_header(inputfile, dialect, encoding))
 
     # Search for term based on cleaned term to match cleaned header
     cleanterm = clean_header([termname])[0]
@@ -624,8 +701,7 @@ def term_rowcount_from_file(inputfile, termname):
 
     rowcount = 0
 
-    for row in read_csv_row(inputfile, inputdialect, inputencoding, fieldnames=cleanheader):
-#        print 'row: %s' % row
+    for row in read_csv_row(inputfile, dialect, encoding, fieldnames=cleanheader):
         try:
             value = row[cleanterm]
             if value is not None and len(value.strip()) > 0:
@@ -635,15 +711,19 @@ def term_rowcount_from_file(inputfile, termname):
 
     return rowcount
 
-def csv_field_checker(inputfile):
-    """Determine if any row in a csv file has fewer fields than the header.
+def csv_field_checker(inputfile, dialect=None, encoding=None):
+    ''' Determine if any row in a csv file has fewer fields than the header.
     parameters:
         inputfile - full path to the input file (required)
+        dialect - csv.dialect object with the attributes of the input files (default None)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
     returns:
         index, row - a tuple composed of the index of the first row that has a different 
             number of fields (1 is the first row after the header) and the row string
-    """
+    '''
     functionname = 'csv_field_checker()'
+
     if inputfile is None or len(inputfile) == 0:
         s = 'No input file given in %s.' % functionname
         logging.debug(s)
@@ -655,13 +735,24 @@ def csv_field_checker(inputfile):
         return None
 
     # Determine the dialect of the input file
-    inputdialect = csv_file_dialect(inputfile)
-    delimiter = inputdialect.delimiter
-    header = read_header(inputfile, inputdialect)
+    if dialect is None:
+        dialect = csv_file_dialect(inputfile)
+        # csv_file_dialect() always returns a dialect if there is an input file.
+        # No need to check.
+
+    # Try to determine the encoding of the inputfile.
+    if encoding is None or len(encoding.strip()) == 0:
+        encoding = csv_file_encoding(inputfile)
+        # csv_file_encoding() always returns an encoding if there is an input file.    
+
+    header = read_header(inputfile, dialect, encoding)
 
     if header is None:
+        s = 'No header found for %s in %s.' % (inputfile, functionname)
+        logging.debug(s)
         return None
 
+    delimiter = dialect.delimiter
     fieldcount = len(header)
 
     with open(inputfile, 'rU') as f:
@@ -674,17 +765,22 @@ def csv_field_checker(inputfile):
 
     return None
 
-def csv_spurious_newline_condenser(inputfile, outputfile, sub='-'):
-    """Remove new lines and carriage returns in data.
+def csv_spurious_newline_condenser(inputfile, outputfile, dialect=None, encoding=None, 
+    sub='-'):
+    ''' Remove new lines and carriage returns in data.
     parameters:
         inputfile - full path to the input file (required)
         outputfile - full path to the translated output file (required)
+        dialect - csv.dialect object with the attributes of the input files (default None)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
         sub - character sequence to substitute for the non-printing character 
             (default '-')
     returns:
         False if the removal does not complete successfully, otherwise True
-    """
+    '''
     functionname = 'csv_spurious_newline_condenser()'
+
     if inputfile is None or len(inputfile) == 0:
         s = 'No input file given in %s.' % functionname
         logging.debug(s)
@@ -696,26 +792,36 @@ def csv_spurious_newline_condenser(inputfile, outputfile, sub='-'):
         return None
 
     # Determine the dialect of the input file
-    inputdialect = csv_file_dialect(inputfile)
-    delimiter = inputdialect.delimiter
-    header = read_header(inputfile, inputdialect)
+    if dialect is None:
+        dialect = csv_file_dialect(inputfile)
+        # csv_file_dialect() always returns a dialect if there is an input file.
+        # No need to check.
+
+    # Try to determine the encoding of the inputfile.
+    if encoding is None or len(encoding.strip()) == 0:
+        encoding = csv_file_encoding(inputfile)
+        # csv_file_encoding() always returns an encoding if there is an input file.    
+
+    header = read_header(inputfile, dialect, encoding)
 
     if header is None:
+        s = 'No header found for %s in %s.' % (inputfile, functionname)
+        logging.debug(s)
         return None
 
     fieldcount = len(header)
+    delimiter = dialect.delimiter
     previousline = ''
+
     with open(outputfile, 'w') as outfile:
         with open(inputfile, 'rU') as infile:
             i = 0
             for line in infile:
                 line = previousline.replace('\n',sub).replace('\r',sub) + line
                 delimitercount = line.count(delimiter)
-#                print 'line: %s (%s delimiter)' % (line, delimitercount)
                 if delimitercount == fieldcount-1:
                     writethis = filter_non_printable(line,sub)
                     outfile.write(writethis)
-#                    print 'writing line: %s' % writethis
                     previousline = ''
                 elif delimitercount < fieldcount-1:
                     previousline = line
@@ -725,54 +831,67 @@ def csv_spurious_newline_condenser(inputfile, outputfile, sub='-'):
                     logging.debug(s)
                     return False
                 i += 1
+
     s = 'Output file written to %s in %s.' % (outputfile, functionname)
     logging.debug(s)
     return True
 
 def csv_file_encoding(inputfile):
-    """Try to discern the encoding of a file.
+    ''' Try to discern the encoding of a file.
     parameters:
         inputfile - the full path to an input file (required)
     returns:
-        the best guess at an encoding
-    """
+        the best guess at an encoding, or None
+    '''
     functionname = 'csv_file_encoding()'
-    for e in ENCODINGS:
-        try:
-            fh = codecs.open(inputfile, 'r', encoding=e)
-            fh.readlines()
-            fh.seek(0)
-        except UnicodeDecodeError:
-            s = 'Encoding error using %s on file %s ' % (e, inputfile)
-            s += ' in %s, trying different encoding' % functionname
-            logging.debug(s)
-        else:
-            # Able to read the file in this encoding
-            s = 'Encoding %s surmised for file %s ' % (e, inputfile)
-            s += 'in %s' % functionname
-            logging.debug(s)
-            return e
-    # Encoding not determined
-    s = 'No appropriate encoding found for file %s ' % inputfile
-    s += 'in %s' % functionname
-    logging.debug(s)
-    return None
 
-def extract_values_from_file(inputfile, fields, separator='|', 
-        function=None, *args, **kwargs):
-    """Get a list of the values of a list of fields from a file.
+    if inputfile is None or len(inputfile) == 0:
+        s = 'No input file given in %s.' % functionname
+        logging.debug(s)
+        return None
+
+    if os.path.isfile(inputfile) == False:
+        s = 'File %s not found in %s.' % (inputfile, functionname)
+        logging.debug(s)
+        return None
+
+    detector = UniversalDetector()
+    for line in file(inputfile, 'rb'):
+        detector.feed(line)
+        if detector.done: break
+    detector.close()
+    encoding = detector.result['encoding']
+
+    if encoding is None:
+        # Encoding not determined
+        s = 'No appropriate encoding found for file %s. Forcing utf8 ' % inputfile
+        s += 'in %s' % functionname
+        logging.debug(s)
+        encoding = 'utf-8'
+
+    return encoding
+
+def extract_values_from_file(
+    inputfile, fields, separator=None, dialect=None, encoding=None, 
+    function=None, *args, **kwargs):
+    ''' Get a list of the values of a list of fields from a file.
     parameters:
         inputfile - full path to the input file (required)
         fields - list of fields to extract from the input file (required)
-        separator - string to separate values the output string (default '|')
+        separator - string to separate values in the output string 
+            (optional: default None)
+        dialect - csv.dialect object with the attributes of the input file (default None)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
         function - function to call for each value extracted (default None)
         args - unnamed parameters to function as tuple (optional)
         kwargs - named parameters to function as dictionary (optional)
     returns:
         values - the extracted values of the fields in the list, concatenated with
             separator between values
-    """
+    '''
     functionname = 'extract_values_from_file()'
+
     if inputfile is None or len(inputfile) == 0:
         s = 'No input file given in %s.' % functionname
         logging.debug(s)
@@ -784,44 +903,35 @@ def extract_values_from_file(inputfile, fields, separator='|',
         return None
 
     # Determine the dialect of the input file
-    inputdialect = csv_file_dialect(inputfile)
-    # print 'inputfile: %s inputdialect: %s' % (inputfile, dialect_attributes(inputdialect))
-    if inputdialect is None:
-        s = 'Unable to determine dialect for file %s ' % inputfile
-        s += 'in %s.' % functionname
-        logging.debug(s)
-        return None
+    if dialect is None:
+        dialect = csv_file_dialect(inputfile)
+        # csv_file_dialect() always returns a dialect if there is an input file.
+        # No need to check.
 
-    # Determine the encoding of the input file
-    inputencoding = csv_file_encoding(inputfile)
-    # print 'inputencoding: %s' % inputencoding
-    if inputencoding is None:
-        s = 'Unable to determine encoding for file %s ' % inputfile
-        s += 'in %s.' % functionname
-        logging.debug(s)
-        return None
+    # Try to determine the encoding of the inputfile.
+    if encoding is None or len(encoding.strip()) == 0:
+        encoding = csv_file_encoding(inputfile)
+        # csv_file_encoding() always returns an encoding if there is an input file.    
 
     # Create a set into which to put the distinct values
     values = set()
 
     # Create a cleaned version of the header
-    cleanheader = clean_header(read_header(inputfile))
-    # print 'cleanheader: %s' % cleanheader
+    cleanheader = clean_header(read_header(inputfile, dialect, encoding))
 
     # Create a cleaned version of fields
     cleanfields = clean_header(fields)
-    # print 'fields: %s' % fields
-    # print 'cleanfields: %s' % cleanfields
+
+    #print 'cleanheader: %s' % cleanheader
+    #print 'cleanfields: %s' % cleanfields
 
     # Extract values from the rows in the input file
-    for row in read_csv_row(inputfile, inputdialect, inputencoding, fieldnames=cleanheader):
-        # print 'row: %s' % row
+    for row in read_csv_row(inputfile, dialect, encoding, fieldnames=cleanheader):
         try:
             value = extract_values_from_row(row, cleanfields, separator)
             if value is not None:
                 if function is not None:
                     newvalue = function(value, *args, **kwargs)
-                    # print 'newvalue: %s' % newvalue
                     values.add(newvalue)
                 else:
                     values.add(value)
@@ -829,21 +939,27 @@ def extract_values_from_file(inputfile, fields, separator='|',
             pass
     return sorted(list(values))
 
-def extract_value_counts_from_file(inputfile, fields, separator='|', 
-        function=None, *args, **kwargs):
-    """Get a dictionary of values of a list of fields from a file and their counts.
+def extract_value_counts_from_file(
+    inputfile, fields, separator=None, dialect=None, encoding=None, 
+    function=None, *args, **kwargs):
+    ''' Get a dictionary of values of a list of fields from a file and their counts.
     parameters:
         inputfile - full path to the input file (required)
         fields - list of fields to extract from the input file (required)
-        separator - string to separate values in the output string (default '|')
+        separator - string to separate values in the output string 
+            (optional; default None)
+        dialect - csv.dialect object with the attributes of the input file (default None)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
         function - function to call for each value extracted (default None)
         args - unnamed parameters to function as tuple (optional)
         kwargs - named parameters to function as dictionary (optional)
     returns:
         values - the extracted values of the fields in the list, concatenated with
             separator between values
-    """
+    '''
     functionname = 'extract_value_counts_from_file()'
+
     if inputfile is None or len(inputfile) == 0:
         s = 'No input file given in %s.' % functionname
         logging.debug(s)
@@ -855,40 +971,29 @@ def extract_value_counts_from_file(inputfile, fields, separator='|',
         return None
 
     # Determine the dialect of the input file
-    inputdialect = csv_file_dialect(inputfile)
-    # print 'inputdialect: %s' % dialect_attributes(inputdialect)
-    if inputdialect is None:
-        s = 'Unable to determine dialect for file %s '% inputfile
-        s += ' in %s.' % functionname
-        logging.debug(s)
-        return None
+    if dialect is None:
+        dialect = csv_file_dialect(inputfile)
+        # csv_file_dialect() always returns a dialect if there is an input file.
+        # No need to check.
 
-    # Determine the encoding of the input file
-    inputencoding = csv_file_encoding(inputfile)
-    # print 'inputencoding: %s' % inputencoding
-    if inputencoding is None:
-        s = 'Unable to determine file encoding for %s' % inputfile
-        s += ' in %s.' % functionname
-        logging.debug(s)
-        return None
+    # Try to determine the encoding of the inputfile.
+    if encoding is None or len(encoding.strip()) == 0:
+        encoding = csv_file_encoding(inputfile)
+        # csv_file_encoding() always returns an encoding if there is an input file.    
 
     # Create a cleaned version of the header
-    cleanheader = clean_header(read_header(inputfile))
-    # print 'cleanheader: %s' % cleanheader
+    cleanheader = clean_header(read_header(inputfile, dialect, encoding))
 
     # Create a cleaned version of fields
     cleanfields = clean_header(fields)
-    # print 'cleanfields: %s' % cleanfields
 
     # Create a set into which to put the distinct values
     values = {}
 
     # Extract values from the rows in the input file
-    for row in read_csv_row(inputfile, inputdialect, inputencoding, fieldnames=cleanheader):
-        # print 'row: %s' % row
+    for row in read_csv_row(inputfile, dialect, encoding, fieldnames=cleanheader):
         try:
             value = extract_values_from_row(row, cleanfields, separator)
-            # print 'value: %s' % value
             if value is not None:
                 if function is not None:
                     newvalue = function(value, *args, **kwargs)
@@ -905,21 +1010,21 @@ def extract_value_counts_from_file(inputfile, fields, separator='|',
             pass
     return sorted(values.iteritems(), key=itemgetter(1), reverse=True)
 
-def extract_values_from_row(row, fields, separator='|'):
-    """Get the values of a list of fields from a row.
+def extract_values_from_row(row, fields, separator=None):
+    ''' Get the values of a list of fields from a row.
     parameters:
         row - a dictionary (required)
         fields - list of fields to extract from the row (required)
-        separator - string to separate values the output string (default '|')
+        separator - string to separate values the output string (optional; default None)
     returns:
         values - the extracted values of the fields in the list, concatenated with
             separator between values
-    """
+    '''
     if fields is None or len(fields)==0:
         return None
 
     if separator is None:
-        separator = '|'
+        separator = ''
 
     values = ''
 
@@ -941,47 +1046,39 @@ def extract_values_from_row(row, fields, separator='|'):
     return values
 
 def read_csv_row(inputfile, dialect, encoding, header=True, fieldnames=None):
-    """Yield a row from a csv file. Determine the existence of the file, its dialect, and 
-       its encoding before making a call to this function.
+    ''' Yield a row from a csv file. Determine the existence of the file, its dialect, and 
+        its encoding before making a call to this function.
     parameters:
         inputfile - full path to the input file (required)
         dialect - csv.dialect object with the attributes of the input file (required)
         encoding - a string designating the input file encoding (required) 
-            (e.g., 'utf_8', 'mac_roman', 'latin_1', 'cp1252')
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
         fieldnames -  list containing the fields in the header (optional)
         header - True if the file has a header row (optional; default True)
     returns:
         row - the row as a dictionary
-    """
+    '''
     with open(inputfile, 'rU') as data:
         if fieldnames is None or len(fieldnames)==0:
-            reader = csv.DictReader(utf8_data_encoder(data, encoding), dialect=dialect)
+            reader = csv.DictReader(utf8_data_encoder(data, encoding), 
+                dialect=dialect, encoding=encoding)
         else:
             reader = csv.DictReader(utf8_data_encoder(data, encoding), \
-                dialect=dialect, fieldnames=fieldnames)
+                dialect=dialect, encoding=encoding, fieldnames=fieldnames)
             if header==True:
                 reader.next()
         for row in reader:
-            # print '===row===:\n%s' % row
-            for f in row:
-                try:
-                    row[f]=row[f].encode(encoding)
-                except AttributeError, e:
-                    s = 'Error encoding as %s: row[f]: %s' % (encoding, row[f])
-                    logging.debug(s)
-                    s = 'row: %s' % (row)
-                    logging.debug(s)
             yield row
 
 def filter_non_printable(str, sub = ''):
-    """Create a copy of a string with non-printing characters removed.
+    ''' Create a copy of a string with non-printing characters removed.
     parameters:
         str - the input string (required)
         sub - character sequence to substitute for the non-printing character 
             (default '')
     returns:
         string with the non-printing characters removed
-    """
+    '''
     newstr = ''
     for c in str:
         if ord(c) > 31 or ord(c) == 9 or ord(c) == 10 or ord(c) == 13:
@@ -991,7 +1088,7 @@ def filter_non_printable(str, sub = ''):
     return newstr
 
 def file_filter_non_printable(inputfile, outputfile, sub = '-'):
-    """Create a copy of a file with non-printing characters removed.
+    ''' Create a copy of a file with non-printing characters removed.
     parameters:
         inputfile - full path to the input file (required)
         outputfile - full path to the translated output file (required)
@@ -999,8 +1096,9 @@ def file_filter_non_printable(inputfile, outputfile, sub = '-'):
             (default '-')
     returns:
         False if the translation does not complete successfully, otherwise True
-    """
+    '''
     functionname = 'file_filter_non_printable()'
+
     i = 0
     with open(outputfile, 'w') as outdata:
         with open(inputfile, 'rU') as indata:
@@ -1016,24 +1114,22 @@ def file_filter_non_printable(inputfile, outputfile, sub = '-'):
     return True
 
 def utf8_file_encoder(inputfile, outputfile, encoding=None):
-    """Translate input file to utf8.
+    ''' Translate input file to utf8.
     parameters:
         inputfile - full path to the input file (required)
         outputfile - full path to the translated output file (required)
-        encoding - encoding of the input file (optional)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
     returns:
         False if the translation does not complete successfully, otherwise True
-    """
+    '''
     functionname = 'utf8_file_encoder()'
+
     # Try to determine the encoding of the inputfile.
-    if encoding is None or len(encoding.strip()) == 0 or encoding not in ENCODINGS:
+    if encoding is None or len(encoding.strip()) == 0:
         encoding = csv_file_encoding(inputfile)
-    if encoding is None:
-        # if we can't figure out the encoding, don't do anything.
-        s = 'Unable to determine file encoding for %s' % inputfile
-        s += ' in %s.' % functionname
-        logging.debug(s)
-        return None
+        # csv_file_encoding() always returns an encoding if there is an input file.    
+
     i = 0
     with open(outputfile, 'w') as outdata:
         with open(inputfile, 'rU') as indata:
@@ -1041,43 +1137,48 @@ def utf8_file_encoder(inputfile, outputfile, encoding=None):
                 try:
                     outdata.write( utf8_line_encoder(line, encoding) )
                 except UnicodeDecodeError, e:
-                    s = 'Failed to encode line %s ' % i
-                    s += 'in %s in encoding %s. Aborting.' % (encoding, functionname)
+                    s = 'Failed to encode line #%s:\n%s\n' % (i, line)
+                    s += 'from %s in encoding %s. ' % (inputfile, encoding)
+                    s += 'Exception: %s %s' % (e, functionname)
                     logging.debug(s)
                     return False
                 i += 1
     return True
 
 def utf8_data_encoder(data, encoding):
-    """Yield a row in utf8 from a file in given encoding.
+    ''' Yield a row in utf8 from a file in given encoding.
     parameters:
         data - the open input file (required)
         encoding - a string designating the input file encoding (required) 
-            (e.g., 'utf_8', 'mac_roman', 'latin_1', 'cp1252')
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
     returns:
         the row in utf8
-    """
+    '''
+    functionname = 'utf8_data_encoder()'
     for line in data:
         try:
             yield utf8_line_encoder(line, encoding)
         except UnicodeDecodeError, e:
-            print 'Failed to encode in encoding %s' % (encoding, e)
+            s = 'Failed to encode line #%s:\n%s\n' % (i, line)
+            s += 'from %s in encoding %s. ' % (inputfile, encoding)
+            s += 'Exception: %s %s' % (e, functionname)
+            logging.debug(s)
 
 def utf8_line_encoder(line, encoding):
-    """Get a row with a given encoding as utf8.
+    ''' Get a row with a given encoding as utf8.
     parameters:
         line - the line to process (required)
         encoding - a string designating the input file encoding (required) 
-            (e.g., 'utf_8', 'latin_1', 'cp1252')
+            (e.g., 'utf-8', 'latin_1', 'cp1252')
     returns:
         the line in utf8
-    """
-    if encoding == 'utf_8':
+    '''
+    if encoding == 'utf-8':
         return line
-    return line.decode(encoding).encode('utf_8')
+    return line.decode(encoding).encode('utf-8')
 
 def split_path(fullpath):
-    """Parse out the path to, the name of, and the extension for a given file.
+    ''' Parse out the path to, the name of, and the extension for a given file.
     parameters:
         fullpath - full path to the input file (required)
     returns:
@@ -1085,7 +1186,7 @@ def split_path(fullpath):
             path - the path to the file (e.g., './')
             filext - the extension for the file name (e.g., 'thefile')
             filepattern - the file name without the path and extension (e.g., 'txt')
-    """
+    '''
     if fullpath is None or len(fullpath)==0:
         logging.debug('No input file given in split_path().')
         return None, None, None
@@ -1096,20 +1197,23 @@ def split_path(fullpath):
 
     return path, fileext, filepattern
 
-def response(returnvars, returnvals):
-    """Create a dictionary combining keys with corresponding values.
+def response(returnvars, returnvals, version=None):
+    ''' Create a dictionary combining keys with corresponding values.
     parameters:
         returnvars - keys to use in the output (required)
         returnvals - values for the keys in the output (required)
+        version - version of the calling script
     returns:
         response - a dictionary of combined keys and values
-    """
+    '''
     response = {}
     i=0
 
     for a in returnvars:
         response[a]= returnvals[i] 
         i+=1
+    if version is not None and len(version.strip())>0:
+        response['version']=version
 
     return response
     
@@ -1234,6 +1338,31 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(termrowcountfile2), termrowcountfile2 + ' does not exist')
         self.assertTrue(os.path.isfile(termtokenfile), termtokenfile + ' does not exist')
 
+    def test_count_rows(self):
+        print 'testing count_rows'
+
+        non_printing_file = self.framework.non_printing_file
+        encodedfile_utf8 = self.framework.encodedfile_utf8
+        geogvocabfile = self.framework.geogvocabfile
+
+        file = non_printing_file
+        count = count_rows(file)
+        expected = 11
+        s = 'Number of rows (%s) in %s not as expected (%s)' % (count, file, expected)
+        self.assertEqual(count, expected, s)
+
+        file = encodedfile_utf8
+        count = count_rows(file)
+        expected = 10
+        s = 'Number of rows (%s) in %s not as expected (%s)' % (count, file, expected)
+        self.assertEqual(count, expected, s)
+
+        file = geogvocabfile
+        count = count_rows(file)
+        expected = 19
+        s = 'Number of rows (%s) in %s not as expected (%s)' % (count, file, expected)
+        self.assertEqual(count, expected, s)
+
     def test_tsv_dialect(self):
         print 'testing tsv_dialect'
         dialect = tsv_dialect()
@@ -1258,7 +1387,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
         print 'testing csv_file_dialect'
         csvreadheaderfile = self.framework.csvreadheaderfile
         dialect = csv_file_dialect(csvreadheaderfile)
-#        print 'dialect:\n%s' % dialect_attributes(dialect)
         self.assertIsNotNone(dialect, 'unable to detect csv file dialect')
         self.assertEqual(dialect.delimiter, ',',
             'incorrect delimiter detected for csv file')
@@ -1281,7 +1409,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
         print 'testing tsv_file_dialect'
         tsvreadheaderfile = self.framework.tsvreadheaderfile
         dialect = csv_file_dialect(tsvreadheaderfile)
-#        print 'dialect:\n%s' % dialect_attributes(dialect)
         self.assertIsNotNone(dialect, 'unable to detect tsv file dialect')
         self.assertEqual(dialect.delimiter, '\t',
             'incorrect delimiter detected for csv file')
@@ -1309,8 +1436,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
         'stateProvince', 'county', 'locality', 'family ', 'scientificName ', 
         'scientificNameAuthorship ', 'reproductiveCondition ', 'InstitutionCode ', 
         'CollectionCode ', 'DatasetName ', 'Id']
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
-#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 21, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
@@ -1320,8 +1445,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
         tsvheaderfile = self.framework.tsvtest1
         header = read_header(tsvheaderfile)
         expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', '']
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
-#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
@@ -1331,8 +1454,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
         csvheaderfile = self.framework.csvtest1
         header = read_header(csvheaderfile)
         expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', '']
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
-#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
@@ -1343,8 +1464,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
         header = read_header(tsvheaderfile)
         expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', 
         'decimalLatitude', 'decimalLongitude']
-#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' \
-#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
@@ -1355,8 +1474,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
         header = read_header(csvheaderfile)
         expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', 
         'decimalLatitude', 'decimalLongitude']
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
-#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
@@ -1368,8 +1485,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
         expected = ['id', 'class', 'coordinateUncertaintyInMeters', 'country',
             'eventDate', 'family', 'genus', 'decimalLatitude', 'decimalLongitude',
             'locality', 'scientificName', 'specificEpithet']
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
-#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 12, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
@@ -1382,8 +1497,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
         header = composite_header(csvcompositepath)
         expected = ['decimalLatitude', 'decimalLongitude', 'locality', 
         'materialSampleID', 'phylum', 'principalInvestigator']
-#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' \
-#            % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
@@ -1408,9 +1521,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
         'species', 'stateProvince', 'subSpecies', 'substratum', 'taxonRemarks', 
         'tissueStorageID', 'vernacularName', 'weight', 'wellID', 'wormsID', 'year', 
         'yearCollected', 'yearIdentified']
-#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' \
-#            % (len(header), len(modelheader), header, modelheader)
-        self.assertEqual(len(header),77, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
 
@@ -1464,8 +1574,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
 
         header = read_header(tsvfile)
         expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', '']
-        # print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
-        #    % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
@@ -1482,8 +1590,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
         header = read_header(tsvfile, tsv_dialect())
         expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', 
         'decimalLatitude', 'decimalLongitude']
-        # print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
-        #    % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
@@ -1501,8 +1607,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
         expected = ['id','class','coordinateUncertaintyInMeters','country','eventDate',
             'family','genus','decimalLatitude','decimalLongitude','locality',
             'scientificName','specificEpithet']
-        #print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
-        #    % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 12, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
@@ -1540,8 +1644,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'minimumDepthInMeters', 'maximumDepthInMeters', 'verbatimDepth', 
             'verbatimElevation', 'disposition', 'language', 'recordEnteredBy', 
             'modified', 'sourcePrimaryKey', 'collId', 'recordId', 'references']
-        #print 'len(header)=%s len(model)=%s\nheader:\nmodel:\n%s\n%s' \
-        #    % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 86, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
@@ -1587,8 +1689,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'stateprovince','county','locality','family','scientificname', \
             'scientificnameauthorship','reproductivecondition','institutioncode', \
             'collectioncode','datasetname','id']
-#        print 'result: %s' % result
-#        print 'expect: %s' % expected
         self.assertEqual(result, expected, 'long header failed to be cleaned properly')
 
     def test_merge_headers(self):
@@ -1668,7 +1768,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
 
         csvfile = self.framework.non_printing_file
         result = csv_field_checker(csvfile)
-#        print 'csvfile: %s result: %s' % (csvfile, result)
         firstbadrow = result[0]
         s = 'field checker found first mismatched field in %s at row index %s'  \
             % (csvfile, firstbadrow)
@@ -1704,12 +1803,14 @@ class DWCAUtilsTestCase(unittest.TestCase):
         encodedfile_latin_1 = self.framework.encodedfile_latin_1
         
         encoding = csv_file_encoding(encodedfile_utf8)
-        expected = 'utf_8'
+        # UTF8 file containing only ascii and latin2 characters encoded as utf-8 is 
+        # indistinguishable from latin2.
+        expected = 'ISO-8859-2'
         s = 'file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding,expected,s)
         
         encoding = csv_file_encoding(encodedfile_latin_1)
-        expected = 'latin_1'
+        expected = 'KOI8-R'
         s = 'file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding,expected,s)
 
@@ -1722,17 +1823,17 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = '%s not translated to utf8' % testfile
         self.assertEqual(success,True,s)
         encoding = csv_file_encoding(tempfile)
-        expected = 'utf_8'
-        s = 'Encoding (%s) of %s to %s not utf_8' % (encoding, testfile, tempfile)
+        expected = 'utf-8'
+        s = 'Encoding (%s) of %s to %s not utf-8' % (encoding, testfile, tempfile)
         self.assertEqual(encoding,expected,s)
 
         testfile = self.framework.encodedfile_latin_1
         success = utf8_file_encoder(testfile, tempfile)
-        s = '%s not translated to utf8' % testfile
+        s = '%s not translated to utf-8' % testfile
         self.assertEqual(success,True,s)
         encoding = csv_file_encoding(tempfile)
-        expected = 'utf_8'
-        s = 'Encoding (%s) of %s to %s not utf_8' % (encoding, testfile, tempfile)
+        expected = 'utf-8'
+        s = 'Encoding (%s) of %s to %s not utf-8' % (encoding, testfile, tempfile)
         self.assertEqual(encoding,expected,s)
 
     def test_file_filter_non_printable(self):
@@ -1769,18 +1870,39 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(found, expected,s)
 
         fields = ['country', 'stateProvince']
-        found = extract_values_from_row(row, fields)
+        found = extract_values_from_row(row, fields, '|')
         expected = 'USA|Montana'
         s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
         self.assertEqual(found, expected,s)
 
+        found = extract_values_from_row(row, fields)
+        expected = 'USAMontana'
+        s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
+        self.assertEqual(found, expected,s)
+
         fields = ['country', 'stateProvince', 'county']
+        found = extract_values_from_row(row, fields, '|')
+        expected = 'USA|Montana|Missoula Co'
+        s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
+        self.assertEqual(found, expected,s)
+
+        found = extract_values_from_row(row, fields)
+        expected = 'USAMontanaMissoula Co'
+        s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
+        self.assertEqual(found, expected,s)
+
+        fields = ['country|stateProvince|county']
         found = extract_values_from_row(row, fields)
         expected = 'USA|Montana|Missoula Co'
         s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
         self.assertEqual(found, expected,s)
 
         fields = ['country|stateProvince|county']
+        found = extract_values_from_row(row, fields, '|')
+        expected = 'USA|Montana|Missoula Co'
+        s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
+        self.assertEqual(found, expected,s)
+
         found = extract_values_from_row(row, fields)
         expected = 'USA|Montana|Missoula Co'
         s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
@@ -1795,8 +1917,10 @@ class DWCAUtilsTestCase(unittest.TestCase):
         print 'testing extract_values_from_file'
 
         extractvaluesfile1 = self.framework.extractvaluesfile1
+        inputencoding = csv_file_encoding(extractvaluesfile1)
         fields = ['country']
-        found = extract_values_from_file(extractvaluesfile1, fields)
+        found = extract_values_from_file(extractvaluesfile1, fields, 
+            encoding=inputencoding)
         expected = ['United States']
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
@@ -1804,7 +1928,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(found, expected,s)
 
         fields = ['stateProvince']
-        found = extract_values_from_file(extractvaluesfile1, fields)
+        found = extract_values_from_file(extractvaluesfile1, fields, 
+            encoding=inputencoding)
         expected = ['California', 'Colorado', 'Hawaii', 'Washington']
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
@@ -1812,7 +1937,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(found, expected,s)
 
         fields = ['country', 'stateProvince', 'county']
-        found = extract_values_from_file(extractvaluesfile1, fields)
+        found = extract_values_from_file(extractvaluesfile1, fields, 
+            separator='|', encoding=inputencoding)
         expected = [
             'United States|California|', 
             'United States|California|Kern', 
@@ -1826,8 +1952,24 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s += ' from %s' % extractvaluesfile1
         self.assertEqual(found, expected,s)
 
+        found = extract_values_from_file(extractvaluesfile1, fields, 
+            encoding=inputencoding)
+        expected = [
+            'United StatesCalifornia', 
+            'United StatesCaliforniaKern', 
+            'United StatesCaliforniaSan Bernardino', 
+            'United StatesColorado', 
+            'United StatesHawaiiHonolulu', 
+            'United StatesWashingtonChelan'
+            ]
+        s = 'Extracted values:\n%s' % found
+        s += ' not as expected:\n%s' % expected
+        s += ' from %s' % extractvaluesfile1
+        self.assertEqual(found, expected,s)
+
         fields = ['CollectionCode ']
-        found = extract_values_from_file(extractvaluesfile1, fields)
+        found = extract_values_from_file(extractvaluesfile1, fields, 
+            encoding=inputencoding)
         expected = ['FilteredPush']
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
@@ -1835,34 +1977,47 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(found, expected,s)
 
         fields = ['CollectionCode']
-        found = extract_values_from_file(extractvaluesfile1, fields)
+        found = extract_values_from_file(extractvaluesfile1, fields, 
+            encoding=inputencoding)
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
         self.assertEqual(found, expected,s)
 
         fields = ['collectionCode']
-        found = extract_values_from_file(extractvaluesfile1, fields)
+        found = extract_values_from_file(extractvaluesfile1, fields, 
+            encoding=inputencoding)
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
         self.assertEqual(found, expected,s)
 
         fields = ['collectioncode']
-        found = extract_values_from_file(extractvaluesfile1, fields)
+        found = extract_values_from_file(extractvaluesfile1, fields, 
+            encoding=inputencoding)
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
         self.assertEqual(found, expected,s)
 
         fields = ['collectioncode ']
-        found = extract_values_from_file(extractvaluesfile1, fields)
+        found = extract_values_from_file(extractvaluesfile1, fields, 
+            encoding=inputencoding)
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
         self.assertEqual(found, expected,s)
 
-        found = extract_values_from_file(extractvaluesfile1, fields, function=ustripstr)
+        fields = ['collectioncode ']
+        found = extract_values_from_file(extractvaluesfile1, fields, 
+            separator='|', encoding=inputencoding)
+        s = 'Extracted values:\n%s' % found
+        s += ' not as expected:\n%s' % expected
+        s += ' from %s' % extractvaluesfile1
+        self.assertEqual(found, expected,s)
+
+        found = extract_values_from_file(extractvaluesfile1, fields, 
+            encoding=inputencoding, function=ustripstr)
         expected = ['FILTEREDPUSH']
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
@@ -1870,12 +2025,26 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(found, expected,s)
 
         fields = ['country', 'stateProvince']
-        found = extract_values_from_file(extractvaluesfile1, fields, function=ustripstr)
+        found = extract_values_from_file(extractvaluesfile1, fields, 
+            encoding=inputencoding, function=ustripstr, separator='|')
         expected = [
             'UNITED STATES|CALIFORNIA', 
             'UNITED STATES|COLORADO', 
             'UNITED STATES|HAWAII', 
             'UNITED STATES|WASHINGTON'
+            ]
+        s = 'Extracted values:\n%s' % found
+        s += ' not as expected:\n%s' % expected
+        s += ' from %s' % extractvaluesfile1
+        self.assertEqual(found, expected,s)
+
+        found = extract_values_from_file(extractvaluesfile1, fields, 
+            encoding=inputencoding, function=ustripstr)
+        expected = [
+            'UNITED STATESCALIFORNIA', 
+            'UNITED STATESCOLORADO', 
+            'UNITED STATESHAWAII', 
+            'UNITED STATESWASHINGTON'
             ]
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
@@ -1903,7 +2072,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(found, expected,s)
 
         fields = ['country', 'stateProvince']
-        found = extract_value_counts_from_file(extractvaluesfile1, fields)
+        found = extract_value_counts_from_file(extractvaluesfile1, fields, '|')
         expected = [('United States|California', 5), ('United States|Colorado', 1), 
             ('United States|Washington', 1), ('United States|Hawaii', 1)]
         s = 'Extracted values:\n%s' % found
@@ -1911,6 +2080,15 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s += ' from %s' % extractvaluesfile1
         self.assertEqual(found, expected,s)
 
+        found = extract_value_counts_from_file(extractvaluesfile1, fields)
+        expected = [('United StatesCalifornia', 5),  ('United StatesWashington', 1), 
+        ('United StatesColorado', 1), ('United StatesHawaii', 1)]
+        s = 'Extracted values:\n%s' % found
+        s += ' not as expected:\n%s' % expected
+        s += ' from %s' % extractvaluesfile1
+        self.assertEqual(found, expected,s)
+
 if __name__ == '__main__':
     print '=== dwca_utils.py ==='
+    #setup_actor_logging({'loglevel':'DEBUG'})
     unittest.main()

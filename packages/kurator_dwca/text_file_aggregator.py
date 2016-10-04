@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,33 +15,36 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator.py 2016-09-29T13:42+02:00"
+__version__ = "text_file_aggregator.py 2016-10-04T13:24+02:00"
 
 from dwca_utils import composite_header
 from dwca_utils import csv_file_dialect
+from dwca_utils import csv_file_encoding
+from dwca_utils import utf8_data_encoder
 from dwca_utils import tsv_dialect
 from dwca_utils import dialect_attributes
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 import os
 import glob
-import csv
 import uuid
 import logging
 import argparse
+
+# Replace the system csv with unicodecsv. All invocations of csv will use unicodecsv,
+# which supports reading and writing unicode streams.
 try:
-    # need to install unicodecsv for this to be used
-    # pip install unicodecsv
-    # jython pip install unicodecsv for use in workflows
     import unicodecsv as csv
 except ImportError:
     import warnings
-    warnings.warn("can't import `unicodecsv` encoding errors may occur")
-    import csv
+    s = "The unicodecsv package is required.\n"
+    s += "pip install unicodecsv\n"
+    s += "jython pip install unicodecsv"
+    warnings.warn(s)
 
 def text_file_aggregator(options):
-    """Join the contents of files in a given path. Headers are not assumed to be the
-       same. Write a file containing the joined files with one header line.
+    ''' Join the contents of files in a given path. Headers are not assumed to be the
+        same. Write a file containing the joined files with one header line.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the outputfile (optional)
@@ -56,7 +60,7 @@ def text_file_aggregator(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -95,7 +99,7 @@ def text_file_aggregator(options):
         pass
 
     if inputpath is None or len(inputpath)==0:
-        message = 'No input file given'
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, outputfile, aggregaterowcount, success, message,
             artifacts]
         logging.debug('message:\n%s' % message)
@@ -125,14 +129,17 @@ def text_file_aggregator(options):
         files = glob.glob(inputpath)
         for file in files:
             dialect = csv_file_dialect(file)
+            encoding = csv_file_encoding(file)
             with open(file, 'rU') as inputfile:
-                reader = csv.DictReader(inputfile, dialect=dialect)
+                reader = csv.DictReader(utf8_data_encoder(inputfile, encoding), 
+                    dialect=dialect, encoding=encoding)
                 for line in reader:
                     try:
                         writer.writerow(line)
                         aggregaterowcount += 1
                     except:
-                        message = 'failed to write line:\n%s\nto file %s' % (line, file)
+                        message = 'failed to write line:\n%s\n' % line
+                        message += 'to file %s. %s' % (file, __version__)
                         returnvals = [workspace, outputfile, aggregaterowcount, success, 
                             message, artifacts]
                         logging.debug('message:\n%s' % message)
@@ -148,7 +155,7 @@ def text_file_aggregator(options):
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parse command line options and return them."""
+    '''Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

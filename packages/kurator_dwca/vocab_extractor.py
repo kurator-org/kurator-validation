@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-09-29T13:43+02:00"
+__version__ = "vocab_extractor.py 2016-10-04T15:48+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -25,7 +26,7 @@ import logging
 import argparse
 
 def vocab_extractor(options):
-    """Extract a list of the distinct values of a set of terms in a text file.
+    ''' Extract a list of the distinct values of a set of terms in a text file.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory to work in (optional)
@@ -38,7 +39,7 @@ def vocab_extractor(options):
         extractedvalues - a list of distinct values of the term in the inputfile
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -77,13 +78,13 @@ def vocab_extractor(options):
         pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given in %s' % __version__
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, extractedvalues, success, message]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
         
     if not os.path.isfile(inputfile):
-        message = 'Input file %s not found in %s' % (inputfile, __version__)
+        message = 'Input file %s not found. %s' % (inputfile, __version__)
         returnvals = [workspace, extractedvalues, success, message]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
@@ -94,7 +95,7 @@ def vocab_extractor(options):
         pass
 
     if termlist is None or len(termlist)==0:
-        message = 'No termlist given in %s' % __version__
+        message = 'No termlist given. %s' % __version__
         returnvals = [workspace, extractedvalues, success, message]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
@@ -106,6 +107,7 @@ def vocab_extractor(options):
 
     # Extract the distinct values from the inputfile, applying the function to strip
     # white space and make lower case.
+    # Let extract_values_from_file figure out the dialect and encoding of inputfile.
     extractedvalues = extract_values_from_file(inputfile, termlist, separator=separator, \
         function=ustripstr)
 
@@ -115,7 +117,7 @@ def vocab_extractor(options):
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

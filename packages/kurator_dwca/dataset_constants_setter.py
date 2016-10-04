@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dataset_constants_setter.py 2016-09-29T13:41+02:00"
+__version__ = "dataset_constants_setter.py 2016-10-02T16:02+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -25,9 +26,9 @@ import logging
 import argparse
 
 def dataset_constants_setter(options):
-    """Create an output file replacing values in fields of an input file with constants 
-       and adding fields that did not already exist in the input file, filling them with 
-       constants.
+    ''' Create an output file replacing values in fields of an input file with constants 
+        and adding fields that did not already exist in the input file, filling them with 
+        constants.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the output file (optional; default './')
@@ -46,7 +47,7 @@ def dataset_constants_setter(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -87,7 +88,7 @@ def dataset_constants_setter(options):
         pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given in %s' % __version__
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -97,7 +98,7 @@ def dataset_constants_setter(options):
         if os.path.isfile(workspace+'/'+inputfile) == True:
             inputfile = workspace+'/'+inputfile
         else:
-            message = 'Input file %s not found in %s' % (inputfile, __version__)
+            message = 'Input file %s not found. %s' % (inputfile, __version__)
             returnvals = [workspace, outputfile, True, message, artifacts]
             logging.debug('message:\n%s' % message)
             return response(returnvars, returnvals)
@@ -108,7 +109,7 @@ def dataset_constants_setter(options):
         pass
 
     if key is None or len(key)==0:
-        message = 'No key in %s' % __version__
+        message = 'No key given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -149,8 +150,8 @@ def dataset_constants_setter(options):
 
     # Check to see if the outputfile was created
     if outputfile is not None and not os.path.isfile(outputfile):
-        message = 'Failed to write results to output file %s ' % outputfile
-        message += 'in %s' % __version__
+        message = 'Failed to write results to output file %s. ' % outputfile
+        message += '%s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -165,7 +166,7 @@ def dataset_constants_setter(options):
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parse command line options and return them."""
+    '''Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

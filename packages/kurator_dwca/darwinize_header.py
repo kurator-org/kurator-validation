@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,10 +15,9 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwinize_header.py 2016-09-29T13:58+02:00"
+__version__ = "darwinize_header.py 2016-10-04T12:02+02:00"
 
 from dwca_vocab_utils import darwinize_list
-from dwca_utils import dialect_attributes
 from dwca_utils import read_header
 from dwca_utils import write_header
 from dwca_utils import read_csv_row
@@ -28,11 +28,21 @@ from dwca_utils import setup_actor_logging
 import os
 import logging
 import argparse
-import csv
+
+# Replace the system csv with unicodecsv. All invocations of csv will use unicodecsv,
+# which supports reading and writing unicode streams.
+try:
+    import unicodecsv as csv
+except ImportError:
+    import warnings
+    s = "The unicodecsv package is required.\n"
+    s += "pip install unicodecsv\n"
+    s += "jython pip install unicodecsv"
+    warnings.warn(s)
 
 def darwinize_header(options):
-    """Translate field names from input file to Darwin Core field names in outputfile
-       using a Darwin Cloud vocabulary lookup.
+    ''' Translate field names from input file to Darwin Core field names in outputfile
+        using a Darwin Cloud vocabulary lookup.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the outputfile (optional)
@@ -44,7 +54,7 @@ def darwinize_header(options):
         outputfile - actual full path to the output file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -80,13 +90,13 @@ def darwinize_header(options):
         pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given'
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file %s not found' % inputfile
+        message = 'Input file %s not found. %s' % (inputfile, __version__)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -97,13 +107,13 @@ def darwinize_header(options):
         pass
 
     if dwccloudfile is None or len(dwccloudfile)==0:
-        message = 'No Darwin Cloud vocabulary file given'
+        message = 'No Darwin Cloud vocabulary file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(dwccloudfile) == False:
-        message = 'Darwin Cloud vocabulary file not found'
+        message = 'Darwin Cloud vocabulary file not found. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -114,7 +124,7 @@ def darwinize_header(options):
         pass
 
     if outputfile is None or len(outputfile)==0:
-        message = 'No output file given'
+        message = 'No output file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -122,16 +132,19 @@ def darwinize_header(options):
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     dialect = csv_file_dialect(inputfile)
-    encoding = csv_file_encoding(inputfile)
-    header = read_header(inputfile)
+    inputencoding = csv_file_encoding(inputfile)
+    header = read_header(inputfile, dialect, inputencoding)
     dwcheader = darwinize_list(header, dwccloudfile)
-    # print 'dialect:\n%s' % dialect_attributes(dialect)
-    # print 'header:\n%s' % header
-    # print 'dwcheader:\n%s' % dwcheader
 
+    if dwcheader is None:
+        message = 'Unable to create darwinized header. %s' % __version__
+        returnvals = [workspace, outputfile, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+        
     # Write the new header to the outputfile
-    if write_header(outputfile, dwcheader, dialect) == False:
-        message = 'Unable to write header to output file'
+    if write_header(outputfile, dwcheader, dialect=dialect) == False:
+        message = 'Unable to write header to output file. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -139,9 +152,9 @@ def darwinize_header(options):
     # Read the rows of the input file, append them to the output file after the 
     # header with columns in the same order.
     with open(outputfile, 'a') as outfile:
-        writer = csv.DictWriter(outfile, dialect=dialect, fieldnames=header)
-        for row in read_csv_row(inputfile, dialect, encoding):
-#            print 'row:\n%s' % row
+        writer = csv.DictWriter(outfile, dialect=dialect, encoding='utf-8', 
+            fieldnames=header)
+        for row in read_csv_row(inputfile, dialect, inputencoding):
             writer.writerow(row)
 
     success = True
@@ -149,9 +162,9 @@ def darwinize_header(options):
     returnvals = [workspace, outputfile, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
-
+	
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

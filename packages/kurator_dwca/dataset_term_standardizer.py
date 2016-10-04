@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dataset_term_standardizer.py 2016-09-26T16:24+02:00"
+__version__ = "dataset_term_standardizer.py 2016-10-02T16:02+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -25,8 +26,8 @@ import logging
 import argparse
 
 def dataset_term_standardizer(options):
-    """Create an output file replacing values from an input file for fields given in key 
-       with standard values and adding new fields to hold the original values.
+    ''' Create an output file replacing values from an input file for fields given in key 
+        with standard values and adding new fields to hold the original values.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the output file (optional; default './')
@@ -45,7 +46,7 @@ def dataset_term_standardizer(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -84,7 +85,7 @@ def dataset_term_standardizer(options):
         pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given in %s' % __version__
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -94,7 +95,7 @@ def dataset_term_standardizer(options):
         if os.path.isfile(workspace+'/'+inputfile) == True:
             inputfile = workspace+'/'+inputfile
         else:
-            message = 'Input file %s not found in %s' % (inputfile, __version__)
+            message = 'Input file %s not found. %s' % (inputfile, __version__)
             returnvals = [workspace, outputfile, True, message, artifacts]
             logging.debug('message:\n%s' % message)
             return response(returnvars, returnvals)
@@ -105,7 +106,7 @@ def dataset_term_standardizer(options):
         pass
 
     if vocabfile is None or len(vocabfile)==0:
-        message = 'No vocab file given in %s' % __version__
+        message = 'No vocab file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -125,7 +126,7 @@ def dataset_term_standardizer(options):
         pass
 
     if key is None or len(key)==0:
-        message = 'No key given in %s' % __version__
+        message = 'No key given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -159,8 +160,8 @@ def dataset_term_standardizer(options):
         separator=separator, format=format)
 
     if outputfile is not None and not os.path.isfile(outputfile):
-        message = 'Failed to write results to output file %s' % outputfile
-        message += 'in %s' %__version__
+        message = 'Failed to write results to output file %s. ' % outputfile
+        message += '%s' %__version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -172,7 +173,7 @@ def dataset_term_standardizer(options):
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

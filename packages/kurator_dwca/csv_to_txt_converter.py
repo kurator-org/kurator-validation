@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_to_txt_converter.py 2016-09-08T13:51+02:00"
+__version__ = "csv_to_txt_converter.py 2016-10-02T16:03+02:00"
 
 from dwca_utils import csv_to_txt
 from dwca_utils import response
@@ -24,7 +25,7 @@ import logging
 import argparse
 
 def csv_to_txt_converter(options):
-    """Translate input file from its current encoding to utf8.
+    ''' Translate input file from its current encoding to utf8.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the outputfile (optional)
@@ -34,7 +35,7 @@ def csv_to_txt_converter(options):
         outputfile - actual full path to the output file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -74,19 +75,19 @@ def csv_to_txt_converter(options):
         pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given'
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file %s not found' % inputfile
+        message = 'Input file %s not found. %s' % (inputfile, __version__)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if outputfile is None or len(outputfile)==0:
-        message = 'No output file given'
+        message = 'No output file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -96,7 +97,7 @@ def csv_to_txt_converter(options):
     success = csv_to_txt(inputfile, outputfile)
 
     if success == False:
-        message = 'Unable to convert %s to txt format' % inputfile
+        message = 'Unable to convert %s to txt format. %s' % (inputfile, __version__)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -107,7 +108,7 @@ def csv_to_txt_converter(options):
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

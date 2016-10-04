@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwcareader_utils.py 2016-05-11T22:46-03:00"
+__version__ = "dwcareader_utils.py 2016-10-02T16:02+02:00"
 
 # This file contains common utility functions for dealing with the content of a Darwin
 # Core archive. It is built with unit tests that can be invoked by running the script
@@ -42,7 +43,7 @@ import xml.etree.ElementTree as ET
 import unittest
 
 def dwca_metadata(dwcareader):
-    """Return metadata from Darwin Core Archive Reader."""
+    ''' Return metadata from Darwin Core Archive Reader.'''
     if dwcareader is None:
         return None
 
@@ -51,9 +52,10 @@ def dwca_metadata(dwcareader):
     return metadata
 
 def dwca_metadata_from_file(inputfile, archivetype=None):
-    """Return metadata from a Darwin Core Archive file."""
+    ''' Return metadata from a Darwin Core Archive file.'''
     if inputfile is None:
         return None
+
     # Make an appropriate reader based on whether the archive is standard or a GBIF
     # download.
     dwcareader = None
@@ -61,12 +63,14 @@ def dwca_metadata_from_file(inputfile, archivetype=None):
         try:
             dwcareader = GBIFResultsReader(inputfile)
         except Exception, e:
-            logging.error('GBIF archive %s has an exception: %s ' % (inputfile, e))
+            s = 'Unable to read GBIF archive %s. %s %s' % (inputfile, e, __version__)
+            logging.error(s)
             pass
     else:
         dwcareader = DwCAReader(inputfile)
+
     if dwcareader is None:
-        print 'No viable archive found at %s' % inputfile
+        logging.debug('No viable archive found at %s. %s' % (inputfile, __version__))
         return None
 
     metadata = dwca_metadata(dwcareader)
@@ -77,7 +81,7 @@ def dwca_metadata_from_file(inputfile, archivetype=None):
     return metadata
 
 def get_core_rowcount(dwcareader):
-    """Return number of rows in the core file of an open Darwin Core Archive."""
+    ''' Return number of rows in the core file of an open Darwin Core Archive.'''
     if dwcareader is None:
         return None
 
@@ -87,25 +91,29 @@ def get_core_rowcount(dwcareader):
         # row is an instance of CoreRow
         # iteration respects the order of appearance in the core file
         rowcount=rowcount+1
+
     return rowcount
     
 def get_core_rowcount_from_file(inputfile, archivetype=None):
-    """Return number of rows in the core file of a Darwin Core Archive file."""
+    ''' Return number of rows in the core file of a Darwin Core Archive file.'''
     if inputfile is None:
         return None
     # Make an appropriate reader based on whether the archive is standard or a GBIF
     # download.
     dwcareader = None
+
     if archivetype=='gbif':
         try:
             dwcareader = GBIFResultsReader(inputfile)
         except Exception, e:
-            logging.error('GBIF archive %s has an exception: %s ' % (inputfile, e))
+            s = 'Unable to read GBIF archive %s. %s %s' % (inputfile, e, __version__)
+            logging.error(s)
             pass
     else:
         dwcareader = DwCAReader(inputfile)
+
     if dwcareader is None:
-        print 'No viable archive found at %s' % inputfile
+        logging.debug('No viable archive found at %s. %s' % (inputfile, __version__))
         return None
 
     rowcount = get_core_rowcount(dwcareader)
@@ -115,21 +123,21 @@ def get_core_rowcount_from_file(inputfile, archivetype=None):
     return rowcount
 
 def shortname(qualname):
-    """Get a term name from a fully qualified term identifier.
+    ''' Get a term name from a fully qualified term identifier.
     parameters:
         qualname - a fully qualified term identifier 
             (e.g., 'http://rs.tdwg.org/dwc/terms/catalogNumber')
     returns:
         qualname.rpartition('/')[2] - the term name part of the identifier 
             (e.g., 'catalogNumber')
-    """
+    '''
     for t in TERMS:
         if t==qualname:
             return t.rpartition('/')[2]
     return None
 
 def short_term_names(termlist):
-    """Get a list of term names that are the short versions of the fully qualified 
+    ''' Get a list of term names that are the short versions of the fully qualified 
        identifiers.
     parameters:
         termlist - a list of fully qualified term identifiers
@@ -137,7 +145,7 @@ def short_term_names(termlist):
     returns:
         shortnamelist - a list of terms names without qualifications 
             (e.g., 'catalogNumber')
-    """
+    '''
     shortnamelist=[]
     for i in range(len(termlist)):
         longname=termlist[i]
@@ -159,7 +167,7 @@ class DWCAUtilsReaderFramework():
     dwca = testdatapath + 'dwca-uwymv_herp.zip'
 
     # following are files output during the tests, remove these in dispose()
-#    csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
+    #csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
 
     def dispose(self):
         files = glob.glob(self.archiveextractionpath + '*')
@@ -205,16 +213,16 @@ class DWCAUtilsReaderTestCase(unittest.TestCase):
         inputfile = self.framework.dwca
         metadata = dwca_metadata_from_file(inputfile)
         title = metadata.find("./dataset/title").text
-#        print title
+        #print title
         self.assertEqual(title, 'UWYMV Herpetology Collection (Arctos)', 'title incorrect from archive metadata')
         creator_position = metadata.find("./dataset/creator/positionName").text
-#        print creator_position
+        #print creator_position
         self.assertEqual(creator_position, 'Curator', 'creator/positionName incorrect from archive metadata')
         pubdate = metadata.find("./dataset/pubDate").text
-#        print pubdate.strip()
+        #print pubdate.strip()
         self.assertEqual(pubdate.strip(), '2015-03-25', 'pubDate incorrect from archive metadata')
         north = metadata.find("./dataset/coverage/geographicCoverage/boundingCoordinates/northBoundingCoordinate").text
-#        print north
+        #print north
         self.assertEqual(north, '90', 'north geographic coverage incorrect from archive metadata')
     
 if __name__ == '__main__':

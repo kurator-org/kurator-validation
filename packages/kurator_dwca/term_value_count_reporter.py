@@ -15,31 +15,33 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_value_count_reporter.py 2016-09-29T12:52+02:00"
+__version__ = "term_value_count_reporter.py 2016-10-04T15:12+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
+from dwca_utils import write_header
 from dwca_utils import csv_dialect
 from dwca_utils import tsv_dialect
 from dwca_utils import extract_value_counts_from_file
 import logging
 import os
-import csv
 import uuid
 import argparse
+
+# Replace the system csv with unicodecsv. All invocations of csv will use unicodecsv,
+# which supports reading and writing unicode streams.
 try:
-    # need to install unicodecsv for this to be used
-    # pip install unicodecsv
-    # jython pip install unicodecsv for use in workflows
     import unicodecsv as csv
 except ImportError:
     import warnings
-    warnings.warn("can't import `unicodecsv` encoding errors may occur")
-    import csv
+    s = "The unicodecsv package is required.\n"
+    s += "pip install unicodecsv\n"
+    s += "jython pip install unicodecsv"
+    warnings.warn(s)
 
 def term_value_count_reporter(options):
-    """Extract a list of the distinct values of a given term in a text file along with 
-       the number of times each occurs.
+    ''' Extract a list of the distinct values of a given term in a text file along with 
+        the number of times each occurs.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the tsvfile (optional)
@@ -55,8 +57,8 @@ def term_value_count_reporter(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
-    """
-    # print '%s options: %s' % (__version__, options)
+    '''
+    #print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 
@@ -92,7 +94,7 @@ def term_value_count_reporter(options):
         pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given in %s' % __version__
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -102,7 +104,7 @@ def term_value_count_reporter(options):
         if os.path.isfile(workspace+'/'+inputfile) == True:
             inputfile = workspace+'/'+inputfile
         else:
-            message = 'Input file %s not found' % inputfile
+            message = 'Input file %s not found. %s' % (inputfile, __version__)
             returnvals = [workspace, outputfile, success, message, artifacts]
             logging.debug('message:\n%s' % message)
             return response(returnvars, returnvals)
@@ -113,7 +115,7 @@ def term_value_count_reporter(options):
         pass
 
     if termlist is None or len(termlist)==0:
-        message = 'No field list given in %s.' % __version__
+        message = 'No field list given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
@@ -159,17 +161,22 @@ def term_value_count_reporter(options):
 
     #Try to create the report for the term value counts.
     success = term_value_count_report(outputfile, counts, termname=termname, format=format)
-    if success==True:
-        s = '%s_count_report_file' % rootname
-        artifacts[s] = outputfile
-    else:
-        message = 'term_count_report() failed, check term name and required parameters.'
+
+    if success==False:
+        message = 'No count report created for %s from %s. ' % (termname, outputfile)
+        message += '%s' % __version__
+        returnvals = [workspace, outputfile, success, message, artifacts]
+        logging.debug('message: %s' % message)
+        return response(returnvars, returnvals)
+    
+    s = '%s_count_report_file' % rootname
+    artifacts[s] = outputfile
     returnvals = [workspace, outputfile, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def term_value_count_report(reportfile, termcountlist, termname='value', format=None):
-    """Write a report of the counts of values for the term.
+    ''' Write a report of the counts of values for the term.
     parameters:
         reportfile - full path to the output report file
         termcountlist - list of terms with counts (required)
@@ -177,8 +184,9 @@ def term_value_count_report(reportfile, termcountlist, termname='value', format=
         format - string signifying the csv.dialect of the report file ('csv' or 'txt')
     returns:
         success - True if report was written or if there is nothing to write, else False
-    """
-    functionname = 'term_value_count_report'
+    '''
+    functionname = 'term_value_count_report()'
+
     if reportfile is None or len(reportfile)==0:
         s = 'No report file given in %s.' % functionname
         logging.debug(s)
@@ -196,10 +204,8 @@ def term_value_count_report(reportfile, termcountlist, termname='value', format=
 
     countreporttermlist = [termname, 'count']
 
-    with open(reportfile, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, \
-            fieldnames=countreporttermlist)
-        writer.writeheader()
+    # Create the outputfile and write the new header to it
+    write_header(reportfile, countreporttermlist, dialect)
 
     if os.path.isfile(reportfile) == False:
         s = 'reportfile: %s not created in %s' % (reportfile, functionname)
@@ -210,16 +216,11 @@ def term_value_count_report(reportfile, termcountlist, termname='value', format=
         writer = csv.DictWriter(csvfile, dialect=dialect, \
             fieldnames=countreporttermlist)
         for item in termcountlist:
-            # Note: This throws an exception in Python 2.7.6 if termname:item[0] if the 
-            # content includes non-ascii characters. Example, for 'Querétaro'
-            #   UnicodeDecodeError: 'ascii' codec can't decode byte 0xc3 in 
-            #   position 4: ordinal not in range(128)
-#            writer.writerow({termname:item[0].encode('utf-8'), 'count':item[1] })
             writer.writerow({termname:item[0], 'count':item[1] })
     return True
 
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_counter.py 2016-09-11T17:18+02:00"
+__version__ = "term_counter.py 2016-10-02T16:02+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -24,16 +25,18 @@ import logging
 import argparse
 
 def term_counter(options):
-    """Get a count of the rows that are populated for a given term.
+    ''' Get a count of the rows that are populated for a given term.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
+        workspace - path to a directory for the output artifacts (optional)
         inputfile - full path to the input file (required)
         termname - the name of the term for which to count rows (required)
     returns a dictionary with information about the results
+        workspace - path to a directory for the output artifacts
         rowcount - the number of rows in the inputfile that have a value for the term
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -42,50 +45,63 @@ def term_counter(options):
     logging.debug( 'options: %s' % options )
 
     # Make a list for the response
-    returnvars = ['rowcount', 'success', 'message']
+    returnvars = ['workspace', 'rowcount', 'success', 'message']
 
-    # outputs
-    rowcount = None
+    ### Standard outputs ###
     success = False
     message = None
 
-    # inputs
+    ### Custom outputs ###
+    rowcount = None
+
+    ### Establish variables ###
+    workspace = './'
+    inputfile = None
+    termname = None
+
+    ### Required inputs ###
+    try:
+        workspace = options['workspace']
+    except:
+        pass
+
     try:
         inputfile = options['inputfile']
     except:
-        inputfile = None
+        pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given'
-        returnvals = [rowcount, success, message]
+        message = 'No input file given. %s' % __version__
+        returnvals = [workspace, rowcount, success, message]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file %s not found' % inputfile
-        returnvals = [rowcount, success, message]
+        message = 'Input file %s not found. %s' % (inputfile, __version__)
+        returnvals = [workspace, rowcount, success, message]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     try:
         termname = options['termname']
     except:
-        termname = None
+        pass
 
     if termname is None or len(termname)==0:
-        message = 'No term given'
-        returnvals = [rowcount, success, message]
+        message = 'No term given. %s' % __version__
+        returnvals = [workspace, rowcount, success, message]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
     rowcount = term_rowcount_from_file(inputfile, termname)
+
     success = True
-    returnvals = [rowcount, success, message]
+    returnvals = [workspace, rowcount, success, message]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'full path to the input file (required)'

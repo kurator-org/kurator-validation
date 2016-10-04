@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_unknown_reporter.py 2016-09-29T12:47+02:00"
+__version__ = "term_unknown_reporter.py 2016-10-04T15:47+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -29,8 +30,8 @@ import logging
 import argparse
 
 def term_unknown_reporter(options):
-    """Report a list of values from a field in an input file that are not in a given 
-       vocabulary.
+    ''' Report a list of values from a field in an input file that are not in a given 
+        vocabulary.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the tsvfile (optional)
@@ -49,8 +50,8 @@ def term_unknown_reporter(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
-    """
-    # print '%s options: %s' % (__version__, options)
+    '''
+    #print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 
@@ -74,7 +75,7 @@ def term_unknown_reporter(options):
     outputfile = None
     format = 'txt'
     key = None
-    separator = '|'
+    separator = None
 
     ### Required inputs ###
     try:
@@ -88,7 +89,7 @@ def term_unknown_reporter(options):
         pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given'
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -98,7 +99,7 @@ def term_unknown_reporter(options):
         if os.path.isfile(workspace+'/'+inputfile) == True:
             inputfile = workspace+'/'+inputfile
         else:
-            message = 'Input file %s not found' % inputfile
+            message = 'Input file %s not found. %s.' % (inputfile, __version__)
             returnvals = [workspace, outputfile, success, message, artifacts]
             logging.debug('message:\n%s' % message)
             return response(returnvars, returnvals)
@@ -109,7 +110,7 @@ def term_unknown_reporter(options):
         pass
 
     if vocabfile is None or len(vocabfile)==0:
-        message = 'No vocab file given'
+        message = 'No vocab file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -129,7 +130,7 @@ def term_unknown_reporter(options):
         pass
 
     if key is None or len(key)==0:
-        message = 'No key in term_unknown_reporter'
+        message = 'No key in term_unknown_reporter. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -156,28 +157,28 @@ def term_unknown_reporter(options):
         outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     # Get a list of distinct values of the term in the input file
-    fields = key.split(separator)
+    if separator is None or len(separator)==0:
+        fields = [key]
+    else:
+        fields = key.split(separator)
 
-    # print 'fields: %s separator: %s' % (fields, separator)
-
-    checklist = extract_values_from_file(inputfile, [key], separator, function=ustripstr)
+    # Let extract_values_from_file figure out the dialect and encoding of inputfile.
+    checklist = extract_values_from_file(inputfile, fields, separator, function=ustripstr)
+    #for c in checklist:
+    #    print c
 
     if checklist is None or len(checklist)==0:
-        message = 'No values of %s from %s' % (key, inputfile)
+        message = 'No values of %s from %s. %s' % (key, inputfile, __version__)
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
-    # print 'checklist: %s' % checklist
-
     # Get a dictionary of checklist values not found in the vocabfile
-    missingvocablist = missing_vocab_list_from_file(checklist, vocabfile, key)
-
-    # print 'missingvocablist: %s' % missingvocablist
+    missingvocablist = missing_vocab_list_from_file(checklist, vocabfile, key, separator)
 
     if missingvocablist is None or len(missingvocablist)==0:
-        message = 'No missing values of %s from %s found in %s' % \
-            (key, inputfile, vocabfile)
+        message = 'No missing values of %s from %s ' % (key, inputfile)
+        message += 'found in %s. %s' % (vocabfile, __version__)
         success = True
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
@@ -189,7 +190,8 @@ def term_unknown_reporter(options):
     success = term_list_report(outputfile, missingvocablist, key, format=format)
 
     if outputfile is not None and not os.path.isfile(outputfile):
-        message = 'Failed to write results to output file %s' % outputfile
+        message = 'Failed to write results to output file %s.' % outputfile
+        message += '%s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
@@ -201,7 +203,7 @@ def term_unknown_reporter(options):
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

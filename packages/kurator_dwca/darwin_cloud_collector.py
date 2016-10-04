@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector.py 2016-09-29T13:57+02:00"
+__version__ = "darwin_cloud_collector.py 2016-10-04T15:42+02:00"
 
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
@@ -28,7 +29,7 @@ import logging
 import argparse
 
 def darwin_cloud_collector(options):
-    """Get field names from inputfile and put any that are not Simple Darwin Core into 
+    ''' Get field names from inputfile and put any that are not Simple Darwin Core into 
        outputfile.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
@@ -40,7 +41,7 @@ def darwin_cloud_collector(options):
         outputfile - actual full path to the output file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
-    """
+    '''
     # print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
@@ -84,38 +85,42 @@ def darwin_cloud_collector(options):
         pass
 
     if inputfile is None or len(inputfile)==0:
-        message = 'No input file given'
+        message = 'No input file given. %s' % __version__
         returnvals = [workspace, addedvalues, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if os.path.isfile(inputfile) == False:
-        message = 'Input file %s not found' % inputfile
+        message = 'Input file %s not found. %s' % (inputfile, __version__)
         returnvals = [workspace, addedvalues, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     if outputfile is None or len(outputfile)==0:
-        message = 'No output file given'
+        message = 'No output file given. %s' % __version__
         returnvals = [workspace, addedvalues, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
+    # Read the header and let read_header figure out the dialect and encoding.
     header = read_header(inputfile)
     nondwc = terms_not_in_dwc(header, casesensitive=False)
 
     dialect = vocab_dialect()
     addedvalues = distinct_vocabs_to_file(outputfile, nondwc, 'fieldname', dialect=dialect)
     success = True
-    artifacts['darwin_cloud_collector_file'] = outputfile
+
+    if addedvalues is not None:
+        artifacts['darwin_cloud_collector_file'] = outputfile
+
     returnvals = [workspace, addedvalues, outputfile, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
 
 def _getoptions():
-    """Parse command line options and return them."""
+    ''' Parse command line options and return them.'''
     parser = argparse.ArgumentParser()
 
     help = 'directory for the output file (optional)'

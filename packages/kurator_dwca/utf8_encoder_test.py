@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "utf8_encoder_test.py 2016-08-04T14:19+02:00"
+__version__ = "utf8_encoder_test.py 2016-10-04T09:38+02:00"
 
 # This file contains unit test for the utf8_encoder function.
 #
@@ -71,14 +71,12 @@ class UTF8EncoderTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=utf8_encoder(inputs)
-#        print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
         # Test with missing inputfile
         inputs['outputfile'] = outputfile
         response=utf8_encoder(inputs)
-#        print 'response2:\n%s' % response
         s = 'success without inputfile'
         self.assertFalse(response['success'], s)
 
@@ -86,14 +84,12 @@ class UTF8EncoderTestCase(unittest.TestCase):
         inputs = {}
         inputs['inputfile'] = testfile1
         response=utf8_encoder(inputs)
-#        print 'response4:\n%s' % response
         s = 'success without outputfile'
         self.assertFalse(response['success'], s)
 
         # Test with missing optional inputs
         inputs['outputfile'] = outputfile
         response=utf8_encoder(inputs)
-#        print 'response5:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
         # Remove the file created by this test, as the Framework does not know about it
@@ -116,9 +112,7 @@ class UTF8EncoderTestCase(unittest.TestCase):
         response=utf8_encoder(inputs)
         outfilelocation = '%s/%s' % (testdatapath, outputfile)
         encoding = csv_file_encoding(outfilelocation)
-#        print 'inputs1:\n%s' % inputs
-#        print 'response1:\n%s' % response
-        expected = 'utf_8'
+        expected = 'utf-8'
         s = 'From input: %s\nFound:\n%s\nExpected:\n%s' % (testfile1, encoding, expected)
         self.assertEqual(encoding, expected, s)
 
@@ -127,7 +121,6 @@ class UTF8EncoderTestCase(unittest.TestCase):
         # Translate the file to utf8 encoding
         response=utf8_encoder(inputs)
         encoding = csv_file_encoding(outfilelocation)
-#        print 'response2:\n%s' % response
         s = 'From input: %s\nFound:\n%s\nExpected:\n%s' % (testfile2, encoding, expected)
         self.assertEqual(encoding, expected, s)
 
@@ -136,7 +129,6 @@ class UTF8EncoderTestCase(unittest.TestCase):
         # Translate the file to utf8 encoding
         response=utf8_encoder(inputs)
         encoding = csv_file_encoding(outfilelocation)
-#        print 'response2:\n%s' % response
         s = 'From input: %s\nFound:\n%s\nExpected:\n%s' % (testfile2, encoding, expected)
         self.assertEqual(encoding, expected, s)
 
