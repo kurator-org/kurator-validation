@@ -53,7 +53,7 @@ def darwinize_header(options):
         encoding - string signifying the encoding of the input file. If known, it speeds
             up processing a great deal. (optional; default None) (e.g., 'utf-8')
         namespace - prepend namespace to fields that were darwinized 
-        (optional; default 'no') (e.g., 'y', 'yes', 'n', 'no')
+        (optional; default 'no') (e.g., 'y', 'n')
     returns a dictionary with information about the results
         outputfile - actual full path to the output file
         success - True if process completed successfully, otherwise False
