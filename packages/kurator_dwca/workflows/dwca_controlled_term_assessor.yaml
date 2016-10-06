@@ -40,7 +40,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_controlled_term_assessor.yaml 2016-09-29T14:36+02:00"
+# __version__ = "dwca_controlled_term_assessor.yaml 2016-10-04T22:11+02:00"
 
 imports:
 
@@ -119,6 +119,9 @@ components:
     code: |
         # The function to run when an on_data message is received. Accepts a dictionary
         # of options.
+        # An optimization would be to download only those files that are needed.
+        # Another optimization would be to have zip files of the vocabs to download
+        # and unzip.
         from kurator_dwca.downloader import downloader
         from kurator_dwca.dwca_terms import controlledtermlist
         def on_data(options):
@@ -225,6 +228,7 @@ components:
         # of options.
         from kurator_dwca.dwca_utils import read_header
         from kurator_dwca.dwca_utils import clean_header
+        from kurator_dwca.dwca_utils import csv_file_encoding
         from kurator_dwca.dwca_terms import controlledtermlist
         from kurator_dwca.term_value_count_reporter import term_value_count_reporter
         def on_data(options):
@@ -232,25 +236,47 @@ components:
             print '### Started %s ###' % actor
             for key, value in options.iteritems():
                 print '%s: %s' % (key, value)
-            header = read_header(options['inputfile'])
+
+            # Get the format for the output files, with 'csv' as the default
+            try:
+                format = options['format']
+            except:
+                format = 'csv'
+
+            # Figure out the input file encoding first. It will makes things much faster
+            # to know it in advance and pass that information to various steps.
+            encoding = csv_file_encoding(options['inputfile'])
+            header = read_header(options['inputfile'], encoding=encoding)
+
+            # Create a cleaned list of fields from the input file
             cleanheader = clean_header(header)
+
+            # Turn the input fieldlist into a cleaned list
             cleancontrolledtermlist = clean_header(controlledtermlist)
             termlist = []
             for term in cleancontrolledtermlist:
                 if term in cleanheader:
                     termlist.append(term)
+
+            # Prepare the output dictionary
             outputoptions = {}
             outputoptions['success'] = True
             outputoptions['message'] = None
             outputoptions['workspace'] = options['workspace']
             outputoptions['artifacts'] = {}
+
+            # Cycle through all of the fields of interest in the inputfile
             for term in termlist:
                 filename = 'count_'+term.lower()+'.csv'
+
+                # Prepare the options dictionary for the term_value_count_reporter
                 counteroptions = {}
                 counteroptions['workspace'] = options['workspace'] 
                 counteroptions['inputfile'] = options['inputfile']
                 counteroptions['outputfile'] = filename
                 counteroptions['termlist'] = [term]
+                counteroptions['encoding'] = encoding
+
                 results = term_value_count_reporter(counteroptions)
                 if results['success'] == False:
                     outputoptions['success'] = False

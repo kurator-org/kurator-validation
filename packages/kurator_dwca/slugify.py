@@ -1,8 +1,26 @@
-# Adapted from https://github.com/un33k/python-slugify/blob/master/slugify/slugify.py
-__version__ = "slugify.py 2016-05-26T11:46-03:00"
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-import re
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Adapted from https://github.com/un33k/python-slugify/blob/master/slugify/slugify.py
+
+__author__ = "John Wieczorek"
+__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
+__version__ = "slugify.py 2016-10-16T16:34+02:00"
+
 import unicodedata
+import re
 import types
 import sys
 
@@ -16,11 +34,16 @@ except ImportError:
     _unicode_type = str
     unichr = chr
 
-# need to install unidecode for this to be used
-# pip install unidecode
-# jython pip install unidecode for use in workflows
-
-import unidecode
+# Replace the system csv with unicodecsv. All invocations of csv will use unicodecsv,
+# which supports reading and writing unicode streams.
+try:
+    import unidecode
+except ImportError:
+    import warnings
+    s = "The unicodedata package is required.\n"
+    s += "pip install unicodedata\n"
+    s += "$JYTHON_HOME/bin/pip install unicodedata"
+    warnings.warn(s)
 
 __all__ = ['slugify']
 

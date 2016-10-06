@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_token_reporter.py 2016-10-04T15:29+02:00"
+__version__ = "term_token_reporter.py 2016-10-06T10:46+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -39,7 +39,7 @@ except ImportError:
     import warnings
     s = "The unicodecsv package is required.\n"
     s += "pip install unicodecsv\n"
-    s += "jython pip install unicodecsv"
+    s += "$JYTHON_HOME/bin/pip install unicodecsv"
     warnings.warn(s)
 
 tokenreportfieldlist = ['token', 'rowcount', 'totalcount']
@@ -52,6 +52,8 @@ def term_token_reporter(options):
         inputfile - full path to the input file (required)
         outputfile - name of the output file, without path (optional)
         termname - the name of the term for which to count rows (required)
+        encoding - string signifying the encoding of the input file. If known, it speeds
+            up processing a great deal. (optional; default None) (e.g., 'utf-8')
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
         outputfile - actual full path to the output report file
@@ -85,6 +87,7 @@ def term_token_reporter(options):
     inputfile = None
     outputfile = None
     termname = None
+    encoding = None
 
     ### Required inputs ###
     try:
@@ -119,7 +122,12 @@ def term_token_reporter(options):
         returnvals = [workspace, outputfile, tokens, success, message, artifacts]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
-        
+
+    try:
+        encoding = options['encoding']
+    except:
+        pass
+
     try:
         outputfile = options['outputfile']
     except:
@@ -130,7 +138,7 @@ def term_token_reporter(options):
     
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
-    tokens = term_token_count_from_file(inputfile, termname)
+    tokens = term_token_count_from_file(inputfile, termname, encoding=encoding)
     success = token_report(outputfile, tokens)
 
     if success==True:
@@ -172,7 +180,7 @@ def token_report(reportfile, tokens, dialect=None):
 
         with open(reportfile, 'a') as csvfile:
             writer = csv.DictWriter(csvfile, dialect=dialect, \
-                fieldnames=tokenreportfieldlist)
+                encoding='utf-8', fieldnames=tokenreportfieldlist)
 
             for key, value in tokens['tokenlist'].iteritems():
                 writer.writerow({'token':key, 'rowcount':value['rowcount'], \
@@ -223,7 +231,7 @@ def term_token_count_from_file(inputfile, termname, dialect=None, encoding=None)
         # No need to check.
 
     # Determine the encoding of the input file
-    if encoding is None:
+    if encoding is None or len(encoding.strip()) == 0:
         encoding = csv_file_encoding(inputfile)
         # csv_file_encoding() always returns an encoding if there is an input file.
         # No need to check.

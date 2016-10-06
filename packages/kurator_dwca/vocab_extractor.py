@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-10-04T15:48+02:00"
+__version__ = "vocab_extractor.py 2016-10-06T11:50+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -34,6 +34,8 @@ def vocab_extractor(options):
         termlist - list of fields to extract from the input file (required)
         separator - string that separates the values in termlist (e.g., '|') 
             (optional; default None)
+        encoding - string signifying the encoding of the input file. If known, it speeds
+            up processing a great deal. (optional; default None) (e.g., 'utf-8')
     returns a dictionary with information about the results
         workspace - path to a directory worked in
         extractedvalues - a list of distinct values of the term in the inputfile
@@ -65,6 +67,7 @@ def vocab_extractor(options):
     inputfile = None
     termlist = None
     separator = None
+    encoding = None
 
     ### Required inputs ###
     try:
@@ -105,11 +108,16 @@ def vocab_extractor(options):
     except:
         pass
 
+    try:
+        encoding = options['encoding']
+    except:
+        pass
+
     # Extract the distinct values from the inputfile, applying the function to strip
     # white space and make lower case.
     # Let extract_values_from_file figure out the dialect and encoding of inputfile.
-    extractedvalues = extract_values_from_file(inputfile, termlist, separator=separator, \
-        function=ustripstr)
+    extractedvalues = extract_values_from_file(inputfile, termlist, separator=separator,
+        encoding=encoding, function=ustripstr)
 
     success = True
     returnvals = [workspace, extractedvalues, success, message]
@@ -132,6 +140,9 @@ def _getoptions():
     help = "separator (optional)"
     parser.add_argument("-s", "--separator", help=help)
 
+    help = "encoding (optional)"
+    parser.add_argument("-e", "--encoding", help=help)
+
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
 
@@ -148,6 +159,7 @@ def main():
         s += ' -w ./workspace'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -t year'
+        s += ' -e utf-8'
         s += ' -l DEBUG\n'
         print '%s' % s
 
@@ -157,6 +169,7 @@ def main():
         s += ' -i ./data/eight_specimen_records.csv'
         s += '"country|stateprovince"'
         s += ' -s "|"'
+        s += ' -e utf-8'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -165,6 +178,7 @@ def main():
     optdict['inputfile'] = options.inputfile
     optdict['termlist'] = options.termlist
     optdict['separator'] = options.separator
+    optdict['encoding'] = options.encoding
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

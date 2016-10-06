@@ -15,11 +15,12 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2016-10-04T15:25+02:00"
+__version__ = "vocab_appender.py 2016-10-06T13:45+02:00"
 
 from dwca_utils import read_header
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
+from dwca_utils import csv_file_dialect
 from dwca_vocab_utils import vocabheader
 from dwca_vocab_utils import writevocabheader
 from dwca_vocab_utils import vocab_dialect
@@ -37,7 +38,7 @@ except ImportError:
     import warnings
     s = "The unicodecsv package is required.\n"
     s += "pip install unicodecsv\n"
-    s += "jython pip install unicodecsv"
+    s += "$JYTHON_HOME/bin/pip install unicodecsv"
     warnings.warn(s)
 
 def vocab_appender(options):
@@ -132,8 +133,10 @@ def vocab_appender(options):
     # If vocab file doesn't exist, create it with a header consisting of fieldnames
     # constructed from key
     isfile = os.path.isfile(vocabfile)
-    dialect = vocab_dialect()
+
+    dialect = csv_file_dialect(vocabfile)
     fieldnames = vocabheader(key)
+
     if not isfile:
         writevocabheader(vocabfile, fieldnames, dialect)
 

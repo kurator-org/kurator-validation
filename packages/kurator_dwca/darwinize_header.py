@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwinize_header.py 2016-10-04T12:02+02:00"
+__version__ = "darwinize_header.py 2016-10-06T16:58+02:00"
 
 from dwca_vocab_utils import darwinize_list
 from dwca_utils import read_header
@@ -37,7 +37,7 @@ except ImportError:
     import warnings
     s = "The unicodecsv package is required.\n"
     s += "pip install unicodecsv\n"
-    s += "jython pip install unicodecsv"
+    s += "$JYTHON_HOME/bin/pip install unicodecsv"
     warnings.warn(s)
 
 def darwinize_header(options):
@@ -50,12 +50,16 @@ def darwinize_header(options):
         dwccloudfile - full path to the vocabulary file containing the Darwin Cloud 
            terms (required)
         outputfile - name of the output file, without path (required)
+        encoding - string signifying the encoding of the input file. If known, it speeds
+            up processing a great deal. (optional; default None) (e.g., 'utf-8')
+        namespace - prepend namespace to fields that were darwinized 
+        (optional; default 'no') (e.g., 'y', 'yes', 'n', 'no')
     returns a dictionary with information about the results
         outputfile - actual full path to the output file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     '''
-    # print '%s options: %s' % (__version__, options)
+    print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 
@@ -77,6 +81,8 @@ def darwinize_header(options):
     inputfile = None
     dwccloudfile = None
     outputfile = None
+    encoding = None
+    namespace = 'n'
 
     ### Required inputs ###
     try:
@@ -131,10 +137,23 @@ def darwinize_header(options):
 
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
+    try:
+        encoding = options['encoding']
+    except:
+        pass
+
+    if encoding is None or len(encoding.strip())==0:
+        encoding = csv_file_encoding(inputfile)
+
+    try:
+        namespace = options['namespace']
+    except:
+        pass
+
     dialect = csv_file_dialect(inputfile)
-    inputencoding = csv_file_encoding(inputfile)
-    header = read_header(inputfile, dialect, inputencoding)
-    dwcheader = darwinize_list(header, dwccloudfile)
+
+    header = read_header(inputfile, dialect=dialect, encoding=encoding)
+    dwcheader = darwinize_list(header, dwccloudfile, namespace)
 
     if dwcheader is None:
         message = 'Unable to create darwinized header. %s' % __version__
@@ -154,7 +173,7 @@ def darwinize_header(options):
     with open(outputfile, 'a') as outfile:
         writer = csv.DictWriter(outfile, dialect=dialect, encoding='utf-8', 
             fieldnames=header)
-        for row in read_csv_row(inputfile, dialect, inputencoding):
+        for row in read_csv_row(inputfile, dialect, encoding):
             writer.writerow(row)
 
     success = True
@@ -179,6 +198,9 @@ def _getoptions():
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
 
+    help = 'include namespace (optional; default No)'
+    parser.add_argument("-n", "--namespace", help=help)
+
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
 
@@ -197,6 +219,7 @@ def main():
         s += ' -v ./data/vocabularies/dwc_cloud.txt'
         s += ' -o darwinized.csv'
         s += ' -l DEBUG'
+        s += ' -n yes'
         print '%s' % s
         return
 
@@ -204,6 +227,7 @@ def main():
     optdict['inputfile'] = options.inputfile
     optdict['dwccloudfile'] = options.dwccloudfile
     optdict['outputfile'] = options.outputfile
+    optdict['namespace'] = options.namespace
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

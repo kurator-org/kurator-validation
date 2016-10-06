@@ -16,7 +16,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_terms.py 2016-09-23T18:13+02:00"
+__version__ = "dwca_terms.py 2016-10-06T15:39+02:00"
 
 # This file contains definitions of standard sets of Darwin Core terms.
 
@@ -101,6 +101,9 @@ vocabfieldlist = ['standard', 'vetted']
 
 # Extra fields in the header of a geography vocabulary lookup file
 geogvocabaddedfieldlist = ['error', 'misplaced', 'unresolved', 'source', 'comment']
+
+# Extra fields in the header of a Darwin Cloud vocabulary lookup file
+darwincloudvocabaddedfieldlist = ['namespace', 'source', 'comment']
 
 # Dictionary defining the default values of a new vocabulary file entry
 vocabrowdict = { 'standard':'', 'vetted':0 }

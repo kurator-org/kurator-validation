@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-10-04T16:03+02:00"
+__version__ = "dwca_utils.py 2016-10-04T16:27+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -25,7 +25,6 @@ __version__ = "dwca_utils.py 2016-10-04T16:03+02:00"
 #
 # python dwca_utils.py
 
-from chardet.universaldetector import UniversalDetector
 from operator import itemgetter
 import os.path
 import glob
@@ -40,7 +39,16 @@ except ImportError:
     import warnings
     s = "The unicodecsv package is required.\n"
     s += "pip install unicodecsv\n"
-    s += "jython pip install unicodecsv"
+    s += "$JYTHON_HOME/bin/pip install unicodecsv"
+    warnings.warn(s)
+
+try:
+    from chardet.universaldetector import UniversalDetector
+except ImportError:
+    import warnings
+    s = "The chardet package is required.\n"
+    s += "pip install chardet\n"
+    s += "$JYTHON_HOME/bin/pip install chardet"
     warnings.warn(s)
 
 # def safe_unicode(obj, *args):
@@ -323,6 +331,8 @@ def read_header(inputfile, dialect=None, encoding=None):
 
     # Try to determine the encoding of the inputfile.
     if encoding is None or len(encoding.strip()) == 0:
+        #print 'Going in to read_header() with encoding: %s' % encoding
+        #print 'for file %s' % inputfile
         encoding = csv_file_encoding(inputfile)
         # csv_file_encoding() always returns an encoding if there is an input file.    
 
@@ -856,9 +866,10 @@ def csv_file_encoding(inputfile):
         return None
 
     detector = UniversalDetector()
-    for line in file(inputfile, 'rb'):
-        detector.feed(line)
-        if detector.done: break
+    with open(inputfile, 'rU') as indata:
+        for line in indata:
+            detector.feed(line)
+            if detector.done: break
     detector.close()
     encoding = detector.result['encoding']
 
@@ -2065,28 +2076,37 @@ class DWCAUtilsTestCase(unittest.TestCase):
 
         fields = ['stateProvince']
         found = extract_value_counts_from_file(extractvaluesfile1, fields)
-        expected = [('California', 5), ('Washington', 1), ('Colorado', 1), ('Hawaii', 1)]
-        s = 'Extracted values:\n%s' % found
+        sortedlist = sorted(found)
+        expected = [(u'California', 5), (u'Colorado', 1), (u'Hawaii', 1), (u'Washington', 1)]
+        s = 'Extracted values:\n%s' % sortedlist
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(sortedlist, expected,s)        
 
         fields = ['country', 'stateProvince']
         found = extract_value_counts_from_file(extractvaluesfile1, fields, '|')
-        expected = [('United States|California', 5), ('United States|Colorado', 1), 
-            ('United States|Washington', 1), ('United States|Hawaii', 1)]
-        s = 'Extracted values:\n%s' % found
+        sortedlist = sorted(found)
+        expected = [
+            ('United States|California', 5), 
+            ('United States|Colorado', 1), 
+            ('United States|Hawaii', 1), 
+            ('United States|Washington', 1)]
+        s = 'Extracted values:\n%s' % sortedlist
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(sortedlist, expected,s)
 
         found = extract_value_counts_from_file(extractvaluesfile1, fields)
-        expected = [('United StatesCalifornia', 5),  ('United StatesWashington', 1), 
-        ('United StatesColorado', 1), ('United StatesHawaii', 1)]
-        s = 'Extracted values:\n%s' % found
+        sortedlist = sorted(found)
+        expected = [
+            ('United StatesCalifornia', 5),  
+            ('United StatesColorado', 1), 
+            ('United StatesHawaii', 1),
+            ('United StatesWashington', 1)]
+        s = 'Extracted values:\n%s' % sortedlist
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(sortedlist, expected,s)
 
 if __name__ == '__main__':
     print '=== dwca_utils.py ==='

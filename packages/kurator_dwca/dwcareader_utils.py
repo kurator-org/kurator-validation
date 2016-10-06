@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwcareader_utils.py 2016-10-02T16:02+02:00"
+__version__ = "dwcareader_utils.py 2016-10-04T16:29+02:00"
 
 # This file contains common utility functions for dealing with the content of a Darwin
 # Core archive. It is built with unit tests that can be invoked by running the script
@@ -25,22 +25,25 @@ __version__ = "dwcareader_utils.py 2016-10-02T16:02+02:00"
 #
 # python dwcareader_utils.py
 
-# The Python Darwin Core Archive Reader from is from:
-# https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
-#
-# Install with: 
-# pip install python-dwca-reader
-# pip install py
-# jython pip install python-dwca-reader for use in workflows
-# jython pip install py for use in workflows (python-dwca-reader depends on this)
-
-from dwca.read import DwCAReader
-from dwca.read import GBIFResultsReader
-from dwca.darwincore.terms import TERMS
 import os.path
 import glob
-import xml.etree.ElementTree as ET
 import unittest
+import xml.etree.ElementTree as ET
+
+# Requires the Python Darwin Core Archive Reader from 
+#   https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
+try:
+    from dwca.read import DwCAReader
+    from dwca.read import GBIFResultsReader
+    from dwca.read import DwCAReader
+    from dwca.read import GBIFResultsReader
+    from dwca.darwincore.terms import TERMS
+except ImportError:
+    import warnings
+    s = "The python-dwca-reader package is required.\n"
+    s += "pip install python-dwca-reader\n"
+    s += "$JYTHON_HOME/bin/pip install python-dwca-reader"
+    warnings.warn(s)
 
 def dwca_metadata(dwcareader):
     ''' Return metadata from Darwin Core Archive Reader.'''

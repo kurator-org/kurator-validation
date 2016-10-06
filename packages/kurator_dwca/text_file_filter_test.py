@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_filter_test.py 2016-10-04T14:49+02:00"
+__version__ = "text_file_filter_test.py 2016-10-04T16:36+02:00"
 
 # This file contains unit tests for the text_file_filter function.
 #
@@ -39,7 +39,7 @@ except ImportError:
     import warnings
     s = "The unicodecsv package is required.\n"
     s += "pip install unicodecsv\n"
-    s += "jython pip install unicodecsv"
+    s += "$JYTHON_HOME/bin/pip install unicodecsv"
     warnings.warn(s)
 
 class TextFileFilterFramework():

@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator.py 2016-10-04T13:24+02:00"
+__version__ = "text_file_aggregator.py 2016-10-06T11:31+02:00"
 
 from dwca_utils import composite_header
 from dwca_utils import csv_file_dialect
@@ -39,12 +39,12 @@ except ImportError:
     import warnings
     s = "The unicodecsv package is required.\n"
     s += "pip install unicodecsv\n"
-    s += "jython pip install unicodecsv"
+    s += "$JYTHON_HOME/bin/pip install unicodecsv"
     warnings.warn(s)
 
 def text_file_aggregator(options):
-    ''' Join the contents of files in a given path. Headers are not assumed to be the
-        same. Write a file containing the joined files with one header line.
+    ''' Join the contents of files in a given path. Headers and encodings are not assumed 
+        to be the same. Write a file containing the joined files with one header line.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the outputfile (optional)
@@ -53,6 +53,7 @@ def text_file_aggregator(options):
             Example: ./workspace/thefiles.txt will produce an output file ending in
             '.txt' (required) 
         outputfile - name of the output file, without path (optional)
+        format - output file format (e.g., 'csv' or 'txt') (optional; default 'txt')
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
         outputfile - actual full path to the output file
@@ -86,6 +87,7 @@ def text_file_aggregator(options):
     workspace = './'
     inputpath = None
     outputfile = None
+    format = None
 
     ### Required inputs ###
     try:
@@ -106,24 +108,37 @@ def text_file_aggregator(options):
         return response(returnvars, returnvals)
 
     try:
+        format = options['format']
+    except:
+        pass
+
+    if format is None or len(format)==0:
+        format = 'txt'
+
+    if format == 'txt':
+        dialect = tsv_dialect()
+    else:
+        dialect = csv_dialect()
+
+    try:
         outputfile = options['outputfile']
     except:
         pass
 
     if outputfile is None or len(outputfile)==0:
-        # Get the extension as the substring of the inputpath following the last '.'
-        extension = inputpath.split('.')[-1]
-        outputfile='aggregate_'+str(uuid.uuid1())+extension
+        outputfile='aggregate_'+str(uuid.uuid1())+format
 
     # Construct the output file path in the workspace
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
-    aggregateheader = composite_header(inputpath, dialect=None)
+    # Create the composite header. Let composite_header determine the dialects and 
+    # encodings of the files to aggregate.
+    aggregateheader = composite_header(inputpath)
     aggregaterowcount = 0
 
-    # Open a file to write the aggregated results
+    # Open a file to write the aggregated results in chosen format and utf-8.
     with open(outputfile, 'w') as outfile:
-        writer = csv.DictWriter(outfile, dialect=tsv_dialect(), 
+        writer = csv.DictWriter(outfile, dialect=dialect, encoding='utf-8', 
             fieldnames=aggregateheader, extrasaction='ignore')
         writer.writeheader()
         files = glob.glob(inputpath)
@@ -167,6 +182,9 @@ def _getoptions():
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
 
+    help = 'report file format (e.g., csv or txt) (optional; default csv)'
+    parser.add_argument("-f", "--format", help=help)
+
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
 
@@ -182,6 +200,7 @@ def main():
         s += ' -i "./data/tests/test_tsv_*.txt"'
         s += ' -w ./workspace'
         s += ' -o aggregatedoutputfile.txt'
+        s += ' -f txt'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -189,6 +208,7 @@ def main():
     optdict['workspace'] = options.workspace
     optdict['inputpath'] = options.inputpath
     optdict['outputfile'] = options.outputfile
+    optdict['format'] = options.format
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

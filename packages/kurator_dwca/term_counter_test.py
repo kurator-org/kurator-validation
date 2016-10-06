@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_counter_test.py 2016-05-11T22:47-03:00"
+__version__ = "term_counter_test.py 2016-10-06T11:43+02:00"
 
 # This file contains unit test for the term_counter function.
 #
@@ -23,7 +23,6 @@ __version__ = "term_counter_test.py 2016-05-11T22:47-03:00"
 # python term_counter_test.py
 
 from term_counter import term_counter
-from dwca_utils import read_header
 import os
 import unittest
 

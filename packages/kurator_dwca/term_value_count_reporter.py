@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_value_count_reporter.py 2016-10-04T15:12+02:00"
+__version__ = "term_value_count_reporter.py 2016-10-06T11:39+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -36,7 +36,7 @@ except ImportError:
     import warnings
     s = "The unicodecsv package is required.\n"
     s += "pip install unicodecsv\n"
-    s += "jython pip install unicodecsv"
+    s += "$JYTHON_HOME/bin/pip install unicodecsv"
     warnings.warn(s)
 
 def term_value_count_reporter(options):
@@ -51,6 +51,8 @@ def term_value_count_reporter(options):
         termlist - list of fields in the field combination to count (required)
         separator - string that separates the values in in the output (e.g., '|') 
             (optional; default '|')
+        encoding - string signifying the encoding of the input file. If known, it speeds
+            up processing a great deal. (optional; default None) (e.g., 'utf-8')
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
         outputfile - actual full path to the output tsv file
@@ -78,9 +80,10 @@ def term_value_count_reporter(options):
     workspace = './'
     inputfile = None
     outputfile = None
-    format = 'txt'
+    format = None
     termlist = None
     separator = '|'
+    encoding = None
 
     ### Required inputs ###
     try:
@@ -135,6 +138,11 @@ def term_value_count_reporter(options):
         format = 'csv'
 
     try:
+        encoding = options['encoding']
+    except:
+        pass
+
+    try:
         outputfile = options['outputfile']
     except:
         pass
@@ -156,7 +164,8 @@ def term_value_count_reporter(options):
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     # Get the list of values for the field given by termname along with their counts.
-    counts = extract_value_counts_from_file(inputfile, termlist, separator=separator)
+    counts = extract_value_counts_from_file(inputfile, termlist, separator=separator, 
+        encoding=encoding)
     # print 'counts: %s' % counts
 
     #Try to create the report for the term value counts.
@@ -241,6 +250,9 @@ def _getoptions():
     help = "separator (optional)"
     parser.add_argument("-s", "--separator", help=help)
 
+    help = "encoding (optional)"
+    parser.add_argument("-e", "--encoding", help=help)
+
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
 
@@ -269,6 +281,7 @@ def main():
         s += ' -f txt'
         s += ' -t "country|stateprovince"'
         s += ' -s "|"'
+        s += ' -e utf-8'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -286,6 +299,7 @@ def main():
     optdict['format'] = options.format
     optdict['termlist'] = termlist
     optdict['separator'] = options.separator
+    optdict['encoding'] = options.encoding
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

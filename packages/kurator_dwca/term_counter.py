@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_counter.py 2016-10-02T16:02+02:00"
+__version__ = "term_counter.py 2016-10-06T11:37+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -31,6 +31,8 @@ def term_counter(options):
         workspace - path to a directory for the output artifacts (optional)
         inputfile - full path to the input file (required)
         termname - the name of the term for which to count rows (required)
+        encoding - string signifying the encoding of the input file. If known, it speeds
+            up processing a great deal. (optional; default None) (e.g., 'utf-8')
     returns a dictionary with information about the results
         workspace - path to a directory for the output artifacts
         rowcount - the number of rows in the inputfile that have a value for the term
@@ -58,6 +60,7 @@ def term_counter(options):
     workspace = './'
     inputfile = None
     termname = None
+    encoding = None
 
     ### Required inputs ###
     try:
@@ -93,7 +96,12 @@ def term_counter(options):
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
-    rowcount = term_rowcount_from_file(inputfile, termname)
+    try:
+        encoding = options['encoding']
+    except:
+        pass
+
+    rowcount = term_rowcount_from_file(inputfile, termname, encoding=encoding)
 
     success = True
     returnvals = [workspace, rowcount, success, message]
@@ -110,6 +118,9 @@ def _getoptions():
     help = "name of the term (required)"
     parser.add_argument("-t", "--termname", help=help)
 
+    help = "encoding (optional)"
+    parser.add_argument("-e", "--encoding", help=help)
+
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
 
@@ -125,12 +136,14 @@ def main():
         s += 'python term_counter.py'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -t year'
+        s += ' -e utf-8'
         s += ' -l DEBUG'
         print '%s' % s
         return
 
     optdict['inputfile'] = options.inputfile
     optdict['termname'] = options.termname
+    optdict['encoding'] = options.encoding
     print 'optdict: %s' % optdict
 
     # Get distinct values of termname from inputfile

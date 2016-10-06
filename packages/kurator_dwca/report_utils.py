@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2016-10-04T15:37+02:00"
+__version__ = "report_utils.py 2016-10-06T13:55+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -51,7 +51,7 @@ except ImportError:
     import warnings
     s = "The unicodecsv package is required.\n"
     s += "pip install unicodecsv\n"
-    s += "jython pip install unicodecsv"
+    s += "$JYTHON_HOME/bin/pip install unicodecsv"
     warnings.warn(s)
 
 def term_recommendation_report(
@@ -96,7 +96,8 @@ def term_recommendation_report(
         return False
 
     with open(reportfile, 'a') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
+        writer = csv.DictWriter(csvfile, dialect=dialect, encoding='utf-8', 
+            fieldnames=fieldnames)
         for datakey, value in recommendationdict.iteritems():
             row = {key:datakey, 
                 'standard':value['standard'], 
@@ -154,7 +155,8 @@ def term_list_report(reportfile, termlist, key, separator=None, format=None):
         return False
 
     with open(reportfile, 'a') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
+        writer = csv.DictWriter(csvfile, dialect=dialect, encoding='utf-8', 
+            fieldnames=fieldnames)
         for value in termlist:
             row = {key:value, 'standard':'', 'vetted':'0' }
             if separator is None:
@@ -193,7 +195,8 @@ def row_correct_term(row, fieldname, shouldbe):
     row[fieldname+'_orig'] = was
 
 def term_setter_report(
-    inputfile, reportfile, key, constantvalues=None, separator=None, format=None):
+    inputfile, reportfile, key, constantvalues=None, separator=None, encoding=None, 
+    format=None):
     ''' Write a file substituting constants for fields that already exist in an input file 
         and with added fields with constants for fields that do not already exist in an 
        inputfile. Field name matching is exact.
@@ -204,6 +207,8 @@ def term_setter_report(
         constantvalues - value or separator-separated values to set the field(s) to 
             (required)
         separator - string to use as the key and value separator (optional; default '|')
+        encoding - string signifying the encoding of the input file. If known, it speeds
+            up processing a great deal. (optional; default None) (e.g., 'utf-8')
         format - string signifying the csv.dialect of the report file ('csv' or 'txt')
             (optional; default: txt)
     returns:
@@ -230,10 +235,11 @@ def term_setter_report(
     inputdialect = csv_file_dialect(inputfile)
 
     # Determine the dialect of the input file
-    inputencoding = csv_file_encoding(inputfile)
+    if encoding is None or len(encoding.strip()) == 0:
+        encoding = csv_file_encoding(inputfile)
 
     # Read the header from the input file
-    inputheader = read_header(inputfile, dialect=inputdialect, encoding=inputencoding)
+    inputheader = read_header(inputfile, dialect=inputdialect, encoding=encoding)
 
     if inputheader is None:
         s = 'Unable to read header from input file %s in %s.' % (inputfile, functionname)
@@ -296,7 +302,7 @@ def term_setter_report(
             fieldnames=outputheader)
 
         # Iterate through all rows in the input file
-        for row in read_csv_row(inputfile, dialect=inputdialect, encoding=inputencoding, 
+        for row in read_csv_row(inputfile, dialect=inputdialect, encoding=encoding, 
             header=True, fieldnames=inputheader):
             # For every field in the key list
             for i in range(0,len(fields)):
@@ -310,7 +316,7 @@ def term_setter_report(
     return True
 
 def term_standardizer_report(
-    inputfile, reportfile, vocabfile, key, separator=None, format=None):
+    inputfile, reportfile, vocabfile, key, separator=None, encoding=None, format=None):
     ''' Write a file with substitutions from a vocabfile for fields in a key and appended 
         terms showing the original values.
     parameters:
@@ -319,6 +325,8 @@ def term_standardizer_report(
         vocabfile - path to the vocabulary file (required)
         key - field or separator-separated fields to set (required)
         separator - string to use as the key and value separator (optional; default '|')
+        encoding - string signifying the encoding of the input file. If known, it speeds
+            up processing a great deal. (optional; default None) (e.g., 'utf-8')
         format - string signifying the csv.dialect of the report file ('csv' or 'txt')
             (optional; default: txt)
     returns:
@@ -345,10 +353,11 @@ def term_standardizer_report(
     inputdialect = csv_file_dialect(inputfile)
 
     # Determine the dialect of the input file
-    inputencoding = csv_file_encoding(inputfile)
+    if encoding is None or len(encoding.strip()) == 0:
+        encoding = csv_file_encoding(inputfile)
 
     # Read the header from the input file
-    inputheader = read_header(inputfile, dialect=inputdialect, encoding=inputencoding)
+    inputheader = read_header(inputfile, dialect=inputdialect, encoding=encoding)
 
     if inputheader is None:
         s = 'Unable to read header from input file %s in %s.' % (inputfile, functionname)
@@ -392,8 +401,9 @@ def term_standardizer_report(
         logging.debug(s)
         return False
 
-    # Get the vocabulary dictionary, but convert all entries using ustripstr
-    vocabdict = vocab_dict_from_file(vocabfile, key, function=ustripstr)
+    # Get the vocabulary dictionary, but convert all entries using ustripstr. Assume
+    # vocabulary file is encoded as utf-8.
+    vocabdict = vocab_dict_from_file(vocabfile, key, encoding='utf-8', function=ustripstr)
     if len(vocabdict) == 0:
         s = 'Vocabulary file %s ' % vocabfile
         s += 'had zero recommendations in %s.' % functionname
@@ -434,7 +444,7 @@ def term_standardizer_report(
         writer = csv.DictWriter(outfile, dialect=outputdialect, encoding='utf-8', 
             fieldnames=outputheader)
         # Iterate through all rows in the input file
-        for row in read_csv_row(inputfile, dialect=inputdialect, encoding=inputencoding, 
+        for row in read_csv_row(inputfile, dialect=inputdialect, encoding=encoding, 
             header=True, fieldnames=cleanedinputheader):
             # Set the _orig values for every field in the field list that exists in
             # the row
@@ -476,128 +486,6 @@ def term_standardizer_report(
     s = 'Report written to %s in %s.' % (reportfile, functionname)
     logging.debug(s)
     return True    
-
-def termlist_corrector_report(
-    inputfile, reportfile, vocabdirectory, fieldlist, key, separator=None, format=None):
-    ''' Specialized function with assumptions about the vocabulary files. Write a file 
-        with substitutions for a list of terms based on the vocabulary files in the given 
-        vocabdirectory that match the field names + '.txt'. Appended terms showing the 
-        original values.
-    parameters:
-        inputfile - full path to the input file (required)
-        reportfile - full path to the output file (required)
-        vocabdirectory - path to the directory where the vocabulary files are located
-            (optional; default '')
-        key - field or separator-separated fields to set (required)
-        separator - string to use as the key and value separator (optional; default '|')
-        format - string signifying the csv.dialect of the report file ('csv' or 'txt')
-            (optional; default: txt)
-    returns:
-        success - True if the report was written, else False
-    '''
-    functionname = 'termlist_corrector_report()'
-
-    if reportfile is None or len(reportfile)==0:
-        s = 'No reportfile name given in %s.' % functionname
-        logging.debug(s)
-        return False
-
-    if inputfile is None or len(inputfile) == 0:
-        s = 'No inputfile file given in %s.' % functionname
-        logging.debug(s)
-        return False
-
-    if os.path.isfile(inputfile) == False:
-        s = 'Inputfile file %s not found in %s.' % (inputfile, functionname)
-        logging.debug(s)
-        return False
-
-    # Determine the dialect of the input file
-    inputdialect = csv_file_dialect(inputfile)
-
-    # Determine the dialect of the input file
-    inputencoding = csv_file_encoding(inputfile)
-
-    # Read the header from the input file
-    inputheader = read_header(inputfile, dialect=inputdialect, encoding=inputencoding)
-
-    if inputheader is None:
-        s = 'Unable to read header from input file %s in %s.' % (inputfile, functionname)
-        logging.debug(s)
-        return False
-
-    if key is None or len(key.strip())==0:
-        s = 'No key given in %s().'
-        logging.debug(s)
-        return False
-
-    if key not in inputheader:
-        s = 'Key %s not found in input file %s in %s.' % (key, inputfile, functionname)
-        logging.debug(s)
-        return False
-
-    if vocabfile is None or len(vocabfile) == 0:
-        s = 'No vocabulary file given in %s.' % functionname
-        logging.debug(s)
-        return False
-
-    if os.path.isfile(vocabfile) == False:
-        s = 'Vocabulary file %s not found in %s.' % (vocabfile, functionname)
-        logging.debug(s)
-        return False
-
-    # Get the vocabulary dictionary, but convert all entries using ustripstr
-    vocabdict = vocab_dict_from_file(vocabfile, key, separator, function=ustripstr)
-    if len(vocabdict) == 0:
-        s = 'Vocabulary file %s ' % vocabfile
-        s += 'had zero recommendations in %s.' % functionname
-        logging.debug(s)
-        return False
-
-    if format=='txt' or format is None:
-        dialect = tsv_dialect()
-    else:
-        dialect = csv_dialect()
-
-    if format=='txt' or format is None:
-        outputdialect = tsv_dialect()
-    else:
-        outputdialect = csv_dialect()
-
-    # Create an output header that is the same as the input header with a field
-    # appended to hold the original value of the key field
-    addedfield = key+'_orig'
-    outputheader = inputheader + [addedfield]
-
-    # Create the outputfile and write the new header to it
-    write_header(reportfile, outputheader, outputdialect)
-
-    # Check to see if the outputfile was created
-    if os.path.isfile(reportfile) == False:
-        s = 'reportfile: %s not created in %s.' % (reportfile, functionname)
-        logging.debug(s)
-        return False
-
-    # Open the outputfile to append rows having the added fields
-    with open(reportfile, 'a') as outfile:
-        writer = csv.DictWriter(outfile, dialect=outputdialect, encoding='utf-8', 
-            fieldnames=outputheader)
-        # Iterate through all rows in the input file
-        for row in read_csv_row(inputfile, dialect=inputdialect, encoding=inputencoding, 
-            header=True, fieldnames=inputheader):
-            # Get the recommended value for the ustripstr'd original value of the 
-            # key field
-            newvalue = recommended_value(vocabdict, ustripstr(row[key]))
-            # Add the field for the original value of the  key
-            row[addedfield] = row[key]
-            if newvalue is not None and 'standard' in newvalue:
-                # Set the value of the key field to the looked up value
-                row[key] = newvalue['standard']
-            writer.writerow(row)
-
-    s = 'Report written to %s in %s.' % (reportfile, functionname)
-    logging.debug(s)
-    return True
 
 class ReportUtilsFramework():
     # testdatapath is the location of the files to test with

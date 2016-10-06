@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwinize_header_test.py 2016-09-23T21:00+02:00"
+__version__ = "darwinize_header_test.py 2016-10-06T17:00+02:00"
 
 # This file contains unit test for the darwinize_header function.
 #
@@ -80,14 +80,14 @@ class DarwinizeHeaderTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=darwinize_header(inputs)
-#        print 'response1:\n%s' % response
+        #print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
         # Test with missing inputfile
         inputs['dwccloudfile'] = dwccloudfile
         response=darwinize_header(inputs)
-#        print 'response2:\n%s' % response
+        #print 'response2:\n%s' % response
         s = 'success without inputfile'
         self.assertFalse(response['success'], s)
 
@@ -95,21 +95,21 @@ class DarwinizeHeaderTestCase(unittest.TestCase):
         inputs = {}
         inputs['inputfile'] = testfile1
         response=darwinize_header(inputs)
-#        print 'response3:\n%s' % response
+        #print 'response3:\n%s' % response
         s = 'success without inputfile'
         self.assertFalse(response['success'], s)
 
         # Test with missing outputfile
         inputs['dwccloudfile'] = dwccloudfile
         response=darwinize_header(inputs)
-#        print 'response4:\n%s' % response
+        #print 'response4:\n%s' % response
         s = 'success without outputfile'
         self.assertFalse(response['success'], s)
 
         # Test with missing optional inputs
         inputs['outputfile'] = outputfile
         response=darwinize_header(inputs)
-#        print 'response5:\n%s' % response
+       #print 'response5:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
         # Remove the file created by this test, as the Framework does not know about it

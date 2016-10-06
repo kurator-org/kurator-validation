@@ -23,3 +23,8 @@ python utf8_encoder_test.py
 python vocab_appender_test.py
 python vocab_counter_test.py
 python vocab_extractor_test.py
+
+jython dwca_utils.py
+jython dwca_vocab_utils.py
+jython dwcareader_utils.py
+jython report_utils.py

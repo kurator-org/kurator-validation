@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2016-10-04T15:09+02:00"
+__version__ = "dwca_core_to_tsv.py 2016-10-04T16:26+02:00"
 
 from dwcareader_utils import short_term_names
 from dwca_utils import tsv_dialect
@@ -35,15 +35,20 @@ except ImportError:
     import warnings
     s = "The unicodecsv package is required.\n"
     s += "pip install unicodecsv\n"
-    s += "jython pip install unicodecsv"
+    s += "$JYTHON_HOME/bin/pip install unicodecsv"
     warnings.warn(s)
 
-# Python Darwin Core Archive Reader from 
+# Requires the Python Darwin Core Archive Reader from 
 #   https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
-#   pip install python-dwca-reader
-#   jython pip install python-dwca-reader for use in workflows
-from dwca.read import DwCAReader
-from dwca.read import GBIFResultsReader
+try:
+    from dwca.read import DwCAReader
+    from dwca.read import GBIFResultsReader
+except ImportError:
+    import warnings
+    s = "The python-dwca-reader package is required.\n"
+    s += "pip install python-dwca-reader\n"
+    s += "$JYTHON_HOME/bin/pip install python-dwca-reader"
+    warnings.warn(s)
 
 def dwca_core_to_tsv(options):
     ''' Save the core of the archive to a tsv file with DwC term names as headers.

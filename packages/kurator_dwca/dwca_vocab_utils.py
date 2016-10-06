@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-10-04T14:58+02:00"
+__version__ = "dwca_vocab_utils.py 2016-10-06T13:43+02:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -42,6 +42,7 @@ from dwca_terms import vocabrowdict
 from dwca_terms import controlledtermlist
 from dwca_terms import geogkeytermlist
 from dwca_terms import geogvocabaddedfieldlist
+from dwca_terms import darwincloudvocabaddedfieldlist
 import os.path
 import logging
 import unittest
@@ -55,7 +56,7 @@ except ImportError:
     import warnings
     s = "The unicodecsv package is required.\n"
     s += "pip install unicodecsv\n"
-    s += "jython pip install unicodecsv"
+    s += "$JYTHON_HOME/bin/pip install unicodecsv"
     warnings.warn(s)
 
 def geogvocabheader():
@@ -67,6 +68,15 @@ def geogvocabheader():
     '''
     geogkey = compose_key_from_list(geogkeytermlist)
     return ['geogkey'] + geogkeytermlist + vocabfieldlist + geogvocabaddedfieldlist
+
+def darwincloudvocabheader():
+    ''' Construct a header row for the Darwin Cloud vocabulary.
+    parameters:
+        None
+    returns:
+        fieldnames -  a list of field names in the header
+    '''
+    return ['fieldname'] + vocabfieldlist + darwincloudvocabaddedfieldlist
 
 def vocabheader(key, separator=None):
     ''' Construct the header row for a vocabulary file. Begin with a field name equal to 
@@ -395,6 +405,43 @@ def vocab_dict_from_file(
                 
     return vocabdict
 
+def darwin_cloud_vocab_dict_from_file(vocabfile):
+    ''' Get a Darwin Cloud vocabulary as a dictionary from a file.
+    parameters:
+        vocabfile - path to the vocabulary file (required)
+    returns:
+        vocabdict - dictionary of complete vocabulary records
+    '''
+    functionname = 'darwin_cloud_vocab_dict_from_file()'
+
+    if vocabfile is None or len(vocabfile) == 0:
+        s = 'No vocabulary file given in %s.' % functionname
+        logging.debug(s)
+        return None
+
+    if os.path.isfile(vocabfile) == False:
+        s = 'Vocabulary file %s not found in %s.' % (vocabfile, functionname)
+        logging.debug(s)
+        return None
+
+    dialect = csv_file_dialect(vocabfile)
+
+    # Create a dictionary to hold the vocabulary
+    vocabdict = {}
+
+    header = read_header(vocabfile, dialect=dialect, encoding='utf8')
+
+    # Iterate through all rows in the input file. Let read_csv_row figure out the dialect
+    for row in read_csv_row(vocabfile, dialect=dialect, encoding='utf-8', header=True, 
+            fieldnames=header):
+        # Make a complete copy of the row
+        rowdict = copy.deepcopy(row)
+        key = row['fieldname']
+        # Remove the key from the row copy
+        rowdict.pop('fieldname')
+        vocabdict[key]=rowdict                
+    return vocabdict
+
 def term_values_recommended(lookupdict):
     ''' Get non-standard values and their standard equivalents from a lookupdict
     parameters:
@@ -507,7 +554,8 @@ def terms_not_in_dwc(checklist, casesensitive=False):
     notfound = not_in_list(lowerdwc,checklist,function=ustripstr)
     return notfound
 
-def terms_not_in_darwin_cloud(checklist, dwccloudfile, vetted=True, casesensitive=False):
+def terms_not_in_darwin_cloud(checklist, dwccloudfile, encoding=None, vetted=True, 
+    casesensitive=False):
     ''' Get the list of distinct values in a checklist that are not in the Darwin Cloud
         vocabulary. Verbatim values in the Darwin Cloud vocabulary should be lower-case and
         stripped already, so that is what must be matched here. The Darwin Cloud vocabulary
@@ -516,6 +564,8 @@ def terms_not_in_darwin_cloud(checklist, dwccloudfile, vetted=True, casesensitiv
         checklist - list of values to check against the target list (required)
         dwccloudfile - the vocabulary file for the Darwin Cloud (required)
         vetted - set to False if unvetted values should also be returned (default True)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
     returns:
         a sorted list of distinct new values not in the Darwin Cloud vocabulary
     '''
@@ -526,12 +576,21 @@ def terms_not_in_darwin_cloud(checklist, dwccloudfile, vetted=True, casesensitiv
         logging.debug(s)
         return None
 
+    dialect = csv_file_dialect(dwccloudfile)
+    
+    # Try to determine the encoding of the inputfile.
+    if encoding is None or len(encoding.strip()) == 0:
+        encoding = csv_file_encoding(dwccloudfile)
+        # csv_file_encoding() always returns an encoding if there is an input file.    
+
     # No need to check if dwccloudfile is given and exists, vocab_dict_from_file() and
     # vetted_vocab_dict_from_file() do that.
     if vetted==True:
-        darwinclouddict = vetted_vocab_dict_from_file(dwccloudfile, 'fieldname')
+        darwinclouddict = vetted_vocab_dict_from_file(dwccloudfile, 'fieldname',
+            dialect=dialect, encoding=encoding)
     else:
-        darwinclouddict = vocab_dict_from_file(dwccloudfile, 'fieldname')
+        darwinclouddict = vocab_dict_from_file(dwccloudfile, 'fieldname', 
+            dialect=dialect, encoding=encoding)
 
     dwcloudlist = []
     for key, value in darwinclouddict.iteritems():
@@ -548,11 +607,13 @@ def terms_not_in_darwin_cloud(checklist, dwccloudfile, vetted=True, casesensitiv
 
     return notfound
 
-def darwinize_list(termlist, dwccloudfile):
+def darwinize_list(termlist, dwccloudfile, namespace=None):
     ''' Translate the terms in a list to standard Darwin Core terms.
     parameters:
         termlist - list of values to translate (required)
         dwccloudfile - the vocabulary file for the Darwin Cloud (required)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
     returns:
         a list with all translatable terms translated
     '''
@@ -563,9 +624,14 @@ def darwinize_list(termlist, dwccloudfile):
         logging.debug(s)
         return None
 
+    dialect = csv_file_dialect(dwccloudfile)
+
     # No need to check if dwccloudfile is given and exists, vetted_vocab_dict_from_file() 
     # does that.
-    darwinclouddict = vetted_vocab_dict_from_file(dwccloudfile, 'fieldname')
+    darwinclouddict = darwin_cloud_vocab_dict_from_file(dwccloudfile)
+
+#    darwinclouddict = vetted_vocab_dict_from_file(dwccloudfile, 'fieldname', 
+#        dialect=dialect, encoding='utf-8')
 
     if darwinclouddict is None:
         s = 'No Darwin Cloud terms in %s.' % functionname
@@ -576,6 +642,10 @@ def darwinize_list(termlist, dwccloudfile):
     for term in termlist:
         thelist.append(ustripstr(term))
 
+    addnamespace = False
+    if namespace is not None and 'y' in namespace:
+        addnamespace = True
+
     darwinizedlist = []
     i = 0
     j = 1
@@ -583,7 +653,11 @@ def darwinize_list(termlist, dwccloudfile):
         if term in darwinclouddict:
             if darwinclouddict[term]['standard'] is not None and \
                 len(darwinclouddict[term]['standard'].strip()) > 0:
-                newterm = darwinclouddict[term]['standard']
+                if addnamespace == True:
+                    ns = darwinclouddict[term]['namespace']
+                    newterm = ns + ':' + darwinclouddict[term]['standard']
+                else:
+                    newterm = darwinclouddict[term]['standard']
             else:
                 newterm = termlist[i].strip()
         else:
@@ -665,9 +739,9 @@ def keys_list(sourcedict):
 
     return keylist
 
-def distinct_vocabs_to_file(vocabfile, valuelist, key, separator=None, dialect=None,
-    encoding=None):
-    ''' Add distinct new verbatim values from a valuelist to a vocabulary file.
+def distinct_vocabs_to_file(vocabfile, valuelist, key, separator=None, dialect=None):
+    ''' Add distinct new verbatim values from a valuelist to a vocabulary file. Always 
+        write new values as utf-8.
     parameters:
         vocabfile - full path to the vocabulary file (required)
         valuelist - list of values to check for adding to the vocabulary file (required)
@@ -677,8 +751,6 @@ def distinct_vocabs_to_file(vocabfile, valuelist, key, separator=None, dialect=N
             (optional; default None)
         dialect - a csv.dialect object with the attributes of the vocabulary file
             (default None)
-        encoding - a string designating the input file encoding (optional; default None) 
-            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
     returns:
         newvaluelist - a sorted list of distinct verbatim values added to the vocabulary
             lookup file
@@ -696,15 +768,10 @@ def distinct_vocabs_to_file(vocabfile, valuelist, key, separator=None, dialect=N
         # csv_file_dialect() always returns a dialect if there is an input file.
         # No need to check.
 
-    # Try to determine the encoding of the inputfile.
-    if encoding is None or len(encoding.strip()) == 0:
-        encoding = csv_file_encoding(vocabfile)
-        # csv_file_encoding() always returns an encoding if there is an input file.    
-
     # No need to check if valuelist is given, not_in_list() does that
     # Get the distinct verbatim values from the vocab file
     vocablist = extract_values_from_file(vocabfile, [key], separator=separator, 
-        dialect=dialect, encoding=encoding)
+        dialect=dialect, encoding='utf-8')
 
     # Get the values not already in the vocab file
     newvaluelist = not_in_list(vocablist, valuelist)
@@ -715,7 +782,7 @@ def distinct_vocabs_to_file(vocabfile, valuelist, key, separator=None, dialect=N
         return None
 
     if dialect is None:
-        dialect = vocab_dialect()
+        dialect = csv_file_dialect(vocabfile)
 
     fieldnames = vocabheader(key, separator)
 
@@ -728,7 +795,8 @@ def distinct_vocabs_to_file(vocabfile, valuelist, key, separator=None, dialect=N
         return None
 
     with open(vocabfile, 'a') as csvfile:
-        writer = csv.DictWriter(csvfile, dialect=dialect, fieldnames=fieldnames)
+        writer = csv.DictWriter(csvfile, dialect=dialect, encoding='utf-8', 
+            fieldnames=fieldnames)
         for term in newvaluelist:
             row = copy.deepcopy(vocabrowdict)
             row[key] = term
@@ -1147,6 +1215,13 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
         self.assertEqual(notdwc, expectedlist, s)
 
+        checklist = [u'catalogNumber ', u'InstitutionCode ', u'CollectionCode ', u'Id']
+        darwincloudfile = self.framework.darwincloudfile
+        notdwc = darwinize_list(checklist, darwincloudfile, namespace='yes')
+        expectedlist = ['dwc:catalogNumber', 'dwc:institutionCode', 'dwc:collectionCode', 'Id']
+        s = 'Found:\n%s\nNot as expected:\n%s' % (notdwc, expectedlist)
+        self.assertEqual(notdwc, expectedlist, s)
+
     def test_not_in_list(self):
         print 'testing not_in_list'
         targetlist = ['b', 'a', 'c']
@@ -1161,10 +1236,11 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
     def test_distinct_vocabs_to_file(self):
         print 'testing distinct_vocabs_to_file'
         testvocabfile = self.framework.testvocabfile
-        vocabencoding = 'utf8'
+        vocabencoding = 'utf-8'
 
         valuelist = ['b', 'a', 'c']
-        writtenlist = distinct_vocabs_to_file(testvocabfile, valuelist, 'verbatim')
+        writtenlist = distinct_vocabs_to_file(testvocabfile, valuelist, 'verbatim',
+            dialect=tsv_dialect())
         expected = ['a', 'b', 'c']
 
         # Check that the testvocabfile exists
@@ -1174,8 +1250,7 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         s = 'testvocabfile not written to %s for first checklist' % testvocabfile
         self.assertTrue(check, s)
 
-        fulllist = extract_values_from_file(testvocabfile, ['verbatim'], separator=None,
-            dialect=None, encoding=vocabencoding)        
+        fulllist = extract_values_from_file(testvocabfile, ['verbatim'], encoding=vocabencoding)
         checklist = ['c', 'd', 'a', 'e']
         writtenlist = distinct_vocabs_to_file(testvocabfile, checklist, 'verbatim')
         expected = ['d', 'e']
@@ -1337,6 +1412,31 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         expected = ''
         s = 'key %s not as expected %s' % (k, expected)
         self.assertEqual(k, expected, s)
+
+    def test_darwin_cloud_vocab_dict_from_file(self):
+        print 'testing darwin_cloud_vocab_dict_from_file'
+
+        darwincloudfile = self.framework.darwincloudfile
+        
+        clouddict = darwin_cloud_vocab_dict_from_file(darwincloudfile)
+        s = 'No Darwin Cloud dictionary loaded from %s' % darwincloudfile
+        self.assertIsNotNone(clouddict, s)
+
+        term = 'LAT'
+        try:
+            entry = clouddict[term]
+        except:
+            entry = None
+        s = 'No Darwin Cloud dictionary entry for %s ' % term
+        s += 'found in %s' % darwincloudfile
+        self.assertIsNotNone(entry, s)
+
+        seek = entry['namespace']
+        expected = 'dwc'
+        s = 'Namespace (%s) does not match expected (%s) ' % (seek, expected)
+        s += 'in entry %s' % entry
+        self.assertEqual(seek, expected, s)
+
 
 if __name__ == '__main__':
     print '=== dwca_vocab_utils.py ==='

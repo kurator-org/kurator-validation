@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_token_reporter_test.py 2016-09-08T13:43+02:00"
+__version__ = "term_token_reporter_test.py 2016-10-06T11:13+02:00"
 
 # This file contains unit test for the term_token_reporter function.
 #
@@ -23,7 +23,6 @@ __version__ = "term_token_reporter_test.py 2016-09-08T13:43+02:00"
 # python term_token_reporter_test.py
 
 from term_token_reporter import term_token_reporter
-from dwca_utils import read_header
 import os
 import unittest
 

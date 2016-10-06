@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dataset_term_standardizer.py 2016-10-02T16:02+02:00"
+__version__ = "dataset_term_standardizer.py 2016-10-06T13:51+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -36,6 +36,8 @@ def dataset_term_standardizer(options):
         outputfile - name of the output file, without path (optional)
         vocabfile - path to the vocabulary file. Either full path or path within the
            workspace (required if constantvalues is None)
+        encoding - string signifying the encoding of the input file. If known, it speeds
+            up processing a great deal. (optional; default None) (e.g., 'utf-8')
         format - output file format (e.g., 'csv' or 'txt') (optional; default 'txt')
         key - field or separator-separated fields whose values are to be set to the 
             constantvalues (required)
@@ -47,7 +49,7 @@ def dataset_term_standardizer(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     '''
-    # print '%s options: %s' % (__version__, options)
+    print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 
@@ -72,6 +74,7 @@ def dataset_term_standardizer(options):
     format = 'txt'
     key = None
     separator = '|'
+    encoding = None
 
     ### Required inputs ###
     try:
@@ -143,6 +146,11 @@ def dataset_term_standardizer(options):
         pass
 
     try:
+        encoding = options['encoding']
+    except:
+        pass
+
+    try:
         outputfile = options['outputfile']
     except:
         pass
@@ -157,7 +165,7 @@ def dataset_term_standardizer(options):
     fields = key.split(separator)
 
     success = term_standardizer_report(inputfile, outputfile, vocabfile, key, \
-        separator=separator, format=format)
+        separator=separator, encoding=encoding, format=format)
 
     if outputfile is not None and not os.path.isfile(outputfile):
         message = 'Failed to write results to output file %s. ' % outputfile
@@ -194,6 +202,9 @@ def _getoptions():
     help = 'string that separates fields in the key (optional)'
     parser.add_argument("-s", "--separator", help=help)
 
+    help = "encoding (optional)"
+    parser.add_argument("-e", "--encoding", help=help)
+
     help = 'report file format (e.g., csv or txt) (optional; default csv)'
     parser.add_argument("-f", "--format", help=help)
 
@@ -218,6 +229,7 @@ def main():
         s += ' -v ./data/vocabularies/country.txt'
         s += ' -k country'
         s += ' -f csv'
+        s += ' -e utf-8'
         s += ' -l DEBUG'
         print '%s' % s
 
@@ -230,6 +242,7 @@ def main():
         s += ' -k "continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island"'
         s += ' -s "|"'
         s += ' -f txt'
+        s += ' -e utf-8'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -241,6 +254,7 @@ def main():
     optdict['key'] = options.key
     optdict['separator'] = options.separator
     optdict['format'] = options.format
+    optdict['encoding'] = options.encoding
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

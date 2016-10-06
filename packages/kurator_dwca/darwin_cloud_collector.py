@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector.py 2016-10-04T15:42+02:00"
+__version__ = "darwin_cloud_collector.py 2016-10-06T17:01+02:00"
 
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
@@ -36,6 +36,8 @@ def darwin_cloud_collector(options):
         workspace - path to a directory for the outputfile (optional)
         inputfile - full path to the input file (required)
         outputfile - name of the output file, without path (required)
+        encoding - string signifying the encoding of the input file. If known, it speeds
+            up processing a great deal. (optional; default None) (e.g., 'utf-8')
     returns a dictionary with information about the results
         addedvalues - new values added to the output file
         outputfile - actual full path to the output file
@@ -67,6 +69,7 @@ def darwin_cloud_collector(options):
     workspace = './'
     inputfile = None
     outputfile = None
+    encoding = None
 
     ### Required inputs ###
     try:
@@ -104,12 +107,18 @@ def darwin_cloud_collector(options):
 
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
-    # Read the header and let read_header figure out the dialect and encoding.
-    header = read_header(inputfile)
+    try:
+        encoding = options['encoding']
+    except:
+        pass
+
+   # Read the header and let read_header figure out the dialect and encoding.
+    header = read_header(inputfile, encoding=encoding)
     nondwc = terms_not_in_dwc(header, casesensitive=False)
 
     dialect = vocab_dialect()
-    addedvalues = distinct_vocabs_to_file(outputfile, nondwc, 'fieldname', dialect=dialect)
+    addedvalues = distinct_vocabs_to_file(outputfile, nondwc, 'fieldname', 
+        dialect=dialect)
     success = True
 
     if addedvalues is not None:

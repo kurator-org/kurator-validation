@@ -44,7 +44,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_geography_cleaner.yaml 2016-09-29T14:56+02:00"
+# __version__ = "dwca_geography_cleaner.yaml 2016-10-06T17:38+02:00"
 
 imports:
 
@@ -66,8 +66,7 @@ components:
       - !ref DownloadCountryLookup
       - !ref DownloadArchive
       - !ref ExtractOccurrenceCore
-      - !ref MakeVocabFieldList
-      - !ref CreateVocabCountReport
+      - !ref CountFieldValues
       - !ref CreateGeographyReport
       - !ref CreateGeographyCountReport
       - !ref CreateMissingGeographyReport
@@ -249,72 +248,109 @@ components:
     listensTo:
       - !ref DownloadArchive
 
-# Inline python actor to generate an options dictionary for each of a list of terms.
-- id: MakeVocabFieldList
+# Inline python actor to create distinct value counts all DwC terms recommended to follow
+# controlled vocabularies.
+- id: CountFieldValues
   type: PythonActor
   properties:
     # Inline python code to run.
     code: |
         # The function to run when an on_data message is received. Accepts a dictionary
         # of options.
+        from kurator_dwca.dwca_utils import read_header
+        from kurator_dwca.dwca_utils import clean_header
+        from kurator_dwca.dwca_utils import csv_file_encoding
+        from kurator_dwca.dwca_terms import controlledtermlist
+        from kurator_dwca.term_value_count_reporter import term_value_count_reporter
         def on_data(options):
-            print '### Started MakeVocabFieldList ###'
-            print 'MakeVocabFieldList options: %s' % options
-            termlist = [ \
+            actor = 'CountFieldValues'
+            print '### Started %s ###' % actor
+            for key, value in options.iteritems():
+                print '%s: %s' % (key, value)
+
+            # Get the format for the output files, with 'csv' as the default
+            try:
+                format = options['format']
+            except:
+                format = 'csv'
+
+            #inputfile = workspace + '/' + options['inputfile']
+            inputfile = options['inputfile']
+
+            # Figure out the input file encoding first. It will makes things much faster
+            # to know it in advance and pass that information to various steps.
+            encoding = csv_file_encoding(inputfile)
+            header = read_header(inputfile, encoding=encoding)
+
+            # Create a cleaned list of fields from the input file
+            cleanheader = clean_header(header)
+
+            # List of terms for which to get distinct value counts.
+            cleantermlist = [ \
                 ['continent'], \
                 ['countrycode'], \
                 ['waterBody'], \
                 ['islandGroup'], \
                 ['island']
                 ]
+
+            print 'cleantermlist: %s' % cleantermlist
+            print 'cleanheader: %s' % cleanheader
+            print 'header: %s' % header
+            print "options['inputfile']: %s" % options['inputfile']
+            print 'inputfile: %s' % inputfile
+
+            # Get a list of fields from those of interest that actually exist in the 
+            # inputfile
+            termlist = []
+            for term in cleantermlist:
+                if term in cleanheader:
+                    termlist.append(term)
+
+            # Prepare the output dictionary
+            outputoptions = {}
+            outputoptions['success'] = True
+            outputoptions['message'] = None
+            outputoptions['workspace'] = options['workspace']
+            outputoptions['artifacts'] = {}
+
+            # Cycle through all of the fields of interest in the inputfile
             for term in termlist:
-                filename = 'count_'+term[0]+'.csv'
-                yield { 'inputfile':options['inputfile'], 
-                        'workspace':options['workspace'], 
-                        'termlist':term,
-                        'outputfile':filename,
-                        'messagefrom':'MakeVocabFieldList' }
+                filename = 'count_'+term.lower()+'.'+format
+
+                # Prepare the options dictionary for the term_value_count_reporter
+                counteroptions = {}
+                counteroptions['workspace'] = options['workspace'] 
+                counteroptions['inputfile'] = inputfile
+                counteroptions['outputfile'] = filename
+                counteroptions['format'] = format
+                counteroptions['termlist'] = [term]
+                counteroptions['encoding'] = encoding
+
+                # Create the reports
+                results = term_value_count_reporter(counteroptions)
+                if results['success'] == False:
+                    outputoptions['success'] = False
+                    outputoptions['message'] = results['message']
+                    return outputoptions
+                else:
+                    artifact_key = '%s_count_file' % term
+                    outputoptions['artifacts'][artifact_key] = results['outputfile']
+            return outputoptions
     # A list of parameters to get from the options dictionary passed from an 
     # upstream actor.
     inputs:
       # Get the inputfile for this actor from the outputfile in the options dictionary.
-      # outputfile: inputfile
+      outputfile: inputfile
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
-    parameters:
-      # Set the inputfile to a specific file name.
-      inputfile: 'dwca_extracted_occurrences.txt'
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref ExtractOccurrenceCore
-
-# Create a term count report.
-- id: CreateVocabCountReport
-  type: PythonActor
-  properties:
-    # The location of the actor source code 
-    module: kurator_dwca.term_value_count_reporter
-    # The function to invoke in the module when the actor receives an onData message.
-    onData: term_value_count_reporter
-    # A list of parameters to get from the options dictionary passed from an 
-    # upstream actor.
-    inputs:
-      # Get the inputfile for this actor from the inputfile in the options dictionary.
-      inputfile: inputfile
-      # Get the termlist for this actor from the termlist in the options dictionary.
-      termlist: termlist
-      # Get the workspace for this actor from the workspace in the options dictionary.
-      workspace: workspace
-      # Get the outputfile for this actor from the outputfile in the options dictionary.
-      outputfile: outputfile
-    # A list of parameters to get from the parameters defined at the workflow level or
-    # to set explicitly from values given in this section.
-    parameters:
-      # Set the format for output files.
-      format: 'csv'
-    # The "upstream" actor from which to receive a message.
-    listensTo:
-      - !ref MakeVocabFieldList
 
 # Create report on geography recommendations.
 - id: CreateGeographyReport
@@ -339,6 +375,8 @@ components:
       # Set the inputfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       inputfile: 'dwca_extracted_occurrences.txt'
+      # Set the encoding for the inputfile to utf-8.
+      encoding: 'utf-8'
       # Set the vocabfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       vocabfile: 'lookup_geography.txt'
@@ -381,6 +419,8 @@ components:
     parameters:
       # Set the inputfile to a specific file name.
       inputfile: 'dwca_extracted_occurrences.txt'
+      # Set the encoding for the inputfile to utf-8.
+      encoding: 'utf-8'
       # Set the outputfile to a specific file name.
       outputfile: 'count_geography.csv'
       # Set the format for output files.
@@ -422,6 +462,8 @@ components:
       # Set the inputfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       inputfile: 'count_geography.csv'
+      # Set the encoding for the inputfile to utf-8.
+      encoding: 'utf-8'
       # Set the vocabfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       vocabfile: 'lookup_geography.txt'
@@ -463,6 +505,8 @@ components:
     parameters:
       # Set the inputfile to a specific file name.
       inputfile: 'dwca_extracted_occurrences.txt'
+      # Set the encoding for the inputfile to utf-8.
+      encoding: 'utf-8'
       # Set the outputfile to a specific file name.
       outputfile: 'count_country.csv'
       # Set the format for output files.
@@ -503,6 +547,8 @@ components:
       # Set the inputfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       inputfile: 'count_country.csv'
+      # Set the encoding for the inputfile to utf-8.
+      encoding: 'utf-8'
       # Set the vocabfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       vocabfile: 'lookup_country.txt'
@@ -547,7 +593,7 @@ components:
       # NOTE: Would like to be able to specify that this file should go in the workspace
       vocabfile: 'lookup_geography.txt'
       # Set the outputfile to a specific file name within the workspace.
-      outputfile: 'dwc_geography_cleaned_occurrences.txt'
+      outputfile: 'dwca_geography_cleaned_occurrences.txt'
       # Set the format for output files.
       format: 'txt'
       # Set the field combination to report on.

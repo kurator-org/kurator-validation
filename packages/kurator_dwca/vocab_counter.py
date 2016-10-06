@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_counter.py 2016-10-02T16:02+02:00"
+__version__ = "vocab_counter.py 2016-10-06T11:53+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -32,6 +32,8 @@ def vocab_counter(options):
         workspace - path to a directory for the output artifacts (optional)
         inputfile - full path to the input file (required)
         termname - the name of the term for which to find distinct values (required)
+        encoding - string signifying the encoding of the input file. If known, it speeds
+            up processing a great deal. (optional; default None) (e.g., 'utf-8')
     returns a dictionary with information about the results
         workspace - path to a directory for the output artifacts
         extractedvalues - a list of distinct values of the term in the inputfile, with a
@@ -60,6 +62,7 @@ def vocab_counter(options):
     workspace = './'
     inputfile = None
     termname = None
+    encoding = None
 
     ### Required inputs ###
     try:
@@ -94,8 +97,14 @@ def vocab_counter(options):
         returnvals = [workspace, extractedvalues, success, message]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
-        
-    extractedvalues = extract_value_counts_from_file(inputfile, [termname])
+
+    try:
+        encoding = options['encoding']
+    except:
+        pass
+
+    extractedvalues = extract_value_counts_from_file(inputfile, [termname], 
+        encoding=encoding)
 
     success = True
     returnvals = [workspace, extractedvalues, success, message]

@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dataset_constants_setter.py 2016-10-02T16:02+02:00"
+__version__ = "dataset_constants_setter.py 2016-10-06T13:49+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -39,6 +39,8 @@ def dataset_constants_setter(options):
         key - field or separator-separated fields whose values are to be set to the 
             constantvalues (required)
         separator - string to use as the key and value separator (optional; default '|')
+        encoding - string signifying the encoding of the input file. If known, it speeds
+            up processing a great deal. (optional; default None) (e.g., 'utf-8')
         constantvalues - value or separator-separated vslues to set the field(s) to
             (required)
     returns a dictionary with information about the results
@@ -75,6 +77,7 @@ def dataset_constants_setter(options):
     key = None
     separator = '|'
     constantvalues = None
+    encoding = None
 
     ### Required inputs ###
     try:
@@ -126,6 +129,11 @@ def dataset_constants_setter(options):
         pass
 
     try:
+        encoding = options['encoding']
+    except:
+        pass
+
+    try:
         constantvalues = options['constantvalues']
     except:
         pass
@@ -146,7 +154,8 @@ def dataset_constants_setter(options):
 
     # Run the core operation
     success = term_setter_report(inputfile, outputfile, key, \
-        constantvalues=constantvalues, separator=separator, format=format)
+        constantvalues=constantvalues, separator=separator, encoding=encoding, 
+        format=format)
 
     # Check to see if the outputfile was created
     if outputfile is not None and not os.path.isfile(outputfile):
@@ -187,6 +196,9 @@ def _getoptions():
     help = 'string that separates fields in the key (optional)'
     parser.add_argument("-s", "--separator", help=help)
 
+    help = "encoding (optional)"
+    parser.add_argument("-e", "--encoding", help=help)
+
     help = 'report file format (e.g., csv or txt) (optional; default csv)'
     parser.add_argument("-f", "--format", help=help)
 
@@ -210,6 +222,7 @@ def main():
         s += ' -k "license|modified"'
         s += ' -c "CC0|2016-09-25"'
         s += ' -s "|"'
+        s += ' -e utf-8'
         s += ' -f txt'
         print '%s' % s
         return
@@ -220,6 +233,7 @@ def main():
     optdict['key'] = options.key
     optdict['constantvalues'] = options.constantvalues
     optdict['separator'] = options.separator
+    optdict['encoding'] = options.encoding
     optdict['format'] = options.format
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict

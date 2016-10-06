@@ -39,7 +39,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_term_values.yaml 2016-09-29T12:00+02:00"
+# __version__ = "dwca_term_values.yaml 2016-10-04T22:11+02:00"
 
 imports:
 
@@ -185,6 +185,7 @@ components:
         # of options.
         from kurator_dwca.dwca_utils import read_header
         from kurator_dwca.dwca_utils import clean_header
+        from kurator_dwca.dwca_utils import csv_file_encoding
         from kurator_dwca.dwca_terms import controlledtermlist
         from kurator_dwca.term_value_count_reporter import term_value_count_reporter
         def on_data(options):
@@ -199,8 +200,12 @@ components:
             except:
                 format = 'csv'
 
+            # Figure out the input file encoding first. It will makes things much faster
+            # to know it in advance and pass that information to various steps.
+            encoding = csv_file_encoding(options['inputfile'])
+            header = read_header(options['inputfile'], encoding=encoding)
+
             # Create a cleaned list of fields from the input file
-            header = read_header(options['inputfile'])
             cleanheader = clean_header(header)
 
             # Turn the input fieldlist into a cleaned list
@@ -236,6 +241,7 @@ components:
                 counteroptions['outputfile'] = filename
                 counteroptions['format'] = format
                 counteroptions['termlist'] = [term]
+                counteroptions['encoding'] = encoding
 
                 # Create the reports
                 results = term_value_count_reporter(counteroptions)
