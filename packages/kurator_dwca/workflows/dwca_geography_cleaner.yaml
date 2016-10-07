@@ -44,7 +44,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_geography_cleaner.yaml 2016-10-06T17:38+02:00"
+# __version__ = "dwca_geography_cleaner.yaml 2016-10-07T14:39+02:00"
 
 imports:
 
@@ -139,7 +139,7 @@ components:
     # to set explicitly from values given in this section.
     parameters:
       # Get the file from a specific URL.
-      url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/dwc_geography.txt'
+      url : 'https://raw.githubusercontent.com/kurator-org/kurator-validation/master/packages/kurator_dwca/data/vocabularies/dwc_geography.txt'
       # Download to a specific file name in the workspace received from upstream.
       outputfile : 'lookup_geography.txt'
       # Show the name of the upstream actor.
@@ -169,8 +169,7 @@ components:
     # to set explicitly from values given in this section.
     parameters:
       # Get the file from a specific URL.
-      url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/country.txt'
-      # url : 'https://raw.githubusercontent.com/gbif/parsers/master/src/main/resources/dictionaries/parse/countryName.txt'
+      url : 'https://raw.githubusercontent.com/kurator-org/kurator-validation/master/packages/kurator_dwca/data/vocabularies/country.txt'
       # Download to a specific file name within the workspace.
       outputfile : 'lookup_country.txt'
       # Show the name of the upstream actor.
@@ -436,8 +435,8 @@ components:
 
 # Create report on country recommendations. Note that it may be very rare that an unknown
 # country string arises, as the country vocabulary from 
-# https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/country.txt contains
-# values found in the corpus of GBIF plus VertNet migrators.
+# https://raw.githubusercontent.com/kurator-org/kurator-validation/master/packages/kurator_dwca/data/vocabularies/country.txt
+# contains values found in the corpus of GBIF plus VertNet migrators.
 - id: CreateMissingGeographyReport
   type: PythonActor
   properties:
@@ -521,8 +520,8 @@ components:
 
 # Create report on country recommendations. Note that it may be very rare that an unknown
 # country string arises, as the country vocabulary from 
-# https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/country.txt contains
-# values found in the corpus of GBIF plus VertNet migrators.
+# https://raw.githubusercontent.com/kurator-org/kurator-validation/master/packages/kurator_dwca/data/vocabularies/country.txt
+# contains values found in the corpus of GBIF plus VertNet migrators.
 - id: CreateMissingCountryReport
   type: PythonActor
   properties:

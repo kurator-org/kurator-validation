@@ -40,7 +40,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_controlled_term_assessor.yaml 2016-10-04T22:11+02:00"
+# __version__ = "dwca_controlled_term_assessor.yaml 2016-10-07T15:00+02:00"
 
 imports:
 
@@ -137,9 +137,10 @@ components:
             outputoptions['artifacts'] = {}
             for term in termlist:
                 url = 'https://raw.githubusercontent.com/'
-                url += 'tucotuco/DwCVocabs/master/kurator/'
+                url += 'kurator-org/kurator-validation/master/packages/kurator_dwca/'
+                url += 'data/vocabularies/'
                 url += '%s.txt' % term.lower()
-                filename = 'vocab_'+term.lower()+'.csv'
+                filename = 'vocab_'+term.lower()+'.txt'
                 downloaderoptions = {}
                 downloaderoptions['workspace'] = options['workspace'] 
                 downloaderoptions['outputfile'] = filename
@@ -276,6 +277,7 @@ components:
                 counteroptions['outputfile'] = filename
                 counteroptions['termlist'] = [term]
                 counteroptions['encoding'] = encoding
+                counteroptions['format'] = 'csv'
 
                 results = term_value_count_reporter(counteroptions)
                 if results['success'] == False:
@@ -328,13 +330,14 @@ components:
                 outfilename = 'recommended_'+term.lower()+'.csv'
                 infilename = 'count_'+term.lower()+'.csv'
                 vocabfile = 'vocab_'+term.lower()+'.csv'
-                counteroptions = {}
-                counteroptions['workspace'] = options['workspace'] 
-                counteroptions['inputfile'] = infilename
-                counteroptions['outputfile'] = outfilename
-                counteroptions['vocabfile'] = vocabfile
-                counteroptions['key'] = term
-                results = term_recommendation_reporter(counteroptions)
+                recommenderoptions = {}
+                recommenderoptions['workspace'] = options['workspace'] 
+                recommenderoptions['inputfile'] = infilename
+                recommenderoptions['outputfile'] = outfilename
+                recommenderoptions['vocabfile'] = vocabfile
+                recommenderoptions['key'] = term
+                recommenderoptions['format'] = 'csv'
+                results = term_recommendation_reporter(recommenderoptions)
                 if results['success'] == False:
                     outputoptions['success'] = False
                     outputoptions['message'] = results['message']
