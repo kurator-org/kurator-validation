@@ -44,7 +44,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_geography_cleaner.yaml 2016-10-07T14:39+02:00"
+# __version__ = "dwca_geography_cleaner.yaml 2016-10-07T17:23+02:00"
 
 imports:
 
@@ -273,13 +273,10 @@ components:
             except:
                 format = 'csv'
 
-            #inputfile = workspace + '/' + options['inputfile']
-            inputfile = options['inputfile']
-
             # Figure out the input file encoding first. It will makes things much faster
             # to know it in advance and pass that information to various steps.
-            encoding = csv_file_encoding(inputfile)
-            header = read_header(inputfile, encoding=encoding)
+            encoding = csv_file_encoding(options['inputfile'])
+            header = read_header(options['inputfile'], encoding=encoding)
 
             # Create a cleaned list of fields from the input file
             cleanheader = clean_header(header)
@@ -292,12 +289,6 @@ components:
                 ['islandGroup'], \
                 ['island']
                 ]
-
-            print 'cleantermlist: %s' % cleantermlist
-            print 'cleanheader: %s' % cleanheader
-            print 'header: %s' % header
-            print "options['inputfile']: %s" % options['inputfile']
-            print 'inputfile: %s' % inputfile
 
             # Get a list of fields from those of interest that actually exist in the 
             # inputfile
@@ -320,7 +311,7 @@ components:
                 # Prepare the options dictionary for the term_value_count_reporter
                 counteroptions = {}
                 counteroptions['workspace'] = options['workspace'] 
-                counteroptions['inputfile'] = inputfile
+                counteroptions['inputfile'] = options['inputfile']
                 counteroptions['outputfile'] = filename
                 counteroptions['format'] = format
                 counteroptions['termlist'] = [term]
@@ -374,16 +365,14 @@ components:
       # Set the inputfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       inputfile: 'dwca_extracted_occurrences.txt'
-      # Set the encoding for the inputfile to utf-8.
-      encoding: 'utf-8'
       # Set the vocabfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       vocabfile: 'lookup_geography.txt'
       # Set the outputfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
-      outputfile: 'recommended_geography.txt'
+      outputfile: 'recommended_geography.csv'
       # Set the format for output files.
-      format: 'txt'
+      format: 'csv'
       # Set the field combination to report on.
       key: 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
       # Set the separator for the key.
@@ -394,7 +383,7 @@ components:
     listensTo:
       - !ref ExtractOccurrenceCore
 
-# Create a term count report.
+# Create a geography combination count report.
 - id: CreateGeographyCountReport
   type: PythonActor
   properties:
@@ -418,8 +407,6 @@ components:
     parameters:
       # Set the inputfile to a specific file name.
       inputfile: 'dwca_extracted_occurrences.txt'
-      # Set the encoding for the inputfile to utf-8.
-      encoding: 'utf-8'
       # Set the outputfile to a specific file name.
       outputfile: 'count_geography.csv'
       # Set the format for output files.
@@ -433,10 +420,7 @@ components:
     listensTo:
       - !ref CreateGeographyReport
 
-# Create report on country recommendations. Note that it may be very rare that an unknown
-# country string arises, as the country vocabulary from 
-# https://raw.githubusercontent.com/kurator-org/kurator-validation/master/packages/kurator_dwca/data/vocabularies/country.txt
-# contains values found in the corpus of GBIF plus VertNet migrators.
+# Create report on geography combinations not found in the geography lookup file.
 - id: CreateMissingGeographyReport
   type: PythonActor
   properties:
@@ -461,19 +445,18 @@ components:
       # Set the inputfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       inputfile: 'count_geography.csv'
-      # Set the encoding for the inputfile to utf-8.
-      encoding: 'utf-8'
       # Set the vocabfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       vocabfile: 'lookup_geography.txt'
       # Set the outputfile to a specific file name within the workspace.
-      outputfile: 'new_geography.txt'
+      outputfile: 'new_geography.csv'
       # Set the format for output files.
-      format: 'txt'
+      format: 'csv'
       # Set the field combination to report on.
       key: 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
       # Set the separator for the key.
-      separator: '|'
+      # In this case, the whole string with |s is the key, so we do not want a separator.
+      separator: None
       # Show the name of the upstream actor.
       messagefrom: 'CreateGeographyCountReport'
     # The "upstream" actor from which to receive a message.
@@ -504,8 +487,6 @@ components:
     parameters:
       # Set the inputfile to a specific file name.
       inputfile: 'dwca_extracted_occurrences.txt'
-      # Set the encoding for the inputfile to utf-8.
-      encoding: 'utf-8'
       # Set the outputfile to a specific file name.
       outputfile: 'count_country.csv'
       # Set the format for output files.
@@ -518,8 +499,8 @@ components:
     listensTo:
       - !ref CreateMissingGeographyReport
 
-# Create report on country recommendations. Note that it may be very rare that an unknown
-# country string arises, as the country vocabulary from 
+# Create report on countries not found in the country lookup file. Note that it may be 
+# rare that an unknown country string arises, as the country vocabulary from 
 # https://raw.githubusercontent.com/kurator-org/kurator-validation/master/packages/kurator_dwca/data/vocabularies/country.txt
 # contains values found in the corpus of GBIF plus VertNet migrators.
 - id: CreateMissingCountryReport
@@ -546,13 +527,11 @@ components:
       # Set the inputfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       inputfile: 'count_country.csv'
-      # Set the encoding for the inputfile to utf-8.
-      encoding: 'utf-8'
       # Set the vocabfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       vocabfile: 'lookup_country.txt'
       # Set the outputfile to a specific file name within the workspace.
-      outputfile: 'country_not_found.txt'
+      outputfile: 'new_country.txt'
       # Set the format for output files.
       format: 'txt'
       # Set the field combination to report on.
@@ -592,7 +571,7 @@ components:
       # NOTE: Would like to be able to specify that this file should go in the workspace
       vocabfile: 'lookup_geography.txt'
       # Set the outputfile to a specific file name within the workspace.
-      outputfile: 'dwca_geography_cleaned_occurrences.txt'
+      outputfile: 'dwca_extracted_occurrences_geography_standardized.txt'
       # Set the format for output files.
       format: 'txt'
       # Set the field combination to report on.

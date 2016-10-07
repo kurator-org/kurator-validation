@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2016-10-06T13:55+02:00"
+__version__ = "report_utils.py 2016-10-07T15:19+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -28,6 +28,7 @@ __version__ = "report_utils.py 2016-10-06T13:55+02:00"
 from dwca_utils import csv_file_dialect
 from dwca_utils import csv_file_encoding
 from dwca_utils import csv_file_dialect
+from dwca_utils import csv_dialect
 from dwca_utils import tsv_dialect
 from dwca_utils import ustripstr
 from dwca_utils import strip_list

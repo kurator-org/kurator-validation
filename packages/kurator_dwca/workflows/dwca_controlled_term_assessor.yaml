@@ -40,7 +40,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_controlled_term_assessor.yaml 2016-10-07T15:00+02:00"
+# __version__ = "dwca_controlled_term_assessor.yaml 2016-10-07T17:16+02:00"
 
 imports:
 
@@ -213,7 +213,7 @@ components:
     # to set explicitly from values given in this section.
     parameters:
       # Set the outputfile to a specific file name within the workspace.
-      outputfile: 'dwca_extractedoccurrences.txt'
+      outputfile: 'dwca_extracted_occurrences.txt'
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref DownloadArchive
@@ -329,7 +329,7 @@ components:
             for term in termlist:
                 outfilename = 'recommended_'+term.lower()+'.csv'
                 infilename = 'count_'+term.lower()+'.csv'
-                vocabfile = 'vocab_'+term.lower()+'.csv'
+                vocabfile = 'vocab_'+term.lower()+'.txt'
                 recommenderoptions = {}
                 recommenderoptions['workspace'] = options['workspace'] 
                 recommenderoptions['inputfile'] = infilename
@@ -359,7 +359,7 @@ components:
       message: previousmessage
     parameters:
       # Set the inputfile to a specific file name within the workspace.
-      inputfile: 'dwca_extractedoccurrences.txt'
+      inputfile: 'dwca_extracted_occurrences.txt'
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref CountControlledVocabularyValues

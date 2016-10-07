@@ -4,9 +4,10 @@
 #
 # This workflow:
 #    - creates a given directory as a workspace
-#    - downloads a given Darwin Core Archive from a URL
+#    - downloads a Darwin Core Archive from a given URL
 #    - extracts the core file of a Darwin Core Archive to a tab-separated text file
-#    - reports counts of distinct values for a given list of fields
+#    - for each field in a given list of fields, creates a report of counts of distinct 
+#      values
 #    - wraps up the workflow
 #
 # Example command-line usage:
@@ -39,7 +40,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_term_values.yaml 2016-10-04T22:11+02:00"
+# __version__ = "dwca_term_values.yaml 2016-10-07T17:17+02:00"
 
 imports:
 
@@ -169,7 +170,7 @@ components:
     # to set explicitly from values given in this section.
     parameters:
       # Set the outputfile to a specific file name within the workspace.
-      outputfile: 'dwca_extractedoccurrences.txt'
+      outputfile: 'dwca_extracted_occurrences.txt'
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref DownloadArchive
