@@ -15,12 +15,13 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2016-10-06T13:45+02:00"
+__version__ = "vocab_appender.py 2016-10-08T13:26+02:00"
 
 from dwca_utils import read_header
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 from dwca_utils import csv_file_dialect
+from dwca_utils import tsv_dialect
 from dwca_vocab_utils import vocabheader
 from dwca_vocab_utils import writevocabheader
 from dwca_vocab_utils import vocab_dialect
@@ -58,7 +59,7 @@ def vocab_appender(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     '''
-    # print '%s options: %s' % (__version__, options)
+    print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 
@@ -125,25 +126,31 @@ def vocab_appender(options):
         pass
 
     if vocabfile is None or len(vocabfile)==0:
-        message = 'No vocab file given.' % __version__
+        message = 'No vocab file given. %s' % __version__
         returnvals = [workspace, vocabfile, addedvalues, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
-    # If vocab file doesn't exist, create it with a header consisting of fieldnames
-    # constructed from key
-    isfile = os.path.isfile(vocabfile)
-
-    dialect = csv_file_dialect(vocabfile)
     fieldnames = vocabheader(key)
 
+    # If vocab file doesn't exist, create it in the workspace with a header consisting 
+    # of fieldnames constructed from key
+    isfile = os.path.isfile(vocabfile)
+
     if not isfile:
-        writevocabheader(vocabfile, fieldnames, dialect)
+        vocabfile = '%s/%s' % (workspace.rstrip('/'), vocabfile)
+        writevocabheader(vocabfile, fieldnames, tsv_dialect())
 
     filesize = os.stat(vocabfile).st_size
+
     # If file is empty, recreate is with a header consisting of fieldnames
     if filesize == 0:
-        writevocabheader(vocabfile, fieldnames, dialect)
+        message = 'Unable to create vocab file file %s. %s' % (vocabfile, __version__)
+        returnvals = [workspace, vocabfile, addedvalues, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
+    dialect = csv_file_dialect(vocabfile)
 
     # Now we should have a vocab file in utf-8 with a header at least
     header = read_header(vocabfile, dialect, 'utf-8')

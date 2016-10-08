@@ -66,7 +66,7 @@ def dwca_core_to_tsv(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     '''
-    # print '%s options: %s' % (__version__, options)
+    print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 

@@ -40,7 +40,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_term_values.yaml 2016-10-07T17:17+02:00"
+# __version__ = "dwca_term_values.yaml 2016-10-07T18:26+02:00"
 
 imports:
 
@@ -83,7 +83,7 @@ components:
         # of the format parameter given on the command line.
         actor: !ref CountFieldValues
         parameter: format
-      # Accept a parameter called format from the command line.
+      # Accept a parameter called fieldlist from the command line.
       fieldlist:
         # Set the fieldlist in the options dictionary of CountFieldValues from the value
         # of the format parameter given on the command line.

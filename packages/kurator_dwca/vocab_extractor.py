@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor.py 2016-10-06T11:50+02:00"
+__version__ = "vocab_extractor.py 2016-10-08T12:25+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -42,7 +42,7 @@ def vocab_extractor(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     '''
-    # print '%s options: %s' % (__version__, options)
+    print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 
@@ -113,10 +113,15 @@ def vocab_extractor(options):
     except:
         pass
 
+    if separator is None or len(separator.strip())==0:
+        theterms = [termlist]
+    else:
+        theterms = termlist.split(separator)
+
     # Extract the distinct values from the inputfile, applying the function to strip
     # white space and make lower case.
     # Let extract_values_from_file figure out the dialect and encoding of inputfile.
-    extractedvalues = extract_values_from_file(inputfile, termlist, separator=separator,
+    extractedvalues = extract_values_from_file(inputfile, theterms, separator=separator,
         encoding=encoding, function=ustripstr)
 
     success = True
@@ -135,7 +140,7 @@ def _getoptions():
     parser.add_argument("-i", "--inputfile", help=help)
 
     help = "termlist (required)"
-    parser.add_argument("-t", "--term list", help=help)
+    parser.add_argument("-t", "--termlist", help=help)
 
     help = "separator (optional)"
     parser.add_argument("-s", "--separator", help=help)
@@ -167,7 +172,7 @@ def main():
         s += 'python vocab_extractor.py'
         s += ' -w ./workspace'
         s += ' -i ./data/eight_specimen_records.csv'
-        s += '"country|stateprovince"'
+        s += ' -t "country|stateprovince"'
         s += ' -s "|"'
         s += ' -e utf-8'
         s += ' -l DEBUG'
