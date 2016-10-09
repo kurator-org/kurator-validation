@@ -40,7 +40,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_controlled_term_assessor.yaml 2016-10-07T17:16+02:00"
+# __version__ = "dwca_controlled_term_assessor.yaml 2016-10-08T17:56+02:00"
 
 imports:
 
@@ -63,6 +63,7 @@ components:
       - !ref ExtractArchiveCore
       - !ref CountControlledVocabularyValues
       - !ref RecommendVocabularyValues
+      - !ref UnknownVocabularyValues
       - !ref WrapUp
     # Each parameter defined here enters the workflow from the command line and is 
     # delivered in the options dictionary of the specified actor.
@@ -364,6 +365,65 @@ components:
     listensTo:
       - !ref CountControlledVocabularyValues
 
+# Inline python actor to report non-standard values that have a recommended standard 
+# value based on the vocabulary lookup files.
+- id: UnknownVocabularyValues
+  type: PythonActor
+  properties:
+    # Inline python code to run.
+    code: |
+        # The function to run when an on_data message is received. Accepts a dictionary
+        # of options.
+        from kurator_dwca.dwca_utils import clean_header
+        from kurator_dwca.dwca_terms import controlledtermlist
+        from kurator_dwca.term_unknown_reporter import term_unknown_reporter
+        def on_data(options):
+            actor = 'UnknownVocabularyValues'
+            print '### Started %s ###' % actor
+            for key, value in options.iteritems():
+                print '%s: %s' % (key, value)
+            outputoptions = {}
+            outputoptions['success'] = True
+            outputoptions['message'] = None
+            outputoptions['workspace'] = options['workspace']
+            outputoptions['artifacts'] = {}
+            termlist = clean_header(controlledtermlist)
+            for term in termlist:
+                outfilename = 'unknown_'+term.lower()+'.csv'
+                infilename = 'count_'+term.lower()+'.csv'
+                vocabfile = 'vocab_'+term.lower()+'.txt'
+                recommenderoptions = {}
+                recommenderoptions['workspace'] = options['workspace'] 
+                recommenderoptions['inputfile'] = infilename
+                recommenderoptions['outputfile'] = outfilename
+                recommenderoptions['vocabfile'] = vocabfile
+                recommenderoptions['key'] = term
+                recommenderoptions['format'] = 'csv'
+                results = term_unknown_reporter(recommenderoptions)
+                if results['success'] == True:
+                    artifact_key = '%s_unknown_file' % term
+                    outputoptions['artifacts'][artifact_key] = results['outputfile']
+            return outputoptions
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
+    inputs:
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      # outputfile: inputfile
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
+    parameters:
+      # Set the inputfile to a specific file name within the workspace.
+      inputfile: 'dwca_extracted_occurrences.txt'
+      # Show the name of the upstream actor.
+      messagefrom: 'RecommendVocabularyValues'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref RecommendVocabularyValues
+
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
   type: PythonActor
@@ -398,7 +458,7 @@ components:
         message: previousmessage
     parameters:
       # Show the name of the upstream actor.
-      messagefrom: 'RecommendVocabularyValues'
+      messagefrom: 'UnknownVocabularyValues'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref RecommendVocabularyValues
+      - !ref UnknownVocabularyValues
