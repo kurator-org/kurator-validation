@@ -18,7 +18,8 @@
 # Example command-line usage:
 # kurator -f dwca_geography_cleaner.yaml 
 #         -p workspace=./dwca_geography_cleaner_workspace
-#         -p inputfile=
+#         -p inputfile=../data/tests/test_barcelona1.txt
+#         -p format=txt
 #         -l DEBUG (optional)
 #
 # Requires:
