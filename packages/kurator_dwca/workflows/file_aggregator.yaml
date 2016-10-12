@@ -4,8 +4,9 @@
 #
 # This workflow:
 #    - creates a given directory as a workspace
-#    - takes a file name as an option
-#    - creates an output file with as many fields standardized to Darwin Core as possible
+#    - takes two file names, an output file name, and output file format as input
+#    - Create a file that combines two separate input files with the distinct columns 
+#      and all records from both
 #    - wraps up the workflow
 #
 # Example command-line usage:

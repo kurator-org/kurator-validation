@@ -7,3 +7,7 @@ ka -f vocabulary_maker.yaml -p workspace=./vocab_maker_workspace -p inputfile=./
 ka -f dwca_geography_assessor.yaml -p workspace=./ws_geography_assessor -p dwca_url=http://pontos.fwl.oregonstate.edu:8080/ipt/archive.do?r=oregonstate_fish
 ka -f dwca_geography_cleaner.yaml -p workspace=./ws_geography_cleaner -p dwca_url=http://pontos.fwl.oregonstate.edu:8080/ipt/archive.do?r=oregonstate_fish
 ka -f file_aggregator.yaml -p workspace=./file_aggregator_workspace -p inputfile1=../data/tests/test_barcelona1.txt -p inputfile2=../data/tests/test_barcelona2.txt -p outputfile=aggregated_file.csv -p format=csv
+
+
+ka -f dwca_geography_assessor.yaml -p workspace=./ws_geography_assessor -p dwca_url=http://ipt.vertnet.org:8080/iptstrays/archive.do?r=mcnb-chordata
+ka -f file_geography_cleaner.yaml -p workspace=./file_geography_cleaner_workspace -p inputfile=../data/tests/test_barcelona1.txt -p outputfile=cleaned_geography_file.csv -p format=csv

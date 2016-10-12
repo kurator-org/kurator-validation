@@ -57,8 +57,8 @@ def term_unknown_reporter(options):
 
     setup_actor_logging(options)
 
-    logging.debug( 'Started %s' % __version__ )
-    logging.debug( 'options: %s' % options )
+    #logging.debug( 'Started %s' % __version__ )
+    #logging.debug( 'options: %s' % options )
 
     # Make a list for the response
     returnvars = ['workspace', 'outputfile', 'success', 'message', 'artifacts']

@@ -6,9 +6,8 @@
 #    - creates a given directory as a workspace
 #    - downloads a geography lookup file
 #    - downloads a country lookup file
-#    - downloads a given Darwin Core Archive from a URL
-#    - extracts the core file of a Darwin Core Archive to a tab-separated text file
-#    - extracts distinct values of various geography fields
+#    - accepts an uploaded csv or txt file
+#    - extracts distinct values of various geography fields from the uploaded file
 #    - reports recommendations for geography
 #    - reports counts of distinct geography combinations
 #    - reports combinations of geography not found in the geography lookup file
@@ -19,7 +18,7 @@
 # Example command-line usage:
 # kurator -f dwca_geography_cleaner.yaml 
 #         -p workspace=./dwca_geography_cleaner_workspace
-#         -p dwca_url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
+#         -p inputfile=
 #         -l DEBUG (optional)
 #
 # Requires:
@@ -44,7 +43,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_geography_cleaner.yaml 2016-10-13T00:12+02:00"
+# __version__ = "dwca_geography_cleaner.yaml 2016-10-12T23:58+02:00"
 
 imports:
 
@@ -64,8 +63,6 @@ components:
       - !ref MakeWorkspace
       - !ref DownloadGeographyLookup
       - !ref DownloadCountryLookup
-      - !ref DownloadArchive
-      - !ref ExtractOccurrenceCore
       - !ref CountFieldValues
       - !ref CreateGeographyReport
       - !ref CreateGeographyCountReport
@@ -77,18 +74,29 @@ components:
     # Each parameter defined here enters the workflow from the command line and is 
     # delivered in the options dictionary of the specified actor.
     parameters:
-      # Accept a parameter called dwca_url from the command line.
-      dwca_url:
-        # Set the url in the options dictionary of DownloadArchive from the value of
-        # the dwca_url parameter given on the command line.
-        actor: !ref DownloadArchive
-        parameter: url
       # Accept a parameter called workspace from the command line.
       workspace:
         # Set the workspace in the options dictionary of MakeWorkspace from the value of
         # the workspace parameter given on the command line.
         actor: !ref MakeWorkspace
         parameter: workspace
+      # Accept a parameter called inputfile from the command line.
+      inputfile:
+        # Set the inputfile in the options dictionary of ExtractVocabulary from the 
+        # value of the inputfile parameter given on the command line.
+        actor: !ref CountFieldValues
+        parameter: inputfile
+      outputfile:
+        # Set the outputfile in the options dictionary of ConstructCompositeHeader from the 
+        # value of the outputfile parameter given on the command line.
+        actor: !ref CreateFileWithCleanGeography
+        parameter: outputfile
+      # Accept a parameter called format from the command line.
+      format:
+        # Set the format in the options dictionary of Darwinize from the value
+        # of the format parameter given on the command line.
+        actor: !ref CreateFileWithCleanGeography
+        parameter: format
 
 # Inline python actor to make a workspace on the fly to use for writing temporary 
 # if one is not supplied in the workflow-defined parameters. It creates a unique
@@ -178,75 +186,6 @@ components:
     listensTo:
       - !ref DownloadGeographyLookup
 
-# Download a Darwin Core archive from a URL given by workflow-defined url parameter. 
-# Download occurs in workspace provided by the upstream actor.
-- id: DownloadArchive
-  type: PythonActor
-  properties:
-    # The location of the actor source code
-    module: kurator_dwca.downloader
-    # The function to invoke in the module when the actor receives an onData message.
-    onData: downloader
-    # A list of parameters to get from the options dictionary passed from an 
-    # upstream actor.
-    inputs:
-      # Get the workspace for this actor from the workspace in the options dictionary.
-      workspace : workspace
-      # Get the success state from the options dictionary of the previous step
-      success: previoussuccess
-      # Get the message from the options dictionary of the previous step
-      message: previousmessage
-    # A list of parameters to get from the parameters defined at the workflow level or
-    # to set explicitly from values given in this section.
-    parameters:
-      # Get the url for the options dictionary from the url parameter defined 
-      # in the Workflow. It is not declared here.
-      # NOTE: Would like to establish the command line source of a parameter here, within
-      # the actor.
-
-      # Set the outputfile to a specific file name.
-      # NOTE: Would like to be able to specify that this file should go in the workspace
-      outputfile: 'dwca.zip'
-      # Set the log level in the actor explicitly
-      # NOTE: Invoking logging in the Python actor causes kurator-akka thread exceptions.
-      #loglevel: 'DEBUG'
-      # Show the name of the upstream actor.
-      messagefrom: 'DownloadCountryLookup'
-    # The "upstream" actor from which to receive a message.
-    listensTo:
-      - !ref DownloadCountryLookup
-
-# Extract core file into a tab-separated value file in workspace from Darwin Core archive.
-- id: ExtractOccurrenceCore
-  type: PythonActor
-  properties:
-    # The location of the actor source code 
-    module: kurator_dwca.dwca_core_to_tsv
-    # The function to invoke in the module when the actor receives an onData message.
-    onData: dwca_core_to_tsv
-    # A list of parameters to get from the options dictionary passed from an 
-    # upstream actor.
-    inputs:
-      # Get the inputfile for this actor from the outputfile in the options dictionary.
-      outputfile: inputfile
-      # Get the workspace for this actor from the workspace in the options dictionary.
-      workspace : workspace
-      # Get the success state from the options dictionary of the previous step
-      success: previoussuccess
-      # Get the message from the options dictionary of the previous step
-      message: previousmessage
-    # A list of parameters to get from the parameters defined at the workflow level or
-    # to set explicitly from values given in this section.
-    parameters:
-      # Set the outputfile to a specific file name.
-      # NOTE: Would like to be able to specify that this file should go in the workspace
-      outputfile: 'dwca_extracted_occurrences.txt'
-      # Show the name of the upstream actor.
-      messagefrom: 'DownloadArchive'
-    # The "upstream" actor from which to receive a message.
-    listensTo:
-      - !ref DownloadArchive
-
 # Inline python actor to create distinct value counts all DwC terms recommended to follow
 # controlled vocabularies.
 - id: CountFieldValues
@@ -276,7 +215,7 @@ components:
             # Figure out the input file encoding first. It will makes things much faster
             # to know it in advance and pass that information to various steps.
             #encoding = csv_file_encoding(options['inputfile'])
-            encoding='utf-8'
+            encoding = 'utf-8'
             header = read_header(options['inputfile'], encoding=encoding)
 
             # Create a cleaned list of fields from the input file
@@ -303,6 +242,8 @@ components:
             outputoptions['success'] = True
             outputoptions['message'] = None
             outputoptions['workspace'] = options['workspace']
+            outputoptions['outputfile'] = options['inputfile']
+            outputoptions['encoding'] = encoding
             outputoptions['artifacts'] = {}
 
             # Cycle through all of the fields of interest in the inputfile
@@ -331,17 +272,17 @@ components:
     # A list of parameters to get from the options dictionary passed from an 
     # upstream actor.
     inputs:
-      # Get the inputfile for this actor from the outputfile in the options dictionary.
-      outputfile: inputfile
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
       # Get the success state from the options dictionary of the previous step
       success: previoussuccess
       # Get the message from the options dictionary of the previous step
       message: previousmessage
+      # Show the name of the upstream actor.
+      messagefrom: 'CountFieldValues'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref ExtractOccurrenceCore
+      - !ref DownloadCountryLookup
 
 # Create report on geography recommendations.
 - id: CreateGeographyReport
@@ -356,6 +297,8 @@ components:
     inputs:
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace: workspace
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      outputfile: inputfile
       # Get the success state from the options dictionary of the previous step
       success: previoussuccess
       # Get the message from the options dictionary of the previous step
@@ -363,9 +306,6 @@ components:
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
-      # Set the inputfile to a specific file name.
-      # NOTE: Would like to be able to specify that this file should go in the workspace
-      inputfile: 'dwca_extracted_occurrences.txt'
       # Set the vocabfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       vocabfile: 'lookup_geography.txt'
@@ -379,10 +319,10 @@ components:
       # Set the separator for the key.
       separator: '|'
       # Show the name of the upstream actor.
-      messagefrom: 'ExtractOccurrenceCore'
+      messagefrom: 'CountFieldValues'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref ExtractOccurrenceCore
+      - !ref CountFieldValues
 
 # Create a geography combination count report.
 - id: CreateGeographyCountReport
@@ -399,6 +339,8 @@ components:
       # outputfile: inputfile
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace: workspace
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      outputfile: inputfile
       # Get the success state from the options dictionary of the previous step
       success: previoussuccess
       # Get the message from the options dictionary of the previous step
@@ -406,8 +348,6 @@ components:
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
-      # Set the inputfile to a specific file name.
-      inputfile: 'dwca_extracted_occurrences.txt'
       # Set the outputfile to a specific file name.
       outputfile: 'count_geography.csv'
       # Set the format for output files.
@@ -416,10 +356,10 @@ components:
       termlist: ['continent', 'country', 'countrycode', 'stateprovince', 'county', 
                  'municipality', 'waterbody', 'islandgroup', 'island']
       # Show the name of the upstream actor.
-      messagefrom: 'CreateGeographyReport'
+      messagefrom: 'CountFieldValues'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref CreateGeographyReport
+      - !ref CountFieldValues
 
 # Create report on geography combinations not found in the geography lookup file.
 - id: CreateMissingGeographyReport
@@ -453,6 +393,8 @@ components:
       outputfile: 'new_geography.csv'
       # Set the format for output files.
       format: 'csv'
+      # Set the encoding for the key.
+      encoding: 'utf-8'
       # Set the field combination to report on.
       key: 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
       # Set the separator for the key.
@@ -479,6 +421,8 @@ components:
       # outputfile: inputfile
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace: workspace
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      outputfile: inputfile
       # Get the success state from the options dictionary of the previous step
       success: previoussuccess
       # Get the message from the options dictionary of the previous step
@@ -486,19 +430,19 @@ components:
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
-      # Set the inputfile to a specific file name.
-      inputfile: 'dwca_extracted_occurrences.txt'
       # Set the outputfile to a specific file name.
       outputfile: 'count_country.csv'
       # Set the format for output files.
       format: 'csv'
+      # Set the encoding for the key.
+      encoding: 'utf-8'
       # Get the termlist for this actor explicitly from here.
       termlist: ['country']
       # Show the name of the upstream actor.
-      messagefrom: 'CreateMissingGeographyReport'
+      messagefrom: 'CountFieldValues'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref CreateMissingGeographyReport
+      - !ref CountFieldValues
 
 # Create report on countries not found in the country lookup file. Note that it may be 
 # rare that an unknown country string arises, as the country vocabulary from 
@@ -516,8 +460,6 @@ components:
     inputs:
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace: workspace
-      # Get the inputfile for this actor from the outputfile in the options dictionary.
-      outputfile: inputfile
       # Get the success state from the options dictionary of the previous step
       success: previoussuccess
       # Get the message from the options dictionary of the previous step
@@ -539,6 +481,8 @@ components:
       key: 'country'
       # Set the separator for the key.
       separator: '|'
+      # Set the encoding for the key.
+      encoding: 'utf-8'
       # Show the name of the upstream actor.
       messagefrom: 'CreateCountryCountReport'
     # The "upstream" actor from which to receive a message.
@@ -558,6 +502,8 @@ components:
     inputs:
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace: workspace
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      outputfile: inputfile
       # Get the success state from the options dictionary of the previous step
       success: previoussuccess
       # Get the message from the options dictionary of the previous step
@@ -565,25 +511,18 @@ components:
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
-      # Set the inputfile to a specific file name.
-      # NOTE: Would like to be able to specify that this file should go in the workspace
-      inputfile: 'dwca_extracted_occurrences.txt'
       # Set the vocabfile to a specific file name.
       # NOTE: Would like to be able to specify that this file should go in the workspace
       vocabfile: 'lookup_geography.txt'
-      # Set the outputfile to a specific file name within the workspace.
-      outputfile: 'dwca_extracted_occurrences_geography_standardized.txt'
-      # Set the format for output files.
-      format: 'txt'
       # Set the field combination to report on.
       key: 'continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island'
       # Set the separator for the key.
       separator: '|'
       # Show the name of the upstream actor.
-      messagefrom: 'CreateMissingCountryReport'
+      messagefrom: 'CountFieldValues'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref CreateMissingCountryReport
+      - !ref CountFieldValues
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp

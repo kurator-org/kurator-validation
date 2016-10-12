@@ -40,7 +40,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_term_values.yaml 2016-10-07T18:26+02:00"
+# __version__ = "dwca_term_values.yaml 2016-10-13T00:13+02:00"
 
 imports:
 
@@ -203,7 +203,8 @@ components:
 
             # Figure out the input file encoding first. It will makes things much faster
             # to know it in advance and pass that information to various steps.
-            encoding = csv_file_encoding(options['inputfile'])
+            #encoding = csv_file_encoding(options['inputfile'])
+            encoding = 'utf-8'
             header = read_header(options['inputfile'], encoding=encoding)
 
             # Create a cleaned list of fields from the input file
