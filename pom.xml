@@ -170,14 +170,38 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <phase>package</phase>
+                        <phase>prepare-package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
-    
+
+            <!-- use jarsigner on packages zip file -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jarsigner-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <id>sign</id>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <archiveDirectory>${project.build.directory}</archiveDirectory>
+                    <includes>
+                        <include>*.zip</include>
+                    </includes>
+                    <keystore>${keystore.location}</keystore>
+                    <alias>${keystore.alias}</alias>
+                    <storepass>${keystore.storepass}</storepass>
+                    <keypass>${keystore.keypass}</keypass>
+                </configuration>
+            </plugin>
     	</plugins>
 
         <pluginManagement>
