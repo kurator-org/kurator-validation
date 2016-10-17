@@ -59,7 +59,7 @@ def darwinize_header(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     '''
-    print '%s options: %s' % (__version__, options)
+    #print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 

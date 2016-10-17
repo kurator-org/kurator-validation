@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Adapted from https://github.com/un33k/python-slugify/blob/master/test.py
-__version__ = "slugify_test.py 2016-05-30T20:34-03:00"
+__version__ = "slugify_test.py 2016-10-17T14:45+02:00"
 
 import unittest
 from slugify import slugify
@@ -194,4 +194,5 @@ class TestSlugification(unittest.TestCase):
         self.assertEqual(r, '1000-reasons-you-are-1')
 
 if __name__ == '__main__':
+    print '=== slugify_test.py ==='
     unittest.main()

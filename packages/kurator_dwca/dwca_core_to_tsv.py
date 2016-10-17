@@ -15,9 +15,10 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2016-10-04T16:26+02:00"
+__version__ = "dwca_core_to_tsv.py 2016-10-17T15:17+02:00"
 
 from dwcareader_utils import short_term_names
+from dwca_vocab_utils import dwc_ordered_header
 from dwca_utils import tsv_dialect
 from dwca_utils import response
 from dwca_utils import write_header
@@ -66,7 +67,7 @@ def dwca_core_to_tsv(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     '''
-    print '%s options: %s' % (__version__, options)
+    #print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 
@@ -139,49 +140,32 @@ def dwca_core_to_tsv(options):
     dwcareader = None
     if archivetype=='gbif':
         try:
-            dwcareader = GBIFResultsReader(inputfile)
+            with GBIFResultsReader(inputfile) as dwcareader:
+                rowcount = write_core_csv_file(dwcareader, outputfile)
+                
+#            dwcareader = GBIFResultsReader(inputfile)
         except Exception, e:
             message = 'Error %s ' % e
             message += 'reading GBIF archive: %s. %s' % (inputfile, __version__)
             returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
             logging.debug('message:\n%s' % message)
             return response(returnvars, returnvals)
-    try:
-        dwcareader = DwCAReader(inputfile)
-    except Exception, e:
-        message = 'Error %s reading archive %s. %s' % (e, inputfile, __version__)
+    else:
+        try:
+            with DwCAReader(inputfile) as dwcareader:
+                rowcount = write_core_csv_file(dwcareader, outputfile)
+#        dwcareader = DwCAReader(inputfile)
+        except Exception, e:
+            message = 'Error %s reading archive %s. %s' % (e, inputfile, __version__)
+            returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
+            logging.debug('message:\n%s' % message)
+            return response(returnvars, returnvals)
+
+    if rowcount == 0:
+        message = 'Unable to create outputfile %s. %s' % (outputfile, __version__)
         returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
-
-    if dwcareader is None:
-        message = 'No viable archive found at %s. %s' % (inputfile, __version__)
-        returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
-        logging.debug('message:\n%s' % message)
-        return response(returnvars, returnvals)
-
-    termnames=list(dwcareader.descriptor.core.terms)
-    shorttermnames=short_term_names(termnames)
-    dialect = tsv_dialect()
-
-    success = write_header(outputfile, shorttermnames, dialect)
-    if success == False:
-        message = 'Unable to write header to %s. %s' % (outputfile, __version__)
-        returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
-        logging.debug('message:\n%s' % message)
-        return response(returnvars, returnvals)
-
-    rowcount = 0
-    with open(outputfile, 'a') as thefile:
-        writer = csv.DictWriter(thefile, dialect=dialect, fieldnames=termnames)
-        for row in dwcareader:
-            for f in row.data:
-                row.data[f]=row.data[f].encode("utf-8")
-            writer.writerow(row.data)
-            rowcount += 1
-
-    # Close the archive    
-    dwcareader.close()
 
     success = True
     if success==True:
@@ -190,6 +174,38 @@ def dwca_core_to_tsv(options):
     returnvals = [workspace, outputfile, rowcount, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
+
+def write_core_csv_file(dwcareader, outputfile):
+    ''' Create a csv file from the Darwin Core Reader.
+    parameters:
+        dwcareader - Darwin Core Reader class instance
+        outputfile - the path to the csv file
+    returns:
+        rowcount - the number of rows in the core file
+    '''
+    # Get the fully qualified field names from the Darwin Core Reader
+    termnames=list(dwcareader.descriptor.core.terms)
+    
+    # Make a list of field names without full qualification, ordered as they are in
+    # Darwin Core
+    shorttermnames=dwc_ordered_header(short_term_names(termnames))
+
+    dialect = tsv_dialect()
+    success = write_header(outputfile, shorttermnames, dialect)
+    if success == False:
+        return None
+
+    rowcount = 0
+    with open(outputfile, 'a') as outfile:
+        writer = csv.DictWriter(outfile, dialect=dialect, fieldnames=termnames, 
+            encoding='utf-8')
+        for row in dwcareader:
+            for f in row.data:
+                row.data[f]=row.data[f].encode('utf-8')
+            writer.writerow(row.data)
+            rowcount += 1
+
+    return rowcount
 
 def _getoptions():
     ''' Parse command line options and return them.'''

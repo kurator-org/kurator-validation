@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-10-06T13:43+02:00"
+__version__ = "dwca_vocab_utils.py 2016-10-17T14:48+02:00"
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
@@ -58,6 +58,35 @@ except ImportError:
     s += "pip install unicodecsv\n"
     s += "$JYTHON_HOME/bin/pip install unicodecsv"
     warnings.warn(s)
+
+def dwc_ordered_header(header):
+    ''' Construct a header with terms ordered in the Darwin Core term order.
+    parameters:
+        None
+    returns:
+        orderedheader -  Darwin Core-ordered list of field names in the given header
+    '''
+    if header is None or len(header) == 0:
+        return None
+
+    # Make a lower case version of the header to compare against
+    compare = []
+    for term in header:
+        compare.append(term.lower())
+
+    # Search through the Simple Darwin terms in order and add any found in the input 
+    # to an ordered header
+    orderedheader = []
+    for term in simpledwctermlist:
+        if term.lower() in compare:
+            orderedheader.append(term)
+
+    # Add any remaining fields from the input header to the ordered header
+    for term in header:
+        if term not in orderedheader:
+            orderedheader.append(term)
+
+    return orderedheader
 
 def geogvocabheader():
     ''' Construct a header row for the geog vocabulary.
@@ -1437,6 +1466,16 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         s += 'in entry %s' % entry
         self.assertEqual(seek, expected, s)
 
+    def test_dwc_ordered_header(self):
+        print 'testing dwc_ordered_header'
+
+        header = ['genus', 'identifiedBy', 'recordedBy', 'country', 'occurrenceID', 
+            'Weight', 'catalogNumber', 'eventDate', 'basisOfRecord', 'type']
+        found = dwc_ordered_header(header)
+        expected = ['type', 'basisOfRecord', 'occurrenceID', 'catalogNumber', 
+            'recordedBy', 'eventDate', 'country', 'identifiedBy', 'genus', 'Weight']
+        s = 'DwC-ordered header (%s) does not match expected (%s) ' % (found, expected)
+        self.assertEqual(found, expected, s)
 
 if __name__ == '__main__':
     print '=== dwca_vocab_utils.py ==='
