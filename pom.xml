@@ -183,14 +183,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jarsigner-plugin</artifactId>
                 <version>1.4</version>
-                <executions>
-                    <execution>
-                        <id>sign</id>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
                 <configuration>
                     <archiveDirectory>${project.build.directory}</archiveDirectory>
                     <includes>
