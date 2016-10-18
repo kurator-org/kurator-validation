@@ -132,6 +132,13 @@ date
 #python: 0s
 #jython: 3s
 
+python text_file_field_stripper_test.py
+date
+jython text_file_field_stripper_test.py
+date
+#python: 0s
+#jython: 3s
+
 python text_file_filter_test.py
 date
 jython text_file_filter_test.py

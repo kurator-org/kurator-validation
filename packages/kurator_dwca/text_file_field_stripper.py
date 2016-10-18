@@ -15,17 +15,19 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_filter.py 2016-10-18T22:34+02:00"
+__version__ = "text_file_field_stripper.py 2016-10-18T22:34+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 from dwca_utils import read_header
 from dwca_utils import write_header
+from dwca_utils import clean_header
 from dwca_utils import csv_file_dialect
 from dwca_utils import csv_file_encoding
 from dwca_utils import read_csv_row
 from dwca_utils import csv_dialect
 from dwca_utils import tsv_dialect
+from dwca_utils import extract_fields_from_row
 import os
 import uuid
 import logging
@@ -42,18 +44,19 @@ except ImportError:
     s += "$JYTHON_HOME/bin/pip install unicodecsv"
     warnings.warn(s)
 
-def text_file_filter(options):
-    ''' Filter a text file into a new file based on matching values in a term.
+def text_file_field_stripper(options):
+    ''' Filter a text file into a new file based on matching a list of fields to keep.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - the directory in which the output will be written (optional)
         inputfile - full path to the input file (required)
+        outputfile - name of the output file, without path (required)
+        separator - string that separates the values in termlist (e.g., '|') 
+            (optional; default None)
         encoding - string signifying the encoding of the input file. If known, it speeds
             up processing a great deal. (optional; default None) (e.g., 'utf-8')
-        outputfile - name of the output file, without path (optional)
         format - output file format (e.g., 'csv' or 'txt') (optional; default 'txt')
-        termname - the name of the term for which to find distinct values (required)
-        matchingvalue - the value to use as a filter for the term (required)
+        termlist - list of fields to extract from the input file (required)
     returns a dictionary with information about the results
         workspace - actual path to the directory where the outputfile was written
         outputfile - actual full path to the output tsv file
@@ -61,7 +64,7 @@ def text_file_filter(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     '''
-    # print '%s options: %s' % (__version__, options)
+    #print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 
@@ -82,10 +85,10 @@ def text_file_filter(options):
     workspace = './'
     inputfile = None
     outputfile = None
-    encoding = None
     format = 'txt'
-    termname = None
-    matchingvalue = None
+    termlist = None
+    separator = None
+    encoding = None
 
     ### Required inputs ###
     try:
@@ -111,31 +114,30 @@ def text_file_filter(options):
         return response(returnvars, returnvals)
 
     try:
-        termname = options['termname']
+        termlist = options['termlist']
     except:
         pass
 
-    if termname is None or len(termname)==0:
-        message = 'No term given. %s' % __version__
+    if termlist is None or len(termlist)==0:
+        message = 'No termlist given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
 
     try:
-        matchingvalue = options['matchingvalue']
+        separator = options['separator']
     except:
         pass
-
-    if matchingvalue is None or len(matchingvalue)==0:
-        message = 'No matching value given for %s. %s' % (termname, __version__)
-        returnvals = [workspace, outputfile, success, message, artifacts]
-        logging.debug('message: %s' % message)
-        return response(returnvars, returnvals)
 
     try:
         encoding = options['encoding']
     except:
         pass
+
+    if separator is None or len(separator.strip())==0:
+        theterms = [termlist]
+    else:
+        theterms = termlist.split(separator)
 
     # Determine the file dialect
     inputdialect = csv_file_dialect(inputfile)
@@ -147,12 +149,9 @@ def text_file_filter(options):
     # If the termname is not in the header of the inputfile, nothing to do.
     header = read_header(inputfile, dialect=inputdialect, encoding=encoding)
 
-    if termname not in header:
-        message = 'Term %s not found in %s. %s' % (termname, inputfile, __version__)
-        returnvals = [workspace, outputfile, success, message, artifacts]
-        logging.debug('message: %s' % message)
-        return response(returnvars, returnvals)
- 
+    # Make a clean version of the input header
+    cleaninputheader = clean_header(header)
+
     try:
         format = options['format']
     except:
@@ -164,8 +163,11 @@ def text_file_filter(options):
         pass
 
     if outputfile is None or len(outputfile)==0:
-        outputfile = '%s_count_report_%s.%s' % (termname, str(uuid.uuid1()), format)
-    
+        message = 'No output file given. %s' % __version__
+        returnvals = [workspace, outputfile, success, message, artifacts]
+        logging.debug('message:\n%s' % message)
+        return response(returnvars, returnvals)
+
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     # Prepare the outputfile
@@ -174,8 +176,16 @@ def text_file_filter(options):
     else:
         outputdialect = csv_dialect()
 
+    if separator is None or len(separator.strip())==0:
+        theterms = [termlist]
+    else:
+        theterms = termlist.split(separator)
+
+    # Make a clean version of the output header
+    cleanoutputheader = clean_header(theterms)
+
     # Create the outputfile and write the new header to it
-    write_header(outputfile, header, outputdialect)
+    write_header(outputfile, cleanoutputheader, outputdialect)
 
     # Check to see that the file was created
     if os.path.isfile(outputfile) == False:
@@ -186,17 +196,16 @@ def text_file_filter(options):
     # Open the outputfile to start writing matching rows
     with open(outputfile, 'a') as outfile:
         writer = csv.DictWriter(outfile, dialect=outputdialect, encoding='utf-8', 
-            fieldnames=header)
+            fieldnames=cleanoutputheader)
 
         # Iterate through all rows in the input file
         for row in read_csv_row(inputfile, dialect=inputdialect, encoding=encoding, 
-            header=True, fieldnames=header):
-            # Write rows where the term value matches the criterion
-            if row[termname] == matchingvalue:
-                writer.writerow(row)
+            header=True, fieldnames=cleaninputheader):
+            newrow = extract_fields_from_row(row, cleanoutputheader)
+            writer.writerow(newrow)
 
     success = True
-    s = '%s_filtered_file' % termname
+    s = 'stripped_file'
     artifacts[s] = outputfile
     
     # Prepare the response dictionary
@@ -220,11 +229,14 @@ def _getoptions():
     help = 'report file format (e.g., csv or txt) (optional)'
     parser.add_argument("-f", "--format", help=help)
 
-    help = "name of the term (required)"
-    parser.add_argument("-t", "--termname", help=help)
+    help = "termlist (required)"
+    parser.add_argument("-t", "--termlist", help=help)
 
-    help = "value to match (required)"
-    parser.add_argument("-m", "--matchingvalue", help=help)
+    help = "separator (optional)"
+    parser.add_argument("-s", "--separator", help=help)
+
+    help = "encoding (optional)"
+    parser.add_argument("-e", "--encoding", help=help)
 
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
@@ -237,13 +249,14 @@ def main():
 
     if options.inputfile is None or len(options.inputfile)==0:
         s =  'syntax:\n'
-        s += 'python text_file_filter.py'
+        s += 'python text_file_field_stripper.py'
         s += ' -w ./workspace'
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -o testfilterout.txt'
         s += ' -f txt'
-        s += ' -t year'
-        s += ' -m 1990'
+        s += ' -t "institutionCode|collectionCode|catalogNumber|year|country|scientificName"'
+        s += ' -s "|"'
+        s += ' -e utf-8'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -252,15 +265,16 @@ def main():
     optdict['inputfile'] = options.inputfile
     optdict['outputfile'] = options.outputfile
     optdict['format'] = options.format
-    optdict['termname'] = options.termname
-    optdict['matchingvalue'] = options.matchingvalue
+    optdict['termlist'] = options.termlist
+    optdict['separator'] = options.separator
+    optdict['encoding'] = options.encoding
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 
     # Split text file into chucks
-    response=text_file_filter(optdict)
+    response=text_file_field_stripper(optdict)
     print '\nresponse: %s' % response
 
 if __name__ == '__main__':
-    """ Demo of text_file_filter"""
+    """ Demo of text_file_field_stripper"""
     main()

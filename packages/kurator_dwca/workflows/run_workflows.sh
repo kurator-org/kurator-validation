@@ -16,3 +16,4 @@ ka -f file_term_values.yaml -p workspace=./file_term_values_workspace -p inputfi
 ka -f file_controlled_term_assessor.yaml -p workspace=./file_controlled_term_workspace -p inputfile=../data/tests/test_barcelona1.txt -p format=csv
 
 ka -f file_geography_cleaner.yaml -p workspace=./file_geography_cleaner_workspace -p inputfile=../data/tests/test_barcelona2.txt -p outputfile=cleaned_geography_file.csv -p format=csv
+ka -f dwca_term_values.yaml -p workspace=./ws_term_values -p dwca_url=http://api.gbif.org/v1/occurrence/download/request/0020829-160910150852091.zip -p fieldlist="basisofrecord"

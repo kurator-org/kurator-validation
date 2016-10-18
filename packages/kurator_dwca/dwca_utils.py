@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-10-18T19:01+02:00"
+__version__ = "dwca_utils.py 2016-10-18T20:43+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -1087,6 +1087,34 @@ def extract_values_from_row(row, fields, separator=None):
         return None
     return values
 
+def extract_fields_from_row(row, fields, separator=None):
+    ''' Make a row from an existing dictionary, keeping only the fields names in the
+        fields list.
+    parameters:
+        row - a dictionary (required)
+        fields - list of fields to extract from the row (required)
+        separator - string to separate values the output string (optional; default None)
+    returns:
+        newrow - the row constructed from the input row and field list
+    '''
+    if fields is None or len(fields)==0:
+        return None
+
+    if separator is None:
+        separator = ''
+
+    newrow = {}
+
+    n = 0
+    for field in fields:
+        try:
+            value = row[field]
+        except:
+            value = ''
+        newrow[field] = value
+
+    return newrow
+
 def read_csv_row(inputfile, dialect, encoding, header=True, fieldnames=None):
     ''' Yield a row from a csv file. Determine the existence of the file, its dialect, and 
         its encoding before making a call to this function.
@@ -1950,6 +1978,30 @@ class DWCAUtilsTestCase(unittest.TestCase):
             s = 'condensed line:\n%s\nfrom %s ' % (line, testfile)
             s += 'not as expected:\n%s' % expected
             self.assertEqual(line, expected, s)
+
+    def test_fields_from_row(self):
+        print 'testing fields_from_row'
+        
+        row = {
+            'institutionCode':'MVZ',
+            'collectionCode':'Mammals',
+            'catalogNumber':'42',
+            'country':'USA', 
+            'stateProvince':'California', 
+            'county':'Alameda Co'}
+
+        fields = ['institutionCode', 'collectionCode', 'catalogNumber']
+        found = extract_fields_from_row(row, fields)
+        expected = {'institutionCode':'MVZ', 'collectionCode':'Mammals', 
+            'catalogNumber':'42'}
+        s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
+        self.assertEqual(found, expected, s)
+
+        fields = ['country', 'stateProvince', 'County']
+        found = extract_fields_from_row(row, fields, '|')
+        expected = {'country':'USA', 'stateProvince':'California', 'County':''}
+        s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
+        self.assertEqual(found, expected, s)
 
     def test_extract_values_from_row(self):
         print 'testing extract_values_from_row'
