@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-10-08T12:24+02:00"
+__version__ = "dwca_utils.py 2016-10-17T18:54+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -93,7 +93,6 @@ def setup_actor_logging(options):
         elif loglevel.upper() == 'INFO':        
             logging.basicConfig(level=logging.INFO)
             logging.info('Log level set to INFO')
-
 
 def tsv_dialect():
     ''' Get a dialect object with tab-separated value properties.
@@ -502,7 +501,7 @@ def header_map(header):
     return headermap
 
 def strip_list(inputlist):
-    ''' Create a list of strings stripped of whitespace from srings in an input list.
+    ''' Create a list of strings stripped of whitespace from strings in an input list.
     parameters:
         inputlist - list of strings (required)
     returns:
@@ -598,7 +597,7 @@ def merge_headers(headersofar, headertoadd=None):
     return sorted(list(composedheader))
 
 def csv_to_txt(inputfile, outputfile, dialect=None, encoding=None):
-    ''' Convert an arbitrary csv file into a txt file.
+    ''' Convert an arbitrary csv file into a txt file in utf-8.
     parameters:
         inputfile - full path to the input file (required)
         outputfile - full path to the converted file (required)
@@ -775,9 +774,10 @@ def csv_field_checker(inputfile, dialect=None, encoding=None):
 
     return None
 
-def csv_spurious_newline_condenser(inputfile, outputfile, dialect=None, encoding=None, 
+def purge_non_printing_from_file(inputfile, outputfile, dialect=None, encoding=None, 
     sub='-'):
-    ''' Remove new lines and carriage returns in data.
+    ''' Remove new lines and carriage returns in data. Assumes that the header is intact
+        with the correct number of columns.
     parameters:
         inputfile - full path to the input file (required)
         outputfile - full path to the translated output file (required)
@@ -789,7 +789,7 @@ def csv_spurious_newline_condenser(inputfile, outputfile, dialect=None, encoding
     returns:
         False if the removal does not complete successfully, otherwise True
     '''
-    functionname = 'csv_spurious_newline_condenser()'
+    functionname = 'purge_non_printing_from_file()'
 
     if inputfile is None or len(inputfile) == 0:
         s = 'No input file given in %s.' % functionname
@@ -827,10 +827,10 @@ def csv_spurious_newline_condenser(inputfile, outputfile, dialect=None, encoding
         with open(inputfile, 'rU') as infile:
             i = 0
             for line in infile:
-                line = previousline.replace('\n',sub).replace('\r',sub) + line
+                line = previousline.replace('\n', sub).replace('\r', sub) + line
                 delimitercount = line.count(delimiter)
                 if delimitercount == fieldcount-1:
-                    writethis = filter_non_printable(line,sub)
+                    writethis = filter_non_printable(line, sub)
                     outfile.write(writethis)
                     previousline = ''
                 elif delimitercount < fieldcount-1:
@@ -845,6 +845,23 @@ def csv_spurious_newline_condenser(inputfile, outputfile, dialect=None, encoding
     s = 'Output file written to %s in %s.' % (outputfile, functionname)
     logging.debug(s)
     return True
+
+def filter_non_printable(str, sub = ''):
+    ''' Create a copy of a string with non-printing characters removed.
+    parameters:
+        str - the input string (required)
+        sub - character sequence to substitute for the non-printing character 
+            (default '')
+    returns:
+        string with the non-printing characters removed
+    '''
+    newstr = ''
+    for c in str:
+        if ord(c) > 31 or ord(c) == 9 or ord(c) == 10 or ord(c) == 13:
+            newstr += c
+        else:
+            newstr += sub
+    return newstr
 
 def csv_file_encoding(inputfile):
     ''' Try to discern the encoding of a file.
@@ -1081,49 +1098,6 @@ def read_csv_row(inputfile, dialect, encoding, header=True, fieldnames=None):
         for row in reader:
             yield row
 
-def filter_non_printable(str, sub = ''):
-    ''' Create a copy of a string with non-printing characters removed.
-    parameters:
-        str - the input string (required)
-        sub - character sequence to substitute for the non-printing character 
-            (default '')
-    returns:
-        string with the non-printing characters removed
-    '''
-    newstr = ''
-    for c in str:
-        if ord(c) > 31 or ord(c) == 9 or ord(c) == 10 or ord(c) == 13:
-            newstr += c
-        else:
-            newstr += sub
-    return newstr
-
-def file_filter_non_printable(inputfile, outputfile, sub = '-'):
-    ''' Create a copy of a file with non-printing characters removed.
-    parameters:
-        inputfile - full path to the input file (required)
-        outputfile - full path to the translated output file (required)
-        sub - character sequence to substitute for the non-printing character 
-            (default '-')
-    returns:
-        False if the translation does not complete successfully, otherwise True
-    '''
-    functionname = 'file_filter_non_printable()'
-
-    i = 0
-    with open(outputfile, 'w') as outdata:
-        with open(inputfile, 'rU') as indata:
-            for line in indata:
-                try:
-                    outdata.write( filter_non_printable(line, sub))
-                except:
-                    s = 'Failed to write line %s ' % i
-                    s += 'in file %s in %s. Aborting.' % (inputfile, functionname)
-                    logging.debug(s)
-                    return False
-                i += 1
-    return True
-
 def utf8_file_encoder(inputfile, outputfile, encoding=None):
     ''' Translate input file to utf8.
     parameters:
@@ -1328,26 +1302,85 @@ class DWCAUtilsTestCase(unittest.TestCase):
         termrowcountfile2 = self.framework.termrowcountfile2
         termtokenfile = self.framework.termtokenfile
 
-        self.assertTrue(os.path.isfile(non_printing_file), non_printing_file + ' does not exist')
-        self.assertTrue(os.path.isfile(encodedfile_utf8), encodedfile_utf8 + ' does not exist')
-        self.assertTrue(os.path.isfile(encodedfile_latin_1), encodedfile_latin_1 + ' does not exist')
-        self.assertTrue(os.path.isfile(csvreadheaderfile), csvreadheaderfile + ' does not exist')
-        self.assertTrue(os.path.isfile(tsvreadheaderfile), tsvreadheaderfile + ' does not exist')
-        self.assertTrue(os.path.isfile(tsvtest1), tsvtest1 + ' does not exist')
-        self.assertTrue(os.path.isfile(tsvtest2), tsvtest2 + ' does not exist')
-        self.assertTrue(os.path.isfile(csvtest1), csvtest1 + ' does not exist')
-        self.assertTrue(os.path.isfile(csvtest2), csvtest2 + ' does not exist')
-        self.assertTrue(os.path.isfile(csvtotsvfile1), csvtotsvfile1 + ' does not exist')
-        self.assertTrue(os.path.isfile(csvtotsvfile2), csvtotsvfile2 + ' does not exist')
-        self.assertTrue(os.path.isfile(monthvocabfile), monthvocabfile + ' does not exist')
-        self.assertTrue(os.path.isfile(geogvocabfile), geogvocabfile + ' does not exist')
-        self.assertTrue(os.path.isfile(compositetestfile), compositetestfile + ' does not exist')
-        self.assertTrue(os.path.isfile(fieldcountestfile1), fieldcountestfile1 + ' does not exist')
-        self.assertTrue(os.path.isfile(fieldcountestfile2), fieldcountestfile2 + ' does not exist')
-        self.assertTrue(os.path.isfile(fieldcountestfile3), fieldcountestfile3 + ' does not exist')
-        self.assertTrue(os.path.isfile(termrowcountfile1), termrowcountfile1 + ' does not exist')
-        self.assertTrue(os.path.isfile(termrowcountfile2), termrowcountfile2 + ' does not exist')
-        self.assertTrue(os.path.isfile(termtokenfile), termtokenfile + ' does not exist')
+        file = non_printing_file
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = encodedfile_utf8
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = encodedfile_latin_1
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = csvreadheaderfile
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = tsvreadheaderfile
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = tsvtest1
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = tsvtest2
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = csvtest1
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = csvtest2
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = csvtotsvfile1
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = csvtotsvfile2
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = monthvocabfile
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = geogvocabfile
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = compositetestfile
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = fieldcountestfile1
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = fieldcountestfile2
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = fieldcountestfile3
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = termrowcountfile1
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = termrowcountfile2
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
+
+        file = termtokenfile
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
 
     def test_count_rows(self):
         print 'testing count_rows'
@@ -1715,7 +1748,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
 
         result = merge_headers(None)
         s = 'merging without header makes a header when it should not'
-        self.assertIsNone(result, )
+        self.assertIsNone(result, s)
 
         result = merge_headers(header4)
         s = 'merging an empty header makes a header when it should not'
@@ -1761,28 +1794,28 @@ class DWCAUtilsTestCase(unittest.TestCase):
         csvfile = self.framework.fieldcountestfile2
         result = csv_field_checker(csvfile)
         s = 'field checker found mismatched fields in %s when it should not' % csvfile
-        self.assertIsNone(result,s)
+        self.assertIsNone(result, s)
         
         csvfile = self.framework.fieldcountestfile1
         result = csv_field_checker(csvfile)
         firstbadrow = result[0]
         s = 'field checker found first mismatched field in %s at row index %s'  \
             % (csvfile, firstbadrow)
-        self.assertEqual(firstbadrow,3,s)
+        self.assertEqual(firstbadrow, 3, s)
 
         csvfile = self.framework.fieldcountestfile3
         result = csv_field_checker(csvfile)
         firstbadrow = result[0]
         s = 'field checker found first mismatched field in %s at row index %s'  \
             % (csvfile, firstbadrow)
-        self.assertEqual(firstbadrow,3,s)
+        self.assertEqual(firstbadrow, 3, s)
 
         csvfile = self.framework.non_printing_file
         result = csv_field_checker(csvfile)
         firstbadrow = result[0]
         s = 'field checker found first mismatched field in %s at row index %s'  \
             % (csvfile, firstbadrow)
-        self.assertEqual(firstbadrow,5,s)
+        self.assertEqual(firstbadrow, 4, s)
 
     def test_term_rowcount_from_file(self):
         print 'testing term_rowcount_from_file'
@@ -1791,22 +1824,22 @@ class DWCAUtilsTestCase(unittest.TestCase):
         expected = 8
         s = 'rowcount (%s) for country does not match expectation (%s)'  \
             % (rowcount, expected)
-        self.assertEqual(rowcount,expected,s)
+        self.assertEqual(rowcount, expected, s)
 
         termrowcountfile = self.framework.termrowcountfile2
         term = 'country'
         expected = 3
-        rowcount = term_rowcount_from_file(termrowcountfile,term)
+        rowcount = term_rowcount_from_file(termrowcountfile, term)
         s = 'rowcount (%s) for %s does not match expectation (%s) in %s'  \
             % (rowcount, term, expected, termrowcountfile)
-        self.assertEqual(rowcount,expected,s)
+        self.assertEqual(rowcount, expected, s)
 
         term = 'island'
         expected = 1
-        rowcount = term_rowcount_from_file(termrowcountfile,term)
+        rowcount = term_rowcount_from_file(termrowcountfile, term)
         s = 'rowcount (%s) for %s does not match expectation (%s) in %s'  \
             % (rowcount, term, expected, termrowcountfile)
-        self.assertEqual(rowcount,expected,s)
+        self.assertEqual(rowcount, expected, s)
 
     def test_csv_file_encoding(self):
         print 'testing csv_file_encoding'
@@ -1818,12 +1851,12 @@ class DWCAUtilsTestCase(unittest.TestCase):
         # indistinguishable from latin2.
         expected = 'ISO-8859-2'
         s = 'file encoding (%s) does not match expectation (%s)' % (encoding, expected)
-        self.assertEqual(encoding,expected,s)
+        self.assertEqual(encoding, expected, s)
         
         encoding = csv_file_encoding(encodedfile_latin_1)
         expected = 'KOI8-R'
         s = 'file encoding (%s) does not match expectation (%s)' % (encoding, expected)
-        self.assertEqual(encoding,expected,s)
+        self.assertEqual(encoding, expected, s)
 
     def test_utf8_file_encoder(self):
         print 'testing utf8_file_encoder'
@@ -1832,38 +1865,77 @@ class DWCAUtilsTestCase(unittest.TestCase):
         testfile = self.framework.encodedfile_utf8
         success = utf8_file_encoder(testfile, tempfile)
         s = '%s not translated to utf8' % testfile
-        self.assertEqual(success,True,s)
+        self.assertEqual(success, True, s)
         encoding = csv_file_encoding(tempfile)
         expected = 'utf-8'
         s = 'Encoding (%s) of %s to %s not utf-8' % (encoding, testfile, tempfile)
-        self.assertEqual(encoding,expected,s)
+        self.assertEqual(encoding, expected, s)
 
         testfile = self.framework.encodedfile_latin_1
         success = utf8_file_encoder(testfile, tempfile)
         s = '%s not translated to utf-8' % testfile
-        self.assertEqual(success,True,s)
+        self.assertEqual(success, True, s)
         encoding = csv_file_encoding(tempfile)
         expected = 'utf-8'
         s = 'Encoding (%s) of %s to %s not utf-8' % (encoding, testfile, tempfile)
-        self.assertEqual(encoding,expected,s)
+        self.assertEqual(encoding, expected, s)
 
-    def test_file_filter_non_printable(self):
-        print 'testing file_filter_non_printable'
-        testfile = self.framework.non_printing_file
-        tempfile = self.framework.testnonprinting
-
-        success = file_filter_non_printable(testfile, tempfile)
-        s = 'Unable to remove non-printing characters from %s' % testfile
-        self.assertEqual(success,True,s)
-
-    def test_csv_spurious_newline_condenser(self):
-        print 'testing csv_spurious_newline_condenser'
+    def test_purge_non_printing_from_file(self):
+        print 'testing purge_non_printing_from_file'
         testfile = self.framework.non_printing_file
         tempfile = self.framework.newlinecondenser
 
-        success = csv_spurious_newline_condenser(testfile, tempfile)
+        success = purge_non_printing_from_file(testfile, tempfile)
+
         s = 'Unable to remove new lines from data content from %s' % testfile
-        self.assertEqual(success,True,s)
+        self.assertEqual(success, True, s)
+
+        with open(tempfile, 'rU') as data:
+            reader = csv.DictReader(utf8_data_encoder(data, 'utf-8'), 
+                dialect=csv_dialect(), encoding='utf-8')
+            # header is the list as returned by the reader
+            header=reader.fieldnames
+            line = reader.next()
+            expected = {'field1':'normal', 'field2':'end'}
+            s = 'condensed line:\n%s\nfrom %s ' % (line, testfile)
+            s += 'not as expected:\n%s' % expected
+            self.assertEqual(line, expected, s)
+
+            line = reader.next()
+            expected = {'field1':'VT:-', 'field2':'end'}
+            s = 'condensed line:\n%s\nfrom %s ' % (line, testfile)
+            s += 'not as expected:\n%s' % expected
+            self.assertEqual(line, expected, s)
+
+            line = reader.next()
+            expected = {'field1':'BS:-', 'field2':'end'}
+            s = 'condensed line:\n%s\nfrom %s ' % (line, testfile)
+            s += 'not as expected:\n%s' % expected
+            self.assertEqual(line, expected, s)
+
+            line = reader.next()
+            expected = {'field1':'CR:-', 'field2':'end'}
+            s = 'condensed line:\n%s\nfrom %s ' % (line, testfile)
+            s += 'not as expected:\n%s' % expected
+            self.assertEqual(line, expected, s)
+
+            line = reader.next()
+            expected = {'field1':'LF:-', 'field2':'end'}
+            s = 'condensed line:\n%s\nfrom %s ' % (line, testfile)
+            s += 'not as expected:\n%s' % expected
+            self.assertEqual(line, expected, s)
+
+            line = reader.next()
+            expected = {'field1':'ESC:-', 'field2':'end'}
+            s = 'condensed line:\n%s\nfrom %s ' % (line, testfile)
+            s += 'not as expected:\n%s' % expected
+            self.assertEqual(line, expected, s)
+
+            line = reader.next()
+            expected = {'field1':'NULL:-', 'field2':'end'}
+            s = 'condensed line:\n%s\nfrom %s ' % (line, testfile)
+            s += 'not as expected:\n%s' % expected
+            self.assertEqual(line, expected, s)
 
     def test_extract_values_from_row(self):
         print 'testing extract_values_from_row'
@@ -1878,51 +1950,51 @@ class DWCAUtilsTestCase(unittest.TestCase):
         found = extract_values_from_row(row, fields)
         expected = 'USA'
         s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['country', 'stateProvince']
         found = extract_values_from_row(row, fields, '|')
         expected = 'USA|Montana'
         s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         found = extract_values_from_row(row, fields)
         expected = 'USAMontana'
         s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['country', 'stateProvince', 'county']
         found = extract_values_from_row(row, fields, '|')
         expected = 'USA|Montana|Missoula Co'
         s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         found = extract_values_from_row(row, fields)
         expected = 'USAMontanaMissoula Co'
         s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['country|stateProvince|county']
         found = extract_values_from_row(row, fields)
         expected = 'USA|Montana|Missoula Co'
         s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['country|stateProvince|county']
         found = extract_values_from_row(row, fields, '|')
         expected = 'USA|Montana|Missoula Co'
         s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         found = extract_values_from_row(row, fields)
         expected = 'USA|Montana|Missoula Co'
         s = 'Extracted values:\n%s not as expected:\n%s' % (found, expected)
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['country|stateProvince']
         found = extract_values_from_row(row, fields)
         s = 'Extracted values:\n%s found where none expected' % found
-        self.assertIsNone(found,s)
+        self.assertIsNone(found, s)
 
     def test_extract_values_from_file(self):
         print 'testing extract_values_from_file'
@@ -1936,7 +2008,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['stateProvince']
         found = extract_values_from_file(extractvaluesfile1, fields, 
@@ -1945,7 +2017,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['country', 'stateProvince', 'county']
         found = extract_values_from_file(extractvaluesfile1, fields, 
@@ -1961,7 +2033,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         found = extract_values_from_file(extractvaluesfile1, fields, 
             encoding=inputencoding)
@@ -1976,7 +2048,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['CollectionCode ']
         found = extract_values_from_file(extractvaluesfile1, fields, 
@@ -1985,7 +2057,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['CollectionCode']
         found = extract_values_from_file(extractvaluesfile1, fields, 
@@ -1993,7 +2065,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['collectionCode']
         found = extract_values_from_file(extractvaluesfile1, fields, 
@@ -2001,7 +2073,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['collectioncode']
         found = extract_values_from_file(extractvaluesfile1, fields, 
@@ -2009,7 +2081,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['collectioncode ']
         found = extract_values_from_file(extractvaluesfile1, fields, 
@@ -2017,7 +2089,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['collectioncode ']
         found = extract_values_from_file(extractvaluesfile1, fields, 
@@ -2025,7 +2097,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         found = extract_values_from_file(extractvaluesfile1, fields, 
             encoding=inputencoding, function=ustripstr)
@@ -2033,7 +2105,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['country', 'stateProvince']
         found = extract_values_from_file(extractvaluesfile1, fields, 
@@ -2047,7 +2119,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         found = extract_values_from_file(extractvaluesfile1, fields, 
             encoding=inputencoding, function=ustripstr)
@@ -2060,7 +2132,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
     def test_extract_value_counts_from_file(self):
         print 'testing extract_value_counts_from_file'
@@ -2072,7 +2144,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % found
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(found, expected,s)
+        self.assertEqual(found, expected, s)
 
         fields = ['stateProvince']
         found = extract_value_counts_from_file(extractvaluesfile1, fields)
@@ -2081,7 +2153,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % sortedlist
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(sortedlist, expected,s)        
+        self.assertEqual(sortedlist, expected, s)        
 
         fields = ['country', 'stateProvince']
         found = extract_value_counts_from_file(extractvaluesfile1, fields, '|')
@@ -2094,7 +2166,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % sortedlist
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(sortedlist, expected,s)
+        self.assertEqual(sortedlist, expected, s)
 
         found = extract_value_counts_from_file(extractvaluesfile1, fields)
         sortedlist = sorted(found)
@@ -2106,7 +2178,16 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Extracted values:\n%s' % sortedlist
         s += ' not as expected:\n%s' % expected
         s += ' from %s' % extractvaluesfile1
-        self.assertEqual(sortedlist, expected,s)
+        self.assertEqual(sortedlist, expected, s)
+
+    def test_strip_list(self):
+        print 'testing strip_list'
+        inputlist = [' a ', 'b', ' c', 'd ', None]
+        outputlist = strip_list(inputlist)
+        expected = ['a', 'b', 'c', 'd', 'field_5']
+        s = 'Strippped list:\n%s' % outputlist
+        s += ' not as expected:\n%s' % expected
+        self.assertEqual(outputlist, expected, s)
 
 if __name__ == '__main__':
     print '=== dwca_utils.py ==='

@@ -88,24 +88,24 @@ def dwc_ordered_header(header):
 
     return orderedheader
 
-def geogvocabheader():
-    ''' Construct a header row for the geog vocabulary.
-    parameters:
-        None
-    returns:
-        fieldnames -  a list of field names in the header
-    '''
-    geogkey = compose_key_from_list(geogkeytermlist)
-    return ['geogkey'] + geogkeytermlist + vocabfieldlist + geogvocabaddedfieldlist
+# def geogvocabheader():
+#     ''' Construct a header row for the geog vocabulary.
+#     parameters:
+#         None
+#     returns:
+#         fieldnames -  a list of field names in the header
+#     '''
+#     geogkey = compose_key_from_list(geogkeytermlist)
+#     return ['geogkey'] + geogkeytermlist + vocabfieldlist + geogvocabaddedfieldlist
 
-def darwincloudvocabheader():
-    ''' Construct a header row for the Darwin Cloud vocabulary.
-    parameters:
-        None
-    returns:
-        fieldnames -  a list of field names in the header
-    '''
-    return ['fieldname'] + vocabfieldlist + darwincloudvocabaddedfieldlist
+# def darwincloudvocabheader():
+#     ''' Construct a header row for the Darwin Cloud vocabulary.
+#     parameters:
+#         None
+#     returns:
+#         fieldnames -  a list of field names in the header
+#     '''
+#     return ['fieldname'] + vocabfieldlist + darwincloudvocabaddedfieldlist
 
 def vocabheader(key, separator=None):
     ''' Construct the header row for a vocabulary file. Begin with a field name equal to 
@@ -659,9 +659,6 @@ def darwinize_list(termlist, dwccloudfile, namespace=None):
     # does that.
     darwinclouddict = darwin_cloud_vocab_dict_from_file(dwccloudfile)
 
-#    darwinclouddict = vetted_vocab_dict_from_file(dwccloudfile, 'fieldname', 
-#        dialect=dialect, encoding='utf-8')
-
     if darwinclouddict is None:
         s = 'No Darwin Cloud terms in %s.' % functionname
         logging.debug(s)
@@ -747,26 +744,26 @@ def not_in_list(targetlist, checklist, function=None, *args, **kwargs):
 
     return sorted(newlist)
 
-def keys_list(sourcedict):
-    ''' Get the list of keys in a dictionary.
-    parameters:
-        sourcedict - dictionary to get the keys from (required)
-    returns:
-        an unsorted list of keys from the dictionary
-    '''
-    functionname = 'keys_list()'
-
-    if sourcedict is None or len(sourcedict)==0:
-        s = 'No dictionary given in %s.' % functionname
-        logging.debug(s)
-        return None
-
-    keylist = []
-
-    for key, value in sourcedict.iteritems():
-        keylist.append(key)
-
-    return keylist
+# def keys_list(sourcedict):
+#     ''' Get the list of keys in a dictionary.
+#     parameters:
+#         sourcedict - dictionary to get the keys from (required)
+#     returns:
+#         an unsorted list of keys from the dictionary
+#     '''
+#     functionname = 'keys_list()'
+# 
+#     if sourcedict is None or len(sourcedict)==0:
+#         s = 'No dictionary given in %s.' % functionname
+#         logging.debug(s)
+#         return None
+# 
+#     keylist = []
+# 
+#     for key, value in sourcedict.iteritems():
+#         keylist.append(key)
+# 
+#     return keylist
 
 def distinct_vocabs_to_file(vocabfile, valuelist, key, separator=None, dialect=None):
     ''' Add distinct new verbatim values from a valuelist to a vocabulary file. Always 
@@ -984,18 +981,18 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         s += 'not as expected: %s' % expected
         self.assertEqual(header, expected, s)
 
-    def test_read_geog_header(self):
-        print 'testing read_geog_header'
-        geogvocabfile = self.framework.geogvocabfile
-        vocabdialect = vocab_dialect()
-        vocabencoding = 'utf-8'
-
-        header = read_header(geogvocabfile, vocabdialect, vocabencoding)
-        expected = clean_header(geogvocabheader())
-
-        s = 'File: %s\nheader:\n%s\n' % (geogvocabfile, header)
-        s += 'not as expected:\n%s' % expected
-        self.assertEqual(header, expected, s)
+#     def test_read_geog_header(self):
+#         print 'testing read_geog_header'
+#         geogvocabfile = self.framework.geogvocabfile
+#         vocabdialect = vocab_dialect()
+#         vocabencoding = 'utf-8'
+# 
+#         header = read_header(geogvocabfile, vocabdialect, vocabencoding)
+#         expected = clean_header(geogvocabheader())
+# 
+#         s = 'File: %s\nheader:\n%s\n' % (geogvocabfile, header)
+#         s += 'not as expected:\n%s' % expected
+#         self.assertEqual(header, expected, s)
 
     def test_vocab_dict_from_file(self):
         print 'testing vocab_dict_from_file'
@@ -1003,8 +1000,13 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
         testmonthvocabfile = self.framework.testmonthvocabfile
         geogcountfileutf8 = self.framework.geogcountfileutf8
 
+        monthdict = vocab_dict_from_file(testmonthvocabfile, 'month')
+        expected = 5
+        s = 'Found %s items in month dictionary ' % len(monthdict)
+        s += 'from %s, expected %s.' % (testmonthvocabfile, expected)
+        self.assertEqual(len(monthdict), expected, s)
+
         monthdict = vocab_dict_from_file(monthvocabfile, 'month')
-        expected = 8
 
         seek = 'VI'
         s = "%s not found in month dictionary:\n%s" % (seek, monthdict)
@@ -1165,6 +1167,17 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
             dialect=csv_dialect())
         s = "matchingdict empty for %s" % v
         self.assertEqual(len(matchingdict), 0, s)
+
+    def test_vetted_vocab_dict_from_file(self):
+        print 'testing vetted_vocab_dict_from_file'
+        monthvocabfile = self.framework.monthvocabfile
+        testmonthvocabfile = self.framework.testmonthvocabfile
+
+        monthdict = vetted_vocab_dict_from_file(testmonthvocabfile, 'month')
+        expected = 4
+        s = 'Found %s items in month dictionary ' % len(monthdict)
+        s += 'from %s, expected %s.' % (testmonthvocabfile, expected)
+        self.assertEqual(len(monthdict), expected, s)
 
     def test_terms_not_in_dwc(self):
         print 'testing terms_not_in_dwc'
@@ -1353,15 +1366,15 @@ class DWCAVocabUtilsTestCase(unittest.TestCase):
             % (header,writevocabheadertestfile,expected)
         self.assertEqual(header, expected, s)
 
-    def test_geogvocabheader(self):
-        print 'testing geogvocabheader'
-        header = geogvocabheader()
-        expected = [
-            'geogkey', 'continent', 'country', 'countryCode', 'stateProvince', 'county', 
-            'municipality', 'waterBody', 'islandGroup', 'island', 'standard', 'vetted', 
-            'error', 'misplaced', 'unresolved', 'source', 'comment']
-        s = 'geog header:\n%s\nnot as expected:\n%s' % (header, expected)
-        self.assertEqual(header, expected, s)
+#     def test_geogvocabheader(self):
+#         print 'testing geogvocabheader'
+#         header = geogvocabheader()
+#         expected = [
+#             'geogkey', 'continent', 'country', 'countryCode', 'stateProvince', 'county', 
+#             'municipality', 'waterBody', 'islandGroup', 'island', 'standard', 'vetted', 
+#             'error', 'misplaced', 'unresolved', 'source', 'comment']
+#         s = 'geog header:\n%s\nnot as expected:\n%s' % (header, expected)
+#         self.assertEqual(header, expected, s)
 
     def test_term_values_recommended(self):
         print 'testing term_values_recommended'

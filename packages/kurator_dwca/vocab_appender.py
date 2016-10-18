@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2016-10-08T13:26+02:00"
+__version__ = "vocab_appender.py 2016-10-17T19:18+02:00"
 
 from dwca_utils import read_header
 from dwca_utils import response
@@ -24,7 +24,6 @@ from dwca_utils import csv_file_dialect
 from dwca_utils import tsv_dialect
 from dwca_vocab_utils import vocabheader
 from dwca_vocab_utils import writevocabheader
-from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
 from dwca_terms import vocabfieldlist
 import os

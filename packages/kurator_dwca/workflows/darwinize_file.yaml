@@ -132,7 +132,8 @@ components:
     # to set explicitly from values given in this section.
     parameters:
       # Get the file from a specific URL.
-      url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/darwin_cloud.txt'      # Download to a specific file name in the workspace received from upstream.
+      url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/darwin_cloud.txt'
+      # Download to a specific file name in the workspace received from upstream.
       # Set the output file to a specific file name.
       outputfile : 'lookup_darwin_cloud.txt'
       # Show the name of the upstream actor.
