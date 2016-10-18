@@ -14,22 +14,25 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_to_txt_converter_test.py 2016-08-04T14:14+02:00"
+__version__ = "csv_converter_test.py 2016-10-18T19:00+02:00"
 
-# This file contains unit test for the csv_to_txt_converter function.
+# This file contains unit test for the csv_converter function.
 #
 # Example:
 #
-# python csv_to_txt_converter_test.py
+# python csv_converter_test.py
 
-from csv_to_txt_converter import csv_to_txt_converter
+from csv_converter import csv_converter
 from dwca_utils import csv_file_dialect
 from dwca_utils import tsv_dialect
+from dwca_utils import csv_dialect
+from dwca_utils import dialect_attributes
 from dwca_utils import dialects_equal
+import csv
 import os
 import unittest
 
-class CSVToTXTConverterFramework():
+class CSVConverterFramework():
     """Test framework for CSV to TXT Converter."""
     # location for the test inputs and outputs
     testdatapath = './data/tests/'
@@ -48,10 +51,10 @@ class CSVToTXTConverterFramework():
             os.remove(outputfile)
         return True
 
-class CSVToTXTConverterTestCase(unittest.TestCase):
+class CSVConverterTestCase(unittest.TestCase):
     """Unit tests."""
     def setUp(self):
-        self.framework = CSVToTXTConverterFramework()
+        self.framework = CSVConverterFramework()
 
     def tearDown(self):
         self.framework.dispose()
@@ -72,38 +75,38 @@ class CSVToTXTConverterTestCase(unittest.TestCase):
         # Test with missing required inputs
         # Test with no inputs
         inputs = {}
-        response=csv_to_txt_converter(inputs)
-#        print 'response1:\n%s' % response
+        response=csv_converter(inputs)
+        #print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
         # Test with missing inputfile
         inputs['outputfile'] = outputfile
-        response=csv_to_txt_converter(inputs)
-#        print 'response2:\n%s' % response
+        response=csv_converter(inputs)
+        #print 'response2:\n%s' % response
         s = 'success without inputfile'
         self.assertFalse(response['success'], s)
 
         # Test with missing outputfile
         inputs = {}
         inputs['inputfile'] = testfile1
-        response=csv_to_txt_converter(inputs)
-#        print 'response4:\n%s' % response
+        response=csv_converter(inputs)
+        #print 'response4:\n%s' % response
         s = 'success without outputfile'
         self.assertFalse(response['success'], s)
 
         # Test with missing optional inputs
         inputs['outputfile'] = outputfile
-        response=csv_to_txt_converter(inputs)
-#        print 'response5:\n%s' % response
+        response=csv_converter(inputs)
+        #print 'response5:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
         # Remove the file created by this test, as the Framework does not know about it
         if os.path.isfile(response['outputfile']):
             os.remove(response['outputfile'])
 
-    def test_csv_to_txt_converter(self):
-        print 'testing csv_to_txt_converter'
+    def test_csv_converter(self):
+        print 'testing csv_converter'
         testfile1 = self.framework.testfile1
         testfile2 = self.framework.testfile2
         testdatapath = self.framework.testdatapath
@@ -113,27 +116,60 @@ class CSVToTXTConverterTestCase(unittest.TestCase):
         inputs['inputfile'] = testfile1
         inputs['outputfile'] = outputfile
         inputs['workspace'] = testdatapath
+        inputs['format'] = 'csv'
 
-        # Translate the file to utf8 encoding
-        response=csv_to_txt_converter(inputs)
-        outfilelocation = '%s/%s' % (testdatapath, outputfile)
+        # Translate the file to csv
+        response=csv_converter(inputs)
+
+        outfilelocation = '%s%s' % (testdatapath, outputfile)
         outdialect = csv_file_dialect(outfilelocation)
-#        print 'inputs1:\n%s' % inputs
-#        print 'response1:\n%s' % response
-        equal = dialects_equal(outdialect, tsv_dialect())
-        s = 'Output dialect for %s not TSV' % outfilelocation
-        self.assertTrue(equal, s)
+        #print 'inputs1:\n%s' % inputs
+        #print 'response1:\n%s' % response
 
-        inputs['inputfile'] = testfile2
+        found = outdialect.lineterminator
+        expected =  '\r'
+        if found == '\r\n':
+            s = 'found lineterminator \\r\\n, not \\r'
+        elif found == '\\n':
+            s = 'found lineterminator \\n, not \\r'
+        else:
+            s = 'lineterminator not as expected (\\r)'
+        self.assertEqual(found, expected, s)
 
-        # Translate the file to utf8 encoding
-        response=csv_to_txt_converter(inputs)
-        outdialect = csv_file_dialect(outfilelocation)
-#        print 'response2:\n%s' % response
-        equal = dialects_equal(outdialect, tsv_dialect())
-        s = 'Output dialect for %s not TSV' % outfilelocation
-        self.assertTrue(equal, s)
+        found = outdialect.delimiter
+        expected = ','
+        s = 'found delimiter %s, not %s' % (found, expected)
+        self.assertEqual(found, expected, s)
+
+        found = outdialect.escapechar
+        expected = '\\'
+        s = 'found escapechar %s, not %s' % (found, expected)
+        self.assertEqual(found, expected, s)
+
+        found = outdialect.quotechar
+        expected = '"'
+        s = 'found quotechar %s, not %s' % (found, expected)
+        self.assertEqual(found, expected, s)
+
+        found = outdialect.doublequote
+        expected = False
+        s = 'found doublequote %s, not %s' % (found, expected)
+        self.assertFalse(found)
+
+        found = outdialect.quoting
+        expected  = csv.QUOTE_MINIMAL
+        s = 'found quoting %s, not %s' % (found, expected)
+        
+        found = outdialect.skipinitialspace
+        expected = True
+        s = 'found skipinitialspace %s, not %s' % (found, expected)
+        self.assertTrue(found)
+        
+        found = outdialect.strict
+        expected = False
+        s = 'found strict %s, not %s' % (found, expected)
+        self.assertFalse(found)
 
 if __name__ == '__main__':
-    print '=== csv_to_txt_converter_test.py ==='
+    print '=== csv_converter_test.py ==='
     unittest.main()

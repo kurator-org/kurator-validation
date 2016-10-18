@@ -20,9 +20,9 @@ date
 #python: 0s
 #jython: 2s
 
-python csv_to_txt_converter_test.py
+python csv_converter_test.py
 date
-jython csv_to_txt_converter_test.py
+jython csv_converter_test.py
 date
 #python: 0s
 #jython: 2s

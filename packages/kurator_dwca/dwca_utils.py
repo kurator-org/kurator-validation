@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-10-17T18:54+02:00"
+__version__ = "dwca_utils.py 2016-10-18T19:01+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -174,6 +174,14 @@ def csv_file_dialect(fullpath):
             # Otherwise let's see what we can find invoking the Sniffer.
             logging.debug('Forced to use csv.Sniffer()')
             dialect = csv.Sniffer().sniff(buf, delimiters=',\t|')
+            # The Sniffer doesn't always guess the line terminator correctly either
+            # Let's double-check.
+            if buf.find('\r\n')>0:
+                dialect.lineterminator = '\r\n'
+            elif buf.find('\r')>0:
+                dialect.lineterminator = '\r'
+            else:
+                dialect.lineterminator = '\n'
         except csv.Error:
             # Something went wrong, so let's try to read a few lines from the beginning of 
             # the file
@@ -596,18 +604,19 @@ def merge_headers(headersofar, headertoadd=None):
 
     return sorted(list(composedheader))
 
-def csv_to_txt(inputfile, outputfile, dialect=None, encoding=None):
+def convert_csv(inputfile, outputfile, dialect=None, encoding=None, format=None):
     ''' Convert an arbitrary csv file into a txt file in utf-8.
     parameters:
         inputfile - full path to the input file (required)
         outputfile - full path to the converted file (required)
-        dialect - csv.dialect object with the attributes of the input files (default None)
+        dialect - csv.dialect object with the attributes of the input file (default None)
         encoding - a string designating the input file encoding (optional; default None) 
             (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
+        format - output file format (e.g., 'csv' or 'txt') (optional; default 'txt')
     returns:
         True if finished successfully, otherwise False
     '''
-    functionname = 'csv_to_txt()'
+    functionname = 'convert_csv()'
 
     if inputfile is None or len(inputfile) == 0:
         s = 'No input file given in %s.' % functionname
@@ -635,23 +644,28 @@ def csv_to_txt(inputfile, outputfile, dialect=None, encoding=None):
         encoding = csv_file_encoding(inputfile)
         # csv_file_encoding() always returns an encoding if there is an input file.    
 
+    # Create a the dialect object for the output file based on the given format
+    if format is not None and format.lower() == 'csv':
+        outdialect = csv_dialect()
+    else:
+        outdialect = tsv_dialect()
+
     # Get the header from the input file
-    inputheader = read_header(inputfile, dialect, encoding)
+    inputheader = read_header(inputfile, dialect=dialect, encoding=encoding)
 
     if inputheader is None:
         s = 'Unable to read header for %s in %s.' % (inputfile, functionname)
         logging.debug(s)
         return False
 
-    outputdialect = tsv_dialect()
-    with open(outputfile, 'a') as tsvfile:
-        writer = csv.DictWriter(tsvfile, dialect=outputdialect, encoding='utf-8', 
+    with open(outputfile, 'w') as outfile:
+        writer = csv.DictWriter(outfile, dialect=outdialect, encoding='utf-8', 
             fieldnames=inputheader)
         writer.writeheader()
 
         # Iterate through all rows in the input file
-        for row in read_csv_row(inputfile, dialect, encoding, header=True, 
-            fieldnames=inputheader):
+        for row in read_csv_row(inputfile, dialect=dialect, encoding=encoding, 
+            header=True, fieldnames=inputheader):
             writer.writerow(row)
 
     s = 'File written to %s in %s.' % (outputfile, functionname)
@@ -1434,7 +1448,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertIsNotNone(dialect, 'unable to detect csv file dialect')
         self.assertEqual(dialect.delimiter, ',',
             'incorrect delimiter detected for csv file')
-        self.assertEqual(dialect.lineterminator, '\r\n',
+        self.assertEqual(dialect.lineterminator, '\n',
             'incorrect lineterminator for csv file')
         self.assertEqual(dialect.escapechar, '\\',
             'incorrect escapechar for csv file')
@@ -1607,12 +1621,12 @@ class DWCAUtilsTestCase(unittest.TestCase):
             print 'output dialect:\n%s' % dialect_attributes(outdialect)
         self.assertTrue(equaldialects, 'input and output dialects not the same')
 
-    def test_csv_to_txt1(self):
-        print 'testing csv_to_txt1'
+    def test_convert_csv1(self):
+        print 'testing convert_csv1'
         csvfile = self.framework.csvtotsvfile1
         tsvfile = self.framework.tsvfromcsvfile1
 
-        csv_to_txt(csvfile, tsvfile)
+        convert_csv(csvfile, tsvfile)
         written = os.path.isfile(tsvfile)
         self.assertTrue(written, 'tsv %s not written' % tsvfile)
 
@@ -1622,12 +1636,12 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
 
-    def test_csv_to_txt2(self):
-        print 'testing csv_to_txt2'
+    def test_convert_csv2(self):
+        print 'testing convert_csv2'
         csvfile = self.framework.csvtotsvfile2
         tsvfile = self.framework.tsvfromcsvfile2
 
-        csv_to_txt(csvfile, tsvfile)
+        convert_csv(csvfile, tsvfile)
         written = os.path.isfile(tsvfile)
         self.assertTrue(written, 'tsv %s not written' % tsvfile)
 
@@ -1638,12 +1652,12 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
 
-    def test_csv_to_txt3(self):
-        print 'testing csv_to_txt3'
+    def test_convert_csv3(self):
+        print 'testing convert_csv3'
         csvfile = self.framework.encodedfile_latin_1
         tsvfile = self.framework.tsvfromcsvfile2
 
-        csv_to_txt(csvfile, tsvfile)
+        convert_csv(csvfile, tsvfile)
         written = os.path.isfile(tsvfile)
         self.assertTrue(written, 'tsv %s not written' % tsvfile)
 
@@ -1655,12 +1669,12 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
 
-    def test_csv_to_txt4(self):
-        print 'testing csv_to_txt4'
+    def test_convert_csv4(self):
+        print 'testing convert_csv4'
         csvfile = self.framework.symbiotafile
         tsvfile = self.framework.tsvfromcsvfile2
 
-        csv_to_txt(csvfile, tsvfile)
+        convert_csv(csvfile, tsvfile)
         written = os.path.isfile(tsvfile)
         self.assertTrue(written, 'tsv %s not written' % tsvfile)
 

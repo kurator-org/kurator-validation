@@ -15,28 +15,31 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_to_txt_converter.py 2016-10-02T16:03+02:00"
+__version__ = "csv_converter.py 2016-10-18T19:03+02:00"
 
-from dwca_utils import csv_to_txt
+from dwca_utils import convert_csv
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 import os
 import logging
 import argparse
 
-def csv_to_txt_converter(options):
+def csv_converter(options):
     ''' Translate input file from its current encoding to utf8.
     options - a dictionary of parameters
         loglevel - level at which to log (e.g., DEBUG) (optional)
         workspace - path to a directory for the outputfile (optional)
         inputfile - full path to the input file (required)
         outputfile - name of the output file, without path (required)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
+        format - output file format (e.g., 'csv' or 'txt') (optional; default 'txt')
     returns a dictionary with information about the results
         outputfile - actual full path to the output file
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     '''
-    # print '%s options: %s' % (__version__, options)
+    #print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 
@@ -57,6 +60,8 @@ def csv_to_txt_converter(options):
     workspace = './'
     inputfile = None
     outputfile = None
+    encoding = None
+    format = 'txt'
 
     ### Required inputs ###
     try:
@@ -86,6 +91,16 @@ def csv_to_txt_converter(options):
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
 
+    try:
+        format = options['format']
+    except:
+        pass
+
+    try:
+        encoding = options['encoding']
+    except:
+        pass
+
     if outputfile is None or len(outputfile)==0:
         message = 'No output file given. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
@@ -94,7 +109,9 @@ def csv_to_txt_converter(options):
 
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
-    success = csv_to_txt(inputfile, outputfile)
+    # Do the file conversion. Let the converter figure out the input dialect.
+    success = convert_csv(inputfile, outputfile, dialect=None, encoding=encoding,
+        format=format)
 
     if success == False:
         message = 'Unable to convert %s to txt format. %s' % (inputfile, __version__)
@@ -102,7 +119,7 @@ def csv_to_txt_converter(options):
         logging.debug('message:\n%s' % message)
         return response(returnvars, returnvals)
         
-    artifacts['txt_converted_file'] = outputfile
+    artifacts['converted_file'] = outputfile
     returnvals = [workspace, outputfile, success, message, artifacts]
     logging.debug('Finishing %s' % __version__)
     return response(returnvars, returnvals)
@@ -120,6 +137,12 @@ def _getoptions():
     help = 'output file name, no path (optional)'
     parser.add_argument("-o", "--outputfile", help=help)
 
+    help = "encoding (optional)"
+    parser.add_argument("-e", "--encoding", help=help)
+
+    help = 'output file format (e.g., csv or txt) (optional; default txt)'
+    parser.add_argument("-f", "--format", help=help)
+
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
 
@@ -132,10 +155,12 @@ def main():
     if options.inputfile is None or len(options.inputfile)==0 or \
         options.outputfile is None or len(options.outputfile)==0:
         s =  'syntax:\n'
-        s += 'python csv_to_txt_converter.py'
+        s += 'python csv_converter.py'
         s += ' -w ./workspace'
         s += ' -i ./data/tests/test_thirty_records_mac_roman_crlf.csv'
-        s += ' -o as_csv.csv'
+        s += ' -o as_txt.csv'
+        s += ' -e mac_roman'
+        s += ' -f txt'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -143,11 +168,13 @@ def main():
     optdict['workspace'] = options.workspace
     optdict['inputfile'] = options.inputfile
     optdict['outputfile'] = options.outputfile
+    optdict['encoding'] = options.encoding
+    optdict['format'] = options.format
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 
     # Append distinct new field names to Darwin Cloud vocab file
-    response=csv_to_txt_converter(optdict)
+    response=csv_converter(optdict)
     print '\nresponse: %s' % response
 
 if __name__ == '__main__':
