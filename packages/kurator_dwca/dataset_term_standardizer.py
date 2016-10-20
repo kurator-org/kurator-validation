@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dataset_term_standardizer.py 2016-10-06T13:51+02:00"
+__version__ = "dataset_term_standardizer.py 2016-10-20T16:48+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -155,7 +155,7 @@ def dataset_term_standardizer(options):
     except:
         pass
 
-    if outputfile is None:
+    if outputfile is None or len(outputfile.strip())==0:
         outputfile = '%s/%s_changed_report_%s.%s' % \
           (workspace.rstrip('/'), slugify(key), str(uuid.uuid1()), format)
     else:

@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-10-18T20:43+02:00"
+__version__ = "dwca_utils.py 2016-10-20T16:21+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data. It is built with unit tests that can be invoked by running the script
@@ -733,6 +733,60 @@ def term_rowcount_from_file(inputfile, termname, dialect=None, encoding=None):
             pass
 
     return rowcount
+
+def term_completeness_from_file(inputfile, dialect=None, encoding=None):
+    ''' Make a dictionary of field names and the number of rows in which each is 
+        populated.
+    parameters:
+        inputfile - full path to the input file (required)
+        dialect - csv.dialect object with the attributes of the input files (default None)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
+    returns:
+        fieldcountdict - dictionary of field names and the number of rows in which they 
+            are populated in the inputfile
+    '''
+    functionname = 'term_completeness_from_file()'
+
+    if inputfile is None or len(inputfile) == 0:
+        s = 'No input file given in %s.' % functionname
+        logging.debug(s)
+        return 0
+
+    if os.path.isfile(inputfile) == False:
+        s = 'File %s not found in %s.' % (inputfile, functionname)
+        logging.debug(s)
+        return 0
+
+    # Determine the dialect of the input file
+    if dialect is None:
+        dialect = csv_file_dialect(inputfile)
+        # csv_file_dialect() always returns a dialect if there is an input file.
+        # No need to check.
+
+    # Try to determine the encoding of the inputfile.
+    if encoding is None or len(encoding.strip()) == 0:
+        encoding = csv_file_encoding(inputfile)
+        # csv_file_encoding() always returns an encoding if there is an input file.    
+
+    # Search for fields based on a cleaned header
+    header = read_header(inputfile, dialect, encoding)
+
+    rowcount = 0
+
+    # Set up the dictionary of row counts for the fields in the input file
+    fieldcountdict = {}
+    for field in header:
+        fieldcountdict[field] = 0
+
+    for row in read_csv_row(inputfile, dialect, encoding, fieldnames=header):
+        for field in header:
+            v = row[field]
+            if v is not None and len(v.strip())>0:
+                fieldcountdict[field] += 1
+        rowcount += 1
+    fieldcountdict['rows'] = rowcount
+    return fieldcountdict
 
 def csv_field_checker(inputfile, dialect=None, encoding=None):
     ''' Determine if any row in a csv file has fewer fields than the header.

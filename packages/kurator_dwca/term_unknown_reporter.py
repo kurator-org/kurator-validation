@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_unknown_reporter.py 2016-10-06T13:21+02:00"
+__version__ = "term_unknown_reporter.py 2016-10-20T16:49+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -158,7 +158,7 @@ def term_unknown_reporter(options):
     except:
         pass
 
-    if outputfile is None:
+    if outputfile is None or len(outputfile.strip())==0:
         outputfile = '%s/%s_standardization_report_%s.%s' % \
           (workspace.rstrip('/'), slugify(key), str(uuid.uuid1()), format)
     else:

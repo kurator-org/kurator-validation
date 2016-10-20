@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2016-10-07T15:19+02:00"
+__version__ = "report_utils.py 2016-10-20T16:16+02:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data. It is built with unit tests that can be invoked by running the script
@@ -40,6 +40,7 @@ from dwca_utils import extract_values_from_row
 from dwca_vocab_utils import vocabheader
 from dwca_vocab_utils import recommended_value
 from dwca_vocab_utils import vocab_dict_from_file
+from operator import itemgetter
 import logging
 import unittest
 import os.path
@@ -167,6 +168,58 @@ def term_list_report(reportfile, termlist, key, separator=None, format=None):
             if len(fields) > 1:
                 for field in fields:
                     row[field] = value
+            writer.writerow(row)
+    s = 'Report written to %s in %s.' % (reportfile, functionname)
+    logging.debug(s)
+    return True
+
+def term_completeness_report(reportfile, fieldcountdict, format=None):
+    ''' Write a report with a list of fields and the number of times they are populated.
+    parameters:
+        reportfile - full path to the output report file (optional)
+        fieldcountdict - dictionary of field names and the number of rows in which they 
+            are populated in the inputfile
+        format - string signifying the csv.dialect of the report file ('csv' or 'txt')
+    returns:
+        success - True if the report was written, else False
+    '''
+    functionname = 'term_completeness_report()'
+
+    if fieldcountdict is None or len(fieldcountdict)==0:
+        s = 'No field count dictionary given in %s.' % functionname
+        logging.debug(s)
+        return False
+
+    if reportfile is None or len(reportfile)==0:
+        s = 'No recommendation file name given in %s.' % functionname
+        logging.debug(s)
+        return False
+
+    if format=='csv' or format is None:
+        dialect = csv_dialect()
+    else:
+        dialect = tsv_dialect()
+
+    fields = []
+    # Make an alphabetically sorted list of field names
+    for key, value in fieldcountdict.iteritems():
+        fields.append(key)
+    fieldlist = sorted(fields)
+
+    outputheader = ['field', 'count']
+    # Create the outputfile and write the new header to it
+    write_header(reportfile, outputheader, dialect)
+
+    if os.path.isfile(reportfile) == False:
+        s = 'reportfile: %s not created in %s.' % (reportfile, functionname)
+        logging.debug(s)
+        return False
+
+    with open(reportfile, 'a') as csvfile:
+        writer = csv.DictWriter(csvfile, dialect=dialect, encoding='utf-8', 
+            fieldnames=outputheader)
+        for field in fieldlist:
+            row = {'field':field , 'count':fieldcountdict[field] }
             writer.writerow(row)
     s = 'Report written to %s in %s.' % (reportfile, functionname)
     logging.debug(s)

@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwcareader_utils.py 2016-10-04T16:29+02:00"
+__version__ = "dwcareader_utils.py 2016-10-20T16:50+02:00"
 
 # This file contains common utility functions for dealing with the content of a Darwin
 # Core archive. It is built with unit tests that can be invoked by running the script
@@ -56,7 +56,7 @@ def dwca_metadata(dwcareader):
 
 def dwca_metadata_from_file(inputfile, archivetype=None):
     ''' Return metadata from a Darwin Core Archive file.'''
-    if inputfile is None:
+    if inputfile is None or len(inputfile.strip())==0:
         return None
 
     # Make an appropriate reader based on whether the archive is standard or a GBIF
@@ -99,7 +99,7 @@ def get_core_rowcount(dwcareader):
     
 def get_core_rowcount_from_file(inputfile, archivetype=None):
     ''' Return number of rows in the core file of a Darwin Core Archive file.'''
-    if inputfile is None:
+    if inputfile is None or len(inputfile.strip())==0:
         return None
     # Make an appropriate reader based on whether the archive is standard or a GBIF
     # download.
