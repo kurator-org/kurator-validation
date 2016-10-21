@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv_test.py 2016-10-17T14:47+02:00"
+__version__ = "dwca_core_to_tsv_test.py 2016-10-21T12:27+02:00"
 
 # This file contains unit test for the dwca_core_to_tsv function.
 #
@@ -22,24 +22,23 @@ __version__ = "dwca_core_to_tsv_test.py 2016-10-17T14:47+02:00"
 #
 # python dwca_core_to_tsv_test.py
 
-from dwca_core_to_tsv import dwca_core_to_tsv
-from dwca_utils import read_header
-from dwca_utils import write_header
-from dwca_utils import tsv_dialect
+from kurator_dwca.dwca_core_to_tsv import dwca_core_to_tsv
+from kurator_dwca.dwca_utils import read_header
+from kurator_dwca.dwca_utils import write_header
+from kurator_dwca.dwca_utils import tsv_dialect
 import os
 import unittest
 
 class DwcaCoreToTsvFramework():
     """Test framework for the Darwin Core archive to TSV converter."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
+    testdatapath = '../data/tests/'
     archivetype = 'standard'
 
     # input data files to test, don't remove these
     dwca = testdatapath + 'dwca-uwymv_herp.zip'
 
     # output data files from tests, remove these in dispose()
-#    outputfile = testdatapath + 'test_tsv_from_dwca.txt'
     outputfile = 'test_tsv_from_dwca.txt'
 
     def dispose(self):
@@ -74,7 +73,7 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=dwca_core_to_tsv(inputs)
-#        print 'response1:\n%s' % response
+        #print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
@@ -82,7 +81,7 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         inputs['outputfile'] = outputfile
         inputs['workspace'] = workspace
         response=dwca_core_to_tsv(inputs)
-#        print 'response2:\n%s' % response
+        #print 'response2:\n%s' % response
         s = 'success without dwca file'
         self.assertFalse(response['success'], s)
 
@@ -90,7 +89,7 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         inputs = {}
         inputs['inputfile'] = dwca
         response=dwca_core_to_tsv(inputs)
-#        print 'response3:\n%s' % response
+        #print 'response3:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
         # Remove the file created by this test, as the Framework does not know about it
@@ -109,10 +108,10 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         inputs['outputfile'] = outputfile
         inputs['workspace'] = workspace
         inputs['archivetype'] = archivetype
-#        print 'inputs:\n%s' % inputs
+        #print 'inputs:\n%s' % inputs
 
         response=dwca_core_to_tsv(inputs)
-#        print 'response:\n%s' % response
+        #print 'response:\n%s' % response
         self.assertEqual(response['rowcount'], 8, 'incorrect number of rows in output')
         self.assertTrue(response['success'], \
             'conversion not successful')
@@ -131,7 +130,7 @@ class DwcaCoreToTsvTestCase(unittest.TestCase):
         inputs['archivetype'] = archivetype
 
         response=dwca_core_to_tsv(inputs)
-#        print 'response:\n%s' % response
+        #print 'response:\n%s' % response
 
         outputfilefullpath = response['outputfile']
         header = read_header(outputfilefullpath, tsv_dialect())

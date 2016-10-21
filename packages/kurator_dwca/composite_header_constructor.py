@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor.py 2016-10-04T15:41+02:00"
+__version__ = "composite_header_constructor.py 2016-10-21T12:45+02:00"
 
 from dwca_utils import read_header
 from dwca_utils import write_header
@@ -44,7 +44,7 @@ def composite_header_constructor(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     '''
-    # print '%s options: %s' % (__version__, options)
+    #print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 

@@ -14,17 +14,17 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "utf8_encoder_test.py 2016-10-04T11:32+02:00"
+__version__ = "utf8_test.py 2016-10-21T15:05+02:00"
 
-# This file contains unit test for the utf8_encoder function.
+# This file contains unit test for the UniversalDetector class.
 #
 # Example:
 #
-# python utf8_encoder_test.py
+# python utf8_test.py
 
-from utf8_encoder import utf8_encoder
+#from kurator_dwca.utf8_encoder import utf8_encoder
+#from kurator_dwca.dwca_utils import csv_file_encoding
 from chardet.universaldetector import UniversalDetector
-from dwca_utils import csv_file_encoding
 import glob
 import os
 import unittest
@@ -32,7 +32,7 @@ import unittest
 class UTF8EncoderFramework():
     """Test framework for UTF8 Encoder."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
+    testdatapath = '../data/tests/'
 
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_eight_records_utf8_lf.csv'
@@ -75,8 +75,8 @@ class UTF8EncoderTestCase(unittest.TestCase):
         detector = UniversalDetector()
 
         for filename in glob.glob('./data/tests/test_*'):
-#        for filename in glob.glob('./data/vocabularies/*.txt'):
-#        for filename in glob.glob('./data/tests/test_geography*'):
+        #for filename in glob.glob('./data/vocabularies/*.txt'):
+        #for filename in glob.glob('./data/tests/test_geography*'):
             print filename.ljust(60),
             detector.reset()
             i = 0
@@ -93,5 +93,5 @@ class UTF8EncoderTestCase(unittest.TestCase):
             encoding = detector.result['encoding']
 
 if __name__ == '__main__':
-    print '=== utf8_encoder_test.py ==='
+    print '=== utf8_test.py ==='
     unittest.main()

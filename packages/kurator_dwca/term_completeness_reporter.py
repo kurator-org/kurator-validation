@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_completeness_reporter.py 2016-10-20T16:45+02:00"
+__version__ = "term_completeness_reporter.py 2016-10-21T12:46+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -136,7 +136,7 @@ def term_completeness_reporter(options):
 
     # Get the list of values for the field given by termname along with their counts.
     fieldcountdict = term_completeness_from_file(inputfile, encoding=encoding)
-    # print 'counts: %s' % counts
+    #print 'counts: %s' % counts
 
     #Try to create the report for the term value counts.
     success = term_completeness_report(outputfile, fieldcountdict, format=format)

@@ -14,10 +14,10 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_splitter_test.py 2016-05-27T22:05-03:00"
+__version__ = "text_file_splitter_test.py 2016-10-21T12:55+02:00"
 
-from text_file_splitter import text_file_splitter
-from dwca_utils import split_path
+from kurator_dwca.text_file_splitter import text_file_splitter
+from kurator_dwca.dwca_utils import split_path
 import os
 import glob
 import unittest
@@ -31,7 +31,7 @@ import unittest
 class TextFileSplitterFramework():
     """Test framework for the text file splitter."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
+    testdatapath = '../data/tests/'
     
     # test file to split
     inputfile = testdatapath + 'test_eight_specimen_records.csv'
@@ -39,11 +39,6 @@ class TextFileSplitterFramework():
     def dispose(self):
         """Remove any output files created as a result of testing"""
         path, ext, filename = split_path(self.inputfile)
-
-        # do not remove the source file from the test data path
-#        csvfile = self.csvfile        
-#        if os.path.isfile(testdatapath + csvfile):
-#            os.remove(testdatapath + csvfile)
 
         files = glob.glob(self.testdatapath + filename + '*')
 
@@ -78,7 +73,7 @@ class TextFileSplitterTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=text_file_splitter(inputs)
-#        print 'response1:\n%s' % response
+        #print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
@@ -87,12 +82,9 @@ class TextFileSplitterTestCase(unittest.TestCase):
         inputs['inputfile'] = inputfile
         inputs['workspace'] = workspace
         response=text_file_splitter(inputs)
-#        print 'response2:\n%s' % response
+        #print 'response2:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
-        # Remove the file created by this test, as the Framework does not know about it
-#         if os.path.isfile(response['outputfile']):
-#             os.remove(response['outputfile'])
 
     def test_split(self):
         print 'testing split'
@@ -104,11 +96,11 @@ class TextFileSplitterTestCase(unittest.TestCase):
         inputs['inputfile'] = inputfile
         inputs['workspace'] = workspace
         inputs['chunksize'] = chunksize
-#        print 'inputs:\n%s' % inputs
+        #print 'inputs:\n%s' % inputs
 
         # Split text file into chucks
         response=text_file_splitter(inputs)
-#        print 'response:\n%s' % response
+        #print 'response:\n%s' % response
 
         path, ext, filename = split_path(inputfile)
         files = glob.glob(workspace + filename + '*')

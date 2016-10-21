@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_fieldcount_checker_test.py 2016-05-11T22:39-03:00"
+__version__ = "csv_fieldcount_checker_test.py 2016-10-20T19:49+02:00"
 
 # This file contains unit test for the csv_fieldcount_checker function.
 #
@@ -22,14 +22,14 @@ __version__ = "csv_fieldcount_checker_test.py 2016-05-11T22:39-03:00"
 #
 # python csv_fieldcount_checker_test.py
 
-from csv_fieldcount_checker import csv_fieldcount_checker
+from kurator_dwca.csv_fieldcount_checker import csv_fieldcount_checker
 import os
 import unittest
 
 class CsvFieldcountCheckerFramework():
     """Test framework for the Darwin Cloud collector."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
+    testdatapath = '../data/tests/'
 
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_eight_specimen_records.csv'
@@ -37,13 +37,13 @@ class CsvFieldcountCheckerFramework():
     testfile3 = testdatapath + 'test_bad_fieldcount1.txt'
 
     # output data files from tests, remove these in dispose()
-#    testcollectorfile = testdatapath + 'test_collector_file.csv'
+    testcollectorfile = testdatapath + 'test_collector_file.csv'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-#         testcollectorfile = self.testcollectorfile
-#         if os.path.isfile(testcollectorfile):
-#             os.remove(testcollectorfile)
+        testcollectorfile = self.testcollectorfile
+        if os.path.isfile(testcollectorfile):
+            os.remove(testcollectorfile)
         return True
 
 class CsvFieldcountCheckerTestCase(unittest.TestCase):
@@ -72,13 +72,13 @@ class CsvFieldcountCheckerTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=csv_fieldcount_checker(inputs)
-#        print 'response1:\n%s' % response
+        #print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
         inputs['inputfile'] = ''
         response=csv_fieldcount_checker(inputs)
-#        print 'response2:\n%s' % response
+        #print 'response2:\n%s' % response
         s = 'success with blank input filename'
         self.assertFalse(response['success'], s)
 
@@ -93,29 +93,29 @@ class CsvFieldcountCheckerTestCase(unittest.TestCase):
 
         # Check for bad rows
         response=csv_fieldcount_checker(inputs)
-#        print 'response:\n%s' % response
+        #print 'response:\n%s' % response
         s = 'Bad row found for file %s' % (testfile1)
         firstbadrowindex = response['firstbadrowindex']
         self.assertEqual(firstbadrowindex, 0, s)
         
         inputs['inputfile'] = testfile2
         response=csv_fieldcount_checker(inputs)
-#        print 'response:\n%s' % response
+        #print 'response:\n%s' % response
         s = 'No bad row found for file %s' % (testfile2)
         self.assertIsNotNone(response, s)
         firstbadrowindex = response['firstbadrowindex']
-#        print 'values:\n%s\nexpected:\n%s' % (values,expected)
+        #print 'values:\n%s\nexpected:\n%s' % (values,expected)
         s = 'File %s, first bad row: %s\nrow:\n%s' \
             % (testfile2, response['firstbadrowindex'], response['row'])
         self.assertEqual(firstbadrowindex, 3, s)
 
         inputs['inputfile'] = testfile3
         response=csv_fieldcount_checker(inputs)
-#        print 'response:\n%s' % response
+        #print 'response:\n%s' % response
         s = 'No bad row found for file %s' % (testfile3)
         self.assertIsNotNone(response, s)
         firstbadrowindex = response['firstbadrowindex']
-#        print 'values:\n%s\nexpected:\n%s' % (values,expected)
+        #print 'values:\n%s\nexpected:\n%s' % (values,expected)
         s = 'File %s, first bad row: %s\nrow:\n%s' \
             % (testfile3, response['firstbadrowindex'], response['row'])
         self.assertEqual(firstbadrowindex, 3, s)

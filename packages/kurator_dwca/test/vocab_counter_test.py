@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_counter_test.py 2016-09-11T14:06+02:00"
+__version__ = "vocab_counter_test.py 2016-10-21T13:02+02:00"
 
 # This file contains unit test for the vocab_counter function.
 #
@@ -22,28 +22,28 @@ __version__ = "vocab_counter_test.py 2016-09-11T14:06+02:00"
 #
 # python vocab_counter_test.py
 
-from vocab_counter import vocab_counter
-from dwca_utils import read_header
+from kurator_dwca.vocab_counter import vocab_counter
+from kurator_dwca.dwca_utils import read_header
 import os
 import unittest
 
 class VocabCounterFramework():
     """Test framework for the vocab counter."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
+    testdatapath = '../data/tests/'
 
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_eight_specimen_records.csv'
     testfile2 = testdatapath + 'test_vocab_month.txt'
 
     # output data files from tests, remove these in dispose()
-#    testvocabfile = testdatapath + 'test_vocab_file.csv'
+    testvocabfile = testdatapath + 'test_vocab_file.csv'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-#         testvocabfile = self.testvocabfile
-#         if os.path.isfile(testvocabfile):
-#             os.remove(testvocabfile)
+        testvocabfile = self.testvocabfile
+        if os.path.isfile(testvocabfile):
+            os.remove(testvocabfile)
         return True
 
 class VocabCounterTestCase(unittest.TestCase):
@@ -70,14 +70,14 @@ class VocabCounterTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=vocab_counter(inputs)
-        # print 'response1:\n%s' % response
+        #print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
         # Test with missing termname
         inputs['inputfile'] = testfile
         response=vocab_counter(inputs)
-        # print 'response2:\n%s' % response
+        #print 'response2:\n%s' % response
         s = 'success without termname'
         self.assertFalse(response['success'], s)
 
@@ -85,7 +85,7 @@ class VocabCounterTestCase(unittest.TestCase):
         inputs = {}
         inputs['termname'] = 'year'
         response=vocab_counter(inputs)
-        # print 'response3:\n%s' % response
+        #print 'response3:\n%s' % response
         s = 'success without input file'
         self.assertFalse(response['success'], s)
 
@@ -121,9 +121,9 @@ class VocabCounterTestCase(unittest.TestCase):
         inputs['termname'] = term
 
         # Extract distinct values of term
-        # print 'inputs:\n%s' % inputs
+        #print 'inputs:\n%s' % inputs
         response=vocab_counter(inputs)
-        # print 'response:\n%s' % response
+        #print 'response:\n%s' % response
         values = response['extractedvalues']
         found = len(response['extractedvalues'])
         expected = 4

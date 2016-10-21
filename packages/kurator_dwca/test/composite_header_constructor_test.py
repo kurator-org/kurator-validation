@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor_test.py 2016-05-27T21:59-03:00"
+__version__ = "composite_header_constructor_test.py 2016-10-20T17:10+02:00"
 
 # This file contains unit test for the composite_header_constructor function.
 #
@@ -22,16 +22,16 @@ __version__ = "composite_header_constructor_test.py 2016-05-27T21:59-03:00"
 #
 # python composite_header_constructor_test.py
 
-from composite_header_constructor import composite_header_constructor
-from dwca_utils import read_header
-from dwca_utils import write_header
+from kurator_dwca.composite_header_constructor import composite_header_constructor
+from kurator_dwca.dwca_utils import read_header
+from kurator_dwca.dwca_utils import write_header
 import os
 import unittest
 
 class CompositeHeaderConstructorFramework():
     """Test framework for the composite header constructor."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
+    testdatapath = '../data/tests/'
     workspace = './workspace/'
     
     # input data files to tests, don't remove these
@@ -80,14 +80,14 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=composite_header_constructor(inputs)
-#        print 'response1:\n%s' % response
+        #print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
         # Test with missing outputfile
         inputs['inputfile1'] = tsvfile1
         response=composite_header_constructor(inputs)
-#        print 'response2:\n%s' % response
+        #print 'response2:\n%s' % response
         s = 'success without outputfile'
         self.assertFalse(response['success'], s)
 
@@ -95,14 +95,14 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         inputs = {}
         inputs['outputfile'] = outputfile
         response=composite_header_constructor(inputs)
-#        print 'response3:\n%s' % response
+        #print 'response3:\n%s' % response
         s = 'success without any input files'
         self.assertFalse(response['success'], s)
 
         # Test with missing optional inputs
         inputs['inputfile2'] = tsvfile2
         response=composite_header_constructor(inputs)
-#        print 'response4:\n%s' % response
+        #print 'response4:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
 
@@ -110,7 +110,7 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         inputs['outputfile'] = outputfile
         inputs['inputfile1'] = tsvfile1
         response=composite_header_constructor(inputs)
-#        print 'response5:\n%s' % response
+        #print 'response5:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
         # Remove the file created by this test, as the Framework does not know about it
@@ -131,7 +131,7 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         modelheader.append('locality')
         modelheader.append('phylum')
         modelheader.append('')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
+        #print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -143,7 +143,7 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         modelheader.append('phylum')
         modelheader.append('decimalLatitude')
         modelheader.append('decimalLongitude')
-#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n%s' % (len(header), len(modelheader), header, modelheader)
+        #print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -155,7 +155,7 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         modelheader.append('phylum')
         modelheader.append('decimalLatitude')
         modelheader.append('decimalLongitude')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
+        #print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -166,7 +166,7 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         modelheader.append('locality')
         modelheader.append('phylum')
         modelheader.append('')
-#        print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
+        #print 'len(header)=%s len(model)=%s\nheader:\nmodel:%s\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -186,7 +186,7 @@ class CompositeHeaderConstructorTestCase(unittest.TestCase):
         inputs['workspace'] = workspace
 
         response=composite_header_constructor(inputs)
-#        print 'response:\n%s' % response
+        #print 'response:\n%s' % response
         success = response['success']
         s = 'composite header not created'
         self.assertTrue(success, s)

@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_fieldcount_checker.py 2016-10-02T16:02+02:00"
+__version__ = "csv_fieldcount_checker.py 2016-10-21T12:45+02:00"
 
 from dwca_utils import csv_field_checker
 from dwca_utils import response
@@ -40,7 +40,7 @@ def csv_fieldcount_checker(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     '''
-    # print '%s options: %s' % (__version__, options)
+    #print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 

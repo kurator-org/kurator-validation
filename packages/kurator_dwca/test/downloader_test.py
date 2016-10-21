@@ -14,25 +14,27 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "actor_template_test.py 2016-05-27T21:58-03:00"
+__version__ = "downloader_test.py 2016-10-21T12:26+02:00"
 
-# This file contains unit test for the dostuffer function.
+# This file contains unit test for the downloader function.
 #
 # Example:
 #
-# python actor_template_test.py
+# python downloader_test.py
 
-from actor_template import dostuffer
+from kurator_dwca.downloader import downloader
 import os
+import json
 import unittest
 
 class DownloaderFramework():
-    """Test framework for the dostuffer."""
+    """Test framework for the downloader."""
     # location for the test inputs and outputs
-    workspace = './data/tests/'
+    workspace = './workspace/'
+    testurl = 'http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals'
 
     # input data files to tests, don't remove these
-    inputfile = workspace + 'test_eight_specimen_records.csv'
+    #testfile1 = testdatapath + 'test_eight_specimen_records.csv'
 
     # output data files from tests, remove these in dispose()
     outputfile = 'test_ccber_mammals_download.zip'
@@ -55,58 +57,56 @@ class DownloaderTestCase(unittest.TestCase):
 
     def test_missing_parameters(self):
         print 'testing missing_parameters'
-        inputfile = self.framework.inputfile
+        testurl = self.framework.testurl
         outputfile = self.framework.outputfile
         workspace = self.framework.workspace
 
         # Test with missing required inputs
         # Test with no inputs
         inputs = {}
-        response=dostuffer(inputs)
-#        print 'response1:\n%s' % response
+        response=downloader(inputs)
+        #print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
-        # Test with missing inputfile
+        # Test with missing url
         inputs['outputfile'] = outputfile
         inputs['workspace'] = workspace
-        response=dostuffer(inputs)
-#        print 'response2:\n%s' % response
-        s = 'success without inputfile'
+        response=downloader(inputs)
+        #print 'response2:\n%s' % response
+        s = 'success without url'
         self.assertFalse(response['success'], s)
 
         # Test with missing optional inputs
         inputs = {}
-        inputs['inputfile'] = inputfile
-        response=dostuffer(inputs)
-#        print 'response3:\n%s' % response
+        inputs['url'] = testurl
+        response=downloader(inputs)
+        #print 'response3:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
         # Remove the file created by this test, as the Framework does not know about it
         if os.path.isfile(response['outputfile']):
             os.remove(response['outputfile'])
 
-    def test_dostuffer(self):
-        print 'testing dostuffer'
-        inputfile = self.framework.inputfile
+    def test_downloader(self):
+        print 'testing downloader'
+        testurl = self.framework.testurl
         outputfile = self.framework.outputfile
         workspace = self.framework.workspace
-
+        
         inputs = {}
-        inputs['inputfile'] = inputfile
+        inputs['url'] = testurl
         inputs['outputfile'] = outputfile
         inputs['workspace'] = workspace
-#        print 'actor_template_test.py: inputs:\n%s' % inputs
+        #print 'downloader_test.py: inputs:\n%s' % inputs
 
         # Collect terms
-        response=dostuffer(inputs)
-#        print 'response:\n%s' % response
+        response=downloader(inputs)
+        #print 'response:\n%s' % response
         success = response['success']
-        s = 'stuff not done with inputfile %s' % inputfile
-        s += ' to outputfile %s' % outputfile
-        s += ' in workspace %s' % workspace
+        s = 'file not downloaded from %s' % testurl 
         self.assertTrue(success, s)
 
 if __name__ == '__main__':
-    print '=== actor_template_test.py ==='
+    print '=== downloader_test.py ==='
     unittest.main()

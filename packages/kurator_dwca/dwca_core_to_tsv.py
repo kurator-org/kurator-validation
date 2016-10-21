@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2016-10-17T15:17+02:00"
+__version__ = "dwca_core_to_tsv.py 2016-10-21T13:12+02:00"
 
 from dwcareader_utils import short_term_names
 from dwca_vocab_utils import dwc_ordered_header
@@ -40,7 +40,7 @@ except ImportError:
     warnings.warn(s)
 
 # Requires the Python Darwin Core Archive Reader from 
-#   https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
+#  https://github.com/BelgianBiodiversityPlatform/python-dwca-reader
 try:
     from dwca.read import DwCAReader
     from dwca.read import GBIFResultsReader
@@ -143,7 +143,6 @@ def dwca_core_to_tsv(options):
             with GBIFResultsReader(inputfile) as dwcareader:
                 rowcount = write_core_csv_file(dwcareader, outputfile)
                 
-#            dwcareader = GBIFResultsReader(inputfile)
         except Exception, e:
             message = 'Error %s ' % e
             message += 'reading GBIF archive: %s. %s' % (inputfile, __version__)
@@ -154,7 +153,6 @@ def dwca_core_to_tsv(options):
         try:
             with DwCAReader(inputfile) as dwcareader:
                 rowcount = write_core_csv_file(dwcareader, outputfile)
-#        dwcareader = DwCAReader(inputfile)
         except Exception, e:
             message = 'Error %s reading archive %s. %s' % (e, inputfile, __version__)
             returnvals = [workspace, outputfile, rowcount, success, message, artifacts]

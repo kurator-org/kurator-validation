@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter_test.py 2016-09-06T13:19+02:00"
+__version__ = "term_recommendation_reporter_test.py 2016-10-21T12:31+02:00"
 
 # This file contains unit tests for the term_recommendation_reporter function.
 #
@@ -22,17 +22,16 @@ __version__ = "term_recommendation_reporter_test.py 2016-09-06T13:19+02:00"
 #
 # python term_recommendation_reporter_test.py
 
-from term_recommendation_reporter import term_recommendation_reporter
+from kurator_dwca.term_recommendation_reporter import term_recommendation_reporter
 import os
 import unittest
 
 class TermRecommendationReporterFramework():
     """Test framework for the term recommendation reporter."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
+    testdatapath = '../data/tests/'
 
     # input data files to tests, don't remove these
-#    testfile1 = testdatapath + 'test_eight_specimen_records.csv'
     testfile1 = testdatapath + 'test_month_report.txt'
     monthvocabfile = testdatapath + 'test_vocab_month.txt'
 
@@ -71,7 +70,7 @@ class TermRecommendationReporterTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=term_recommendation_reporter(inputs)
-#        print 'response1:\n%s' % response
+        #print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
@@ -79,7 +78,7 @@ class TermRecommendationReporterTestCase(unittest.TestCase):
         inputs['vocabfile'] = monthvocabfile
         inputs['key'] = 'month'
         response=term_recommendation_reporter(inputs)
-#        print 'response2:\n%s' % response
+        #print 'response2:\n%s' % response
         s = 'success without inputfile'
         self.assertFalse(response['success'], s)
 
@@ -88,7 +87,7 @@ class TermRecommendationReporterTestCase(unittest.TestCase):
         inputs['inputfile'] = testfile
         inputs['key'] = 'month'
         response=term_recommendation_reporter(inputs)
-#        print 'response3:\n%s' % response
+        #print 'response3:\n%s' % response
         s = 'success without vocabfile'
         self.assertFalse(response['success'], s)
 
@@ -97,7 +96,7 @@ class TermRecommendationReporterTestCase(unittest.TestCase):
         inputs['inputfile'] = testfile
         inputs['vocabfile'] = monthvocabfile
         response=term_recommendation_reporter(inputs)
-#        print 'response4:\n%s' % response
+        #print 'response4:\n%s' % response
         s = 'success without key'
         self.assertFalse(response['success'], s)
 
@@ -112,11 +111,11 @@ class TermRecommendationReporterTestCase(unittest.TestCase):
         inputs['key'] = 'month'
         inputs['outputfile'] = testreportfile
         inputs['vocabfile'] = monthvocabfile
-#        print 'inputs:\n%s' % inputs
+        #print 'inputs:\n%s' % inputs
 
         # Create the report
         response=term_recommendation_reporter(inputs)
-#        print 'response:\n%s' % response
+        #print 'response:\n%s' % response
         success = response['success']
         s = 'term recommendation failed: %s' % response['message']
         self.assertTrue(success, s)

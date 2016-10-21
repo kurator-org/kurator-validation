@@ -14,20 +14,20 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_filter_test.py 2016-10-04T16:36+02:00"
+__version__ = "text_file_field_stripper_test.py 2016-10-21T12:53+02:00"
 
-# This file contains unit tests for the text_file_filter function.
+# This file contains unit tests for the text_file_field_stripper function.
 #
 # Example:
 #
-# python text_file_filter_test.py
+# python text_file_field_stripper_test.py
 
-from text_file_filter import text_file_filter
-from dwca_utils import read_header
-from dwca_utils import csv_file_dialect
-from dwca_utils import csv_file_encoding
-from dwca_utils import read_csv_row
-from dwca_utils import count_rows
+from kurator_dwca.text_file_field_stripper import text_file_field_stripper
+from kurator_dwca.dwca_utils import read_header
+from kurator_dwca.dwca_utils import csv_file_dialect
+from kurator_dwca.dwca_utils import csv_file_encoding
+from kurator_dwca.dwca_utils import read_csv_row
+from kurator_dwca.dwca_utils import count_rows
 import os
 import unittest
 
@@ -42,10 +42,10 @@ except ImportError:
     s += "$JYTHON_HOME/bin/pip install unicodecsv"
     warnings.warn(s)
 
-class TextFileFilterFramework():
+class TextFileFieldStripperFramework():
     """Test framework for the text file filter."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
+    testdatapath = '../data/tests/'
 
     # input data files to tests, don't remove these
     testinputfile = testdatapath + 'test_eight_specimen_records.csv'
@@ -60,10 +60,10 @@ class TextFileFilterFramework():
             os.remove(testreportfile)
         return True
 
-class TextFileFilterTestCase(unittest.TestCase):
+class TextFileFieldStripperTestCase(unittest.TestCase):
     """Unit tests."""
     def setUp(self):
-        self.framework = TextFileFilterFramework()
+        self.framework = TextFileFieldStripperFramework()
 
     def tearDown(self):
         self.framework.dispose()
@@ -83,80 +83,68 @@ class TextFileFilterTestCase(unittest.TestCase):
         # Test with missing required inputs
         # Test with no inputs
         inputs = {}
-        response=text_file_filter(inputs)
-#        print 'response1:\n%s' % response
+        response=text_file_field_stripper(inputs)
+        #print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
-        # Test with missing termname
+        # Test with missing termlist
         inputs['inputfile'] = testinputfile
         inputs['outputfile'] = testreportfile
         inputs['workspace'] = workspace
-        response=text_file_filter(inputs)
-#        print 'response2:\n%s' % response
-        s = 'success without termname'
+        response=text_file_field_stripper(inputs)
+        #print 'response2:\n%s' % response
+        s = 'success without termlist'
         self.assertFalse(response['success'], s)
 
         # Test with missing inputfile
         inputs = {}
-        inputs['termname'] = 'year'
+        inputs['termlist'] = 'country'
         inputs['outputfile'] = testreportfile
         inputs['workspace'] = workspace
-        response=text_file_filter(inputs)
-#        print 'response3:\n%s' % response
+        response=text_file_field_stripper(inputs)
+        #print 'response3:\n%s' % response
         s = 'success without input file'
-        self.assertFalse(response['success'], s)
-
-        # Test with missing matchingvalue
-        inputs = {}
-        inputs['termname'] = 'year'
-        inputs['outputfile'] = testreportfile
-        inputs['workspace'] = workspace
-        inputs['inputfile'] = testinputfile
-        response=text_file_filter(inputs)
-#        print 'response4:\n%s' % response
-        s = 'success without matching value'
         self.assertFalse(response['success'], s)
 
         # Test with missing optional inputs
         inputs = {}
         inputs['inputfile'] = testinputfile
-        inputs['termname'] = 'year'
-        inputs['matchingvalue'] = '1990'
-        response=text_file_filter(inputs)
-#        print 'response5:\n%s' % response
+        inputs['outputfile'] = testreportfile
+        inputs['termlist'] = 'country'
+        response=text_file_field_stripper(inputs)
+        #print 'response5:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
         # Remove the file created by this test, as the Framework does not know about it
         if os.path.isfile(response['outputfile']):
             os.remove(response['outputfile'])
 
-    def test_text_file_filter(self):
-        print 'testing text_file_filter'
+    def test_text_file_field_stripper(self):
+        print 'testing text_file_field_stripper'
         testinputfile = self.framework.testinputfile
         testreportfile = self.framework.testreportfile
         workspace = self.framework.testdatapath
         outputfile = '%s/%s' % (workspace.rstrip('/'), testreportfile)
-        termname = 'year'
-        matchingvalue = '1990'
+        termlist = 'country|stateProvince'
         
         inputs = {}
         inputs['inputfile'] = testinputfile
-        inputs['termname'] = termname
-        inputs['matchingvalue'] = matchingvalue
+        inputs['termlist'] = termlist
         inputs['workspace'] = workspace
         inputs['outputfile'] = testreportfile
+        inputs['separator'] = '|'
 
         # Create the report
-#        print 'inputs:\n%s' % inputs
-        response=text_file_filter(inputs)
-#        print 'response:\n%s' % response
+        #print 'inputs:\n%s' % inputs
+        response=text_file_field_stripper(inputs)
+        #print 'response:\n%s' % response
         success = response['success']
         s = 'text file filter failed: %s' % response['message']
         self.assertTrue(success, s)
 
         outputfile = response['outputfile']
-#        print 'response:\n%s' % response
+        #print 'response:\n%s' % response
         s = 'Output file %s not created' % outputfile
         self.assertTrue(os.path.isfile(outputfile), s)
 
@@ -164,23 +152,16 @@ class TextFileFilterTestCase(unittest.TestCase):
         dialect = csv_file_dialect(outputfile)
         encoding = csv_file_encoding(outputfile)
 
-        matches = 0
-        # Iterate through all rows in the input file
-        for row in read_csv_row(outputfile, dialect=dialect, encoding=encoding, 
-            header=True, fieldnames=header):
-            #print 'row: %s' % row
-            if row[termname] == matchingvalue:
-                matches +=1
-        expected = 5
-        s = 'Number of matches in output (%s) not as expected (%s)' % (matches, expected)
-        self.assertEqual(matches, expected, s)
-
-        matches = count_rows(outputfile)
-        expected = 7
-        s = 'Number of matches of %s in %s ' % (matchingvalue, outputfile)
-        s += 'was %s, not as expected (%s) ' % (matches, expected)
-        self.assertEqual(matches, expected, s)
+        rows = count_rows(outputfile)
+        expected = 10
+        s = 'Number of rows in %s ' % outputfile
+        s += 'was %s, not as expected (%s) ' % (rows, expected)
+        self.assertEqual(rows, expected, s)
+        
+        expected = ['country', 'stateprovince']
+        s = 'Header: %s, not as expected: %s' % (header, expected)
+        self.assertEqual(header, expected, s)
         
 if __name__ == '__main__':
-    print '=== text_file_filter_test.py ==='
+    print '=== text_file_field_stripper_test.py ==='
     unittest.main()

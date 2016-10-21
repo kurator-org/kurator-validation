@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_unknown_reporter.py 2016-10-20T16:49+02:00"
+__version__ = "term_unknown_reporter.py 2016-10-21T13:16+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -173,8 +173,6 @@ def term_unknown_reporter(options):
     # Let extract_values_from_file figure out the dialect of inputfile.
     checklist = extract_values_from_file(inputfile, fields, separator, encoding=encoding,
         function=ustripstr)
-    #for c in checklist:
-    #    print c
 
     if checklist is None or len(checklist)==0:
         message = 'No values of %s from %s. %s' % (key, inputfile, __version__)

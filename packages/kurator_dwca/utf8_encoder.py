@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "utf8_encoder.py 2016-10-04T12:01+02:00"
+__version__ = "utf8_encoder.py 2016-10-21T12:50+02:00"
 
 from dwca_utils import utf8_file_encoder
 from dwca_utils import response
@@ -37,7 +37,7 @@ def utf8_encoder(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     '''
-    # print '%s options: %s' % (__version__, options)
+    #print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 

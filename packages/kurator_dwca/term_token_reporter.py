@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_token_reporter.py 2016-10-06T10:46+02:00"
+__version__ = "term_token_reporter.py 2016-10-21T12:48+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -62,7 +62,7 @@ def term_token_reporter(options):
         message - an explanation of the reason if success=False
         artifacts - a dictionary of persistent objects created
     '''
-    # print '%s options: %s' % (__version__, options)
+    #print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 
@@ -186,7 +186,7 @@ def token_report(reportfile, tokens, dialect=None):
                 writer.writerow({'token':key, 'rowcount':value['rowcount'], \
                     'totalcount':value['totalcount'] })
     else:
-        # Print the report
+        # Write the report to stdout
         for key, value in tokens['tokenlist'].iteritems():
             print 'token: %s rowcount: %s totalcount: %s' % (key, value['rowcount'], \
                 value['totalcount'])

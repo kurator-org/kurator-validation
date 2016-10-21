@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_extractor_test.py 2016-10-08T12:25+02:00"
+__version__ = "vocab_extractor_test.py 2016-10-21T13:05+02:00"
 
 # This file contains unit test for the vocab_extractor function.
 #
@@ -22,15 +22,15 @@ __version__ = "vocab_extractor_test.py 2016-10-08T12:25+02:00"
 #
 # python vocab_extractor_test.py
 
-from vocab_extractor import vocab_extractor
-from dwca_utils import read_header
+from kurator_dwca.vocab_extractor import vocab_extractor
+from kurator_dwca.dwca_utils import read_header
 import os
 import unittest
 
 class VocabExtractorFramework():
     """Test framework for the vocab loader."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
+    testdatapath = '../data/tests/'
 
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_eight_specimen_records.csv'
@@ -38,13 +38,13 @@ class VocabExtractorFramework():
     testfile3 = testdatapath + 'test_three_specimen_records.txt'
 
     # output data files from tests, remove these in dispose()
-#    testvocabfile = testdatapath + 'test_vocab_file.csv'
+    testvocabfile = testdatapath + 'test_vocab_file.csv'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-#         testvocabfile = self.testvocabfile
-#         if os.path.isfile(testvocabfile):
-#             os.remove(testvocabfile)
+        testvocabfile = self.testvocabfile
+        if os.path.isfile(testvocabfile):
+            os.remove(testvocabfile)
         return True
 
 class VocabExtractorTestCase(unittest.TestCase):
@@ -73,14 +73,14 @@ class VocabExtractorTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=vocab_extractor(inputs)
-#        print 'response1:\n%s' % response
+        #print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
         # Test with missing inputfile
         inputs['terms'] = 'year'
         response=vocab_extractor(inputs)
-#        print 'response2:\n%s' % response
+        #print 'response2:\n%s' % response
         s = 'success without inputfile'
         self.assertFalse(response['success'], s)
 
@@ -88,7 +88,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         inputs = {}
         inputs['inputfile'] = testfile
         response=vocab_extractor(inputs)
-#        print 'response3:\n%s' % response
+        #print 'response3:\n%s' % response
         s = 'success without inputfile'
         self.assertFalse(response['success'], s)
 
@@ -97,7 +97,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         inputs['inputfile'] = testfile
         inputs['termlist'] = 'year'
         response=vocab_extractor(inputs)
-#        print 'response4:\n%s' % response
+        #print 'response4:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
 
@@ -133,9 +133,9 @@ class VocabExtractorTestCase(unittest.TestCase):
         inputs['termlist'] = term
 
         # Extract distinct values of term
-#        print 'inputs:\n%s' % inputs
+        #print 'inputs:\n%s' % inputs
         response=vocab_extractor(inputs)
-#        print 'response:\n%s' % response
+        #print 'response:\n%s' % response
         values = response['extractedvalues']
         expected = ['1973', '1990', '2003', '2007']
         s = 'values of term %s\n%s\n' % (term, values)
@@ -144,10 +144,10 @@ class VocabExtractorTestCase(unittest.TestCase):
 
         term = 'fieldNumber'
         inputs['termlist'] = term
-#        print 'inputs:\n%s' % inputs
+        #print 'inputs:\n%s' % inputs
         response=vocab_extractor(inputs)
         values = response['extractedvalues']
-#        print 'response:\n%s' % response
+        #print 'response:\n%s' % response
         s = 'values of term %s not extracted correctly from %s' % (term, testfile)
         v = ['107702', '126', '1940', '2503', '2938', '2940', '3000', '606']
         self.assertEqual(values, v, s)
@@ -156,11 +156,11 @@ class VocabExtractorTestCase(unittest.TestCase):
         term = 'month'
         inputs['inputfile'] = testfile
         inputs['termlist'] = term
-#        print 'inputs:\n%s' % inputs
+        #print 'inputs:\n%s' % inputs
         response=vocab_extractor(inputs)
         values = response['extractedvalues']
         expected = ['5', '6', 'V', 'VI']
-#        print 'response:\n%s' % response
+        #print 'response:\n%s' % response
         s = 'values of term %s:\n%s\n' % (term, values)
         s += 'not as expected: %s from %s' % (expected, testfile)
         self.assertEqual(values, expected, s)
@@ -174,9 +174,9 @@ class VocabExtractorTestCase(unittest.TestCase):
 
         # Extract distinct values of term
         response=vocab_extractor(inputs)
-#        print 'response1: %s' % response
+        #print 'response1: %s' % response
         values = response['extractedvalues']
-#        print '%s values: %s' % (term, values)
+        #print '%s values: %s' % (term, values)
         expected = ['UNITED STATES']
         s = 'values of term %s:\n%s\n' % (term, values)
         s += 'not as expected: %s from %s' % (expected, testfile)
@@ -187,7 +187,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         inputs['separator'] = '|'
         response=vocab_extractor(inputs)
         values = response['extractedvalues']
-#        print 'values: %s' % values
+        #print 'values: %s' % values
         expected = [
             'UNITED STATES|CALIFORNIA', 
             'UNITED STATES|COLORADO', 
@@ -204,7 +204,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         response=vocab_extractor(inputs)
         s = 'values of key %s not extracted correctly from %s' % (terms, testfile)
         values = response['extractedvalues']
-#        print 'values: %s' % values
+        #print 'values: %s' % values
         expected = ['ASTERACEAE']
         s = 'family values: %s\n' % values
         s += 'do not match expectation: %s' % expected
@@ -218,7 +218,7 @@ class VocabExtractorTestCase(unittest.TestCase):
         response=vocab_extractor(inputs)
         s = 'values of key %s not extracted correctly from %s' % (terms, testfile)
         values = response['extractedvalues']
-#        print 'values: %s' % values
+        #print 'values: %s' % values
         expected = ['MOZAMBIQUE|MAPUTO', U'SOUTH AFRICA|KWA-ZULU NATAL']
         s = 'country|stateprovince values: %s\n' % values
         s += 'do not match expectation: %s' % expected

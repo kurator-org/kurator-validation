@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector_test.py 2016-09-23T20:59+02:00"
+__version__ = "darwin_cloud_collector_test.py 2016-10-20T19:36+02:00"
 
 # This file contains unit test for the darwin_cloud_collector function.
 #
@@ -22,15 +22,15 @@ __version__ = "darwin_cloud_collector_test.py 2016-09-23T20:59+02:00"
 #
 # python darwin_cloud_collector_test.py
 
-from darwin_cloud_collector import darwin_cloud_collector
-from dwca_utils import read_header
+from kurator_dwca.darwin_cloud_collector import darwin_cloud_collector
+from kurator_dwca.dwca_utils import read_header
 import os
 import unittest
 
 class DarwinCloudCollectorFramework():
     """Test framework for the Darwin Cloud collector."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
+    testdatapath = '../data/tests/'
 
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_eight_specimen_records.csv'
@@ -71,14 +71,14 @@ class DarwinCloudCollectorTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=darwin_cloud_collector(inputs)
-#        print 'response1:\n%s' % response
+        #print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
         # Test with missing inputfile
         inputs['outputfile'] = outputfile
         response=darwin_cloud_collector(inputs)
-#        print 'response2:\n%s' % response
+        #print 'response2:\n%s' % response
         s = 'success without inputfile'
         self.assertFalse(response['success'], s)
 
@@ -86,15 +86,15 @@ class DarwinCloudCollectorTestCase(unittest.TestCase):
         inputs = {}
         inputs['inputfile'] = testfile1
         response=darwin_cloud_collector(inputs)
-#        print 'response3:\n%s' % response
+        #print 'response3:\n%s' % response
         s = 'success without outputfile'
         self.assertFalse(response['success'], s)
 
         # Test with missing optional inputs
         inputs['outputfile'] = outputfile
-#        print 'inputs:\n%s' % inputs
+        #print 'inputs:\n%s' % inputs
         response=darwin_cloud_collector(inputs)
-#        print 'response4:\n%s' % response
+        #print 'response4:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
         # Remove the file created by this test, as the Framework does not know about it
@@ -149,10 +149,10 @@ class DarwinCloudCollectorTestCase(unittest.TestCase):
 
         # Collect terms
         response=darwin_cloud_collector(inputs)
-#        print 'response1:\n%s' % response
+        #print 'response1:\n%s' % response
         addedvalues = response['addedvalues']
         expected = ['ID']
-#        print 'addedvalues:\n%s expected: %s' % (addedvalues,expected)
+        #print 'addedvalues:\n%s expected: %s' % (addedvalues,expected)
         s = 'From: %s\nFound:\n%s\nExpected:\n%s' % (testfile1, addedvalues, expected)
         self.assertEqual(addedvalues, expected, s)
 
@@ -160,7 +160,7 @@ class DarwinCloudCollectorTestCase(unittest.TestCase):
 
         # Collect terms
         response=darwin_cloud_collector(inputs)
-#        print 'response2:\n%s' % response
+        #print 'response2:\n%s' % response
         addedvalues = response['addedvalues']
         expected = ['BASISOFIDENTIFICATION', 'BCID', 'DAYCOLLECTED', 'DAYIDENTIFIED', 
             'EXTRACTIONID', 'FUNDINGSOURCE', 'GENETICTISSUETYPE', 'LENGTH', 
@@ -169,7 +169,7 @@ class DarwinCloudCollectorTestCase(unittest.TestCase):
             'SAMPLEOWNERINSTITUTIONCODE', 'SPECIES', 'SUBSPECIES', 'SUBSTRATUM', 
             'TISSUESTORAGEID', 'WEIGHT', 'WELLID', 'WORMSID', 'YEARCOLLECTED', 
             'YEARIDENTIFIED']
-#        print 'addedvalues:\n%s\nexpected:\n%s' % (addedvalues,expected)
+        #print 'addedvalues:\n%s\nexpected:\n%s' % (addedvalues,expected)
         s = 'From: %s\nFound:\n%s\nExpected:\n%s' % (testfile2, addedvalues, expected)
         self.assertEqual(addedvalues, expected, s)
 

@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_counter_test.py 2016-10-06T11:43+02:00"
+__version__ = "term_counter_test.py 2016-10-21T12:28+02:00"
 
 # This file contains unit test for the term_counter function.
 #
@@ -22,27 +22,27 @@ __version__ = "term_counter_test.py 2016-10-06T11:43+02:00"
 #
 # python term_counter_test.py
 
-from term_counter import term_counter
+from kurator_dwca.term_counter import term_counter
 import os
 import unittest
 
 class TermCounterFramework():
     """Test framework for the term counter."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
+    testdatapath = '../data/tests/'
 
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_eight_specimen_records.csv'
     testfile2 = testdatapath + 'test_three_specimen_records.txt'
 
     # output data files from tests, remove these in dispose()
-#    testvocabfile = testdatapath + 'test_vocab_file.csv'
+    testvocabfile = testdatapath + 'test_vocab_file.csv'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-#         testvocabfile = self.testvocabfile
-#         if os.path.isfile(testvocabfile):
-#             os.remove(testvocabfile)
+        testvocabfile = self.testvocabfile
+        if os.path.isfile(testvocabfile):
+            os.remove(testvocabfile)
         return True
 
 class TermCounterTestCase(unittest.TestCase):
@@ -69,14 +69,14 @@ class TermCounterTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=term_counter(inputs)
-#        print 'response1:\n%s' % response
+        #print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
         # Test with missing termname
         inputs['inputfile'] = testfile
         response=term_counter(inputs)
-#        print 'response2:\n%s' % response
+        #print 'response2:\n%s' % response
         s = 'success without termname'
         self.assertFalse(response['success'], s)
 
@@ -84,7 +84,7 @@ class TermCounterTestCase(unittest.TestCase):
         inputs = {}
         inputs['termname'] = 'year'
         response=term_counter(inputs)
-#        print 'response3:\n%s' % response
+        #print 'response3:\n%s' % response
         s = 'success without input file'
         self.assertFalse(response['success'], s)
 
@@ -99,7 +99,7 @@ class TermCounterTestCase(unittest.TestCase):
 
         # Extract distinct values of term
         response=term_counter(inputs)
-#        print 'response:\n%s' % response
+        #print 'response:\n%s' % response
         rowcount = response['rowcount']
         expected = 8
         s = 'rowcount for term %s not extracted correctly from %s' % (termname, testfile)
@@ -111,7 +111,7 @@ class TermCounterTestCase(unittest.TestCase):
         inputs['termname'] = term
         response=term_counter(inputs)
         rowcount = response['rowcount']
-#        print 'response:\n%s' % response
+        #print 'response:\n%s' % response
         s = 'rowcount for term %s not extracted correctly from %s' % (term, testfile)
         self.assertEqual(rowcount, 1, s)
 

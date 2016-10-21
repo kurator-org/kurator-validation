@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwinize_header_test.py 2016-10-06T17:00+02:00"
+__version__ = "darwinize_header_test.py 2016-10-21T12:24+02:00"
 
 # This file contains unit test for the darwinize_header function.
 #
@@ -22,17 +22,17 @@ __version__ = "darwinize_header_test.py 2016-10-06T17:00+02:00"
 #
 # python darwinize_header_test.py
 
-from darwinize_header import darwinize_header
-from dwca_vocab_utils import terms_not_in_dwc
-from dwca_utils import read_header
+from kurator_dwca.darwinize_header import darwinize_header
+from kurator_dwca.dwca_vocab_utils import terms_not_in_dwc
+from kurator_dwca.dwca_utils import read_header
 import os
 import unittest
 
 class DarwinizeHeaderFramework():
     """Test framework for Darwinize Header."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
-    vocabpath = './data/vocabularies/'
+    testdatapath = '../data/tests/'
+    vocabpath = '../data/vocabularies/'
 
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_eight_records_utf8_lf.csv'
@@ -198,8 +198,8 @@ class DarwinizeHeaderTestCase(unittest.TestCase):
         response=darwinize_header(inputs)
         outfilelocation = '%s/%s' % (testdatapath, outputfile)
         header = read_header(outfilelocation)
-#        print 'inputs1:\n%s' % inputs
-#        print 'response1:\n%s' % response
+        #print 'inputs1:\n%s' % inputs
+        #print 'response1:\n%s' % response
         expected = ['catalogNumber', 'recordedBy', 'fieldNumber', 'year', 'month', 'day',
             'decimalLatitude', 'decimalLongitude', 'geodeticDatum', 'country', 
             'stateProvince', 'county', 'locality', 'family', 'scientificName',
@@ -220,7 +220,7 @@ class DarwinizeHeaderTestCase(unittest.TestCase):
         # Darwinize the header
         response=darwinize_header(inputs)
         header = read_header(outfilelocation)
-#        print 'response2:\n%s' % response
+        #print 'response2:\n%s' % response
         expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', 
         'decimalLatitude', 'decimalLongitude', 'coordinateUncertaintyInMeters', 
         'georeferenceProtocol', 'year', 'month', 'day', 'genus', 'specificEpithet', 
@@ -257,7 +257,7 @@ class DarwinizeHeaderTestCase(unittest.TestCase):
         # Darwinize the header
         response=darwinize_header(inputs)
         header = read_header(outfilelocation)
-#        print 'response2:\n%s' % response
+        #print 'response2:\n%s' % response
         expected = ['id', 'institutionCode', 'collectionCode', 'basisOfRecord', 
             'occurrenceID', 'catalogNumber', 'otherCatalogNumbers', 'kingdom', 'phylum',
             'class', 'order', 'family', 'scientificName', 'scientificNameAuthorship',

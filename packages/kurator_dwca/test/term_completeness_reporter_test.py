@@ -14,20 +14,20 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_field_stripper_test.py 2016-10-18T22:34+02:00"
+__version__ = "term_completeness_reporter_test.py 2016-10-20T19:46+02:00"
 
-# This file contains unit tests for the text_file_field_stripper function.
+# This file contains unit tests for the term_completeness_reporter function.
 #
 # Example:
 #
-# python text_file_field_stripper_test.py
+# python term_completeness_reporter_test.py
 
-from text_file_field_stripper import text_file_field_stripper
-from dwca_utils import read_header
-from dwca_utils import csv_file_dialect
-from dwca_utils import csv_file_encoding
-from dwca_utils import read_csv_row
-from dwca_utils import count_rows
+from kurator_dwca.term_completeness_reporter import term_completeness_reporter
+from kurator_dwca.dwca_utils import read_header
+from kurator_dwca.dwca_utils import csv_file_dialect
+from kurator_dwca.dwca_utils import csv_file_encoding
+from kurator_dwca.dwca_utils import read_csv_row
+from kurator_dwca.dwca_utils import count_rows
 import os
 import unittest
 
@@ -42,16 +42,16 @@ except ImportError:
     s += "$JYTHON_HOME/bin/pip install unicodecsv"
     warnings.warn(s)
 
-class TextFileFieldStripperFramework():
+class TermCompletenessReporterFramework():
     """Test framework for the text file filter."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
+    testdatapath = '../data/tests/'
 
     # input data files to tests, don't remove these
     testinputfile = testdatapath + 'test_eight_specimen_records.csv'
 
     # output data files from tests, remove these in dispose()
-    testreportfile = 'test_tefile_filter_file.csv'
+    testreportfile = 'test_term_completeness_file.csv'
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
@@ -60,10 +60,10 @@ class TextFileFieldStripperFramework():
             os.remove(testreportfile)
         return True
 
-class TextFileFieldStripperTestCase(unittest.TestCase):
+class TermCompletenessReporterTestCase(unittest.TestCase):
     """Unit tests."""
     def setUp(self):
-        self.framework = TextFileFieldStripperFramework()
+        self.framework = TermCompletenessReporterFramework()
 
     def tearDown(self):
         self.framework.dispose()
@@ -83,26 +83,15 @@ class TextFileFieldStripperTestCase(unittest.TestCase):
         # Test with missing required inputs
         # Test with no inputs
         inputs = {}
-        response=text_file_field_stripper(inputs)
+        response=term_completeness_reporter(inputs)
         #print 'response1:\n%s' % response
-        s = 'success without any required inputs'
-        self.assertFalse(response['success'], s)
-
-        # Test with missing termlist
-        inputs['inputfile'] = testinputfile
-        inputs['outputfile'] = testreportfile
-        inputs['workspace'] = workspace
-        response=text_file_field_stripper(inputs)
-        #print 'response2:\n%s' % response
-        s = 'success without termlist'
+        s = 'Success without any required inputs'
         self.assertFalse(response['success'], s)
 
         # Test with missing inputfile
         inputs = {}
-        inputs['termlist'] = 'country'
         inputs['outputfile'] = testreportfile
-        inputs['workspace'] = workspace
-        response=text_file_field_stripper(inputs)
+        response=term_completeness_reporter(inputs)
         #print 'response3:\n%s' % response
         s = 'success without input file'
         self.assertFalse(response['success'], s)
@@ -111,8 +100,7 @@ class TextFileFieldStripperTestCase(unittest.TestCase):
         inputs = {}
         inputs['inputfile'] = testinputfile
         inputs['outputfile'] = testreportfile
-        inputs['termlist'] = 'country'
-        response=text_file_field_stripper(inputs)
+        response=term_completeness_reporter(inputs)
         #print 'response5:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
@@ -120,27 +108,24 @@ class TextFileFieldStripperTestCase(unittest.TestCase):
         if os.path.isfile(response['outputfile']):
             os.remove(response['outputfile'])
 
-    def test_text_file_field_stripper(self):
-        print 'testing text_file_field_stripper'
+    def test_term_completeness_reporter(self):
+        print 'testing term_completeness_reporter'
         testinputfile = self.framework.testinputfile
         testreportfile = self.framework.testreportfile
         workspace = self.framework.testdatapath
         outputfile = '%s/%s' % (workspace.rstrip('/'), testreportfile)
-        termlist = 'country|stateProvince'
         
         inputs = {}
         inputs['inputfile'] = testinputfile
-        inputs['termlist'] = termlist
         inputs['workspace'] = workspace
         inputs['outputfile'] = testreportfile
-        inputs['separator'] = '|'
 
         # Create the report
         #print 'inputs:\n%s' % inputs
-        response=text_file_field_stripper(inputs)
+        response=term_completeness_reporter(inputs)
         #print 'response:\n%s' % response
         success = response['success']
-        s = 'text file filter failed: %s' % response['message']
+        s = 'Term completeness counter failed: %s' % response['message']
         self.assertTrue(success, s)
 
         outputfile = response['outputfile']
@@ -149,19 +134,17 @@ class TextFileFieldStripperTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(outputfile), s)
 
         header = read_header(outputfile)
-        dialect = csv_file_dialect(outputfile)
-        encoding = csv_file_encoding(outputfile)
 
         rows = count_rows(outputfile)
-        expected = 10
+        expected = 24
         s = 'Number of rows in %s ' % outputfile
         s += 'was %s, not as expected (%s) ' % (rows, expected)
         self.assertEqual(rows, expected, s)
         
-        expected = ['country', 'stateprovince']
+        expected = ['field', 'count']
         s = 'Header: %s, not as expected: %s' % (header, expected)
         self.assertEqual(header, expected, s)
         
 if __name__ == '__main__':
-    print '=== text_file_field_stripper_test.py ==='
+    print '=== term_completeness_reporter_test.py ==='
     unittest.main()

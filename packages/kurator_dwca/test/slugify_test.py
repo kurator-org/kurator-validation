@@ -3,7 +3,7 @@
 __version__ = "slugify_test.py 2016-10-17T14:45+02:00"
 
 import unittest
-from slugify import slugify
+from kurator_dwca.slugify import slugify
 
 class TestSlugification(unittest.TestCase):
 

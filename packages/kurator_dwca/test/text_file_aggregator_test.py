@@ -14,10 +14,10 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator_test.py 2016-05-27T22:03-03:00"
+__version__ = "text_file_aggregator_test.py 2016-10-21T12:39+02:00"
 
-from text_file_aggregator import text_file_aggregator
-from dwca_utils import read_header
+from kurator_dwca.text_file_aggregator import text_file_aggregator
+from kurator_dwca.dwca_utils import read_header
 import os
 import unittest
 
@@ -30,7 +30,7 @@ import unittest
 class TextFileAggregatorFramework():
     """Test framework for the text file aggregator."""
     # location for the test inputs and outputs
-    testdatapath = './data/tests/'
+    testdatapath = '../data/tests/'
     csvcompositepath = testdatapath + 'test_csv*.csv'
     tsvcompositepath = testdatapath + 'test_tsv*.txt'
     mixedcompositepath = testdatapath + 'test_*_specimen_records.*'
@@ -62,7 +62,7 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         # Test with no inputs
         inputs = {}
         response=text_file_aggregator(inputs)
-#        print 'response1:\n%s' % response
+        #print 'response1:\n%s' % response
         s = 'success without any required inputs'
         self.assertFalse(response['success'], s)
 
@@ -70,7 +70,7 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         inputs = {}
         inputs['inputpath'] = inputpath
         response=text_file_aggregator(inputs)
-#        print 'response2:\n%s' % response
+        #print 'response2:\n%s' % response
         s = 'no output file produced with required inputs'
         self.assertTrue(response['success'], s)
         # Remove the file created by this test, as the Framework does not know about it
@@ -89,12 +89,12 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         inputs['inputdialect'] = 'tsv'
         inputs['workspace'] = workspace
 
-#        print 'inputs:\n%s' % (inputs)
+        #print 'inputs:\n%s' % (inputs)
 
         # Aggregate text file
         response=text_file_aggregator(inputs)
 
-#        print 'inputs:\n%s\nresponse:\n%s' % (inputs, response)
+        #print 'inputs:\n%s\nresponse:\n%s' % (inputs, response)
         outputfile = response['outputfile']
         self.assertTrue(os.path.isfile(outputfile), outputfile + ' does not exist')
         self.assertEqual(response['aggregaterowcount'], 6, 'incorrect number of rows')
@@ -107,7 +107,7 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         modelheader.append('materialSampleID')
         modelheader.append('phylum')
         modelheader.append('principalInvestigator')
-#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
+        #print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -126,7 +126,7 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         # Aggregate text file
         response=text_file_aggregator(inputs)
 
-#        print 'inputs:\n%s\nresponse:\n%s' % (inputs, response)
+        #print 'inputs:\n%s\nresponse:\n%s' % (inputs, response)
         outputfile = response['outputfile']
         self.assertTrue(os.path.isfile(outputfile), outputfile + ' does not exist')
         self.assertEqual(response['aggregaterowcount'], 6, 'incorrect number of rows')
@@ -140,7 +140,7 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         modelheader.append('materialSampleID')
         modelheader.append('phylum')
         modelheader.append('principalInvestigator')
-#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
+        #print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 6, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
@@ -241,7 +241,7 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         modelheader.append('year')
         modelheader.append('yearCollected')
         modelheader.append('yearIdentified')
-#        print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
+        #print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 77, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
 
