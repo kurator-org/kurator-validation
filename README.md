@@ -8,7 +8,7 @@ This README describes how one Python class in the library, [WoRMSService](https:
 Other Python classes made available through this package may be used similarly.  We recommend using the approaches described in this README to develop, test, and distribute your own data curation classes, packages, actors, and workflows that work with the Kurator software toolkit.
 
 The TDWG 2015 presentation [Data cleaning with the Kurator toolkit: Bridging the gap between conventional scripting and 
-high-performance workflow automation](http://www.slideshare.net/TimothyMcPhillips/data-cleaning-with-the-kurator-toolkit-bridging-the-gap-between-conventional-scripting-and-highperformance-workflow-automation) provides an overview of the Kurator project and tools described in this README.  For information about the **Kurator-Akka** workflow framework please see the [README](https://github.com/kurator-org/kurator-akka/blob/master/README.md) in the [Kurator-Akka](https://github.com/kurator-org/kurator-akka) repository.  
+high-performance workflow automation](http://www.slideshare.net/TimothyMcPhillips/data-cleaning-with-the-kurator-toolkit-bridging-the-gap-between-conventional-scripting-and-highperformance-workflow-automation) provides an overview of the Kurator project and tools described in this README.  For information about the **Kurator-Akka** workflow framework please see the [README](https://github.com/kurator-org/kurator-akka/blob/master/README.md) in the [Kurator-Akka](https://github.com/kurator-org/kurator-akka) repository.
 
 Structure of this repository
 ----------------------------
@@ -28,11 +28,11 @@ src/test/resources   | Resource files and test data available to Java-based test
 
 ##### Python library layout
 
-All python code provided with kurator-validation is organized as Python packages stored under the `python` directory.  Each package can include Python modules and classes that can be used directly from Python scripts for data cleaning; example scripts using these modules and classes; and **Kurator-Akka** workflows that employ the same Python modules and classes.  The next section of this README illustrates how to use either scripts or workflow to accomplish the same data cleaning tasks.
+All python code provided with kurator-validation is organized as Python packages stored under the `packages` directory.  Each package includes Python modules and classes that can be used directly from Python scripts for data cleaning; example Python scripts using these modules and classes; and **Kurator-Akka** workflows that employ the same Python modules and classes. The next section of this README illustrates how to use either scripts or workflow to accomplish the same data cleaning tasks.
 
 Example: Validating names using WoRMS
 -------------------------------------
-This section demonstrates how one can validate, correct, or reject data using a specific web service as a reference. The [WoRMS web service](http://marinespecies.org/aphia.php?p=webservice) allows the standard WoRMS taxononmy to be searched by taxon name.  The search may be for an exact match, or for similar names using a fuzzy match.  The kurator-validation package provides (1) a Python class for invoking the WoRMS web service; (2) an example script using this class to access the service and thereby clean a data set; (3) a Python-based actor for performing this service within the context of a **Kurator-Akka** workflow; and (4) a declaration of a workflow using this actor.
+This section demonstrates how one can validate, correct, or reject data using a specific web service as a reference. The [WoRMS web service](http://marinespecies.org/aphia.php?p=webservice) allows the standard WoRMS taxononomy to be searched by taxon name.  The search may be for an exact match, or for similar names using a fuzzy match.  The kurator-validation package provides (1) a Python class for invoking the WoRMS web service; (2) an example script using this class to access the service and thereby clean a data set; (3) a Python-based actor for performing this service within the context of a **Kurator-Akka** workflow; and (4) a declaration of a workflow using this actor.
 
 ## The WoRMSService class
 
@@ -82,11 +82,14 @@ The `WoRMSService` class can be used in other scripts that import the class defi
 
     from org.kurator.validation.services.WoRMSService import WoRMSService
 
-In order for Python to find the `org.kurator.validation.services.WoRMSService` package, the directory containing the root of this package must be present in the `PYTHONPATH` environment variable (`JYTHONPATH` if using Jython).  In a bash shell, the command to add the necessary path to the `PYTHONPATH` variables will be similar to this (replace `/Users/myhomedir/kurator-validation/` below with the path to the cloned repository):
+In order for Python to find the `org.kurator.validation.services.WoRMSService` package, the directory containing the root of this package must be present in the `PYTHONPATH` environment variable. If using Jython (the Java implementation of Python) or **Kurator-Akka** (which uses Jython) then the `JYTHONPATH` variable must be set instead of (or in addition to) `PYTHONPATH`. In a bash shell, the command to add the necessary path to the `PYTHONPATH`  or `JYTHONPATH` variables will be similar to this (replace `/Users/myhomedir/kurator-validation/` below with the path to the cloned repository):
 
-    export PYTHONPATH="/Users/myhomedir/kurator-validation/src/main/python/:$PYTHONPATH"
-
-The script [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/scripts/WoRMS/clean_data_using_worms.py) illustrates how `WoRMSService` can be used in a standalone Python script.  The script also illustrates the use of [YesWorkflow](https://github.com/yesworkflow-org/yw-prototypes) comments to document how data flows through the various operations in the script.  The YesWorkflow rendering of the *process view* of this script is as follows:
+    export PYTHONPATH="/Users/myhomedir/kurator-validation/packages/:$PYTHONPATH"
+or 
+    
+    export JYTHONPATH="/Users/myhomedir/kurator-validation/packages/:$JYTHONPATH"
+   
+The script [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/scripts/WoRMS/clean_data_using_worms.py) illustrates how `WoRMSService` can be used in a standalone Python script. The script also illustrates the use of [YesWorkflow](https://github.com/yesworkflow-org/yw-prototypes) comments to document how data flows through the various operations in the script.  The YesWorkflow rendering of the *process view* of this script is as follows:
 
 ![process view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/process.png)
 
