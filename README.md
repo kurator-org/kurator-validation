@@ -97,7 +97,7 @@ The process view reveals only the data processing steps (green boxes in the figu
 
 The arrows between the boxes above represent their dataflow dependencies, but the data items themselves are hidden.  The *combined view*, below, represents the process blocks together with the data (yellow rounded boxes) and parameters (white rounded boxes) that each processing step consumes and produces:
 
-![combined view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/combined.png)
+![combined view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/packages/kurator_worms/scripts/combined.png)
 
 Besides revealing the input, intermediate, and output data items produced by a run of the script (the yellow rounded boxes), this figure shows that the names of the input and output files are named by the parameters `input_data_file_name`, `rejected_data_file_name`, and `cleaned_data_file_name`.
 
@@ -138,7 +138,7 @@ The WoRMSService methods are called from the code for the block named `find_matc
 
 The comments starting with `@BEGIN`, `@IN`, `@OUT`, and `@END` are the YesWorkflow annotations that identify this block of code and connect it via variable names to the other blocks in the figures above.
 
-The script is used by calling the `clean_data_using_worms()` function defined in the script.  The `__main__` block at the end of [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/scripts/WoRMS/clean_data_using_worms.py) demonstrates the use of the function using the input file `demo_input.csv` which is provided in the directory with the script:
+The script is used by calling the `clean_data_using_worms()` function defined in the script.  The `__main__` block at the end of [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/packages/kurator_worms/scripts/clean_data_using_worms.py) demonstrates the use of the function using the input file `demo_input.csv` which is provided in the directory with the script:
 
     if __name__ == '__main__':
         """ Demo of clean_data_using_worms script """
@@ -176,6 +176,7 @@ Below is a portion of the logging information sent to the terminal when running 
     .
     2015-07-06 08:35:10  Wrote 7 accepted records to 'demo_cleaned.csv'.
     2015-07-06 08:35:10  Wrote 3 rejected records to 'demo_rejected.csv'.
+
 
 ## Composeable code:  The WoRMSCurator actor
 
