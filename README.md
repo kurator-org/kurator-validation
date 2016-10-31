@@ -91,7 +91,7 @@ or
    
 The script [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/scripts/WoRMS/clean_data_using_worms.py) illustrates how `WoRMSService` can be used in a standalone Python script. The script also illustrates the use of [YesWorkflow](https://github.com/yesworkflow-org/yw-prototypes) comments to document how data flows through the various operations in the script.  The YesWorkflow rendering of the *process view* of this script is as follows:
 
-![process view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/process.png)
+![process view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/packages/kurator_worms/scripts/process.png)
 
 The process view reveals only the data processing steps (green boxes in the figure above) identified by YesWorkflow annotations in the script comments. As illustrated in the figure, the script takes as input a set of records (in CSV format), attempts to find corresponding records in the WoRMS taxonomy, rejects input records that cannot be found in WoRMS, and corrects the scientific name and authorship fields as needed in the records that it does find matches for.  The rejected and accepted (possibly corrected) records are output separately.
 
