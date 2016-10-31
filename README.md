@@ -21,26 +21,14 @@ Overall structure of the repository:
 
 Directory            | Description
 ---------------------|------------
-src/main/python      | Python sources for function and class libraries, scripts, and actors.
+packages             | Python packages with data cleaning libraries, scripts, actors, and workflows.
+src/main/java        | Source code for Java-based data cleaning actors 
 src/test/java        | Source code for Java-based tests of actors and workflows.
-src/test/resources   | Resource files available to Java-based tests.
+src/test/resources   | Resource files and test data available to Java-based tests.
 
 ##### Python library layout
 
-All python code provided with kurator-validation is organized in a single directory tree at `src/main/python`.  This directory tree is structured so that all code is in sub-packages of the `org.kurator.validation` Python package.
-
-Subdirectories of the `src/main/python` directory include:
-
-Directory                            | Description
--------------------------------------|------------
-org/kurator/validation/**actors**    | Sources for Python-based actors.
-org/kurator/validation/**scripts**   | Python scripts using the data cleaning services and actors.
-org/kurator/validation/**services**  | Python classes and functions providing data cleaning services including access to remote data sources and network-based services.
-org/kurator/validation/standards     | Support for various data standards.
-org/kurator/validation/utilities     | General purpose Python scripts and classes.
-org/kurator/validation/**workflows** | Workflows composed from actors and declared in YAML.
-
-The **actors**, **scripts**, **services**, and **workflows** directories each provide different ways of accessing the data cleaning capabilities provided by this software. The next section of this README illustrates how to use each approach.
+All python code provided with kurator-validation is organized as Python packages stored under the `python` directory.  Each package can include Python modules and classes that can be used directly from Python scripts for data cleaning; example scripts using these modules and classes; and **Kurator-Akka** workflows that employ the same Python modules and classes.  The next section of this README illustrates how to use either scripts or workflow to accomplish the same data cleaning tasks.
 
 Example: Validating names using WoRMS
 -------------------------------------
