@@ -28,7 +28,7 @@ src/test/resources   | Resource files and test data available to Java-based test
 
 ##### Python library layout
 
-All python code provided with kurator-validation is organized as Python packages stored under the `packages` directory.  Each package includes Python modules and classes that can be used directly from Python scripts for data cleaning; example Python scripts using these modules and classes; and **Kurator-Akka** workflows that employ the same Python modules and classes. The next section of this README illustrates how to use either scripts or workflow to accomplish the same data cleaning tasks.
+All python code provided with kurator-validation is organized as Python packages stored under the `packages` directory.  Each package includes Python modules and classes that can be used directly from Python scripts for data cleaning; example Python scripts using these modules and classes; and **Kurator-Akka** workflows that employ the same Python modules and classes. The next section of this README illustrates how to use either a script or a workflow to accomplish the same data cleaning task.
 
 Example: Validating names using WoRMS
 -------------------------------------
