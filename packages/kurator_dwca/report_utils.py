@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2016-10-21T14:58+02:00"
+__version__ = "report_utils.py 2016-11-18T17:33-06:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data.
@@ -24,6 +24,7 @@ from dwca_utils import csv_dialect
 from dwca_utils import csv_file_encoding
 from dwca_utils import csv_file_dialect
 from dwca_utils import extract_values_from_row
+from dwca_utils import get_guid
 from dwca_utils import read_csv_row
 from dwca_utils import read_header
 from dwca_utils import strip_list
@@ -357,6 +358,106 @@ def term_setter_report(
             writer.writerow(row)
 
     s = 'Report written to %s in %s.' % (reportfile, functionname)
+    logging.debug(s)
+    return True
+
+def uuid_term_appender(
+    inputfile, outputfile, key, guidtype=None, encoding=None, format=None):
+    ''' Write a file adding a field populated by global unique identifiers (GUIDs) to the 
+        fields in the input file.
+    parameters:
+        inputfile - full path to the input file (required)
+        outputfile - full path to the output file (required)
+        key - field or separator-separated fields to set (required)
+        guidtype - type of GUID to use to populate the key (optional; default 'uuid')
+        encoding - string signifying the encoding of the input file. If known, it speeds
+            up processing a great deal. (optional; default None) (e.g., 'utf-8')
+        format - string signifying the csv.dialect of the report file ('csv' or 'txt')
+            (optional; default: txt)
+    returns:
+        success - True if the report was written, else False
+    '''
+    functionname = 'uuid_term_appender()'
+
+    if outputfile is None or len(outputfile)==0:
+        s = 'No outputfile name given in %s.' % functionname
+        logging.debug(s)
+        return False
+
+    if inputfile is None or len(inputfile) == 0:
+        s = 'No inputfile file given in %s.' % functionname
+        logging.debug(s)
+        return False
+
+    if os.path.isfile(inputfile) == False:
+        s = 'Inputfile file %s not found in %s.' % (inputfile, functionname)
+        logging.debug(s)
+        return False
+
+    # Determine the dialect of the input file
+    inputdialect = csv_file_dialect(inputfile)
+
+    # Determine the dialect of the input file
+    if encoding is None or len(encoding.strip()) == 0:
+        encoding = csv_file_encoding(inputfile)
+
+    # Read the header from the input file
+    inputheader = read_header(inputfile, dialect=inputdialect, encoding=encoding)
+
+    if inputheader is None:
+        s = 'Unable to read header from input file %s in %s.' % (inputfile, functionname)
+        logging.debug(s)
+        return False
+
+    if key is None or len(key.strip())==0:
+        s = 'No key given in %s.' % functionname
+        logging.debug(s)
+        return False
+
+    # Abort if the key exists in the inputheader
+    if key in inputheader:
+        s = 'field %s ' % key
+        s += 'already exists in file %s ' % inputfile
+        s += 'in %s.' % functionname
+        logging.debug(s)
+        return False
+
+    if format=='txt' or format is None:
+        outputdialect = tsv_dialect()
+    else:
+        outputdialect = csv_dialect()
+
+    # Make an outputheader that is a copy of the inputheader plus the new field to hold 
+    # GUID.
+    outputheader = inputheader + [key]
+
+    # Create the outputfile and write the new header to it
+    write_header(outputfile, outputheader, outputdialect)
+
+    # Check to see if the outputfile was created
+    if os.path.isfile(outputfile) == False:
+        s = 'outputfile: %s was not created in %s.' % (outputfile, functionname)
+        logging.debug(s)
+        return False
+
+    # Open the outputfile to append rows with appended GUID field  
+    with open(outputfile, 'a') as outfile:
+        writer = csv.DictWriter(outfile, dialect=outputdialect, encoding='utf-8', 
+            fieldnames=outputheader)
+
+        # Iterate through all rows in the input file
+        for row in read_csv_row(inputfile, dialect=inputdialect, encoding=encoding, 
+            header=True, fieldnames=inputheader):
+            # Create a GUID based on the selected guidtype
+            guid = get_guid(guidtype)
+
+            # Set the value of the key field to a GUID
+            row[key]=guid
+
+            # Write the updated row to the outputfile
+            writer.writerow(row)
+
+    s = 'Output file written to %s in %s.' % (outputfile, functionname)
     logging.debug(s)
     return True
 

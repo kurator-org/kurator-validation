@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils_test.py 2016-10-21T13:37+02:00"
+__version__ = "dwca_utils_test.py 2016-11-18T17:26-06:00"
 
 # This file contains unit test for the functions in dwca_utils.
 #
@@ -36,6 +36,7 @@ from kurator_dwca.dwca_utils import extract_fields_from_row
 from kurator_dwca.dwca_utils import extract_value_counts_from_file
 from kurator_dwca.dwca_utils import extract_values_from_row
 from kurator_dwca.dwca_utils import extract_values_from_file
+from kurator_dwca.dwca_utils import get_guid
 from kurator_dwca.dwca_utils import header_map
 from kurator_dwca.dwca_utils import merge_headers
 from kurator_dwca.dwca_utils import purge_non_printing_from_file
@@ -1072,6 +1073,15 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'Strippped list:\n%s' % outputlist
         s += ' not as expected:\n%s' % expected
         self.assertEqual(outputlist, expected, s)
+
+    def test_get_guid(self):
+        print 'testing get_guid'
+        guid = get_guid('uuid')
+        expected = 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX'
+        s = 'GUID:\n%s' % guid
+        s += ' not in expected format:\n%s' % expected
+        guidlength = len(guid)
+        self.assertEqual(guidlength, 36, s)
 
 if __name__ == '__main__':
     print '=== dwca_utils_test.py ==='

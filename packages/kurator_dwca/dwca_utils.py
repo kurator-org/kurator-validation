@@ -15,12 +15,13 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-10-21T14:27+02:00"
+__version__ = "dwca_utils.py 2016-11-18T17:18-06:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT data.
 
 from operator import itemgetter
+from uuid import uuid1
 import os.path
 import glob
 import logging
@@ -61,6 +62,12 @@ except ImportError:
 #     except UnicodeEncodeError:
 #         # obj is unicode
 #         return unicode(obj).encode('unicode_escape')
+
+def get_guid(guidtype):
+    ''' Create a global unique identifier of the requested type.'''
+    if guidtype == 'uuid':
+        return str(uuid1())
+    return str(uuid1())
 
 def ustripstr(s):
     ''' Create a stripped, uppercase version of an input string or empty string if input
