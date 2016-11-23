@@ -13,7 +13,7 @@
 # Example command-line usage:
 # kurator -f file_date_validator.yaml
 #         -p workspace=./file_date_validator_workspace
-#         -p inputfile=../data/tests/mcz_eventdate_test.txt
+#         -p inputfile=../data/tests/test_mcz_eventdate.txt
 #         -p format=tsv
 #         -p namespace=no
 #         -l DEBUG (optional)
@@ -216,13 +216,6 @@ components:
             print '### Finished Wrapup ###'
     # A list of parameters to get from the options dictionary passed from an
     # upstream actor.
-    inputs:
-        # Get the workspace for this actor from the workspace in the options dictionary.
-        workspace: workspace
-        # Get the success state from the options dictionary of the previous step
-        success: previoussuccess
-        # Get the message from the options dictionary of the previous step
-        message: previousmessage
     parameters:
       # Show the name of the upstream actor.
       messagefrom: 'DateValidator'
