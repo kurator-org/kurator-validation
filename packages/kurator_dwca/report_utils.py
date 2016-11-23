@@ -15,33 +15,26 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2016-10-07T15:19+02:00"
+__version__ = "report_utils.py 2016-11-18T17:33-06:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
-# TSV data. It is built with unit tests that can be invoked by running the script
-# without any command line parameters.
-#
-# Example:
-#
-# python report_utils.py
+# TSV data.
 
-from dwca_utils import csv_file_dialect
+from dwca_utils import csv_dialect
 from dwca_utils import csv_file_encoding
 from dwca_utils import csv_file_dialect
-from dwca_utils import csv_dialect
+from dwca_utils import extract_values_from_row
+from dwca_utils import get_guid
+from dwca_utils import read_csv_row
+from dwca_utils import read_header
+from dwca_utils import strip_list
 from dwca_utils import tsv_dialect
 from dwca_utils import ustripstr
-from dwca_utils import strip_list
-from dwca_utils import read_header
 from dwca_utils import write_header
-from dwca_utils import read_rows
-from dwca_utils import read_csv_row
-from dwca_utils import extract_values_from_row
-from dwca_vocab_utils import vocabheader
 from dwca_vocab_utils import recommended_value
 from dwca_vocab_utils import vocab_dict_from_file
+from dwca_vocab_utils import vocabheader
 import logging
-import unittest
 import os.path
 
 # Replace the system csv with unicodecsv. All invocations of csv will use unicodecsv,
@@ -167,6 +160,58 @@ def term_list_report(reportfile, termlist, key, separator=None, format=None):
             if len(fields) > 1:
                 for field in fields:
                     row[field] = value
+            writer.writerow(row)
+    s = 'Report written to %s in %s.' % (reportfile, functionname)
+    logging.debug(s)
+    return True
+
+def term_completeness_report(reportfile, fieldcountdict, format=None):
+    ''' Write a report with a list of fields and the number of times they are populated.
+    parameters:
+        reportfile - full path to the output report file (optional)
+        fieldcountdict - dictionary of field names and the number of rows in which they 
+            are populated in the inputfile
+        format - string signifying the csv.dialect of the report file ('csv' or 'txt')
+    returns:
+        success - True if the report was written, else False
+    '''
+    functionname = 'term_completeness_report()'
+
+    if fieldcountdict is None or len(fieldcountdict)==0:
+        s = 'No field count dictionary given in %s.' % functionname
+        logging.debug(s)
+        return False
+
+    if reportfile is None or len(reportfile)==0:
+        s = 'No recommendation file name given in %s.' % functionname
+        logging.debug(s)
+        return False
+
+    if format=='csv' or format is None:
+        dialect = csv_dialect()
+    else:
+        dialect = tsv_dialect()
+
+    fields = []
+    # Make an alphabetically sorted list of field names
+    for key, value in fieldcountdict.iteritems():
+        fields.append(key)
+    fieldlist = sorted(fields)
+
+    outputheader = ['field', 'count']
+    # Create the outputfile and write the new header to it
+    write_header(reportfile, outputheader, dialect)
+
+    if os.path.isfile(reportfile) == False:
+        s = 'reportfile: %s not created in %s.' % (reportfile, functionname)
+        logging.debug(s)
+        return False
+
+    with open(reportfile, 'a') as csvfile:
+        writer = csv.DictWriter(csvfile, dialect=dialect, encoding='utf-8', 
+            fieldnames=outputheader)
+        for field in fieldlist:
+            row = {'field':field , 'count':fieldcountdict[field] }
             writer.writerow(row)
     s = 'Report written to %s in %s.' % (reportfile, functionname)
     logging.debug(s)
@@ -313,6 +358,106 @@ def term_setter_report(
             writer.writerow(row)
 
     s = 'Report written to %s in %s.' % (reportfile, functionname)
+    logging.debug(s)
+    return True
+
+def uuid_term_appender(
+    inputfile, outputfile, key, guidtype=None, encoding=None, format=None):
+    ''' Write a file adding a field populated by global unique identifiers (GUIDs) to the 
+        fields in the input file.
+    parameters:
+        inputfile - full path to the input file (required)
+        outputfile - full path to the output file (required)
+        key - field or separator-separated fields to set (required)
+        guidtype - type of GUID to use to populate the key (optional; default 'uuid')
+        encoding - string signifying the encoding of the input file. If known, it speeds
+            up processing a great deal. (optional; default None) (e.g., 'utf-8')
+        format - string signifying the csv.dialect of the report file ('csv' or 'txt')
+            (optional; default: txt)
+    returns:
+        success - True if the report was written, else False
+    '''
+    functionname = 'uuid_term_appender()'
+
+    if outputfile is None or len(outputfile)==0:
+        s = 'No outputfile name given in %s.' % functionname
+        logging.debug(s)
+        return False
+
+    if inputfile is None or len(inputfile) == 0:
+        s = 'No inputfile file given in %s.' % functionname
+        logging.debug(s)
+        return False
+
+    if os.path.isfile(inputfile) == False:
+        s = 'Inputfile file %s not found in %s.' % (inputfile, functionname)
+        logging.debug(s)
+        return False
+
+    # Determine the dialect of the input file
+    inputdialect = csv_file_dialect(inputfile)
+
+    # Determine the dialect of the input file
+    if encoding is None or len(encoding.strip()) == 0:
+        encoding = csv_file_encoding(inputfile)
+
+    # Read the header from the input file
+    inputheader = read_header(inputfile, dialect=inputdialect, encoding=encoding)
+
+    if inputheader is None:
+        s = 'Unable to read header from input file %s in %s.' % (inputfile, functionname)
+        logging.debug(s)
+        return False
+
+    if key is None or len(key.strip())==0:
+        s = 'No key given in %s.' % functionname
+        logging.debug(s)
+        return False
+
+    # Abort if the key exists in the inputheader
+    if key in inputheader:
+        s = 'field %s ' % key
+        s += 'already exists in file %s ' % inputfile
+        s += 'in %s.' % functionname
+        logging.debug(s)
+        return False
+
+    if format=='txt' or format is None:
+        outputdialect = tsv_dialect()
+    else:
+        outputdialect = csv_dialect()
+
+    # Make an outputheader that is a copy of the inputheader plus the new field to hold 
+    # GUID.
+    outputheader = inputheader + [key]
+
+    # Create the outputfile and write the new header to it
+    write_header(outputfile, outputheader, outputdialect)
+
+    # Check to see if the outputfile was created
+    if os.path.isfile(outputfile) == False:
+        s = 'outputfile: %s was not created in %s.' % (outputfile, functionname)
+        logging.debug(s)
+        return False
+
+    # Open the outputfile to append rows with appended GUID field  
+    with open(outputfile, 'a') as outfile:
+        writer = csv.DictWriter(outfile, dialect=outputdialect, encoding='utf-8', 
+            fieldnames=outputheader)
+
+        # Iterate through all rows in the input file
+        for row in read_csv_row(inputfile, dialect=inputdialect, encoding=encoding, 
+            header=True, fieldnames=inputheader):
+            # Create a GUID based on the selected guidtype
+            guid = get_guid(guidtype)
+
+            # Set the value of the key field to a GUID
+            row[key]=guid
+
+            # Write the updated row to the outputfile
+            writer.writerow(row)
+
+    s = 'Output file written to %s in %s.' % (outputfile, functionname)
     logging.debug(s)
     return True
 
@@ -487,183 +632,3 @@ def term_standardizer_report(
     s = 'Report written to %s in %s.' % (reportfile, functionname)
     logging.debug(s)
     return True    
-
-class ReportUtilsFramework():
-    # testdatapath is the location of the files to test with
-    testdatapath = './data/tests/'
-
-    # following are files used as input during the tests, don't remove these
-    csvreadheaderfile = testdatapath + 'test_eight_specimen_records.csv'
-    tsvreadheaderfile = testdatapath + 'test_three_specimen_records.txt'
-    testcorrectioninputfile = testdatapath + 'test_specimen_correction.txt'
-    testsetterinputfile = testdatapath + 'test_specimen_correction.txt'
-    testmonthvocabfile = testdatapath + 'test_month.txt'
-
-    # following are files output during the tests, remove these in dispose()
-    testtokenreportfile = testdatapath + 'test_token_report_file.txt'
-    testcorrectionreportfile = testdatapath + 'test_correction_report_file.txt'
-    testsetterreportfile = testdatapath + 'test_setter_report_file.txt'
-
-    def dispose(self):
-        testtokenreportfile = self.testtokenreportfile
-        testcorrectionreportfile = self.testcorrectionreportfile
-        testsetterreportfile = self.testsetterreportfile
-        if os.path.isfile(testtokenreportfile):
-            os.remove(testtokenreportfile)
-        if os.path.isfile(testcorrectionreportfile):
-            os.remove(testcorrectionreportfile)
-        if os.path.isfile(testsetterreportfile):
-            os.remove(testsetterreportfile)
-        return True
-
-class ReportUtilsTestCase(unittest.TestCase):
-    def setUp(self):
-        self.framework = ReportUtilsFramework()
-
-    def tearDown(self):
-        self.framework.dispose()
-        self.framework = None
-
-    def test_source_files_exist(self):
-        print 'testing source_files_exist'
-        csvreadheaderfile = self.framework.csvreadheaderfile
-        tsvreadheaderfile = self.framework.tsvreadheaderfile
-        testcorrectioninputfile = self.framework.testcorrectioninputfile
-
-        s = csvreadheaderfile + ' does not exist'
-        self.assertTrue(os.path.isfile(csvreadheaderfile), s)
-        s = tsvreadheaderfile + ' does not exist'
-        self.assertTrue(os.path.isfile(tsvreadheaderfile), s)
-        s = testcorrectioninputfile + ' does not exist'
-        self.assertTrue(os.path.isfile(testcorrectioninputfile), s)
-
-    def test_term_setter_report(self):
-        print 'testing term_setter_report'
-        testsetterinputfile = self.framework.testsetterinputfile
-        testsetterreportfile = self.framework.testsetterreportfile
-
-        # Test field addition
-        key = 'institutionCode'
-        result = term_setter_report(testsetterinputfile, testsetterreportfile, 
-            key, constantvalues='CAS')
-        s = 'term_setter_report() result not True '
-        s += 'with inputfile: %s ' % testsetterinputfile
-        s += 'and outputfile: %s' % testsetterreportfile
-        self.assertTrue(result, s)
-        
-        outputheader = read_header(testsetterreportfile)
-        expected = ['ID', 'month', 'country', 'institutionCode']
-        s = 'outputheader: %s not as expected: %s' % (outputheader, expected)
-        self.assertEqual(outputheader, expected, s)
-
-        dialect = csv_file_dialect(testsetterreportfile)
-        encoding = csv_file_encoding(testsetterreportfile)
-        rows = read_rows(testsetterreportfile, 1, dialect=dialect, encoding=encoding, 
-            header=True, fieldnames=outputheader)
-        firstrow = rows[0]
-
-        field = 'institutionCode'
-        value = firstrow[field]
-        expected = 'CAS'
-        s = 'Field %s value %s not as expected (%s)' % (field, value, expected)
-        self.assertEqual(value, expected, s)
-
-        # Test field list addition
-        key = 'institutionCode|license'
-        result = term_setter_report(testsetterinputfile, testsetterreportfile, 
-            key, constantvalues='CAS|CC0')
-        s = 'term_setter_report() result not True '
-        s += 'with inputfile: %s ' % testsetterinputfile
-        s += 'and outputfile: %s' % testsetterreportfile
-        self.assertTrue(result, s)
-        
-        outputheader = read_header(testsetterreportfile)
-        expected = ['ID', 'month', 'country', 'institutionCode', 'license']
-        s = 'outputheader: %s not as expected: %s' % (outputheader, expected)
-        self.assertEqual(outputheader, expected, s)
-
-        dialect = csv_file_dialect(testsetterreportfile)
-        encoding = csv_file_encoding(testsetterreportfile)
-        rows = read_rows(testsetterreportfile, 1, dialect=dialect, encoding=encoding, 
-            header=True, fieldnames=outputheader)
-        firstrow = rows[0]
-
-        field = 'institutionCode'
-        value = firstrow[field]
-        expected = 'CAS'
-        s = 'Field %s value %s not as expected (%s)' % (field, value, expected)
-        self.assertEqual(value, expected, s)
-
-        field = 'license'
-        value = firstrow[field]
-        expected = 'CC0'
-        s = 'Field %s value %s not as expected (%s)' % (field, value, expected)
-        self.assertEqual(value, expected, s)
-
-        # Test field replacement
-        key = 'country'
-        result = term_setter_report(testsetterinputfile, testsetterreportfile, 
-            key, constantvalues='Argentina')
-        s = 'term_setter_report() result not True '
-        s += 'with inputfile: %s ' % testsetterinputfile
-        s += 'and outputfile: %s' % testsetterreportfile
-        self.assertTrue(result, s)
-        
-        outputheader = read_header(testsetterreportfile)
-        expected = ['ID', 'month', 'country']
-        s = 'outputheader: %s not as expected: %s' % (outputheader, expected)
-        self.assertEqual(outputheader, expected, s)
-
-        dialect = csv_file_dialect(testsetterreportfile)
-        encoding = csv_file_encoding(testsetterreportfile)
-        rows = read_rows(testsetterreportfile, 1, dialect=dialect, encoding=encoding, 
-            header=True, fieldnames=outputheader)
-        firstrow = rows[0]
-
-        field = 'country'
-        value = firstrow[field]
-        expected = 'Argentina'
-        s = 'Field %s value %s not as expected (%s)' % (field, value, expected)
-        self.assertEqual(value, expected, s)
-
-    def test_term_standardizer_report(self):
-        print 'testing term_standardizer_report'
-        testcorrectioninputfile = self.framework.testcorrectioninputfile
-        testcorrectionreportfile = self.framework.testcorrectionreportfile
-        testmonthvocabfile = self.framework.testmonthvocabfile
-    
-        key = 'month'
-        result = term_standardizer_report(testcorrectioninputfile, \
-            testcorrectionreportfile, testmonthvocabfile, key)
-        s = 'term_standardizer_report() result not True '
-        s += 'with inputfile: %s ' % testcorrectioninputfile
-        s += 'outpufile: %s' % testcorrectionreportfile
-        s += 'and vocabfile: %s' % testmonthvocabfile
-        self.assertTrue(result, s)
-        
-        outputheader = read_header(testcorrectionreportfile)
-        expected = ['ID', 'month', 'country', 'month_orig']
-        s = 'outputheader: %s not as expected: %s' % (outputheader, expected)
-        self.assertEqual(outputheader, expected, s)
-
-        dialect = csv_file_dialect(testcorrectionreportfile)
-        encoding = csv_file_encoding(testcorrectionreportfile)
-        rows = read_rows(testcorrectionreportfile, 1, dialect=dialect, encoding=encoding, 
-            header=True, fieldnames=outputheader)
-        firstrow = rows[0]
-
-        field = 'month_orig'
-        value = firstrow[field]
-        expected = 'vi'
-        s = 'Field %s value %s not as expected (%s)' % (field, value, expected)
-        self.assertEqual(value, expected, s)
-
-        field = 'month'
-        value = firstrow[field]
-        expected = '6'
-        s = 'Field %s value %s not as expected (%s)' % (field, value, expected)
-        self.assertEqual(value, expected, s)
-
-if __name__ == '__main__':
-    print '=== report_utils.py ==='
-    unittest.main()

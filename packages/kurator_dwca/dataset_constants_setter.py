@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dataset_constants_setter.py 2016-10-06T13:49+02:00"
+__version__ = "dataset_constants_setter.py 2016-10-20T16:47+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -143,7 +143,7 @@ def dataset_constants_setter(options):
     except:
         pass
 
-    if outputfile is None:
+    if outputfile is None or len(outputfile.strip())==0:
         outputfile = '%s/%s_corrected_report_%s.%s' % \
           (workspace.rstrip('/'), slugify(key), str(uuid.uuid1()), format)
     else:

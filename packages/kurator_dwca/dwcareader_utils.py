@@ -15,19 +15,13 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwcareader_utils.py 2016-10-04T16:29+02:00"
+__version__ = "dwcareader_utils.py 2016-10-21T14:24+02:00"
 
 # This file contains common utility functions for dealing with the content of a Darwin
-# Core archive. It is built with unit tests that can be invoked by running the script
-# without any command line parameters.
-#
-# Example:
-#
-# python dwcareader_utils.py
+# Core archive.
 
 import os.path
 import glob
-import unittest
 import xml.etree.ElementTree as ET
 
 # Requires the Python Darwin Core Archive Reader from 
@@ -56,7 +50,7 @@ def dwca_metadata(dwcareader):
 
 def dwca_metadata_from_file(inputfile, archivetype=None):
     ''' Return metadata from a Darwin Core Archive file.'''
-    if inputfile is None:
+    if inputfile is None or len(inputfile.strip())==0:
         return None
 
     # Make an appropriate reader based on whether the archive is standard or a GBIF
@@ -99,7 +93,7 @@ def get_core_rowcount(dwcareader):
     
 def get_core_rowcount_from_file(inputfile, archivetype=None):
     ''' Return number of rows in the core file of a Darwin Core Archive file.'''
-    if inputfile is None:
+    if inputfile is None or len(inputfile.strip())==0:
         return None
     # Make an appropriate reader based on whether the archive is standard or a GBIF
     # download.
@@ -158,76 +152,3 @@ def short_term_names(termlist):
         else:
             shortnamelist.append(sname)
     return shortnamelist
-
-class DWCAUtilsReaderFramework():
-    # testdatapath is the location of the files to test with
-    testdatapath = './data/tests/'
-    # the archive extraction path is created by the Darwin Core archive reader and
-    # should be removed when finished
-    archiveextractionpath = './v/'
-
-    # following are files used as input during the tests, don't remove these
-    dwca = testdatapath + 'dwca-uwymv_herp.zip'
-
-    # following are files output during the tests, remove these in dispose()
-    #csvwriteheaderfile = testdatapath + 'test_write_header_file.csv'
-
-    def dispose(self):
-        files = glob.glob(self.archiveextractionpath + '*')
-        for file in files:
-            if os.path.isfile(file):
-                os.remove(file)
-        if os.path.isdir(self.archiveextractionpath):
-            os.rmdir(self.archiveextractionpath)
-        return True
-
-class DWCAUtilsReaderTestCase(unittest.TestCase):
-    def setUp(self):
-        self.framework = DWCAUtilsReaderFramework()
-
-    def tearDown(self):
-        self.framework.dispose()
-        self.framework = None
-
-    def test_source_files_exist(self):
-        print 'testing source_files_exist'
-        dwca = self.framework.dwca
-        self.assertTrue(os.path.isfile(dwca), dwca + ' does not exist')
-
-    def test_source_is_dwca(self):
-        print 'testing source_is_dwca'
-        dwca = self.framework.dwca
-        dwcareader = None
-        try:
-            dwcareader = DwCAReader(dwca)
-        except:
-            dwcareader = None
-        s = 'No viable Darwin Core archive found at %s' % dwca
-        self.assertIsNotNone(dwcareader, s)
-
-    def test_dwca_core_row_count(self):
-        print 'testing dwca_core_row_count'
-        dwca = self.framework.dwca
-        rowcount = get_core_rowcount_from_file(dwca)
-        self.assertEqual(rowcount, 8, 'incorrect number of rows in archive core file')
-
-    def test_metadata(self):
-        print 'testing metadata'
-        inputfile = self.framework.dwca
-        metadata = dwca_metadata_from_file(inputfile)
-        title = metadata.find("./dataset/title").text
-        #print title
-        self.assertEqual(title, 'UWYMV Herpetology Collection (Arctos)', 'title incorrect from archive metadata')
-        creator_position = metadata.find("./dataset/creator/positionName").text
-        #print creator_position
-        self.assertEqual(creator_position, 'Curator', 'creator/positionName incorrect from archive metadata')
-        pubdate = metadata.find("./dataset/pubDate").text
-        #print pubdate.strip()
-        self.assertEqual(pubdate.strip(), '2015-03-25', 'pubDate incorrect from archive metadata')
-        north = metadata.find("./dataset/coverage/geographicCoverage/boundingCoordinates/northBoundingCoordinate").text
-        #print north
-        self.assertEqual(north, '90', 'north geographic coverage incorrect from archive metadata')
-    
-if __name__ == '__main__':
-    print '=== dwcareader_utils.py ==='
-    unittest.main()

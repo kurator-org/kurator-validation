@@ -8,7 +8,7 @@ This README describes how one Python class in the library, [WoRMSService](https:
 Other Python classes made available through this package may be used similarly.  We recommend using the approaches described in this README to develop, test, and distribute your own data curation classes, packages, actors, and workflows that work with the Kurator software toolkit.
 
 The TDWG 2015 presentation [Data cleaning with the Kurator toolkit: Bridging the gap between conventional scripting and 
-high-performance workflow automation](http://www.slideshare.net/TimothyMcPhillips/data-cleaning-with-the-kurator-toolkit-bridging-the-gap-between-conventional-scripting-and-highperformance-workflow-automation) provides an overview of the Kurator project and tools described in this README.  For information about the **Kurator-Akka** workflow framework please see the [README](https://github.com/kurator-org/kurator-akka/blob/master/README.md) in the [Kurator-Akka](https://github.com/kurator-org/kurator-akka) repository.  
+high-performance workflow automation](http://www.slideshare.net/TimothyMcPhillips/data-cleaning-with-the-kurator-toolkit-bridging-the-gap-between-conventional-scripting-and-highperformance-workflow-automation) provides an overview of the Kurator project and tools described in this README.  For information about the **Kurator-Akka** workflow framework please see the [README](https://github.com/kurator-org/kurator-akka/blob/master/README.md) in the [Kurator-Akka](https://github.com/kurator-org/kurator-akka) repository.
 
 Structure of this repository
 ----------------------------
@@ -21,30 +21,18 @@ Overall structure of the repository:
 
 Directory            | Description
 ---------------------|------------
-src/main/python      | Python sources for function and class libraries, scripts, and actors.
+packages             | Python packages with data cleaning libraries, scripts, actors, and workflows.
+src/main/java        | Source code for Java-based data cleaning actors 
 src/test/java        | Source code for Java-based tests of actors and workflows.
-src/test/resources   | Resource files available to Java-based tests.
+src/test/resources   | Resource files and test data available to Java-based tests.
 
 ##### Python library layout
 
-All python code provided with kurator-validation is organized in a single directory tree at `src/main/python`.  This directory tree is structured so that all code is in sub-packages of the `org.kurator.validation` Python package.
-
-Subdirectories of the `src/main/python` directory include:
-
-Directory                            | Description
--------------------------------------|------------
-org/kurator/validation/**actors**    | Sources for Python-based actors.
-org/kurator/validation/**scripts**   | Python scripts using the data cleaning services and actors.
-org/kurator/validation/**services**  | Python classes and functions providing data cleaning services including access to remote data sources and network-based services.
-org/kurator/validation/standards     | Support for various data standards.
-org/kurator/validation/utilities     | General purpose Python scripts and classes.
-org/kurator/validation/**workflows** | Workflows composed from actors and declared in YAML.
-
-The **actors**, **scripts**, **services**, and **workflows** directories each provide different ways of accessing the data cleaning capabilities provided by this software. The next section of this README illustrates how to use each approach.
+All python code provided with kurator-validation is organized as Python packages stored under the `packages` directory.  Each package includes Python modules and classes that can be used directly from Python scripts for data cleaning; example Python scripts using these modules and classes; and **Kurator-Akka** workflows that employ the same Python modules and classes. The next section of this README illustrates how to use either a script or a workflow to accomplish the same data cleaning task.
 
 Example: Validating names using WoRMS
 -------------------------------------
-This section demonstrates how one can validate, correct, or reject data using a specific web service as a reference. The [WoRMS web service](http://marinespecies.org/aphia.php?p=webservice) allows the standard WoRMS taxononmy to be searched by taxon name.  The search may be for an exact match, or for similar names using a fuzzy match.  The kurator-validation package provides (1) a Python class for invoking the WoRMS web service; (2) an example script using this class to access the service and thereby clean a data set; (3) a Python-based actor for performing this service within the context of a **Kurator-Akka** workflow; and (4) a declaration of a workflow using this actor.
+This section demonstrates how one can validate, correct, or reject data using a specific web service as a reference. The [WoRMS web service](http://marinespecies.org/aphia.php?p=webservice) allows the standard WoRMS taxononomy to be searched by taxon name.  The search may be for an exact match, or for similar names using a fuzzy match.  The kurator-validation package provides (1) a Python class for invoking the WoRMS web service; (2) an example script using this class to access the service and thereby clean a data set; (3) a Python-based actor for performing this service within the context of a **Kurator-Akka** workflow; and (4) a declaration of a workflow using this actor.
 
 ## The WoRMSService class
 
@@ -94,19 +82,22 @@ The `WoRMSService` class can be used in other scripts that import the class defi
 
     from org.kurator.validation.services.WoRMSService import WoRMSService
 
-In order for Python to find the `org.kurator.validation.services.WoRMSService` package, the directory containing the root of this package must be present in the `PYTHONPATH` environment variable (`JYTHONPATH` if using Jython).  In a bash shell, the command to add the necessary path to the `PYTHONPATH` variables will be similar to this (replace `/Users/myhomedir/kurator-validation/` below with the path to the cloned repository):
+In order for Python to find the `org.kurator.validation.services.WoRMSService` package, the directory containing the root of this package must be present in the `PYTHONPATH` environment variable. If using Jython (the Java implementation of Python) or **Kurator-Akka** (which uses Jython) then the `JYTHONPATH` variable must be set instead of (or in addition to) `PYTHONPATH`. In a bash shell, the command to add the necessary path to the `PYTHONPATH`  or `JYTHONPATH` variables will be similar to this (replace `/Users/myhomedir/kurator-validation/` below with the path to the cloned repository):
 
-    export PYTHONPATH="/Users/myhomedir/kurator-validation/src/main/python/:$PYTHONPATH"
+    export PYTHONPATH="/Users/myhomedir/kurator-validation/packages/:$PYTHONPATH"
+or 
+    
+    export JYTHONPATH="/Users/myhomedir/kurator-validation/packages/:$JYTHONPATH"
+   
+The script [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/scripts/WoRMS/clean_data_using_worms.py) illustrates how `WoRMSService` can be used in a standalone Python script. The script also illustrates the use of [YesWorkflow](https://github.com/yesworkflow-org/yw-prototypes) comments to document how data flows through the various operations in the script.  The YesWorkflow rendering of the *process view* of this script is as follows:
 
-The script [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/scripts/WoRMS/clean_data_using_worms.py) illustrates how `WoRMSService` can be used in a standalone Python script.  The script also illustrates the use of [YesWorkflow](https://github.com/yesworkflow-org/yw-prototypes) comments to document how data flows through the various operations in the script.  The YesWorkflow rendering of the *process view* of this script is as follows:
-
-![process view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/process.png)
+![process view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/packages/kurator_worms/scripts/process.png)
 
 The process view reveals only the data processing steps (green boxes in the figure above) identified by YesWorkflow annotations in the script comments. As illustrated in the figure, the script takes as input a set of records (in CSV format), attempts to find corresponding records in the WoRMS taxonomy, rejects input records that cannot be found in WoRMS, and corrects the scientific name and authorship fields as needed in the records that it does find matches for.  The rejected and accepted (possibly corrected) records are output separately.
 
 The arrows between the boxes above represent their dataflow dependencies, but the data items themselves are hidden.  The *combined view*, below, represents the process blocks together with the data (yellow rounded boxes) and parameters (white rounded boxes) that each processing step consumes and produces:
 
-![combined view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/src/main/python/org/kurator/validation/scripts/WoRMS/combined.png)
+![combined view of clean_data_using_worms.py](https://raw.githubusercontent.com/kurator-org/kurator-validation/master/packages/kurator_worms/scripts/combined.png)
 
 Besides revealing the input, intermediate, and output data items produced by a run of the script (the yellow rounded boxes), this figure shows that the names of the input and output files are named by the parameters `input_data_file_name`, `rejected_data_file_name`, and `cleaned_data_file_name`.
 
@@ -147,7 +138,7 @@ The WoRMSService methods are called from the code for the block named `find_matc
 
 The comments starting with `@BEGIN`, `@IN`, `@OUT`, and `@END` are the YesWorkflow annotations that identify this block of code and connect it via variable names to the other blocks in the figures above.
 
-The script is used by calling the `clean_data_using_worms()` function defined in the script.  The `__main__` block at the end of [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/src/main/python/org/kurator/validation/scripts/WoRMS/clean_data_using_worms.py) demonstrates the use of the function using the input file `demo_input.csv` which is provided in the directory with the script:
+The script is used by calling the `clean_data_using_worms()` function defined in the script.  The `__main__` block at the end of [clean_data_using_worms.py](https://github.com/kurator-org/kurator-validation/blob/master/packages/kurator_worms/scripts/clean_data_using_worms.py) demonstrates the use of the function using the input file `demo_input.csv` which is provided in the directory with the script:
 
     if __name__ == '__main__':
         """ Demo of clean_data_using_worms script """
@@ -185,6 +176,7 @@ Below is a portion of the logging information sent to the terminal when running 
     .
     2015-07-06 08:35:10  Wrote 7 accepted records to 'demo_cleaned.csv'.
     2015-07-06 08:35:10  Wrote 3 rejected records to 'demo_rejected.csv'.
+
 
 ## Composeable code:  The WoRMSCurator actor
 

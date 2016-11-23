@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "term_recommendation_reporter.py 2016-10-06T13:35+02:00"
+__version__ = "term_recommendation_reporter.py 2016-10-21T13:15+02:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -157,7 +157,7 @@ def term_recommendation_reporter(options):
     except:
         pass
 
-    if outputfile is None:
+    if outputfile is None or len(outputfile.strip())==0:
         outputfile = '%s/%s_standardization_report_%s.%s' % \
           (workspace.rstrip('/'), slugify(key), str(uuid.uuid1()), format)
     else:
@@ -169,8 +169,6 @@ def term_recommendation_reporter(options):
     # Let extract_values_from_file figure out the dialect and encoding of inputfile.
     checklist = extract_values_from_file(inputfile, fields, separator=separator, 
         encoding=encoding)
-    #for c in checklist:
-    #    print c
 
     if checklist is None or len(checklist)==0:
         message = 'No values of %s from %s. %s' % (key, inputfile, __version__)

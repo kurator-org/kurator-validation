@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwin_cloud_collector.py 2016-10-06T17:01+02:00"
+__version__ = "darwin_cloud_collector.py 2016-10-21T12:46+02:00"
 
 from dwca_vocab_utils import vocab_dialect
 from dwca_vocab_utils import distinct_vocabs_to_file
@@ -44,7 +44,7 @@ def darwin_cloud_collector(options):
         success - True if process completed successfully, otherwise False
         message - an explanation of the reason if success=False
     '''
-    # print '%s options: %s' % (__version__, options)
+    #print '%s options: %s' % (__version__, options)
 
     setup_actor_logging(options)
 

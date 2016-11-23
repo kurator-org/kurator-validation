@@ -50,8 +50,8 @@ class TestGeomancer(unittest.TestCase):
         wgs84point = agd66point.point2wgs84(Datums.AGD84)
         logging.info(wgs84point)
         logging.info(Datums.AGD84)
-    #    144.96797984155188, -37.798491994062296
-    #    144.96798640000000, -37.798480400000000
+        #144.96797984155188, -37.798491994062296
+        #144.96798640000000, -37.798480400000000
 
     def test_distanceprecision(self):
         d = '110'
@@ -886,7 +886,6 @@ test_response_berkeley = {
    ],
    "status" : "OK"
 }
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
