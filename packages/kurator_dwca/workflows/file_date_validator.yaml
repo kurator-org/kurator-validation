@@ -1,0 +1,231 @@
+#####################################################################################
+# file_date_validator.yaml
+#####################################################################################
+#
+# This workflow:
+#    - creates a given directory as a workspace
+#    - takes a file name as an option
+#    - takes an output format (csv, txt) as an option
+#    - creates an output file with as many fields standardized to Darwin Core as possible
+#    - validates event date fields and fills in missing dates from atomic fields
+#    - wraps up the workflow
+#
+# Example command-line usage:
+# kurator -f file_date_validator.yaml
+#         -p workspace=./file_date_validator_workspace
+#         -p inputfile=../data/tests/mcz_eventdate_test.txt
+#         -p format=tsv
+#         -p namespace=no
+#         -l DEBUG (optional)
+#
+#####################################################################################
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# __author__ = "John Wieczorek, David Lowery"
+# __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
+# __version__ = "file_date_validator.yaml 2016-11-23T12:47:55-05:00"
+
+imports:
+
+- classpath:/org/kurator/akka/types.yaml
+
+# Definitions of the Workflow and actors
+components:
+
+### The named workflow ###
+- id: DarwinizeFile
+  type: Workflow
+  properties:
+    actors:
+      # Actors invoked in the workflow. Every actor that will be invoked must be on this
+      # list. Though the order does not matter, it is helpful to keep the list in more
+      # or less the order in which they'll be invoked, for clarity.
+      - !ref MakeWorkspace
+      - !ref DownloadDarwinCloudLookup
+      - !ref Darwinize
+      - !ref DateValidator
+      - !ref WrapUp
+    # Each parameter defined here enters the workflow from the command line and is
+    # delivered in the options dictionary of the specified actor.
+    parameters:
+      # Accept a parameter called workspace from the command line.
+      workspace:
+        # Set the workspace in the options dictionary of MakeWorkspace from the value
+        # of the workspace parameter given on the command line.
+        actor: !ref MakeWorkspace
+        parameter: workspace
+      # Accept a parameter called inputfile from the command line.
+      inputfile:
+        # Set the inputfile in the options dictionary of the Darwinize actor from the
+        # value of the inputfile parameter given on the command line.
+        actor: !ref Darwinize
+        parameter: inputfile
+      # Accept a parameter called format from the command line.
+      format:
+        # Set the format in the options dictionary of Darwinize from the value
+        # of the format parameter given on the command line.
+        actor: !ref Darwinize
+        parameter: format
+      # Accept a parameter called namespace from the command line.
+      dwcnamespace:
+        # Set the namespace in the options dictionary of Darwinize from the value
+        # of the format parameter given on the command line.
+        actor: !ref Darwinize
+        parameter: namespace
+
+# Inline python actor to make a workspace on the fly to use for writing temporary
+# if one is not supplied in the workflow-defined parameters. It creates a unique
+# workspace if a workspace location is not explicitly provided, or if the provided
+# one does not exist.
+- id: MakeWorkspace
+  type: PythonActor
+  properties:
+    # Inline python code to run.
+    code: |
+        import uuid
+        import os
+        # The function to run when an on_start message is received. Accepts a dictionary
+        # of options.
+        def on_start(options):
+            actor = 'MakeWorkspace'
+            print '### Started %s ###' % actor
+            for key, value in options.iteritems():
+                print '%s: %s' % (key, value)
+            options['success']=True
+            if options.has_key('workspace') == False:
+                options['workspace'] ='./workspace_'+str(uuid.uuid1())
+            if not os.path.exists(options['workspace']):
+                os.makedirs(options['workspace'])
+            if not os.path.exists(options['workspace']):
+                options['success']=False
+                options['message']='Unable to create workspace at %s' % options[workspace]
+            else:
+                options['message']='Created workspace %s' % options['workspace']
+            return options
+
+# Download darwin_cloud.txt file containing field name to Darwin Core lookups.
+- id: DownloadDarwinCloudLookup
+  type: PythonActor
+  properties:
+    # The location of the actor source code
+    module: kurator_dwca.downloader
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: downloader
+    # A list of parameters to get from the options dictionary passed from an
+    # upstream actor.
+    inputs:
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
+    parameters:
+      # Get the file from a specific URL.
+      url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/darwin_cloud.txt'
+      # Download to a specific file name in the workspace received from upstream.
+      # Set the output file to a specific file name.
+      outputfile : 'lookup_darwin_cloud.txt'
+      # Show the name of the upstream actor.
+      messagefrom: 'MakeWorkspace'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref MakeWorkspace
+
+# Transform the input file to a file with the chosen format and as many field names
+# standardized to Darwin Core as possible.
+- id: Darwinize
+  type: PythonActor
+  properties:
+    # The location of the actor source code
+    module: kurator_dwca.darwinize_header
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: darwinize_header
+    # A list of parameters to get from the options dictionary passed from an
+    # upstream actor.
+    inputs:
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
+      # Get the dwccloudfile for this actor from the output of the previous actor
+      outputfile : dwccloudfile
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
+    parameters:
+      # Set the output file to a specific file name.
+      outputfile : 'darwinized_file.txt'
+      namespace:
+      # Show the name of the upstream actor.
+      messagefrom: 'DownloadDarwinCloudLookup'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref DownloadDarwinCloudLookup
+
+# Validate the eventDate field. Fill in missing values from atomic parts or verbatimEventDate.
+- id: DateValidator
+  type: Actor
+  properties:
+    actorClass: org.kurator.validation.actors.DateValidator
+    listensTo:
+      - !ref Darwinize
+    # A list of parameters to get from the options dictionary passed from an
+    # upstream actor.
+    inputs:
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      outputfile: inputfile
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
+
+# Inline python actor to take care of any unfinished business and finish the workflow.
+- id: WrapUp
+  type: PythonActor
+  properties:
+    # Inline python code to run.
+    code: |
+        # The function to run when an on_data message is received. Accepts a dictionary
+        # of options.
+        def on_data(options):
+            actor = 'WrapUp'
+            print '### Started %s ###' % actor
+            for key, value in options.iteritems():
+                if key == 'artifacts':
+                    print 'artifacts:'
+                    keylist = []
+                    for akey, avalue in options[key].iteritems():
+                        keylist.append(akey)
+                    sortedkeylist = sorted(keylist)
+                    for skey in sortedkeylist:
+                        print '  %s: %s' % (skey, options[key][skey])
+                else:
+                    print '%s: %s' % (key, value)
+            print '### Finished Wrapup ###'
+    # A list of parameters to get from the options dictionary passed from an
+    # upstream actor.
+    inputs:
+        # Get the workspace for this actor from the workspace in the options dictionary.
+        workspace: workspace
+        # Get the success state from the options dictionary of the previous step
+        success: previoussuccess
+        # Get the message from the options dictionary of the previous step
+        message: previousmessage
+    parameters:
+      # Show the name of the upstream actor.
+      messagefrom: 'DateValidator'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref DateValidator
