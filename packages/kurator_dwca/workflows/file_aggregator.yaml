@@ -12,8 +12,8 @@
 # Example command-line usage:
 # kurator -f file_aggregator.yaml 
 #         -p workspace=./file_aggregator_workspace
-#         -p inputfile1=../data/tests/test_barcelona1.txt
-#         -p inputfile2=../data/tests/test_barcelona2.txt
+#         -p inputfile1=../data/tests/test_aggregate_1.txt
+#         -p inputfile2=../data/tests/test_aggregate_2.txt
 #         -p outputfile=aggregated_file.csv
 #         -p format=csv
 #         -l DEBUG (optional)
@@ -33,7 +33,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "file_aggregator.yaml 2016-10-09T17:03+02:00"
+# __version__ = "file_aggregator.yaml 2016-11-29T17:16-03:00"
 
 imports:
 
@@ -211,6 +211,8 @@ components:
                 with open(file, 'rU') as inputfile:
                     reader = csv.DictReader(utf8_data_encoder(inputfile, encoding1), 
                         dialect=inputdialect, fieldnames=header1)
+                    # Skip the header row
+                    reader.next()
                     for line in reader:
                         try:
                             writer.writerow(line)
@@ -227,6 +229,7 @@ components:
                 with open(file, 'rU') as inputfile:
                     reader = csv.DictReader(utf8_data_encoder(inputfile, encoding2), 
                         dialect=inputdialect, fieldnames=header2)
+                    # Skip the header row
                     reader.next()
                     for line in reader:
                         try:
