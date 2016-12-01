@@ -33,7 +33,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "file_aggregator.yaml 2016-11-29T17:16-03:00"
+# __version__ = "file_aggregator.yaml 2016-11-30T123:32-03:00"
 
 imports:
 
@@ -129,6 +129,7 @@ components:
         # An optimization would be to download only those files that are needed.
         # Another optimization would be to have zip files of the vocabs to download
         # and unzip.
+        import os
         from kurator_dwca.dwca_utils import read_header
         from kurator_dwca.dwca_utils import merge_headers
         from kurator_dwca.dwca_utils import csv_file_dialect
@@ -179,6 +180,26 @@ components:
 
             inputfile1 = options['inputfile1']
             inputfile2 = options['inputfile2']
+
+            if inputfile1 is None or len(inputfile1)==0:
+                outputoptions['message'] = 'input file 1 not given'
+                outputoptions['success'] = False
+                return outputoptions
+
+            if inputfile2 is None or len(inputfile2)==0:
+                outputoptions['message'] = 'input file 2 not given'
+                outputoptions['success'] = False
+                return outputoptions
+
+            if os.path.isfile(inputfile1) == False:
+                message = 'Input file %s not found.' % (inputfile1)
+                outputoptions['success'] = False
+                return outputoptions
+
+            if os.path.isfile(inputfile2) == False:
+                message = 'Input file %s not found.' % (inputfile2)
+                outputoptions['success'] = False
+                return outputoptions
 
             # Read the headers of the two files and let read_header figure out the dialects and
             # encodings.
