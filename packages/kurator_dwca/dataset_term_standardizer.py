@@ -15,12 +15,13 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dataset_term_standardizer.py 2016-10-20T16:48+02:00"
+__version__ = "dataset_term_standardizer.py 2017-01-05T14:59-03:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 from report_utils import term_standardizer_report
 from slugify import slugify
+import uuid
 import os.path
 import logging
 import argparse

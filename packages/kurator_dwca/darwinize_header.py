@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwinize_header.py 2016-10-07T15:21+02:00"
+__version__ = "darwinize_header.py 2017-01-05T12:00-03:00"
 
 from dwca_vocab_utils import darwinize_list
 from dwca_utils import read_header
@@ -216,7 +216,7 @@ def main():
         s += 'python darwinize_header.py'
         s += ' -w ./workspace'
         s += ' -i ./data/tests/test_eight_specimen_records.csv'
-        s += ' -v ./data/vocabularies/dwc_cloud.txt'
+        s += ' -v ./data/vocabularies/darwin_cloud.txt'
         s += ' -o darwinized.csv'
         s += ' -l DEBUG'
         s += ' -n yes'

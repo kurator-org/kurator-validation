@@ -74,10 +74,10 @@ components:
         # of the format parameter given on the command line.
         actor: !ref Darwinize
         parameter: format
-      # Accept a parameter called namespace from the command line.
+      # Accept a parameter called dwcnamespace from the command line.
       dwcnamespace:
         # Set the namespace in the options dictionary of Darwinize from the value
-        # of the format parameter given on the command line.
+        # of the dwcnamespace parameter given on the command line.
         actor: !ref Darwinize
         parameter: namespace
 
@@ -167,7 +167,6 @@ components:
     parameters:
       # Set the output file to a specific file name.
       outputfile : 'darwinized_file.txt'
-      namespace: 
       # Show the name of the upstream actor.
       messagefrom: 'DownloadDarwinCloudLookup'
     # The "upstream" actor from which to receive a message.

@@ -16,7 +16,7 @@
 #    - wraps up the workflow
 #
 # Example command-line usage:
-# kurator -f dwca_geography_cleaner.yaml 
+# kurator -f file_geography_cleaner.yaml 
 #         -p workspace=./dwca_geography_cleaner_workspace
 #         -p inputfile=../data/tests/test_barcelona1.txt
 #         -p format=txt
@@ -44,7 +44,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "dwca_geography_cleaner.yaml 2016-10-12T23:58+02:00"
+# __version__ = "file_geography_cleaner.yaml 2017-01-05T14:51-03:00"
 
 imports:
 

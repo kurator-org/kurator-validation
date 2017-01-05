@@ -43,7 +43,7 @@ imports:
 components:
 
 ### The named workflow ###
-- id: DarwinizeFile
+- id: DateValidator
   type: Workflow
   properties:
     actors:
