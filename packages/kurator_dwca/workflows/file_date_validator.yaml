@@ -169,7 +169,8 @@ components:
     parameters:
       # Set the output file to a specific file name.
       outputfile : 'darwinized_file.txt'
-      namespace:
+      namespace: 'n'
+      format: 'csv'
       # Show the name of the upstream actor.
       messagefrom: 'DownloadDarwinCloudLookup'
     # The "upstream" actor from which to receive a message.

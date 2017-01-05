@@ -6,11 +6,13 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.datakurator.data.ffdq.DQReport;
 import org.datakurator.data.ffdq.DQReportBuilder;
+import org.datakurator.data.ffdq.runner.ValidationRunner;
 import org.datakurator.data.provenance.BaseRecord;
 import org.filteredpush.kuration.data.DateFragment;
 import org.kurator.akka.KuratorActor;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 /**
@@ -34,6 +36,8 @@ public class DateValidator extends KuratorActor {
                 "month", "day", "verbatimEventDate", "status"));
 
         for (Map<String, String> record : readFile(inputfile)) {
+            validate(record);
+
             BaseRecord result = org.filteredpush.kuration.validators.DateValidator.validateEventConsistencyWithContext(record.get("id"),
                     record.get("eventDate"), record.get("year"), record.get("month"), record.get("day"),
                     record.get("startDayOfYear"), record.get("endDayOfYear"), record.get("eventTime"),
@@ -69,7 +73,7 @@ public class DateValidator extends KuratorActor {
         Map<String, String> artifacts = (Map<String, String>) options.get("artifacts");
 
         String artifactFileName = options.get("workspace") + File.separator + reportFile;
-        publishArtifact("dq_report_file", artifactFileName);
+        publishArtifact("dq_report_file", artifactFileName, "DQ_REPORT");
         artifacts.put("dq_report_file", artifactFileName);
 
         artifactFileName = options.get("workspace") + File.separator + outputfile;
@@ -77,6 +81,15 @@ public class DateValidator extends KuratorActor {
         artifacts.put("event_dates_file", artifactFileName);
 
         broadcast(options);
+    }
+
+    private void validate(Map<String, String> record) {
+        /*try {
+            ValidationRunner runner = new ValidationRunner(DateUtils.class);
+            runner.validate(record);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }*/
     }
 
     private DQReport createReport(BaseRecord result) throws IOException {

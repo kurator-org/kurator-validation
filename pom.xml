@@ -4,7 +4,7 @@
 
     <groupId>org.kurator</groupId>
     <artifactId>kurator-validation</artifactId>
-    <version>0.5-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
     <name>kurator-validation</name>
     <url>http://opensource.ncsa.illinois.edu/projects/KURATOR</url>
@@ -33,7 +33,7 @@
         <dependency>
             <groupId>org.kurator</groupId>
             <artifactId>kurator-akka</artifactId>
-            <version>0.5-SNAPSHOT</version>
+            <version>1.0.0</version>
         </dependency>
 
         <dependency>
@@ -45,7 +45,7 @@
         <dependency>
             <groupId>org.datakurator</groupId>
             <artifactId>kurator-ffdq</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>
