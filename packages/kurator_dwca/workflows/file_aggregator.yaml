@@ -12,8 +12,8 @@
 # Example command-line usage:
 # kurator -f file_aggregator.yaml 
 #         -p workspace=./file_aggregator_workspace
-#         -p inputfile1=../data/tests/test_aggregate_1.txt
-#         -p inputfile2=../data/tests/test_aggregate_2.txt
+#         -p inputfile1=../data/tests/test_aggregate_1.csv
+#         -p inputfile2=../data/tests/test_aggregate_2.csv
 #         -p outputfile=aggregated_file.csv
 #         -p format=csv
 #         -l DEBUG (optional)
@@ -33,7 +33,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "file_aggregator.yaml 2016-11-30T123:32-03:00"
+# __version__ = "file_aggregator.yaml 2017-01-05T16:34-03:00"
 
 imports:
 
@@ -130,6 +130,8 @@ components:
         # Another optimization would be to have zip files of the vocabs to download
         # and unzip.
         import os
+        import uuid
+        from kurator_dwca.slugify import slugify
         from kurator_dwca.dwca_utils import read_header
         from kurator_dwca.dwca_utils import merge_headers
         from kurator_dwca.dwca_utils import csv_file_dialect
@@ -174,9 +176,14 @@ components:
             try:
                 outputfile = options['outputfile']
             except:
-                pass
+                outputfile = None
 
-            outputfile = '%s/%s' % (options['workspace'].rstrip('/'), outputfile)
+            if outputfile is None or len(outputfile.strip())==0:
+                outputfile = '%s/aggregated_%s.%s' % \
+                  (options['workspace'].rstrip('/'), str(uuid.uuid1()), format)
+            else:
+                outputfile = '%s/%s' % (options['workspace'].rstrip('/'), outputfile)
+            print 'outputfile: %s' % outputfile
 
             inputfile1 = options['inputfile1']
             inputfile2 = options['inputfile2']
@@ -193,11 +200,13 @@ components:
 
             if os.path.isfile(inputfile1) == False:
                 message = 'Input file %s not found.' % (inputfile1)
+                outputoptions['message'] = message
                 outputoptions['success'] = False
                 return outputoptions
 
             if os.path.isfile(inputfile2) == False:
                 message = 'Input file %s not found.' % (inputfile2)
+                outputoptions['message'] = message
                 outputoptions['success'] = False
                 return outputoptions
 
