@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dataset_term_standardizer.py 2017-01-05T14:59-03:00"
+__version__ = "dataset_term_standardizer.py 2017-01-17T11:41-03:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -237,7 +237,7 @@ def main():
         s =  'Multiple field syntax:\n'
         s += 'python dataset_term_standardizer.py'
         s += ' -w ./workspace'
-        s += ' -i ./data/eight_specimen_records.csv'
+        s += ' -i ./data/tests/test_geog_lowercase.csv'
         s += ' -o testgeographystandardization.txt'
         s += ' -v ./data/vocabularies/dwc_geography.txt'
         s += ' -k "continent|country|countryCode|stateProvince|county|municipality|waterBody|islandGroup|island"'

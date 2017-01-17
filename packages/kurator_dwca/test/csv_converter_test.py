@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_converter_test.py 2016-10-20T17:12+02:00"
+__version__ = "csv_converter_test.py 2017-01-17T09:20-03:00"
 
 # This file contains unit test for the csv_converter function.
 #
@@ -40,6 +40,7 @@ class CSVConverterFramework():
     # input data files to tests, don't remove these
     testfile1 = testdatapath + 'test_three_records_utf8_unix_lf.txt'
     testfile2 = testdatapath + 'test_thirty_records_latin_1_crlf.csv'
+    testfile3 = testdatapath + 'test_bat_agave_data_idigbio.csv'
 
     # output data files from tests, remove these in dispose()
     outputfile = 'test_txt_from_csv_file.txt'
@@ -66,6 +67,8 @@ class CSVConverterTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(testfile1), testfile1 + ' does not exist')
         testfile2 = self.framework.testfile2
         self.assertTrue(os.path.isfile(testfile2), testfile2 + ' does not exist')
+        testfile3 = self.framework.testfile3
+        self.assertTrue(os.path.isfile(testfile2), testfile3 + ' does not exist')
 
     def test_missing_parameters(self):
         print 'testing missing_parameters'
@@ -109,6 +112,7 @@ class CSVConverterTestCase(unittest.TestCase):
         print 'testing csv_converter'
         testfile1 = self.framework.testfile1
         testfile2 = self.framework.testfile2
+        testfile3 = self.framework.testfile3
         testdatapath = self.framework.testdatapath
         outputfile = self.framework.outputfile
         
@@ -155,6 +159,110 @@ class CSVConverterTestCase(unittest.TestCase):
         expected = False
         s = 'found doublequote %s, not %s' % (found, expected)
         self.assertFalse(found)
+
+        found = outdialect.quoting
+        expected  = csv.QUOTE_MINIMAL
+        s = 'found quoting %s, not %s' % (found, expected)
+        
+        found = outdialect.skipinitialspace
+        expected = True
+        s = 'found skipinitialspace %s, not %s' % (found, expected)
+        self.assertTrue(found)
+        
+        found = outdialect.strict
+        expected = False
+        s = 'found strict %s, not %s' % (found, expected)
+        self.assertFalse(found)
+
+        inputs['inputfile'] = testfile2
+
+        # Translate the file to csv
+        response=csv_converter(inputs)
+        outdialect = csv_file_dialect(outfilelocation)
+        #print 'inputs2:\n%s' % inputs
+        #print 'response2:\n%s' % response
+
+        found = outdialect.lineterminator
+        expected =  '\r'
+        if found == '\r\n':
+            s = 'found lineterminator \\r\\n, not \\r'
+        elif found == '\\n':
+            s = 'found lineterminator \\n, not \\r'
+        else:
+            s = 'lineterminator not as expected (\\r)'
+        self.assertEqual(found, expected, s)
+
+        found = outdialect.delimiter
+        expected = ','
+        s = 'found delimiter %s, not %s' % (found, expected)
+        self.assertEqual(found, expected, s)
+
+        found = outdialect.escapechar
+        expected = '\\'
+        s = 'found escapechar %s, not %s' % (found, expected)
+        self.assertEqual(found, expected, s)
+
+        found = outdialect.quotechar
+        expected = '"'
+        s = 'found quotechar %s, not %s' % (found, expected)
+        self.assertEqual(found, expected, s)
+
+        found = outdialect.doublequote
+        expected = False
+        s = 'found doublequote %s, not %s' % (found, expected)
+        self.assertFalse(found)
+
+        found = outdialect.quoting
+        expected  = csv.QUOTE_MINIMAL
+        s = 'found quoting %s, not %s' % (found, expected)
+        
+        found = outdialect.skipinitialspace
+        expected = True
+        s = 'found skipinitialspace %s, not %s' % (found, expected)
+        self.assertTrue(found)
+        
+        found = outdialect.strict
+        expected = False
+        s = 'found strict %s, not %s' % (found, expected)
+        self.assertFalse(found)
+
+        inputs['inputfile'] = testfile3
+
+        # Translate the file to csv
+        response=csv_converter(inputs)
+        outdialect = csv_file_dialect(outfilelocation)
+        #print 'inputs3:\n%s' % inputs
+        #print 'response3:\n%s' % response
+
+        found = outdialect.lineterminator
+        expected =  '\r'
+        if found == '\r\n':
+            s = 'found lineterminator \\r\\n, not \\r'
+        elif found == '\\n':
+            s = 'found lineterminator \\n, not \\r'
+        else:
+            s = 'lineterminator not as expected (\\r)'
+        self.assertEqual(found, expected, s)
+
+        found = outdialect.delimiter
+        expected = ','
+        s = 'found delimiter %s, not %s' % (found, expected)
+        self.assertEqual(found, expected, s)
+
+        found = outdialect.escapechar
+        expected = '\\'
+        s = 'found escapechar %s, not %s' % (found, expected)
+        self.assertEqual(found, expected, s)
+
+        found = outdialect.quotechar
+        expected = '"'
+        s = 'found quotechar %s, not %s' % (found, expected)
+        self.assertEqual(found, expected, s)
+
+        found = outdialect.doublequote
+        expected = True
+        s = 'found doublequote %s, not %s' % (found, expected)
+        self.assertTrue(found)
 
         found = outdialect.quoting
         expected  = csv.QUOTE_MINIMAL

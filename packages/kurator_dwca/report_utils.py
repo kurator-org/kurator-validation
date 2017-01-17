@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2016-11-18T17:33-06:00"
+__version__ = "report_utils.py 2017-01-17T11:36-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data.
@@ -549,7 +549,8 @@ def term_standardizer_report(
 
     # Get the vocabulary dictionary, but convert all entries using ustripstr. Assume
     # vocabulary file is encoded as utf-8.
-    vocabdict = vocab_dict_from_file(vocabfile, key, encoding='utf-8', function=ustripstr)
+    vocabdict = vocab_dict_from_file(vocabfile, key, encoding='utf-8', \
+        separator=separator, function=ustripstr)
     if len(vocabdict) == 0:
         s = 'Vocabulary file %s ' % vocabfile
         s += 'had zero recommendations in %s.' % functionname

@@ -15,10 +15,10 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2016-11-18T17:18-06:00"
+__version__ = "dwca_utils.py 2017-01-16T15:26-03:00"
 
 # This file contains common utility functions for dealing with the content of CSV and
-# TXT data.
+# TXT files.
 
 from operator import itemgetter
 from uuid import uuid1
@@ -45,6 +45,16 @@ except ImportError:
     s += "pip install chardet\n"
     s += "$JYTHON_HOME/bin/pip install chardet"
     warnings.warn(s)
+
+# Unfortunately, pandas will not currently work under JYTHON due to the numpy dependency.
+# try:
+#     import pandas as pd
+# except ImportError:
+#     import warnings
+#     s = "The pandas package is required.\n"
+#     s += "pip install pandas\n"
+#     s += "$JYTHON_HOME/bin/pip install pandas"
+#     warnings.warn(s)
 
 # def safe_unicode(obj, *args):
 #     ''' Return the unicode representation of obj.'''
@@ -152,7 +162,7 @@ def csv_file_dialect(fullpath):
         return None
 
     # Let's look at up to readto bytes from the file
-    readto = 4096
+    readto = 20000
     filesize = os.path.getsize(fullpath)
 
     if filesize < readto:
@@ -167,14 +177,17 @@ def csv_file_dialect(fullpath):
             # dialect doublequote value should be true.
             if buf.find('""')>0:
                 found_doublequotes = True
+
             # Make a determination based on existence of tabs in the buffer, as the
             # Sniffer is not particularly good at detecting TSV file formats. So, if the
             # buffer has a tab in it, let's treat it as a TSV file 
             if buf.find('\t')>0:
                 return tsv_dialect()
+
             # Otherwise let's see what we can find invoking the Sniffer.
             logging.debug('Forced to use csv.Sniffer()')
-            dialect = csv.Sniffer().sniff(buf, delimiters=',\t|')
+            dialect = csv.Sniffer().sniff(buf, delimiters=',\t')
+
             # The Sniffer doesn't always guess the line terminator correctly either
             # Let's double-check.
             if buf.find('\r\n')>0:
@@ -183,12 +196,13 @@ def csv_file_dialect(fullpath):
                 dialect.lineterminator = '\r'
             else:
                 dialect.lineterminator = '\n'
-        except csv.Error:
+        except csv.Error, e:
             # Something went wrong, so let's try to read a few lines from the beginning of 
             # the file
             try:
                 file.seek(0)
                 s = 'csv_file_dialect()'
+                s += ' %s' % e
                 s += ' Re-sniffing %s to %s' % (fullpath, readto)
                 logging.debug(s)
                 sample_text = ''.join(file.readline() for x in xrange(2,4,1))
@@ -200,15 +214,16 @@ def csv_file_dialect(fullpath):
             # Sorry, couldn't figure it out. Let's treat it as csv
             except csv.Error:
                 s = 'Unable to determine csv dialect in %s' % functionname
+                s += ' %s' % e
                 logging.debug(s)
                 return csv_dialect()
     
     # Fill in some standard values for the remaining dialect attributes        
     if dialect.escapechar is None:
-        dialect.escapechar='\\'
+        dialect.escapechar = '\\'
 
-    dialect.skipinitialspace=True
-    dialect.strict=False
+    dialect.skipinitialspace = True
+    dialect.strict = False
     dialect.doublequote = found_doublequotes
     return dialect
 
@@ -672,6 +687,74 @@ def convert_csv(inputfile, outputfile, dialect=None, encoding=None, format=None)
     s = 'File written to %s in %s.' % (outputfile, functionname)
     logging.debug(s)
     return True
+
+# Unfortunately, pandas will not currently work under JYTHON due to the numpy dependency.
+# def convert_csv_pandas(inputfile, outputfile, encoding=None, format=None):
+#     ''' Convert an arbitrary csv file into a txt file in utf-8 usin pandas.
+#     parameters:
+#         inputfile - full path to the input file (required)
+#         outputfile - full path to the converted file (required)
+#         encoding - a string designating the input file encoding (optional; default None) 
+#             (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
+#         format - output file format (e.g., 'csv' or 'txt') (optional; default 'txt')
+#     returns:
+#         True if finished successfully, otherwise False
+#     '''
+#     functionname = 'convert_csv_pandas()'
+# 
+#     if inputfile is None or len(inputfile) == 0:
+#         s = 'No input file given in %s.' % functionname
+#         logging.debug(s)
+#         return False
+# 
+#     if outputfile is None or len(outputfile) == 0:
+#         s = 'No output file given in %s.' % functionname
+#         logging.debug(s)
+#         return False
+# 
+#     if os.path.isfile(inputfile) == False:
+#         s = 'File %s not found in %s.' % (inputfile, functionname)
+#         logging.debug(s)
+#         return False
+# 
+#     # Determine the dialect of the input file
+#     dialect = csv_file_dialect(inputfile)
+#     # csv_file_dialect() always returns a dialect if there is an input file.
+#     # No need to check.
+# 
+#     # Try to determine the encoding of the inputfile.
+#     if encoding is None or len(encoding.strip()) == 0:
+#         encoding = csv_file_encoding(inputfile)
+#         # csv_file_encoding() always returns an encoding if there is an input file.    
+# 
+#     # Read the inputfile based on the preliminary dialect detection
+#     p = None
+#     if dialect.delimiter == '\t':
+#         df = pd.read_table(inputfile, encoding=encoding)
+#     else:
+#         df = pd.read_csv(inputfile, encoding=encoding)
+# 
+#     # df contains the pandas data frame
+#     if format == 'txt':
+#         try:
+#             df.to_csv(outputfile, sep='\t', index=False, encoding='utf8', \
+#                 quoting=csv.QUOTE_NONE)
+#         except Exception, e:
+#             s = 'File not written to %s in %s.\n%s' % (outputfile, functionname, e)
+#             logging.debug(s)
+#             return False
+#     else:
+#         try:
+#             df.to_csv(outputfile, sep=',', index=False, encoding='utf8', \
+#                 quoting=csv.QUOTE_MINIMAL)
+#         except Exception, e:
+#             s = 'File not written to %s in %s.\n%s' % (outputfile, functionname, e)
+#             logging.debug(s)
+#             return False
+# 
+#     s = 'File written to %s in %s.' % (outputfile, functionname)
+#     logging.debug(s)
+#     return True
 
 def term_rowcount_from_file(inputfile, termname, dialect=None, encoding=None):
     ''' Count of the rows that are populated for a given term.

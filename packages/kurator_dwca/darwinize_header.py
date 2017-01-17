@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwinize_header.py 2017-01-05T12:00-03:00"
+__version__ = "darwinize_header.py 2017-01-17T09:38-03:00"
 
 from dwca_vocab_utils import darwinize_list
 from dwca_utils import read_header
@@ -151,7 +151,15 @@ def darwinize_header(options):
         pass
 
     dialect = csv_file_dialect(inputfile)
-
+    
+    parts = outputfile.split('.')
+    # If the outputfile name does not have an extension, provide one based on the format.
+    if parts[len(parts)-1] != 'csv' and parts[len(parts)-1] != 'txt':
+        if dialect.delimiter == ',':
+            outputfile = '%s.%s' % (outputfile, 'csv')
+        else:
+            outputfile = '%s.%s' % (outputfile, 'txt')
+    print 'outputfile: %s parts: %s' % (outputfile, parts)
     header = read_header(inputfile, dialect=dialect, encoding=encoding)
     dwcheader = darwinize_list(header, dwccloudfile, namespace)
 
@@ -215,11 +223,11 @@ def main():
         s =  'syntax:\n'
         s += 'python darwinize_header.py'
         s += ' -w ./workspace'
-        s += ' -i ./data/tests/test_eight_specimen_records.csv'
         s += ' -v ./data/vocabularies/darwin_cloud.txt'
         s += ' -o darwinized.csv'
-        s += ' -l DEBUG'
+        s += ' -i ./data/tests/test_eight_specimen_records.csv'
         s += ' -n yes'
+        s += ' -l DEBUG'
         print '%s' % s
         return
 
