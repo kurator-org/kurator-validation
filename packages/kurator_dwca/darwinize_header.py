@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwinize_header.py 2017-01-17T09:38-03:00"
+__version__ = "darwinize_header.py 2017-01-17T21:19-03:00"
 
 from dwca_vocab_utils import darwinize_list
 from dwca_utils import read_header
@@ -159,7 +159,7 @@ def darwinize_header(options):
             outputfile = '%s.%s' % (outputfile, 'csv')
         else:
             outputfile = '%s.%s' % (outputfile, 'txt')
-    print 'outputfile: %s parts: %s' % (outputfile, parts)
+
     header = read_header(inputfile, dialect=dialect, encoding=encoding)
     dwcheader = darwinize_list(header, dwccloudfile, namespace)
 
@@ -183,6 +183,7 @@ def darwinize_header(options):
             fieldnames=header)
         for row in read_csv_row(inputfile, dialect, encoding):
             writer.writerow(row)
+            #print 'row: %s' % row
 
     success = True
     artifacts['darwinized_header_file'] = outputfile

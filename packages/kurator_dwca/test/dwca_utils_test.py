@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils_test.py 2017-01-16T19:09-03:00"
+__version__ = "dwca_utils_test.py 2017-01-17T21:21-03:00"
 
 # This file contains unit test for the functions in dwca_utils.
 #
@@ -302,8 +302,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'incorrect escapechar for csv file')
         self.assertEqual(dialect.quotechar, '"',
             'incorrect quotechar for csv file')
-        self.assertFalse(dialect.doublequote,
-            'doublequote not set to False for csv file')
+        self.assertTrue(dialect.doublequote,
+            'doublequote not set to True for csv file')
         self.assertEqual(dialect.quoting, csv.QUOTE_MINIMAL,
             'quoting not set to csv.QUOTE_MINIMAL for csv file')
         self.assertTrue(dialect.skipinitialspace,

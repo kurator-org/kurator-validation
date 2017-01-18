@@ -168,7 +168,8 @@ def csv_file_dialect(fullpath):
     if filesize < readto:
         readto = filesize
 
-    found_doublequotes = False
+#    found_doublequotes = False
+    found_doublequotes = True
     with open(fullpath, 'rb') as file:
         # Try to read the specified part of the file
         try:
