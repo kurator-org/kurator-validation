@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwinize_header.py 2016-10-07T15:21+02:00"
+__version__ = "darwinize_header.py 2017-01-17T21:19-03:00"
 
 from dwca_vocab_utils import darwinize_list
 from dwca_utils import read_header
@@ -151,6 +151,14 @@ def darwinize_header(options):
         pass
 
     dialect = csv_file_dialect(inputfile)
+    
+    parts = outputfile.split('.')
+    # If the outputfile name does not have an extension, provide one based on the format.
+    if parts[len(parts)-1] != 'csv' and parts[len(parts)-1] != 'txt':
+        if dialect.delimiter == ',':
+            outputfile = '%s.%s' % (outputfile, 'csv')
+        else:
+            outputfile = '%s.%s' % (outputfile, 'txt')
 
     header = read_header(inputfile, dialect=dialect, encoding=encoding)
     dwcheader = darwinize_list(header, dwccloudfile, namespace)
@@ -175,6 +183,7 @@ def darwinize_header(options):
             fieldnames=header)
         for row in read_csv_row(inputfile, dialect, encoding):
             writer.writerow(row)
+            #print 'row: %s' % row
 
     success = True
     artifacts['darwinized_header_file'] = outputfile
@@ -215,11 +224,11 @@ def main():
         s =  'syntax:\n'
         s += 'python darwinize_header.py'
         s += ' -w ./workspace'
-        s += ' -i ./data/tests/test_eight_specimen_records.csv'
-        s += ' -v ./data/vocabularies/dwc_cloud.txt'
+        s += ' -v ./data/vocabularies/darwin_cloud.txt'
         s += ' -o darwinized.csv'
-        s += ' -l DEBUG'
+        s += ' -i ./data/tests/test_eight_specimen_records.csv'
         s += ' -n yes'
+        s += ' -l DEBUG'
         print '%s' % s
         return
 

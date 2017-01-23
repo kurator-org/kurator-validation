@@ -32,7 +32,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "darwinize_file.yaml 2016-10-08T13:36+02:00"
+# __version__ = "darwinize_file.yaml 2017-01-17T10:15-03:00"
 
 imports:
 
@@ -74,10 +74,10 @@ components:
         # of the format parameter given on the command line.
         actor: !ref Darwinize
         parameter: format
-      # Accept a parameter called namespace from the command line.
+      # Accept a parameter called dwcnamespace from the command line.
       dwcnamespace:
         # Set the namespace in the options dictionary of Darwinize from the value
-        # of the format parameter given on the command line.
+        # of the dwcnamespace parameter given on the command line.
         actor: !ref Darwinize
         parameter: namespace
 
@@ -156,18 +156,18 @@ components:
     inputs:
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
-      # Get the dwccloudfile for this actor from the output of the previous actor
+      # Get the dwccloudfile for this actor from the outputfile in the options dictionary.
       outputfile : dwccloudfile
-      # Get the success state from the options dictionary of the previous step
+      # Get the success state of the previous step from the options dictionary.
       success: previoussuccess
-      # Get the message from the options dictionary of the previous step
+      # Get the message from the previous step from the options dictionary.
       message: previousmessage
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
-      # Set the output file to a specific file name.
-      outputfile : 'darwinized_file.txt'
-      namespace: 
+      # Set the outputfile to a specific file name without an extension. The extension
+      # will be provided by determining the input file format
+      outputfile : 'darwinized_file'
       # Show the name of the upstream actor.
       messagefrom: 'DownloadDarwinCloudLookup'
     # The "upstream" actor from which to receive a message.

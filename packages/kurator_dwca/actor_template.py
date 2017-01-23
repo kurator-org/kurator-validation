@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "actor_template.py 2016-10-21T12:44+02:00"
+__version__ = "actor_template.py 2017-01-05T18:24-03:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -60,7 +60,6 @@ def dostuffer(options):
     artifacts = {}
 
     ### Establish variables ###
-    workspace = './'
     inputfile = None
     outputfile = None
 
@@ -68,7 +67,7 @@ def dostuffer(options):
     try:
         workspace = options['workspace']
     except:
-        pass
+        workspace = './'
 
     try:
         inputfile = options['inputfile']
