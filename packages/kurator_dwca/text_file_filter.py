@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_filter.py 2016-10-21T12:49+02:00"
+__version__ = "text_file_filter.py 2017-01-24T20:04-03:00"
 
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
@@ -220,6 +220,9 @@ def _getoptions():
     help = 'report file format (e.g., csv or txt) (optional)'
     parser.add_argument("-f", "--format", help=help)
 
+    help = 'input file encoding (optional)'
+    parser.add_argument("-e", "--encoding", help=help)
+
     help = "name of the term (required)"
     parser.add_argument("-t", "--termname", help=help)
 
@@ -242,6 +245,7 @@ def main():
         s += ' -i ./data/eight_specimen_records.csv'
         s += ' -o testfilterout.txt'
         s += ' -f txt'
+        s += ' -e utf-8'
         s += ' -t year'
         s += ' -m 1990'
         s += ' -l DEBUG'
@@ -252,6 +256,7 @@ def main():
     optdict['inputfile'] = options.inputfile
     optdict['outputfile'] = options.outputfile
     optdict['format'] = options.format
+    optdict['encoding'] = options.encoding
     optdict['termname'] = options.termname
     optdict['matchingvalue'] = options.matchingvalue
     optdict['loglevel'] = options.loglevel
