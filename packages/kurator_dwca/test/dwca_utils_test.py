@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils_test.py 2016-11-18T17:26-06:00"
+__version__ = "dwca_utils_test.py 2017-01-17T21:21-03:00"
 
 # This file contains unit test for the functions in dwca_utils.
 #
@@ -25,6 +25,7 @@ __version__ = "dwca_utils_test.py 2016-11-18T17:26-06:00"
 from kurator_dwca.dwca_utils import clean_header
 from kurator_dwca.dwca_utils import composite_header
 from kurator_dwca.dwca_utils import convert_csv
+#from kurator_dwca.dwca_utils import convert_csv_pandas
 from kurator_dwca.dwca_utils import count_rows
 from kurator_dwca.dwca_utils import csv_dialect
 from kurator_dwca.dwca_utils import csv_field_checker
@@ -301,8 +302,8 @@ class DWCAUtilsTestCase(unittest.TestCase):
             'incorrect escapechar for csv file')
         self.assertEqual(dialect.quotechar, '"',
             'incorrect quotechar for csv file')
-        self.assertFalse(dialect.doublequote,
-            'doublequote not set to False for csv file')
+        self.assertTrue(dialect.doublequote,
+            'doublequote not set to True for csv file')
         self.assertEqual(dialect.quoting, csv.QUOTE_MINIMAL,
             'quoting not set to csv.QUOTE_MINIMAL for csv file')
         self.assertTrue(dialect.skipinitialspace,
@@ -552,6 +553,22 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(len(header), 86, 'incorrect number of fields in header')
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
+
+    # Unfortunately, pandas will not currently work under JYTHON due to the numpy dependency.
+#     def test_convert_csv_pandas(self):
+#         print 'testing convert_csv_pandas'
+#         csvfile = self.framework.csvtotsvfile1
+#         tsvfile = self.framework.tsvfromcsvfile1
+# 
+#         convert_csv_pandas(csvfile, tsvfile, format='txt')
+#         written = os.path.isfile(tsvfile)
+#         self.assertTrue(written, 'tsv %s not written' % tsvfile)
+# 
+#         header = read_header(tsvfile)
+#         expected = ['materialSampleID', 'principalInvestigator', 'locality', 'phylum', 'Unnamed: 4']
+#         self.assertEqual(len(header), 5, 'incorrect number of fields in header')
+#         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+#         self.assertEqual(header, expected, s)
 
     def test_split_path(self):
         print 'testing split_path'

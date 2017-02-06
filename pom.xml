@@ -45,25 +45,7 @@
         <dependency>
             <groupId>org.datakurator</groupId>
             <artifactId>kurator-ffdq</artifactId>
-            <version>1.0.2-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.kamon</groupId>
-            <artifactId>kamon-core_2.11</artifactId>
-            <version>0.6.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.kamon</groupId>
-            <artifactId>kamon-akka_2.11</artifactId>
-            <version>0.6.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.kamon</groupId>
-            <artifactId>kamon-statsd_2.11</artifactId>
-            <version>0.6.1</version>
+            <version>1.0.2</version>
         </dependency>
 
         <dependency>

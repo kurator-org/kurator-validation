@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "utf8_encoder.py 2016-10-21T12:50+02:00"
+__version__ = "utf8_encoder.py 2017-01-05T18:22-03:00"
 
 from dwca_utils import utf8_file_encoder
 from dwca_utils import response
@@ -55,7 +55,6 @@ def utf8_encoder(options):
     artifacts = {}
 
     ### Establish variables ###
-    workspace = './'
     inputfile = None
     outputfile = None
     encoding = None
@@ -64,7 +63,7 @@ def utf8_encoder(options):
     try:
         workspace = options['workspace']
     except:
-        pass
+        workspace = './'
 
     try:
         inputfile = options['inputfile']

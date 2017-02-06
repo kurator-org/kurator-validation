@@ -1,5 +1,5 @@
 #####################################################################################
-# dwca_geography_cleaner.yaml
+# file_geography_cleaner.yaml
 #####################################################################################
 #
 # This workflow:
@@ -17,9 +17,10 @@
 #
 # Example command-line usage:
 # kurator -f file_geography_cleaner.yaml 
-#         -p workspace=./dwca_geography_cleaner_workspace
-#         -p inputfile=../data/tests/test_barcelona1.txt
-#         -p format=txt
+#         -p workspace=./file_geography_cleaner_workspace
+#         -p inputfile=../data/tests/test_bat_agave_data_idigbio.csv
+#         -p outputfile=cleaneddata.csv
+#         -p format=csv
 #         -l DEBUG (optional)
 #
 # Requires:
@@ -44,7 +45,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "file_geography_cleaner.yaml 2017-01-05T14:51-03:00"
+# __version__ = "file_geography_cleaner.yaml 2017-01-17T11:42-03:00"
 
 imports:
 
@@ -64,6 +65,8 @@ components:
       - !ref MakeWorkspace
       - !ref DownloadGeographyLookup
       - !ref DownloadCountryLookup
+      - !ref DownloadDarwinCloudLookup
+      - !ref Darwinize
       - !ref CountFieldValues
       - !ref CreateGeographyReport
       - !ref CreateGeographyCountReport
@@ -83,19 +86,20 @@ components:
         parameter: workspace
       # Accept a parameter called inputfile from the command line.
       inputfile:
-        # Set the inputfile in the options dictionary of ExtractVocabulary from the 
+        # Set the inputfile in the options dictionary of Darwinize from the 
         # value of the inputfile parameter given on the command line.
-        actor: !ref CountFieldValues
+        actor: !ref Darwinize
         parameter: inputfile
+      # Accept a parameter called outputfile from the command line.
       outputfile:
-        # Set the outputfile in the options dictionary of ConstructCompositeHeader from the 
-        # value of the outputfile parameter given on the command line.
+        # Set the outputfile in the options dictionary of CreateFileWithCleanGeography
+        # from the value of the outputfile parameter given on the command line.
         actor: !ref CreateFileWithCleanGeography
         parameter: outputfile
       # Accept a parameter called format from the command line.
       format:
-        # Set the format in the options dictionary of Darwinize from the value
-        # of the format parameter given on the command line.
+        # Set the format in the options dictionary of CreateFileWithCleanGeography from 
+        # the value of the format parameter given on the command line.
         actor: !ref CreateFileWithCleanGeography
         parameter: format
 
@@ -127,7 +131,7 @@ components:
                 options['message']='Created workspace %s' % options['workspace']
             return options
 
-# Download dwc_geography.txt file containing geography key to standard geography lookup.
+# Download file containing geography key to standard geography lookup.
 - id: DownloadGeographyLookup
   type: PythonActor
   properties:
@@ -157,7 +161,7 @@ components:
     listensTo:
       - !ref MakeWorkspace
 
-# Download dwc_countries.txt file containing raw country to standard country lookup.
+# Download file containing raw country to standard country lookup.
 - id: DownloadCountryLookup
   type: PythonActor
   properties:
@@ -187,8 +191,70 @@ components:
     listensTo:
       - !ref DownloadGeographyLookup
 
-# Inline python actor to create distinct value counts all DwC terms recommended to follow
-# controlled vocabularies.
+# Download file containing raw field names to Darwin Core field names lookups.
+- id: DownloadDarwinCloudLookup
+  type: PythonActor
+  properties:
+    # The location of the actor source code 
+    module: kurator_dwca.downloader
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: downloader
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
+    inputs:
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
+    parameters:
+      # Get the file from a specific URL.
+      url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/darwin_cloud.txt'
+      # Download to a specific file name in the workspace received from upstream.
+      # Set the output file to a specific file name.
+      outputfile : 'lookup_darwin_cloud.txt'
+      # Show the name of the upstream actor.
+      messagefrom: 'MakeWorkspace'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref DownloadCountryLookup
+
+# Transform the input file to a file with the chosen format and as many field names 
+# standardized to Darwin Core as possible.
+- id: Darwinize
+  type: PythonActor
+  properties:
+    # The location of the actor source code 
+    module: kurator_dwca.darwinize_header
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: darwinize_header
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
+    inputs:
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
+      # Get the dwccloudfile for this actor from the outputfile in the options dictionary.
+      outputfile : dwccloudfile
+      # Get the success state of the previous step from the options dictionary.
+      success: previoussuccess
+      # Get the message from the previous step from the options dictionary.
+      message: previousmessage
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
+    parameters:
+      # Set the output file to a specific file name.
+      outputfile : 'darwinized_file'
+      # Show the name of the upstream actor.
+      messagefrom: 'DownloadDarwinCloudLookup'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref DownloadDarwinCloudLookup
+
+# Inline python actor to create distinct value counts of all DwC terms recommended to 
+# follow controlled vocabularies.
 - id: CountFieldValues
   type: PythonActor
   properties:
@@ -275,6 +341,8 @@ components:
     inputs:
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      outputfile : inputfile
       # Get the success state from the options dictionary of the previous step
       success: previoussuccess
       # Get the message from the options dictionary of the previous step
@@ -283,7 +351,7 @@ components:
       messagefrom: 'CountFieldValues'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref DownloadCountryLookup
+      - !ref Darwinize
 
 # Create report on geography recommendations.
 - id: CreateGeographyReport
