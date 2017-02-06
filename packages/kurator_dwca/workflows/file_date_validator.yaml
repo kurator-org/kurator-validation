@@ -43,7 +43,7 @@ imports:
 components:
 
 ### The named workflow ###
-- id: DateValidator
+- id: EventDateValidator
   type: Workflow
   properties:
     actors:
