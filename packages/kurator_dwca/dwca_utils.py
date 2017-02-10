@@ -73,6 +73,13 @@ except ImportError:
 #         # obj is unicode
 #         return unicode(obj).encode('unicode_escape')
 
+def represents_int(s):
+    try: 
+        int(s)
+        return True
+    except:
+        return False
+
 def get_guid(guidtype):
     ''' Create a global unique identifier of the requested type.'''
     if guidtype == 'uuid':
@@ -1016,12 +1023,13 @@ def filter_non_printable(str, sub = ''):
             newstr += sub
     return newstr
 
-def csv_file_encoding(inputfile):
+def csv_file_encoding(inputfile, maxlines=None):
     ''' Try to discern the encoding of a file.
     parameters:
         inputfile - the full path to an input file (required)
+        maxlines  - the maximum number of lines to read from the csv file(optional)
     returns:
-        the best guess at an encoding, or None
+        the best guess at an encoding, defaulting to utf-8, or None on error
     '''
     functionname = 'csv_file_encoding()'
 
@@ -1034,14 +1042,26 @@ def csv_file_encoding(inputfile):
         s = 'File %s not found in %s.' % (inputfile, functionname)
         logging.debug(s)
         return None
+        
+    if maxlines is None or maxlines is False or maxlines is True:
+        maxlines = 0
+        
+    if not represents_int(maxlines) or maxlines < 0:
+        s = 'maxlines is not an integer or is value is negative in %s.' % (functionname)
+        logging.debug(s)
+        return None
 
+    line_count = 0
     detector = UniversalDetector()
     with open(inputfile, 'rU') as indata:
         for line in indata:
+            line_count +=1
             detector.feed(line)
-            if detector.done: break
+            if detector.done or ( maxlines > 0 and line_count >= maxlines ): break
+
     detector.close()
     encoding = detector.result['encoding']
+    print(encoding)
 
     if encoding is None:
         # Encoding not determined
