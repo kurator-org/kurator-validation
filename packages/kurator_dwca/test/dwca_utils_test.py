@@ -22,6 +22,7 @@ __version__ = "dwca_utils_test.py 2017-01-17T21:21-03:00"
 #
 # python dwca_utils_test.py
 
+from kurator_dwca.dwca_utils import represents_int
 from kurator_dwca.dwca_utils import clean_header
 from kurator_dwca.dwca_utils import composite_header
 from kurator_dwca.dwca_utils import convert_csv
@@ -72,6 +73,7 @@ class DWCAUtilsFramework():
     non_printing_file = testdatapath + 'test_non-printing.csv'
     encodedfile_utf8 = testdatapath + 'test_eight_records_utf8_lf.csv'
     encodedfile_latin_1 = testdatapath + 'test_thirty_records_latin_1_crlf.csv'
+
     symbiotafile = testdatapath + 'test_symbiota_download.csv'
     csvreadheaderfile = testdatapath + 'test_eight_specimen_records.csv'
     tsvreadheaderfile = testdatapath + 'test_three_specimen_records.txt'
@@ -175,6 +177,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         file = encodedfile_latin_1
         s = 'File %s does not exist' % file
         self.assertTrue(os.path.isfile(file), s)
+
 
         file = csvreadheaderfile
         s = 'File %s does not exist' % file
@@ -719,11 +722,71 @@ class DWCAUtilsTestCase(unittest.TestCase):
             % (rowcount, term, expected, termrowcountfile)
         self.assertEqual(rowcount, expected, s)
 
+    def test_represents_int(self):
+        print 'testing represents_int'
+
+        result = represents_int(None)
+        expected = False
+        s = 'represents_int None result (%s) does not match expectation (%s)' % (result, expected)
+        self.assertEqual(result, expected, s)
+
+        result = represents_int('A')
+        expected = False
+        s = 'represents_int \'A\' result (%s) does not match expectation (%s)' % (result, expected)
+        self.assertEqual(result, expected, s)
+
+        result = represents_int("AAAA")
+        expected = False
+        s = 'represents_int "AAAA" result (%s) does not match expectation (%s)' % (result, expected)
+        self.assertEqual(result, expected, s)
+
+        result = represents_int(self)
+        expected = False
+        s = 'represents_int self result (%s) does not match expectation (%s)' % (result, expected)
+        self.assertEqual(result, expected, s)
+
+        result = represents_int(False)
+        expected = True
+        s = 'represents_int False result (%s) does not match expectation (%s)' % (result, expected)
+        self.assertEqual(result, expected, s)
+
+
+        result = represents_int("0")
+        expected = True
+        s = 'represents_int "0" result (%s) does not match expectation (%s)' % (result, expected)
+        self.assertEqual(result, expected, s)
+
+        result = represents_int(0)
+        expected = True
+        s = 'represents_int 0 result (%s) does not match expectation (%s)' % (result, expected)
+        self.assertEqual(result, expected, s)
+
+        result = represents_int(-1)
+        expected = True
+        s = 'represents_int -1 result (%s) does not match expectation (%s)' % (result, expected)
+        self.assertEqual(result, expected, s)
+
+        result = represents_int(1)
+        expected = True
+        s = 'represents_int 1 result (%s) does not match expectation (%s)' % (result, expected)
+        self.assertEqual(result, expected, s)
+
+        result = represents_int(1L)
+        expected = True
+        s = 'represents_int 1L result (%s) does not match expectation (%s)' % (result, expected)
+        self.assertEqual(result, expected, s)
+    
+        result = represents_int(1.001)
+        expected = True
+        s = 'represents_int 1.001 result (%s) does not match expectation (%s)' % (result, expected)
+        self.assertEqual(result, expected, s)
+    
+    
     def test_csv_file_encoding(self):
         print 'testing csv_file_encoding'
         encodedfile_utf8 = self.framework.encodedfile_utf8
         encodedfile_latin_1 = self.framework.encodedfile_latin_1
-        
+       
         encoding = csv_file_encoding(encodedfile_utf8)
         # UTF8 file containing only ascii and latin2 characters encoded as utf-8 is 
         # indistinguishable from latin2.
@@ -735,6 +798,43 @@ class DWCAUtilsTestCase(unittest.TestCase):
         expected = 'KOI8-R'
         s = 'file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding, expected, s)
+
+        # Passing in -1 should be an irrecoverable error
+        encoding = csv_file_encoding(encodedfile_latin_1, -1)
+        expected = None
+        s = 'maxlines =-1 file encoding (%s) does not match expectation (None)' % (encoding)
+        self.assertEqual(encoding, expected, s)
+
+        # Passing in a string, 'A', should be an irrecoverable error
+        encoding = csv_file_encoding(encodedfile_latin_1, 'A')
+        expected = None
+        s = 'maxlines = \'A\' file encoding (%s) does not match expectation (None)' % (encoding)
+        self.assertEqual(encoding, expected, s)
+
+        # Passing in a float, 1.001, is legal, but will read 2 lines
+        encoding = csv_file_encoding(encodedfile_latin_1, 1.001)
+        expected = 'ascii'
+        s = 'maxlines = 1.001 file encoding (%s) does not match expectation (%s)' % (encoding, expected)
+        self.assertEqual(encoding, expected, s)
+
+        # If we read in only the first line there is not enough info for the detector
+        # to make a fully informed descision, so it should return 'ascii' rather than the
+        # the more correct value o 'KOI8-R'
+        encoding = csv_file_encoding(encodedfile_latin_1, 1)
+        expected = 'ascii'
+        s = 'maxlines = 1 file encoding (%s) does not match expectation (%s)' % (encoding, expected)
+        self.assertEqual(encoding, expected, s)
+
+        encoding = csv_file_encoding(encodedfile_latin_1, 0)
+        expected = 'KOI8-R'
+        s = 'maxlines = 0 file encoding (%s) does not match expectation (%s)' % (encoding, expected)
+        self.assertEqual(encoding, expected, s)
+
+        encoding = csv_file_encoding(encodedfile_latin_1, 1000)
+        expected = 'KOI8-R'
+        s = 'maxlines = 1000 file encoding (%s) does not match expectation (%s)' % (encoding, expected)
+        self.assertEqual(encoding, expected, s)
+
 
     def test_utf8_file_encoder(self):
         print 'testing utf8_file_encoder'
