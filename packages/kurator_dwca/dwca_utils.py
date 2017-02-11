@@ -1,5 +1,3 @@
-then I thought I was doing a pull req
-
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
