@@ -8,6 +8,7 @@ import org.datakurator.data.ffdq.DQReport;
 import org.datakurator.data.ffdq.DQReportBuilder;
 import org.datakurator.data.ffdq.runner.ValidationRunner;
 import org.datakurator.data.provenance.BaseRecord;
+import org.datakurator.postprocess.FFDQPostProcessor;
 import org.filteredpush.kuration.data.DateFragment;
 import org.kurator.akka.KuratorActor;
 
@@ -70,6 +71,14 @@ public class DateValidator extends KuratorActor {
         reportWriter.write(strWriter.toString());
         reportWriter.close();
 
+        String reportXlsFile = "dq_report.xls";
+        File reportXls = new File(options.get("workspace") + File.separator + reportXlsFile);
+
+        // Postprocessor
+        InputStream config = DateValidator.class.getResourceAsStream("/ffdq-assertions.json");
+        FFDQPostProcessor postProcessor = new FFDQPostProcessor(summary, config);
+        postProcessor.reportSummary(reportXls);
+
         Map<String, String> artifacts = (Map<String, String>) options.get("artifacts");
 
         String artifactFileName = options.get("workspace") + File.separator + reportFile;
@@ -79,6 +88,10 @@ public class DateValidator extends KuratorActor {
         artifactFileName = options.get("workspace") + File.separator + outputfile;
         publishArtifact("event_dates_file", artifactFileName);
         artifacts.put("event_dates_file", artifactFileName);
+
+        artifactFileName = options.get("workspace") + File.separator + reportXlsFile;
+        publishArtifact("dq_report_xls_file", artifactFileName);
+        artifacts.put("dq_report_xls_file", artifactFileName);
 
         broadcast(options);
     }
