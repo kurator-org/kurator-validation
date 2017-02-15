@@ -9,7 +9,7 @@ import org.datakurator.data.ffdq.DQReportBuilder;
 import org.datakurator.data.ffdq.runner.ValidationRunner;
 import org.datakurator.data.provenance.BaseRecord;
 import org.datakurator.postprocess.FFDQPostProcessor;
-import org.filteredpush.kuration.data.DateFragment;
+import org.filteredpush.qc.date.DwCEventDQ;
 import org.kurator.akka.KuratorActor;
 
 import java.io.*;
@@ -20,7 +20,7 @@ import java.util.*;
  * Created by lowery on 11/23/16.
  */
 public class DateValidator extends KuratorActor {
-    private CSVFormat csvFormat = CSVFormat.TDF.withHeader();
+    private CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader();
 
     @Override
     protected void onData(Object value) throws Exception {
@@ -39,36 +39,36 @@ public class DateValidator extends KuratorActor {
         for (Map<String, String> record : readFile(inputfile)) {
             validate(record);
 
-            BaseRecord result = org.filteredpush.kuration.validators.DateValidator.validateEventConsistencyWithContext(record.get("id"),
+            /*BaseRecord result = org.filteredpush.kuration.validators.DateValidator.validateEventConsistencyWithContext(record.get("id"),
                     record.get("eventDate"), record.get("year"), record.get("month"), record.get("day"),
                     record.get("startDayOfYear"), record.get("endDayOfYear"), record.get("eventTime"),
                     record.get("verbatimEventDate"));
 
             csvPrinter.printRecord(record.get("eventDate"), result.get("eventDate"), result.get("year"),
                     result.get("month"), result.get("day"), result.get("verbatimEventDate"),
-                    result.getCurationStatus("eventDate"));
+                    result.getCurationStatus("eventDate"));*/
 
-            DQReport report = createReport(result);
-            summary.add(report);
+            //DQReport report = createReport(result);
+            //summary.add(report);
         }
 
         csvPrinter.close();
+        writer.close();
 
         String reportFile = "dq_report.json";
         FileWriter reportWriter = new FileWriter(options.get("workspace") + File.separator + reportFile);
 
         StringWriter strWriter = new StringWriter();
         int count = 0;
-        strWriter.write('[');
+        reportWriter.write('[');
         for (DQReport report : summary) {
-            report.write(strWriter);
+            reportWriter.write(report.toJson());
             if (count++ < summary.size()-1) {
-                strWriter.write(",");
+                reportWriter.write(",");
+                reportWriter.flush();
             }
         }
-        strWriter.write(']');
-
-        reportWriter.write(strWriter.toString());
+        reportWriter.write(']');
         reportWriter.close();
 
         String reportXlsFile = "dq_report.xls";
@@ -97,12 +97,12 @@ public class DateValidator extends KuratorActor {
     }
 
     private void validate(Map<String, String> record) {
-        /*try {
-            ValidationRunner runner = new ValidationRunner(DateUtils.class);
+        try {
+            ValidationRunner runner = new ValidationRunner(DwCEventDQ.class);
             runner.validate(record);
         } catch (Exception e) {
             e.printStackTrace();
-        }*/
+        }
     }
 
     private DQReport createReport(BaseRecord result) throws IOException {
