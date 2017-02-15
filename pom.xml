@@ -37,9 +37,15 @@
         </dependency>
 
         <dependency>
+            <groupId>org.datakurator</groupId>
+            <artifactId>kurator-ffdq</artifactId>
+            <version>1.0.3-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.filteredpush</groupId>
-            <artifactId>FP-KurationServices</artifactId>
-            <version>1.1.8-SNAPSHOT</version>
+            <artifactId>event_date_qc</artifactId>
+            <version>1.0.3-SNAPSHOT</version>
         </dependency>
 
         <dependency>
