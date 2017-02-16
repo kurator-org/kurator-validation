@@ -23,99 +23,20 @@ public class DateValidator extends KuratorActor {
     private CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader();
 
     @Override
-    protected void onData(Object value) throws Exception {
-        Map<String, Object> options = (Map<String, Object>) value;
+    protected void onData(Object data) throws Exception {
+        Map<String, Object> options = (Map<String, Object>) data;
         File workspace = new File((String) options.get("workspace"));
         File inputfile = new File((String) options.get("outputfile"));
 
-        String outputfile = "event_dates.tsv";
-
-        List<DQReport> summary = new ArrayList<>();
-
-        FileWriter writer = new FileWriter(workspace + File.separator + "event_dates.tsv");
-        CSVPrinter csvPrinter = new CSVPrinter(writer, csvFormat.withHeader("initialValue", "curatedValue", "year",
-                "month", "day", "verbatimEventDate", "status"));
-
-        for (Map<String, String> record : readFile(inputfile)) {
-            validate(record);
-
-            /*BaseRecord result = org.filteredpush.kuration.validators.DateValidator.validateEventConsistencyWithContext(record.get("id"),
-                    record.get("eventDate"), record.get("year"), record.get("month"), record.get("day"),
-                    record.get("startDayOfYear"), record.get("endDayOfYear"), record.get("eventTime"),
-                    record.get("verbatimEventDate"));
-
-            csvPrinter.printRecord(record.get("eventDate"), result.get("eventDate"), result.get("year"),
-                    result.get("month"), result.get("day"), result.get("verbatimEventDate"),
-                    result.getCurationStatus("eventDate"));*/
-
-            //DQReport report = createReport(result);
-            //summary.add(report);
-        }
-
-        csvPrinter.close();
-        writer.close();
-
         String reportFile = "dq_report.json";
+
         FileWriter reportWriter = new FileWriter(options.get("workspace") + File.separator + reportFile);
+        //List<String> fields = Arrays.asList("dwc:eventDate", "dwc:month", "dwc:day", "dwc:year", "dwc:startDayOfYear",
+        //        "dwc:endDayOfYear", "dwc:eventTime", "dwc:verbatimEventDate");
 
-        StringWriter strWriter = new StringWriter();
-        int count = 0;
-        reportWriter.write('[');
-        for (DQReport report : summary) {
-            reportWriter.write(report.toJson());
-            if (count++ < summary.size()-1) {
-                reportWriter.write(",");
-                reportWriter.flush();
-            }
-        }
-        reportWriter.write(']');
-        reportWriter.close();
+        ValidationRunner runner = new ValidationRunner(DwCEventDQ.class, reportWriter);
 
-        String reportXlsFile = "dq_report.xls";
-        File reportXls = new File(options.get("workspace") + File.separator + reportXlsFile);
-
-        // Postprocessor
-        InputStream config = DateValidator.class.getResourceAsStream("/ffdq-assertions.json");
-        FFDQPostProcessor postProcessor = new FFDQPostProcessor(summary, config);
-        postProcessor.reportSummary(reportXls);
-
-        Map<String, String> artifacts = (Map<String, String>) options.get("artifacts");
-
-        String artifactFileName = options.get("workspace") + File.separator + reportFile;
-        publishArtifact("dq_report_file", artifactFileName, "DQ_REPORT");
-        artifacts.put("dq_report_file", artifactFileName);
-
-        artifactFileName = options.get("workspace") + File.separator + outputfile;
-        publishArtifact("event_dates_file", artifactFileName);
-        artifacts.put("event_dates_file", artifactFileName);
-
-        artifactFileName = options.get("workspace") + File.separator + reportXlsFile;
-        publishArtifact("dq_report_xls_file", artifactFileName);
-        artifacts.put("dq_report_xls_file", artifactFileName);
-
-        broadcast(options);
-    }
-
-    private void validate(Map<String, String> record) {
-        try {
-            ValidationRunner runner = new ValidationRunner(DwCEventDQ.class);
-            runner.validate(record);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private DQReport createReport(BaseRecord result) throws IOException {
-        InputStream config = DateValidator.class.getResourceAsStream("/ffdq-assertions.json");
-        DQReportBuilder builder = new DQReportBuilder(config);
-
-        DQReport report = builder.createReport(result);
-
-        return report;
-    }
-
-    private List<Map<String, String>> readFile(File file) throws Exception {
-        FileReader reader = new FileReader(file);
+        FileReader reader = new FileReader(inputfile);
 
         try (CSVParser csvParser = new CSVParser(reader, csvFormat)) {
             List<Map<String, String>> records = new ArrayList<>();
@@ -126,6 +47,8 @@ public class DateValidator extends KuratorActor {
             for (String header : csvHeader.keySet()) {
                 headers[i++] = header;
             }
+
+            reportWriter.write('[');
 
             for (Iterator<CSVRecord> iterator = csvParser.iterator(); iterator.hasNext(); ) {
 
@@ -142,11 +65,50 @@ public class DateValidator extends KuratorActor {
                     record.put(header, value);
                 }
 
-                records.add(record);
+                runner.validate(record);
+
+                if (iterator.hasNext()) {
+                    reportWriter.write(",");
+                }
             }
 
-            return records;
+            reportWriter.write(']');
+            reportWriter.close();
         }
+
+
+        //String reportXlsFile = "dq_report.xls";
+        //File reportXls = new File(options.get("workspace") + File.separator + reportXlsFile);
+
+        // Postprocessor
+        //InputStream config = DateValidator.class.getResourceAsStream("/ffdq-assertions.json");
+        //FFDQPostProcessor postProcessor = new FFDQPostProcessor(summary, config);
+        //postProcessor.reportSummary(reportXls);
+
+        Map<String, String> artifacts = (Map<String, String>) options.get("artifacts");
+
+        String artifactFileName = options.get("workspace") + File.separator + reportFile;
+        publishArtifact("dq_report_file", artifactFileName, "DQ_REPORT");
+        artifacts.put("dq_report_file", artifactFileName);
+
+        //artifactFileName = options.get("workspace") + File.separator + outputfile;
+        //publishArtifact("event_dates_file", artifactFileName);
+        //artifacts.put("event_dates_file", artifactFileName);
+
+        //artifactFileName = options.get("workspace") + File.separator + reportXlsFile;
+        //publishArtifact("dq_report_xls_file", artifactFileName);
+        //artifacts.put("dq_report_xls_file", artifactFileName);
+
+        broadcast(options);
+    }
+
+    private DQReport createReport(BaseRecord result) throws IOException {
+        InputStream config = DateValidator.class.getResourceAsStream("/ffdq-assertions.json");
+        DQReportBuilder builder = new DQReportBuilder(config);
+
+        DQReport report = builder.createReport(result);
+
+        return report;
     }
 }
 
