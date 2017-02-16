@@ -4,8 +4,6 @@
 #
 # This workflow:
 #    - creates a given directory as a workspace
-#    - downloads a Darwin Core Archive from a given URL
-#    - extracts the core file of a Darwin Core Archive to a tab-separated text file
 #    - for each field in a given list of fields, creates a report of counts of distinct 
 #      values
 #    - wraps up the workflow
