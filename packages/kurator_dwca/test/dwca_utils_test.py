@@ -801,14 +801,14 @@ class DWCAUtilsTestCase(unittest.TestCase):
 
         # Passing in -1 should be an irrecoverable error
         encoding = csv_file_encoding(encodedfile_latin_1, -1)
-        expected = None
-        s = 'maxlines =-1 file encoding (%s) does not match expectation (None)' % (encoding)
+        expected = 'KOI8-R'
+        s = 'maxlines =-1 file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding, expected, s)
 
         # Passing in a string, 'A', should be an irrecoverable error
         encoding = csv_file_encoding(encodedfile_latin_1, 'A')
-        expected = None
-        s = 'maxlines = \'A\' file encoding (%s) does not match expectation (None)' % (encoding)
+        expected = 'KOI8-R'
+        s = 'maxlines = \'A\' file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding, expected, s)
 
         # Passing in a float, 1.001, is legal, but will read 2 lines
