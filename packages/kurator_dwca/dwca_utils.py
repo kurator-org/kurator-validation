@@ -1032,7 +1032,9 @@ def csv_file_encoding(inputfile, maxlines=None):
         the best guess at an encoding, defaulting to utf-8, or None on error
     '''
     functionname = 'csv_file_encoding()'
-
+    line_count = 0
+    limitlines = False
+    
     if inputfile is None or len(inputfile) == 0:
         s = 'No input file given in %s.' % functionname
         logging.debug(s)
@@ -1042,22 +1044,16 @@ def csv_file_encoding(inputfile, maxlines=None):
         s = 'File %s not found in %s.' % (inputfile, functionname)
         logging.debug(s)
         return None
-        
-    if maxlines is None or maxlines is False or maxlines is True:
-        maxlines = 0
-        
-    if not represents_int(maxlines) or maxlines < 0:
-        s = 'maxlines is not an integer or is value is negative in %s.' % (functionname)
-        logging.debug(s)
-        return None
 
-    line_count = 0
+    if represents_int(maxlines) and maxlines > 0:
+        limitlines = True
+             
     detector = UniversalDetector()
     with open(inputfile, 'rU') as indata:
         for line in indata:
-            line_count +=1
+            line_count += 1
             detector.feed(line)
-            if detector.done or ( maxlines > 0 and line_count >= maxlines ): break
+            if detector.done or ( limitlines and line_count >= maxlines ): break
 
     detector.close()
     encoding = detector.result['encoding']
