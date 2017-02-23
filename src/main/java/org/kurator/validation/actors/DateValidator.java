@@ -48,8 +48,6 @@ public class DateValidator extends KuratorActor {
                 headers[i++] = header;
             }
 
-            reportWriter.write('[');
-
             for (Iterator<CSVRecord> iterator = csvParser.iterator(); iterator.hasNext(); ) {
 
                 CSVRecord csvRecord = iterator.next();
@@ -66,14 +64,9 @@ public class DateValidator extends KuratorActor {
                 }
 
                 runner.validate(record);
-
-                if (iterator.hasNext()) {
-                    reportWriter.write(",");
-                }
             }
 
-            reportWriter.write(']');
-            reportWriter.close();
+            runner.close();
         }
 
 
