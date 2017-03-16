@@ -49,6 +49,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.filteredpush</groupId>
+            <artifactId>geo_ref_qc</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <dependency>
           <groupId>org.kurator</groupId>
           <artifactId>suds_jurko</artifactId>
           <version>0.6</version>
