@@ -19,7 +19,7 @@ public class GeoRefValidator {
     public static void main(String [] args) throws Exception {
         FileWriter reportWriter = new FileWriter("georef.json");
 
-        ValidationRunner runner = new ValidationRunner(DwCEventDQ.class, reportWriter);
+        ValidationRunner runner = new ValidationRunner(DwCGeoRefDQ.class, reportWriter);
 
         FileReader reader = new FileReader(args[0]);
 
