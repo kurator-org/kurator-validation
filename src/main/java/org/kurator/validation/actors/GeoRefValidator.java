@@ -6,6 +6,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.datakurator.data.ffdq.runner.ValidationRunner;
 import org.filteredpush.qc.date.DwCEventDQ;
 import org.filteredpush.qc.georeference.DwCGeoRefDQ;
+import org.kurator.akka.KuratorActor;
 
 import java.io.*;
 import java.util.*;
@@ -13,15 +14,22 @@ import java.util.*;
 /**
  * Created by lowery on 3/15/17.
  */
-public class GeoRefValidator {
+public class GeoRefValidator extends KuratorActor {
     private static CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader();
 
-    public static void main(String [] args) throws Exception {
-        FileWriter reportWriter = new FileWriter("georef.json");
+    @Override
+    protected void onData(Object data) throws Exception {
+        Map<String, Object> options = (Map<String, Object>) data;
+        File workspace = new File((String) options.get("workspace"));
+        File inputfile = new File((String) options.get("outputfile"));
+
+        String reportFile = "dq_report.json";
+
+        FileWriter reportWriter = new FileWriter(options.get("workspace") + File.separator + reportFile);
 
         ValidationRunner runner = new ValidationRunner(DwCGeoRefDQ.class, reportWriter);
 
-        FileReader reader = new FileReader(args[0]);
+        FileReader reader = new FileReader(inputfile);
 
         try (CSVParser csvParser = new CSVParser(reader, csvFormat)) {
             Map<String, Integer> csvHeader = csvParser.getHeaderMap();
@@ -51,5 +59,13 @@ public class GeoRefValidator {
 
             runner.close();
         }
+
+        Map<String, String> artifacts = (Map<String, String>) options.get("artifacts");
+
+        String artifactFileName = options.get("workspace") + File.separator + reportFile;
+        publishArtifact("dq_report_file", artifactFileName, "DQ_REPORT");
+        artifacts.put("dq_report_file", artifactFileName);
+
+        broadcast(options);
     }
 }
