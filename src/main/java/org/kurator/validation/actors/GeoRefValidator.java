@@ -2,20 +2,29 @@ package org.kurator.validation.actors;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.datakurator.data.ffdq.DQReport;
+import org.datakurator.data.ffdq.DQReportBuilder;
 import org.datakurator.data.ffdq.runner.ValidationRunner;
+import org.datakurator.data.provenance.BaseRecord;
+import org.datakurator.postprocess.FFDQPostProcessor;
+import org.datakurator.postprocess.xlsx.DQReportParser;
+import org.datakurator.postprocess.xlsx.XLSXPostProcessor;
 import org.filteredpush.qc.date.DwCEventDQ;
 import org.filteredpush.qc.georeference.DwCGeoRefDQ;
 import org.kurator.akka.KuratorActor;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 /**
- * Created by lowery on 3/15/17.
+ * Created by lowery on 11/23/16.
  */
 public class GeoRefValidator extends KuratorActor {
-    private static CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader();
+    private CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader();
+    private CSVFormat tsvFormat = CSVFormat.TDF.withHeader();
 
     @Override
     protected void onData(Object data) throws Exception {
@@ -24,14 +33,43 @@ public class GeoRefValidator extends KuratorActor {
         File inputfile = new File((String) options.get("outputfile"));
 
         String reportFile = "dq_report.json";
+        String xlsxFile = "dq_report.xlsx";
 
         FileWriter reportWriter = new FileWriter(options.get("workspace") + File.separator + reportFile);
 
         ValidationRunner runner = new ValidationRunner(DwCGeoRefDQ.class, reportWriter);
 
+        try {
+            parseInputfile(runner, inputfile, csvFormat);
+        } catch (IllegalArgumentException e) {
+            // Try tsv
+            logger.debug("File does not appear to be csv, trying tsv format.");
+            parseInputfile(runner, inputfile, tsvFormat);
+        }
+
+        Map<String, String> artifacts = (Map<String, String>) options.get("artifacts");
+
+        String reportFileName = options.get("workspace") + File.separator + reportFile;
+        publishArtifact("dq_report_file", reportFileName, "DQ_REPORT");
+        artifacts.put("dq_report_file", reportFileName);
+
+        // Postprocessor
+        String xlsxFileName = options.get("workspace") + File.separator + xlsxFile;
+        XLSXPostProcessor postProcessor = new XLSXPostProcessor(new FileInputStream(reportFileName));
+        postProcessor.postprocess(new FileOutputStream(xlsxFileName));
+
+        publishArtifact("dq_report_xls_file", xlsxFileName);
+        artifacts.put("dq_report_xls_file", xlsxFileName);
+
+        broadcast(options);
+    }
+
+    private void parseInputfile(ValidationRunner runner, File inputfile, CSVFormat format) throws IOException, IllegalAccessException, InvocationTargetException, InstantiationException, IllegalArgumentException {
         FileReader reader = new FileReader(inputfile);
 
-        try (CSVParser csvParser = new CSVParser(reader, csvFormat)) {
+        try (CSVParser csvParser = new CSVParser(reader, format)) {
+            List<Map<String, String>> records = new ArrayList<>();
+
             Map<String, Integer> csvHeader = csvParser.getHeaderMap();
             String[] headers = new String[csvHeader.size()];
             int i = 0;
@@ -44,7 +82,7 @@ public class GeoRefValidator extends KuratorActor {
                 CSVRecord csvRecord = iterator.next();
 
                 if (!csvRecord.isConsistent()) {
-                    throw new Exception("Wrong number of fields in record " + csvRecord.getRecordNumber());
+                    throw new IllegalArgumentException("Wrong number of fields in record " + csvRecord.getRecordNumber());
                 }
 
                 Map<String, String> record = new HashMap<>();
@@ -59,13 +97,7 @@ public class GeoRefValidator extends KuratorActor {
 
             runner.close();
         }
-
-        Map<String, String> artifacts = (Map<String, String>) options.get("artifacts");
-
-        String artifactFileName = options.get("workspace") + File.separator + reportFile;
-        publishArtifact("dq_report_file", artifactFileName, "DQ_REPORT");
-        artifacts.put("dq_report_file", artifactFileName);
-
-        broadcast(options);
     }
 }
+
+
