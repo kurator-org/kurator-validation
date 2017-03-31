@@ -1,0 +1,49 @@
+
+% FACT: extract_source(source_id, source_path).
+extract_source(1, 'file_term_values_yw.yaml').
+
+% FACT: annotation(annotation_id, source_id, line_number, tag, keyword, value).
+annotation(1, 1, 50, 'begin', '@begin', 'FileTermCounterWorkflow').
+annotation(2, 1, 51, 'param', '@param', 'workspace').
+annotation(3, 1, 52, 'in', '@in', 'inputfile').
+annotation(4, 1, 53, 'param', '@param', 'encoding').
+annotation(5, 1, 54, 'param', '@param', 'format').
+annotation(6, 1, 55, 'param', '@param', 'fieldlist').
+annotation(7, 1, 56, 'out', '@out', 'counteroptions.outputfile').
+annotation(8, 1, 104, 'begin', '@begin', 'MakeWorkspace').
+annotation(9, 1, 105, 'param', '@param', 'workspace').
+annotation(10, 1, 106, 'out', '@out', 'options.success').
+annotation(11, 1, 107, 'out', '@out', 'options.workspace').
+annotation(12, 1, 108, 'out', '@out', 'options.message').
+annotation(13, 1, 109, 'out', '@out', 'options.outputfile').
+annotation(14, 1, 110, 'out', '@out', 'options').
+annotation(15, 1, 141, 'end', '@end', 'MakeWorkspace').
+annotation(16, 1, 144, 'begin', '@begin', 'CountFieldValues').
+annotation(17, 1, 145, 'in', '@in', 'inputfile').
+annotation(18, 1, 146, 'param', '@param', 'encoding').
+annotation(19, 1, 147, 'param', '@param', 'format').
+annotation(20, 1, 148, 'param', '@param', 'fieldlist').
+annotation(21, 1, 149, 'in', '@in', 'options.workspace').
+annotation(22, 1, 150, 'in', '@in', 'options.success').
+annotation(23, 1, 151, 'in', '@in', 'options.message').
+annotation(24, 1, 152, 'call', '@call', 'read_header').
+annotation(25, 1, 153, 'call', '@call', 'clean_header').
+annotation(26, 1, 154, 'call', '@call', 'csv_file_encoding').
+annotation(27, 1, 155, 'call', '@call', 'term_value_count_reporter').
+annotation(28, 1, 156, 'out', '@out', 'outputoptions.success').
+annotation(29, 1, 157, 'out', '@out', 'outputoptions.message').
+annotation(30, 1, 158, 'out', '@out', 'outputoptions.workspace').
+annotation(31, 1, 159, 'out', '@out', 'counteroptions').
+annotation(32, 1, 160, 'out', '@out', 'counteroptions.outputfile').
+annotation(33, 1, 161, 'out', '@out', 'results').
+annotation(34, 1, 162, 'out', '@out', 'outputoptions').
+annotation(35, 1, 268, 'end', '@end', 'CountFieldValues').
+annotation(36, 1, 271, 'begin', '@begin', 'WrapUp').
+annotation(37, 1, 272, 'in', '@in', 'outputoptions.workspace').
+annotation(38, 1, 273, 'in', '@in', 'outputoptions.success').
+annotation(39, 1, 274, 'in', '@in', 'outputoptions.message').
+annotation(40, 1, 275, 'param', '@param', 'messagefrom').
+annotation(41, 1, 315, 'end', '@end', 'WrapUp').
+annotation(42, 1, 317, 'end', '@end', 'FileTermCounterWorkflow').
+
+% FACT: annotation_qualifies(qualifying_annotation_id, primary_annotation_id).

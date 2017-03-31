@@ -1,0 +1,317 @@
+#####################################################################################
+# file_term_values.yaml
+#####################################################################################
+#
+# This workflow:
+#    - creates a given directory as a workspace
+#    - for each field in a given list of fields, creates a report of counts of distinct 
+#      values
+#    - wraps up the workflow
+#
+# Example command-line usage:
+# kurator -f file_term_values_yw.yaml
+#         -p workspace=./file_term_values_workspace
+#         -p inputfile=../data/tests/test_barcelona1_clean.txt
+#         -p format=txt
+#         -p fieldlist="genus|specificepithet"
+#         -l DEBUG (optional)
+#
+# Requires:
+# jython pip install requests
+# jython pip install python-dwca-reader
+# jython pip install py
+# jython pip install unicodecsv
+# jython pip install unidecode
+#
+#####################################################################################
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# __author__ = "John Wieczorek"
+# __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
+# __version__ = "file_term_values.yaml 2017-01-17T14:02-03:00"
+
+imports:
+
+- classpath:/org/kurator/akka/types.yaml
+
+# Definitions of the Workflow and actors
+components:
+
+# @begin FileTermCounterWorkflow
+# @param workspace
+# @in inputfile
+# @param encoding
+# @param format
+# @param fieldlist
+# @out counteroptions.outputfile
+
+### The named workflow ###
+- id: FileTermCounter
+  type: Workflow
+  properties:
+    actors:
+      # Actors invoked in the workflow. Every actor that will be invoked must be on this
+      # list. Though the order does not matter, it is helpful to keep the list in more
+      # or less the order in which they'll be invoked, for clarity.
+      - !ref MakeWorkspace
+      - !ref CountFieldValues
+      - !ref WrapUp
+    # Each parameter defined here enters the workflow from the command line and is 
+    # delivered in the options dictionary of the specified actor.
+    parameters:
+      # Accept a parameter called workspace from the command line.
+      workspace:
+        # Set the workspace in the options dictionary of MakeWorkspace from the value
+        # of the workspace parameter given on the command line.
+        actor: !ref MakeWorkspace
+        parameter: workspace
+      # Accept a parameter called inputfile from the command line.
+      inputfile:
+        # Set the inputfile in the options dictionary of ExtractVocabulary from the 
+        # value of the inputfile parameter given on the command line.
+        actor: !ref CountFieldValues
+        parameter: inputfile
+      # Accept a parameter called format from the command line.
+      encoding:
+        # Set the encoding in the options dictionary of CountFieldValues from the value
+        # of the encoding parameter given on the command line.
+        actor: !ref CountFieldValues
+        parameter: encoding
+      format:
+        # Set the format in the options dictionary of CountFieldValues from the value
+        # of the format parameter given on the command line.
+        actor: !ref CountFieldValues
+        parameter: format
+      # Accept a parameter called fieldlist from the command line.
+      fieldlist:
+        # Set the fieldlist in the options dictionary of CountFieldValues from the value
+        # of the format parameter given on the command line.
+        # Example: 'country|state|county|year'
+        actor: !ref CountFieldValues
+        parameter: fieldlist
+
+
+# @begin MakeWorkspace
+# @param workspace
+# @out options.success
+# @out options.workspace
+# @out options.message
+# @out options.outputfile
+# @out options
+
+# Inline python actor to make a workspace on the fly to use for writing temporary 
+# if one is not supplied in the workflow-defined parameters. It creates a unique
+# workspace if a workspace location is not explicitly provided, or if the provided
+# one does not exist.
+- id: MakeWorkspace
+  type: PythonActor
+  properties:
+    # Inline python code to run.
+    code: |
+        import uuid
+        import os
+        # The function to run when an on_start message is received. Accepts a dictionary
+        # of options.
+        def on_start(options):
+            actor = 'MakeWorkspace'
+            print '### Started %s ###' % actor
+            for key, value in options.iteritems():
+                print '%s: %s' % (key, value)
+            options['success']=True
+            if options.has_key('workspace') == False:
+                options['workspace'] ='./workspace_'+str(uuid.uuid1())
+            if not os.path.exists(options['workspace']):
+                os.makedirs(options['workspace'])
+            if not os.path.exists(options['workspace']):
+                options['success']=False
+                options['message']='Unable to create workspace at %s' % options[workspace]
+            else:
+                options['message']='Created workspace %s' % options['workspace']
+            return options
+# @end MakeWorkspace
+
+
+# @begin CountFieldValues
+# @in inputfile 
+# @param encoding
+# @param format
+# @param fieldlist
+# @in options.workspace
+# @in options.success
+# @in options.message
+# @call read_header
+# @call clean_header
+# @call csv_file_encoding
+# @call term_value_count_reporter
+# @out outputoptions.success
+# @out outputoptions.message
+# @out outputoptions.workspace
+# @out counteroptions
+# @out counteroptions.outputfile
+# @out results
+# @out outputoptions
+ 
+# Inline python actor to create distinct value counts all DwC terms recommended to follow
+# controlled vocabularies.
+- id: CountFieldValues
+  type: PythonActor
+  properties:
+    # Inline python code to run.
+    code: |
+        # The function to run when an on_data message is received. Accepts a dictionary
+        # of options.
+        from kurator_dwca.dwca_utils import read_header
+        from kurator_dwca.dwca_utils import clean_header
+        from kurator_dwca.dwca_utils import csv_file_encoding
+        from kurator_dwca.dwca_terms import controlledtermlist
+        from kurator_dwca.term_value_count_reporter import term_value_count_reporter
+        def on_data(options):
+            actor = 'CountFieldValues'
+            print '### Started %s ###' % actor
+            for key, value in options.iteritems():
+                print '%s: %s' % (key, value)
+
+            # Get the format for the output files, with 'csv' as the default
+            try:
+                format = options['format']
+            except:
+                format = 'csv'
+
+            # Figure out the input file encoding first. It will make things much faster
+            # to know it in advance and pass that information to various steps.
+            # Get the encoding for the input file from the options dictionary
+            try:
+                encoding = options['encoding']
+            except:
+                encoding = None
+
+            if encoding is None:
+                encoding = csv_file_encoding(options['inputfile'])
+
+            header = read_header(options['inputfile'], encoding=encoding)
+
+            # Create a cleaned list of fields from the input file
+            cleanheader = clean_header(header)
+
+            # Turn the input fieldlist into a cleaned list
+            try:
+                fieldlist = options['fieldlist']
+            except:
+                fieldlist = 'country'
+            termsofinterest = fieldlist.split('|')
+            cleantermlist = clean_header(termsofinterest)
+
+            # Get a list of fields from those of interest that actually exist in the 
+            # inputfile
+            termlist = []
+            for term in cleantermlist:
+                if term in cleanheader:
+                    termlist.append(term)
+
+            # Prepare the output dictionary
+            outputoptions = {}
+            outputoptions['success'] = True
+            outputoptions['message'] = None
+            outputoptions['workspace'] = options['workspace']
+            outputoptions['artifacts'] = {}
+
+            # Cycle through all of the fields of interest in the inputfile
+            for term in termlist:
+                filename = ('count_'+term.lower()+'.'+format).replace(':','_')
+
+                # Prepare the options dictionary for the term_value_count_reporter
+                counteroptions = {}
+                counteroptions['workspace'] = options['workspace'] 
+                counteroptions['inputfile'] = options['inputfile']
+                counteroptions['outputfile'] = filename
+                counteroptions['format'] = format
+                counteroptions['termlist'] = [term]
+                counteroptions['encoding'] = encoding
+                print 'counteroptions: %s' % counteroptions
+
+                # Create the reports
+                results = term_value_count_reporter(counteroptions)
+                print 'results: %s' % results
+                if results['success'] == False:
+                    outputoptions['success'] = False
+                    outputoptions['message'] = results['message']
+                    return outputoptions
+                else:
+                    artifact_key = '%s_count_file' % term
+                    outputoptions['artifacts'][artifact_key] = results['outputfile']
+                print 'outputoptions: %s' % outputoptions
+            return outputoptions
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
+    inputs:
+      # Get the inputfile for this actor from the outputfile in the options dictionary.
+      outputfile: inputfile
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref MakeWorkspace
+# @end CountFieldValues
+
+
+# @begin WrapUp
+# @in outputoptions.workspace
+# @in outputoptions.success
+# @in outputoptions.message
+# @param messagefrom 
+
+# Inline python actor to take care of any unfinished business and finish the workflow.
+- id: WrapUp
+  type: PythonActor
+  properties:
+    # Inline python code to run.
+    code: |
+        # The function to run when an on_data message is received. Accepts a dictionary
+        # of options.
+        def on_data(options):
+            actor = 'WrapUp'
+            print '### Started %s ###' % actor
+            for key, value in options.iteritems():
+                if key == 'artifacts':
+                    print 'artifacts:'
+                    keylist = []
+                    for akey, avalue in options[key].iteritems():
+                        keylist.append(akey)
+                    sortedkeylist = sorted(keylist)
+                    for skey in sortedkeylist:
+                        print '  %s: %s' % (skey, options[key][skey])
+                else:
+                    print '%s: %s' % (key, value)
+            print '### Finished Wrapup ###'
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
+    inputs:
+        # Get the workspace for this actor from the workspace in the options dictionary.
+        workspace: workspace
+        # Get the success state from the options dictionary of the previous step
+        success: previoussuccess
+        # Get the message from the options dictionary of the previous step
+        message: previousmessage
+    parameters:
+      # Show the name of the upstream actor.
+      messagefrom: 'CountFieldValues'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref CountFieldValues
+# @end WrapUp
+
+# @end FileTermCounterWorkflow
