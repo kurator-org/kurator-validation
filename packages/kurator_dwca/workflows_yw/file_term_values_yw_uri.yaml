@@ -49,11 +49,10 @@ components:
 
 # @begin FileTermCounterWorkflow
 # @param workspace
-# @in inputfile
-# @param encoding
+# @in inputfile @uri file:../data/tests/test_barcelona1_clean.txt
 # @param format
 # @param fieldlist
-# @out counteroptions.outputfile
+# @out outputoptions.artifacts @uri file:{outputoptions.workspace}/count_{term}.{format} @as term_value_count_report
 
 ### The named workflow ###
 - id: FileTermCounter
@@ -101,13 +100,9 @@ components:
         parameter: fieldlist
 
 
-# @begin MakeWorkspace
+# @begin make_workspace
 # @param workspace
-# @out options.success
-# @out options.workspace
-# @out options.message
-# @out options.outputfile
-# @out options
+# @out options.workspace @as workflow_workspace
 
 # Inline python actor to make a workspace on the fly to use for writing temporary 
 # if one is not supplied in the workflow-defined parameters. It creates a unique
@@ -137,29 +132,21 @@ components:
                 options['message']='Unable to create workspace at %s' % options[workspace]
             else:
                 options['message']='Created workspace %s' % options['workspace']
+            print 'options: %s' % options
             return options
-# @end MakeWorkspace
+# @end make_workspace
 
-
-# @begin CountFieldValues
-# @in inputfile 
-# @param encoding
+# @begin count_field_values
+# @in inputfile @uri file:../data/tests/test_barcelona1_clean.txt
 # @param format
 # @param fieldlist
-# @in options.workspace
-# @in options.success
-# @in options.message
+# @in options.workspace @as workflow_workspace
 # @call read_header
 # @call clean_header
 # @call csv_file_encoding
 # @call term_value_count_reporter
-# @out outputoptions.success
-# @out outputoptions.message
-# @out outputoptions.workspace
-# @out counteroptions
-# @out counteroptions.outputfile
-# @out results
-# @out outputoptions
+# @out outputoptions.artifacts @uri file:{outputoptions.workspace}/count_{term}.{format} @as term_value_count_report
+# @out outputoptions @as output_dictionary
  
 # Inline python actor to create distinct value counts all DwC terms recommended to follow
 # controlled vocabularies.
@@ -178,6 +165,7 @@ components:
         def on_data(options):
             actor = 'CountFieldValues'
             print '### Started %s ###' % actor
+            print 'options: %s' % options            
             for key, value in options.iteritems():
                 print '%s: %s' % (key, value)
 
@@ -190,6 +178,9 @@ components:
             # Figure out the input file encoding first. It will make things much faster
             # to know it in advance and pass that information to various steps.
             # Get the encoding for the input file from the options dictionary
+            # @begin get_file_encoding
+            # @in inputfile @uri file:../data/tests/test_barcelona1_clean.txt
+            # @out encoding
             try:
                 encoding = options['encoding']
             except:
@@ -197,12 +188,27 @@ components:
 
             if encoding is None:
                 encoding = csv_file_encoding(options['inputfile'])
-
+            # @end get_file_encoding
+            
+            # @begin read_header
+            # @in inputfile @uri file:../data/tests/test_barcelona1_clean.txt
+            # @in encoding
+            # @call clean_header
+            # @out header
             header = read_header(options['inputfile'], encoding=encoding)
-
+            # @end read_header
+            
+            # @begin clean_header
+            # @in header
+            # @out cleanheader
             # Create a cleaned list of fields from the input file
             cleanheader = clean_header(header)
-
+            # @end clean_header
+            
+            # @begin clean_list
+            # @in fieldlist
+            # @call clean_header
+            # @out cleantermlist
             # Turn the input fieldlist into a cleaned list
             try:
                 fieldlist = options['fieldlist']
@@ -210,14 +216,21 @@ components:
                 fieldlist = 'country'
             termsofinterest = fieldlist.split('|')
             cleantermlist = clean_header(termsofinterest)
+            # @end clean_list
             print 'options: %s' % options
 
+            # @begin get_interest_list_in_inputfile
+            # @in cleantermlist
+            # @in cleanheader
+            # @out termlist
             # Get a list of fields from those of interest that actually exist in the 
             # inputfile
             termlist = []
             for term in cleantermlist:
                 if term in cleanheader:
                     termlist.append(term)
+            print termlist		
+            # @end get_interest_list_in_inputfile
 
             # Prepare the output dictionary
             outputoptions = {}
@@ -228,6 +241,7 @@ components:
 
             # Cycle through all of the fields of interest in the inputfile
             for term in termlist:
+                print term
                 filename = ('count_'+term.lower()+'.'+format).replace(':','_')
 
                 # Prepare the options dictionary for the term_value_count_reporter
@@ -239,7 +253,13 @@ components:
                 counteroptions['termlist'] = [term]
                 counteroptions['encoding'] = encoding
                 print 'counteroptions: %s' % counteroptions
-
+                
+                # @begin count_term_value
+                # @in termlist
+                # @in inputfile @uri file:../data/tests/test_barcelona1_clean.txt
+                # @call term_value_count_reporter 
+                # @out outputoptions @as output_dictionary
+                # @out outputoptions.artifacts @uri file:{outputoptions.workspace}/count_{term}.{format} @as term_value_count_report @log {term_name},{term_count}
                 # Create the reports
                 results = term_value_count_reporter(counteroptions)
                 print 'results: %s' % results
@@ -251,6 +271,7 @@ components:
                     artifact_key = '%s_count_file' % term
                     outputoptions['artifacts'][artifact_key] = results['outputfile']
                 print 'outputoptions: %s' % outputoptions
+                # @end count_term_value
             return outputoptions
     # A list of parameters to get from the options dictionary passed from an 
     # upstream actor.
@@ -266,14 +287,12 @@ components:
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref MakeWorkspace
-# @end CountFieldValues
+# @end count_field_values
 
 
-# @begin WrapUp
-# @in outputoptions.workspace
-# @in outputoptions.success
-# @in outputoptions.message
-# @param messagefrom 
+# @begin wrap_up
+# @in options.workspace @as workflow_workspace
+# @in outputoptions @as output_dictionary
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
@@ -313,6 +332,6 @@ components:
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref CountFieldValues
-# @end WrapUp
+# @end wrap_up
 
 # @end FileTermCounterWorkflow

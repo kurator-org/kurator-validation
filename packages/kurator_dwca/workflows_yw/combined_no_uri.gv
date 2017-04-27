@@ -16,20 +16,15 @@ node[shape=box style=filled fillcolor="#CCFFCC" peripheries=1 fontname=Helvetica
 
 /* Nodes representing atomic programs in workflow */
 MakeWorkspace
-WrapUp
-
-/* Style for nodes representing composite programs (sub-workflows) in workflow */
-node[shape=box style=filled fillcolor="#CCFFCC" peripheries=2 fontname=Helvetica]
-
-/* Nodes representing composite programs (sub-workflows) in workflow */
 CountFieldValues
+WrapUp
 
 /* Style for nodes representing non-parameter data channels in workflow */
 node[shape=box style="rounded,filled" fillcolor="#FFFFCC" peripheries=1 fontname=Helvetica]
 
 /* Nodes for non-parameter data channels in workflow */
-termcounts [shape=record rankdir=LR label="{{<f0> termcounts |<f1> file\:\{outputoptions.workspace\}/count_\{term\}.\{format\}}}"];
-inputfile [shape=record rankdir=LR label="{{<f0> inputfile |<f1> file\:../data/tests/test_barcelona1_clean.txt}}"];
+"counteroptions.outputfile"
+inputfile
 "options.workspace"
 "options.success"
 "options.message"
@@ -42,6 +37,7 @@ node[shape=box style="rounded,filled" fillcolor="#FCFCFC" peripheries=1 fontname
 
 /* Nodes representing parameter channels in workflow */
 workspace
+encoding
 format
 fieldlist
 
@@ -49,12 +45,18 @@ fieldlist
 MakeWorkspace -> "options.success"
 MakeWorkspace -> "options.workspace"
 MakeWorkspace -> "options.message"
+MakeWorkspace -> "options.outputfile"
+MakeWorkspace -> options
 workspace -> MakeWorkspace
 CountFieldValues -> "outputoptions.success"
 CountFieldValues -> "outputoptions.message"
 CountFieldValues -> "outputoptions.workspace"
-CountFieldValues -> termcounts
+CountFieldValues -> counteroptions
+CountFieldValues -> "counteroptions.outputfile"
+CountFieldValues -> results
+CountFieldValues -> outputoptions
 inputfile -> CountFieldValues
+encoding -> CountFieldValues
 format -> CountFieldValues
 fieldlist -> CountFieldValues
 "options.workspace" -> CountFieldValues
@@ -78,6 +80,7 @@ node[shape=circle style="rounded,filled" fillcolor="#FFFFFF" peripheries=1 fontn
 /* Nodes representing workflow input ports */
 workspace_input_port [label=""]
 inputfile_input_port [label=""]
+encoding_input_port [label=""]
 format_input_port [label=""]
 fieldlist_input_port [label=""]
 
@@ -92,7 +95,7 @@ subgraph cluster_output_ports_group_inner { label=""; penwidth=0
 node[shape=circle style="rounded,filled" fillcolor="#FFFFFF" peripheries=1 fontname=Helvetica width=0.2]
 
 /* Nodes representing workflow output ports */
-termcounts_output_port [label=""]
+"counteroptions.outputfile_output_port" [label=""]
 
 /* End of double-cluster for grouping workflow output ports */
 }}
@@ -100,11 +103,12 @@ termcounts_output_port [label=""]
 /* Edges from input ports to channels */
 workspace_input_port -> workspace
 inputfile_input_port -> inputfile
+encoding_input_port -> encoding
 format_input_port -> format
 fieldlist_input_port -> fieldlist
 
 /* Edges from channels to output ports */
-termcounts -> termcounts_output_port
+"counteroptions.outputfile" -> "counteroptions.outputfile_output_port"
 
 /* End of top-level graph */
 }
