@@ -14,8 +14,10 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwinize_header.py 2017-01-17T21:19-03:00"
+__copyright__ = "Copyright 2017 President and Fellows of Harvard College"
+__version__ = "darwinize_header.py 2017-04-27T16:37-04:00"
+__kurator_content_type__ = "actor"
+__adapted_from__ = "actor_template.py"
 
 from dwca_vocab_utils import darwinize_list
 from dwca_utils import read_header
