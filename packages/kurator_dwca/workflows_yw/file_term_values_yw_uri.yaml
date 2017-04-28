@@ -232,6 +232,15 @@ components:
             print termlist		
             # @end get_interest_list_in_inputfile
 
+            # @begin count_term_value
+            # @in termlist
+            # @in format
+            # @in options.workspace @as workflow_workspace
+            # @in inputfile @uri file:../data/tests/test_barcelona1_clean.txt
+            # @call term_value_count_reporter 
+            # @out outputoptions @as output_dictionary
+            # @out outputoptions.artifacts @uri file:{outputoptions.workspace}/count_{term}.{format} @as term_value_count_report @log {term_name}	{term_count}
+
             # Prepare the output dictionary
             outputoptions = {}
             outputoptions['success'] = True
@@ -253,14 +262,8 @@ components:
                 counteroptions['termlist'] = [term]
                 counteroptions['encoding'] = encoding
                 print 'counteroptions: %s' % counteroptions
-                
-                # @begin count_term_value
-                # @in termlist
-                # @in inputfile @uri file:../data/tests/test_barcelona1_clean.txt
-                # @call term_value_count_reporter 
-                # @out outputoptions @as output_dictionary
-                # @out outputoptions.artifacts @uri file:{outputoptions.workspace}/count_{term}.{format} @as term_value_count_report @log {term_name},{term_count}
-                # Create the reports
+ 
+                # Create the reports               
                 results = term_value_count_reporter(counteroptions)
                 print 'results: %s' % results
                 if results['success'] == False:

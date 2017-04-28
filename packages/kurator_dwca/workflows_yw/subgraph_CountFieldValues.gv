@@ -35,6 +35,8 @@ fieldlist
 cleantermlist
 cleanheader
 termlist
+format
+workflow_workspace
 
 /* Style for nodes representing parameter channels in workflow */
 node[shape=box style="rounded,filled" fillcolor="#FCFCFC" peripheries=1 fontname=Helvetica]
@@ -57,6 +59,8 @@ cleanheader -> get_interest_list_in_inputfile
 count_term_value -> output_dictionary
 count_term_value -> term_value_count_report
 termlist -> count_term_value
+format -> count_term_value
+workflow_workspace -> count_term_value
 inputfile -> count_term_value
 
 /* End of double cluster for drawing box around nodes in workflow */
@@ -71,7 +75,9 @@ node[shape=circle style="rounded,filled" fillcolor="#FFFFFF" peripheries=1 fontn
 
 /* Nodes representing workflow input ports */
 inputfile_input_port [label=""]
+format_input_port [label=""]
 fieldlist_input_port [label=""]
+workflow_workspace_input_port [label=""]
 
 /* End of double-cluster for grouping workflow input ports */
 }}
@@ -92,7 +98,9 @@ output_dictionary_output_port [label=""]
 
 /* Edges from input ports to channels */
 inputfile_input_port -> inputfile
+format_input_port -> format
 fieldlist_input_port -> fieldlist
+workflow_workspace_input_port -> workflow_workspace
 
 /* Edges from channels to output ports */
 term_value_count_report -> term_value_count_report_output_port

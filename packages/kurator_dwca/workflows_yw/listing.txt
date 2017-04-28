@@ -121,15 +121,17 @@ Turn the input fieldlist into a cleaned list
 Get a list of fields from those of interest that actually exist in the
 inputfile
 @end get_interest_list_in_inputfile
-Prepare the output dictionary
-Cycle through all of the fields of interest in the inputfile
-Prepare the options dictionary for the term_value_count_reporter
 @begin count_term_value
 @in termlist
+@in format
+@in options.workspace @as workflow_workspace
 @in inputfile @uri file:../data/tests/test_barcelona1_clean.txt
 @call term_value_count_reporter
 @out outputoptions @as output_dictionary
-@out outputoptions.artifacts @uri file:{outputoptions.workspace}/count_{term}.{format} @as term_value_count_report @log {termname},{term_count}
+@out outputoptions.artifacts @uri file:{outputoptions.workspace}/count_{term}.{format} @as term_value_count_report @log {term_name}	{term_count}
+Prepare the output dictionary
+Cycle through all of the fields of interest in the inputfile
+Prepare the options dictionary for the term_value_count_reporter
 Create the reports
 @end count_term_value
 A list of parameters to get from the options dictionary passed from an

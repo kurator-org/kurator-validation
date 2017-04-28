@@ -57,26 +57,29 @@ annotation(53, 1, 223, 'in', '@in', 'cleantermlist').
 annotation(54, 1, 224, 'in', '@in', 'cleanheader').
 annotation(55, 1, 225, 'out', '@out', 'termlist').
 annotation(56, 1, 233, 'end', '@end', 'get_interest_list_in_inputfile').
-annotation(57, 1, 257, 'begin', '@begin', 'count_term_value').
-annotation(58, 1, 258, 'in', '@in', 'termlist').
-annotation(59, 1, 259, 'in', '@in', 'inputfile').
-annotation(60, 1, 259, 'uri', '@uri', 'file:../data/tests/test_barcelona1_clean.txt').
-annotation(61, 1, 260, 'call', '@call', 'term_value_count_reporter').
-annotation(62, 1, 261, 'out', '@out', 'outputoptions').
-annotation(63, 1, 261, 'as', '@as', 'output_dictionary').
-annotation(64, 1, 262, 'out', '@out', 'outputoptions.artifacts').
-annotation(65, 1, 262, 'uri', '@uri', 'file:{outputoptions.workspace}/count_{term}.{format}').
-annotation(66, 1, 262, 'as', '@as', 'term_value_count_report').
-annotation(67, 1, 262, 'log', '@log', '{termname},{term_count}').
-annotation(68, 1, 274, 'end', '@end', 'count_term_value').
-annotation(69, 1, 290, 'end', '@end', 'count_field_values').
-annotation(70, 1, 293, 'begin', '@begin', 'wrap_up').
-annotation(71, 1, 294, 'in', '@in', 'options.workspace').
-annotation(72, 1, 294, 'as', '@as', 'workflow_workspace').
-annotation(73, 1, 295, 'in', '@in', 'outputoptions').
-annotation(74, 1, 295, 'as', '@as', 'output_dictionary').
-annotation(75, 1, 335, 'end', '@end', 'wrap_up').
-annotation(76, 1, 337, 'end', '@end', 'FileTermCounterWorkflow').
+annotation(57, 1, 235, 'begin', '@begin', 'count_term_value').
+annotation(58, 1, 236, 'in', '@in', 'termlist').
+annotation(59, 1, 237, 'in', '@in', 'format').
+annotation(60, 1, 238, 'in', '@in', 'options.workspace').
+annotation(61, 1, 238, 'as', '@as', 'workflow_workspace').
+annotation(62, 1, 239, 'in', '@in', 'inputfile').
+annotation(63, 1, 239, 'uri', '@uri', 'file:../data/tests/test_barcelona1_clean.txt').
+annotation(64, 1, 240, 'call', '@call', 'term_value_count_reporter').
+annotation(65, 1, 241, 'out', '@out', 'outputoptions').
+annotation(66, 1, 241, 'as', '@as', 'output_dictionary').
+annotation(67, 1, 242, 'out', '@out', 'outputoptions.artifacts').
+annotation(68, 1, 242, 'uri', '@uri', 'file:{outputoptions.workspace}/count_{term}.{format}').
+annotation(69, 1, 242, 'as', '@as', 'term_value_count_report').
+annotation(70, 1, 242, 'log', '@log', '{term_name} {term_count}').
+annotation(71, 1, 277, 'end', '@end', 'count_term_value').
+annotation(72, 1, 293, 'end', '@end', 'count_field_values').
+annotation(73, 1, 296, 'begin', '@begin', 'wrap_up').
+annotation(74, 1, 297, 'in', '@in', 'options.workspace').
+annotation(75, 1, 297, 'as', '@as', 'workflow_workspace').
+annotation(76, 1, 298, 'in', '@in', 'outputoptions').
+annotation(77, 1, 298, 'as', '@as', 'output_dictionary').
+annotation(78, 1, 338, 'end', '@end', 'wrap_up').
+annotation(79, 1, 340, 'end', '@end', 'FileTermCounterWorkflow').
 % FACT: annotation_qualifies(qualifying_annotation_id, primary_annotation_id).
 annotation_qualifies(4, 3).
 annotation_qualifies(8, 7).
@@ -89,10 +92,11 @@ annotation_qualifies(28, 26).
 annotation_qualifies(30, 29).
 annotation_qualifies(33, 32).
 annotation_qualifies(38, 37).
-annotation_qualifies(60, 59).
+annotation_qualifies(61, 60).
 annotation_qualifies(63, 62).
-annotation_qualifies(65, 64).
-annotation_qualifies(66, 64).
-annotation_qualifies(67, 64).
-annotation_qualifies(72, 71).
-annotation_qualifies(74, 73).
+annotation_qualifies(66, 65).
+annotation_qualifies(68, 67).
+annotation_qualifies(69, 67).
+annotation_qualifies(70, 67).
+annotation_qualifies(75, 74).
+annotation_qualifies(77, 76).
