@@ -12,6 +12,7 @@ import org.datakurator.postprocess.FFDQPostProcessor;
 import org.datakurator.postprocess.xlsx.DQReportParser;
 import org.datakurator.postprocess.xlsx.XLSXPostProcessor;
 import org.filteredpush.qc.date.DwCEventDQ;
+import org.filteredpush.qc.georeference.DwCGeoRefDQ;
 import org.kurator.akka.KuratorActor;
 
 import java.io.*;
@@ -21,7 +22,7 @@ import java.util.*;
 /**
  * Created by lowery on 11/23/16.
  */
-public class DateValidator extends KuratorActor {
+public class GeoRefValidator extends KuratorActor {
     private CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader();
     private CSVFormat tsvFormat = CSVFormat.TDF.withHeader();
 
@@ -35,10 +36,8 @@ public class DateValidator extends KuratorActor {
         String xlsxFile = "dq_report.xlsx";
 
         FileWriter reportWriter = new FileWriter(options.get("workspace") + File.separator + reportFile);
-        //List<String> fields = Arrays.asList("dwc:eventDate", "dwc:month", "dwc:day", "dwc:year", "dwc:startDayOfYear",
-        //        "dwc:endDayOfYear", "dwc:eventTime", "dwc:verbatimEventDate");
 
-        ValidationRunner runner = new ValidationRunner(DwCEventDQ.class, reportWriter);
+        ValidationRunner runner = new ValidationRunner(DwCGeoRefDQ.class, reportWriter);
 
         try {
             parseInputfile(runner, inputfile, csvFormat);
@@ -47,15 +46,6 @@ public class DateValidator extends KuratorActor {
             logger.debug("File does not appear to be csv, trying tsv format.");
             parseInputfile(runner, inputfile, tsvFormat);
         }
-
-        //String reportXlsFile = "dq_report.xls";
-        //File reportXls = new File(options.get("workspace") + File.separator + reportXlsFile);
-
-        //InputStream config = DateValidator.class.getResourceAsStream("/ffdq-assertions.json");
-        //FFDQPostProcessor postProcessor = new FFDQPostProcessor(summary, config);
-        //postProcessor.reportSummary(reportXls);
-
-
 
         Map<String, String> artifacts = (Map<String, String>) options.get("artifacts");
 
@@ -70,14 +60,6 @@ public class DateValidator extends KuratorActor {
 
         publishArtifact("dq_report_xls_file", xlsxFileName);
         artifacts.put("dq_report_xls_file", xlsxFileName);
-
-        //artifactFileName = options.get("workspace") + File.separator + outputfile;
-        //publishArtifact("event_dates_file", artifactFileName);
-        //artifacts.put("event_dates_file", artifactFileName);
-
-        //artifactFileName = options.get("workspace") + File.separator + reportXlsFile;
-        //publishArtifact("dq_report_xls_file", artifactFileName);
-        //artifacts.put("dq_report_xls_file", artifactFileName);
 
         broadcast(options);
     }

@@ -1,0 +1,66 @@
+% FACT: resource(resource_id, resource_uri).
+resource(1, '../data/tests/test_barcelona1_clean.txt').
+resource(2, 'file_term_values_workspace/count_genus.csv').
+resource(3, 'file_term_values_workspace/count_genus.tsv').
+resource(4, 'file_term_values_workspace/count_specificepithet.csv').
+resource(5, 'file_term_values_workspace/count_specificepithet.tsv').
+% FACT: data_resource(data_id, resource_id).
+data_resource(2, 1).
+data_resource(5, 2).
+data_resource(5, 3).
+data_resource(5, 4).
+data_resource(5, 5).
+data_resource(8, 1).
+data_resource(11, 2).
+data_resource(11, 3).
+data_resource(11, 4).
+data_resource(11, 5).
+data_resource(13, 1).
+data_resource(13, 1).
+data_resource(13, 1).
+data_resource(23, 2).
+data_resource(23, 3).
+data_resource(23, 4).
+data_resource(23, 5).
+% FACT: uri_variable_value(resource_id, uri_variable_id, uri_variable_value).
+uri_variable_value(2, 1, 'file_term_values_workspace').
+uri_variable_value(2, 2, 'genus').
+uri_variable_value(2, 3, '').
+uri_variable_value(3, 1, 'file_term_values_workspace').
+uri_variable_value(3, 2, 'genus').
+uri_variable_value(3, 3, '').
+uri_variable_value(4, 1, 'file_term_values_workspace').
+uri_variable_value(4, 2, 'specificepithet').
+uri_variable_value(4, 3, '').
+uri_variable_value(5, 1, 'file_term_values_workspace').
+uri_variable_value(5, 2, 'specificepithet').
+uri_variable_value(5, 3, '').
+uri_variable_value(2, 4, 'file_term_values_workspace').
+uri_variable_value(2, 5, 'genus').
+uri_variable_value(2, 6, '').
+uri_variable_value(3, 4, 'file_term_values_workspace').
+uri_variable_value(3, 5, 'genus').
+uri_variable_value(3, 6, '').
+uri_variable_value(4, 4, 'file_term_values_workspace').
+uri_variable_value(4, 5, 'specificepithet').
+uri_variable_value(4, 6, '').
+uri_variable_value(5, 4, 'file_term_values_workspace').
+uri_variable_value(5, 5, 'specificepithet').
+uri_variable_value(5, 6, '').
+uri_variable_value(2, 7, 'file_term_values_workspace').
+uri_variable_value(2, 8, 'genus').
+uri_variable_value(2, 9, '').
+uri_variable_value(3, 7, 'file_term_values_workspace').
+uri_variable_value(3, 8, 'genus').
+uri_variable_value(3, 9, '').
+uri_variable_value(4, 7, 'file_term_values_workspace').
+uri_variable_value(4, 8, 'specificepithet').
+uri_variable_value(4, 9, '').
+uri_variable_value(5, 7, 'file_term_values_workspace').
+uri_variable_value(5, 8, 'specificepithet').
+uri_variable_value(5, 9, '').
+% FACT: log_variable_value(resource_id, log_entry_id, log_variable_id, log_variable_value).
+log_variable_value(4, 1, 1, 'cf.').
+log_variable_value(4, 1, 2, 'erithaca,1').
+log_variable_value(5, 2, 1, 'cf.').
+log_variable_value(5, 2, 2, 'erithaca	1').

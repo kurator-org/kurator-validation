@@ -33,7 +33,7 @@
         <dependency>
             <groupId>org.kurator</groupId>
             <artifactId>kurator-akka</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -45,7 +45,13 @@
         <dependency>
             <groupId>org.filteredpush</groupId>
             <artifactId>event_date_qc</artifactId>
-            <version>1.0.3-SNAPSHOT</version>
+            <version>1.0.4-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.filteredpush</groupId>
+            <artifactId>geo_ref_qc</artifactId>
+            <version>1.0.0</version>
         </dependency>
 
         <dependency>

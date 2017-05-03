@@ -1,0 +1,188 @@
+% EQ1:  What source files SF were YW annotations extracted from?
+:- table eq1/1.
+eq1(SourceFile) :-
+    extract_source(_, SourceFile).
+    
+% EQ2:  What are the names N of all program blocks?
+:- table eq2/1.
+eq2(ProgramName) :-
+    annotation(_, _, _, 'begin', _, ProgramName).
+    
+% EQ3:  What out ports are qualified with URIs?
+:- table eq3/1.
+eq3(PortName) :-
+    annotation(URI, _, _, 'uri', _, _),
+    annotation(OUT, _, _, 'out', _, PortName),
+    annotation_qualifies(URI, OUT).	
+
+
+% MQ1:  Where is the definition of block FileTermCounterWorkflow.count_field_values?
+:- table mq1/3.
+mq1(SourceFile, StartLine, EndLine) :-
+    program_source('FileTermCounterWorkflow.count_field_values', SourceFile, StartLine, EndLine).
+    
+% MQ2:  What is the name and description of the top-level workflow?
+:- table mq2/2.
+mq2(WorkflowName,Description) :-
+    top_workflow(W),
+    program(W, _, WorkflowName, _, _),
+    program_description(W, Description).
+    
+% MQ3:  What are the names of any top-level functions?
+:- table mq3/1.
+mq3(FunctionName) :-
+    not subprogram(F),
+    program(F, _, FunctionName, _, _).
+
+% MQ4:  What are the names of the programs comprising the top-level workflow?
+:- table mq4/1.
+mq4(ProgramName) :-
+    top_workflow(W),
+    has_subprogram(W, P),
+    program(P, ProgramName, _, _, _).
+
+% MQ5:  What are the names and descriptions of the inputs to the top-level workflow?
+:- table mq5/2.
+mq5(InputPortName,Description) :-
+    top_workflow(W),
+    has_in_port(W, P),
+    port(P, _, InputPortName, _, _, _),
+    port_description(P, Description).
+
+% MQ6:  What data is output by program block count_field_values?
+:- table mq6/2.
+mq6(DataName) :-
+    program(P, _, 'count_field_values', _, _),
+    has_out_port(P, OUT),
+    port_data(OUT, DataName, _).
+    
+% MQ7: What program blocks provide input directly to count_field_values?
+:- table mq7/1.
+mq7(ProgramName) :-
+    program(P1, _, 'count_field_values', _, _),
+    has_in_port(P1, IN),
+    port_data(IN, _, D),
+    port_data(OUT, _, D),
+    has_out_port(P2, OUT),
+    program(P2, _, ProgramName, _, _).
+
+% MQ8: What programs have input ports that receive data FileTermCounterWorkflow.fieldlist?
+:- table mq8/1.
+mq8(ProgramName) :-
+    data(D, _, 'ileTermCounterWorkflow.fieldlist'),
+    channel(C, D),
+    port_connects_to_channel(IN, C),
+    has_in_port(P, IN),
+    program(P, _, ProgramName, _, _).
+
+
+% MQ9: How many ports read data FileTermCounterWorkflow.workflow_workspace?
+:- table mq9/1.
+mq9(PortCount) :-
+    data(D, _, 'FileTermCounterWorkflow.workflow_workspace'),
+    count(data_in_port(_, D), PortCount).
+
+% MQ10: How many data are read by more than port in workflow FileTermCounterWorkflow?
+:- table mq10/1.
+mq10(DataCount) :- 
+    program(W, 'FileTermCounterWorkflow', _, _, _),
+    count(data_in_workflow_read_by_multiple_ports(_, W), DataCount).
+:- table data_in_workflow_read_by_multiple_ports/2.
+data_in_workflow_read_by_multiple_ports(D, W) :-
+    has_subprogram(W, P),
+    has_in_port(P, IN),
+    port_connects_to_channel(IN, C),
+    channel(C, D),
+    data_in_port_count(Count, D),
+    Count > 1.
+:- table data_in_port_count/2.
+data_in_port_count(PortCount, D) :-
+    data(D, _, _),
+    count(data_in_port(_, D), PortCount).
+    
+% MQ11: What program blocks are immediately downstream of get_interest_list_in_inputfile?
+:- table mq11/1.
+mq11(DownstreamProgramName) :-
+    program(P1, DownstreamProgramName, _, _, _),
+    program(P2, _, 'FileTermCounterWorkflow.get_interest_list_in_inputfile', _, _),
+    program_immediately_downstream(P1, P2).
+
+% MQ12: What program blocks are immediately upstream of count_term_value?
+:- table mq12/1.
+mq12(UpstreamProgramName) :-
+    program(P1, UpstreamProgramName, _, _, _),
+    program(P2, _, 'FileTermCounterWorkflow.count_term_value', _, _),
+    program_immediately_upstream(P1, P2).
+    
+% MQ13: What program blocks are upstream of count_term_value?
+:- table mq13/1.
+mq13(UpstreamProgramName):-
+    program(P1, UpstreamProgramName, _, _, _),
+    program(P2, _, 'FileTermCounterWorkflow.count_term_value', _, _),
+    program_upstream(P1, P2).
+
+% MQ14: What program blocks are anywhere downstream of clean_header?
+:- table mq14/1.
+mq14(DownstreamProgramName):-
+    program(P1, DownstreamProgramName, _, _, _),
+    program(P2, _, 'FileTermCounterWorkflow.clean_header', _, _),
+    program_downstream(P1, P2).
+
+% MQ15: What data is immediately downstream of encoding?
+:- table mq15/1.
+mq15(DownstreamDataName) :-
+    data(D1, DownstreamDataName, _),
+    data(D2, 'encoding', _),
+    data_immediately_downstream(D1, D2).
+
+% MQ16: What data is immediately upstream of encoding?
+:- table mq16/1.
+mq16(UpstreamDataName) :-
+    data(D1, UpstreamDataName, _),
+    data(D2, 'encoding', _),
+    data_immediately_upstream(D1, D2).
+
+
+% MQ19: What URI variables are associated with writes of data FileTermCounterWorkflow.term_value_count_report?
+:- table mq19/1.
+mq19(VariableName) :-
+    data(D, _, 'FileTermCounterWorkflow.term_value_count_report'),
+    channel(C, D),
+    port_connects_to_channel(OUT, C),
+    has_out_port(_, OUT),
+    uri_variable(_, VariableName, OUT).
+
+
+
+
+% RQ0: What URI variable values are associated with resource file_term_values_workspace/count_genus.txt?
+:- table rq0/2.
+rq0(VarName, VarValue) :-
+    resource(R, 'file_term_values_workspace/count_genus.txt'),
+    resource_metadata(R, VarName, VarValue, _).
+
+% RQ1: What format was the run of the script input ?
+:- table rq1/1.
+rq1(foramt) :-
+    data(D, _, 'FileTermCounterWorkflow.format'),
+    data_resource(D, R),
+    written_resource_metadata(R, 'format', format).
+
+% RQ2: What fieldlist were used during cleaning the header of input file? 
+:- table rq2/1.
+rq2(field) :-
+    data(D, _, 'FileTermCounterWorkflow/count_field_values.inputfile'),
+    data_resource(D, R),
+    data(D, _, 'fieldlist'),
+	uri_variable_value(R, _, field).
+        
+
+
+% RQ5: What sub-fields held the field genus from which file_term_values_workspace/count_genus.txt was derived?
+:- table rq5/1.
+rq5(sub_fields) :-
+   resource(R1, 'file_term_values_workspace/count_genus.txt'),
+   log_template_variable(id, variable_name, log_template_id),
+   log_variable_value(R1, _, id, sub_fields).
+   
+   

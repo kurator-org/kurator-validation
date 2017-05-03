@@ -1,0 +1,110 @@
+
+/* Start of top-level graph */
+digraph Workflow {
+rankdir=LR
+
+/* Title for graph */
+fontname=Helvetica; fontsize=18; labelloc=t
+label="FileTermCounterWorkflow.count_field_values"
+
+/* Start of double cluster for drawing box around nodes in workflow */
+subgraph cluster_workflow_box_outer { label=""; color=black; penwidth=2
+subgraph cluster_workflow_box_inner { label=""; penwidth=0
+
+/* Style for nodes representing atomic programs in workflow */
+node[shape=box style=filled fillcolor="#CCFFCC" peripheries=1 fontname=Helvetica]
+
+/* Nodes representing atomic programs in workflow */
+get_file_encoding
+read_header
+clean_header
+clean_list
+get_interest_list_in_inputfile
+count_term_value
+
+/* Style for nodes representing non-parameter data channels in workflow */
+node[shape=box style="rounded,filled" fillcolor="#FFFFCC" peripheries=1 fontname=Helvetica]
+
+/* Nodes for non-parameter data channels in workflow */
+term_value_count_report [shape=record rankdir=LR label="{{<f0> term_value_count_report |<f1> file\:\{outputoptions.workspace\}/count_\{term\}.\{format\}}}"];
+output_dictionary
+inputfile [shape=record rankdir=LR label="{{<f0> inputfile |<f1> file\:../data/tests/test_barcelona1_clean.txt}}"];
+encoding
+header
+fieldlist
+cleantermlist
+cleanheader
+termlist
+format
+workflow_workspace
+
+/* Style for nodes representing parameter channels in workflow */
+node[shape=box style="rounded,filled" fillcolor="#FCFCFC" peripheries=1 fontname=Helvetica]
+
+/* Nodes representing parameter channels in workflow */
+
+/* Edges representing connections between programs and channels */
+get_file_encoding -> encoding
+inputfile -> get_file_encoding
+read_header -> header
+inputfile -> read_header
+encoding -> read_header
+clean_header -> cleanheader
+header -> clean_header
+clean_list -> cleantermlist
+fieldlist -> clean_list
+get_interest_list_in_inputfile -> termlist
+cleantermlist -> get_interest_list_in_inputfile
+cleanheader -> get_interest_list_in_inputfile
+count_term_value -> output_dictionary
+count_term_value -> term_value_count_report
+termlist -> count_term_value
+format -> count_term_value
+workflow_workspace -> count_term_value
+inputfile -> count_term_value
+
+/* End of double cluster for drawing box around nodes in workflow */
+}}
+
+/* Hidden double-cluster for grouping workflow input ports */
+subgraph cluster_input_ports_group_outer { label=""; penwidth=0
+subgraph cluster_input_ports_group_inner { label=""; penwidth=0
+
+/* Style for nodes representing workflow input ports */
+node[shape=circle style="rounded,filled" fillcolor="#FFFFFF" peripheries=1 fontname=Helvetica width=0.2]
+
+/* Nodes representing workflow input ports */
+inputfile_input_port [label=""]
+format_input_port [label=""]
+fieldlist_input_port [label=""]
+workflow_workspace_input_port [label=""]
+
+/* End of double-cluster for grouping workflow input ports */
+}}
+
+/* Hidden double-cluster for grouping workflow output ports */
+subgraph cluster_output_ports_group_outer { label=""; penwidth=0
+subgraph cluster_output_ports_group_inner { label=""; penwidth=0
+
+/* Style for nodes representing workflow output ports */
+node[shape=circle style="rounded,filled" fillcolor="#FFFFFF" peripheries=1 fontname=Helvetica width=0.2]
+
+/* Nodes representing workflow output ports */
+term_value_count_report_output_port [label=""]
+output_dictionary_output_port [label=""]
+
+/* End of double-cluster for grouping workflow output ports */
+}}
+
+/* Edges from input ports to channels */
+inputfile_input_port -> inputfile
+format_input_port -> format
+fieldlist_input_port -> fieldlist
+workflow_workspace_input_port -> workflow_workspace
+
+/* Edges from channels to output ports */
+term_value_count_report -> term_value_count_report_output_port
+output_dictionary -> output_dictionary_output_port
+
+/* End of top-level graph */
+}

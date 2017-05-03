@@ -1,0 +1,278 @@
+% FACT: program(program_id, program_name, qualified_program_name, begin_annotation_id, end_annotation_id).
+program(1, 'FileTermCounterWorkflow', 'FileTermCounterWorkflow', 1, 79).
+program(2, 'make_workspace', 'FileTermCounterWorkflow/make_workspace', 10, 14).
+program(3, 'count_field_values', 'FileTermCounterWorkflow/count_field_values', 15, 72).
+program(4, 'get_file_encoding', 'FileTermCounterWorkflow/count_field_values/get_file_encoding', 31, 35).
+program(5, 'read_header', 'FileTermCounterWorkflow/count_field_values/read_header', 36, 42).
+program(6, 'clean_header', 'FileTermCounterWorkflow/count_field_values/clean_header', 43, 46).
+program(7, 'clean_list', 'FileTermCounterWorkflow/count_field_values/clean_list', 47, 51).
+program(8, 'get_interest_list_in_inputfile', 'FileTermCounterWorkflow/count_field_values/get_interest_list_in_inputfile', 52, 56).
+program(9, 'count_term_value', 'FileTermCounterWorkflow/count_field_values/count_term_value', 57, 71).
+program(10, 'wrap_up', 'FileTermCounterWorkflow/wrap_up', 73, 78).
+
+% FACT: workflow(program_id).
+workflow(1).
+workflow(3).
+
+% FACT: function(program_id).
+
+% FACT: has_subprogram(program_id, subprogram_id).
+has_subprogram(1, 2).
+has_subprogram(1, 3).
+has_subprogram(3, 4).
+has_subprogram(3, 5).
+has_subprogram(3, 6).
+has_subprogram(3, 7).
+has_subprogram(3, 8).
+has_subprogram(3, 9).
+has_subprogram(1, 10).
+
+% FACT: port(port_id, port_type, port_name, qualified_port_name, port_annotation_id, data_id).
+port(1, 'param', 'workspace', 'FileTermCounterWorkflow<-workspace', 2, 1).
+port(2, 'in', 'inputfile', 'FileTermCounterWorkflow<-inputfile', 3, 2).
+port(3, 'param', 'format', 'FileTermCounterWorkflow<-format', 5, 3).
+port(4, 'param', 'fieldlist', 'FileTermCounterWorkflow<-fieldlist', 6, 4).
+port(5, 'out', 'outputoptions.artifacts', 'FileTermCounterWorkflow->outputoptions.artifacts', 7, 5).
+port(6, 'param', 'workspace', 'FileTermCounterWorkflow/make_workspace<-workspace', 11, 6).
+port(7, 'out', 'options.workspace', 'FileTermCounterWorkflow/make_workspace->options.workspace', 12, 7).
+port(8, 'in', 'inputfile', 'FileTermCounterWorkflow/count_field_values<-inputfile', 16, 8).
+port(9, 'param', 'format', 'FileTermCounterWorkflow/count_field_values<-format', 18, 9).
+port(10, 'param', 'fieldlist', 'FileTermCounterWorkflow/count_field_values<-fieldlist', 19, 10).
+port(11, 'in', 'options.workspace', 'FileTermCounterWorkflow/count_field_values<-options.workspace', 20, 7).
+port(12, 'out', 'outputoptions.artifacts', 'FileTermCounterWorkflow/count_field_values->outputoptions.artifacts', 26, 11).
+port(13, 'out', 'outputoptions', 'FileTermCounterWorkflow/count_field_values->outputoptions', 29, 12).
+port(14, 'in', 'inputfile', 'FileTermCounterWorkflow/count_field_values/get_file_encoding<-inputfile', 32, 13).
+port(15, 'out', 'encoding', 'FileTermCounterWorkflow/count_field_values/get_file_encoding->encoding', 34, 14).
+port(16, 'in', 'inputfile', 'FileTermCounterWorkflow/count_field_values/read_header<-inputfile', 37, 13).
+port(17, 'in', 'encoding', 'FileTermCounterWorkflow/count_field_values/read_header<-encoding', 39, 14).
+port(18, 'out', 'header', 'FileTermCounterWorkflow/count_field_values/read_header->header', 41, 15).
+port(19, 'in', 'header', 'FileTermCounterWorkflow/count_field_values/clean_header<-header', 44, 15).
+port(20, 'out', 'cleanheader', 'FileTermCounterWorkflow/count_field_values/clean_header->cleanheader', 45, 16).
+port(21, 'in', 'fieldlist', 'FileTermCounterWorkflow/count_field_values/clean_list<-fieldlist', 48, 17).
+port(22, 'out', 'cleantermlist', 'FileTermCounterWorkflow/count_field_values/clean_list->cleantermlist', 50, 18).
+port(23, 'in', 'cleantermlist', 'FileTermCounterWorkflow/count_field_values/get_interest_list_in_inputfile<-cleantermlist', 53, 18).
+port(24, 'in', 'cleanheader', 'FileTermCounterWorkflow/count_field_values/get_interest_list_in_inputfile<-cleanheader', 54, 16).
+port(25, 'out', 'termlist', 'FileTermCounterWorkflow/count_field_values/get_interest_list_in_inputfile->termlist', 55, 19).
+port(26, 'in', 'termlist', 'FileTermCounterWorkflow/count_field_values/count_term_value<-termlist', 58, 19).
+port(27, 'in', 'format', 'FileTermCounterWorkflow/count_field_values/count_term_value<-format', 59, 20).
+port(28, 'in', 'options.workspace', 'FileTermCounterWorkflow/count_field_values/count_term_value<-options.workspace', 60, 21).
+port(29, 'in', 'inputfile', 'FileTermCounterWorkflow/count_field_values/count_term_value<-inputfile', 62, 13).
+port(30, 'out', 'outputoptions', 'FileTermCounterWorkflow/count_field_values/count_term_value->outputoptions', 65, 22).
+port(31, 'out', 'outputoptions.artifacts', 'FileTermCounterWorkflow/count_field_values/count_term_value->outputoptions.artifacts', 67, 23).
+port(32, 'in', 'options.workspace', 'FileTermCounterWorkflow/wrap_up<-options.workspace', 74, 7).
+port(33, 'in', 'outputoptions', 'FileTermCounterWorkflow/wrap_up<-outputoptions', 76, 12).
+
+% FACT: port_alias(port_id, alias).
+port_alias(5, 'term_value_count_report').
+port_alias(7, 'workflow_workspace').
+port_alias(11, 'workflow_workspace').
+port_alias(12, 'term_value_count_report').
+port_alias(13, 'output_dictionary').
+port_alias(28, 'workflow_workspace').
+port_alias(30, 'output_dictionary').
+port_alias(31, 'term_value_count_report').
+port_alias(32, 'workflow_workspace').
+port_alias(33, 'output_dictionary').
+
+% FACT: port_uri_template(port_id, uri).
+port_uri_template(2, 'file:../data/tests/test_barcelona1_clean.txt').
+port_uri_template(5, 'file:{outputoptions.workspace}/count_{term}.{format}').
+port_uri_template(8, 'file:../data/tests/test_barcelona1_clean.txt').
+port_uri_template(12, 'file:{outputoptions.workspace}/count_{term}.{format}').
+port_uri_template(14, 'file:../data/tests/test_barcelona1_clean.txt').
+port_uri_template(16, 'file:../data/tests/test_barcelona1_clean.txt').
+port_uri_template(29, 'file:../data/tests/test_barcelona1_clean.txt').
+port_uri_template(31, 'file:{outputoptions.workspace}/count_{term}.{format}').
+
+% FACT: has_in_port(block_id, port_id).
+has_in_port(1, 1).
+has_in_port(1, 2).
+has_in_port(1, 3).
+has_in_port(1, 4).
+has_in_port(2, 6).
+has_in_port(3, 8).
+has_in_port(3, 9).
+has_in_port(3, 10).
+has_in_port(3, 11).
+has_in_port(4, 14).
+has_in_port(5, 16).
+has_in_port(5, 17).
+has_in_port(6, 19).
+has_in_port(7, 21).
+has_in_port(8, 23).
+has_in_port(8, 24).
+has_in_port(9, 26).
+has_in_port(9, 27).
+has_in_port(9, 28).
+has_in_port(9, 29).
+has_in_port(10, 32).
+has_in_port(10, 33).
+
+% FACT: has_out_port(block_id, port_id).
+has_out_port(1, 5).
+has_out_port(2, 7).
+has_out_port(3, 12).
+has_out_port(3, 13).
+has_out_port(4, 15).
+has_out_port(5, 18).
+has_out_port(6, 20).
+has_out_port(7, 22).
+has_out_port(8, 25).
+has_out_port(9, 30).
+has_out_port(9, 31).
+
+% FACT: data(data_id, data_name, qualified_data_name).
+data(1, 'workspace', 'workspace').
+data(2, 'inputfile', 'inputfile').
+data(3, 'format', 'format').
+data(4, 'fieldlist', 'fieldlist').
+data(5, 'term_value_count_report', 'term_value_count_report').
+data(6, 'workspace', 'FileTermCounterWorkflow.workspace').
+data(7, 'workflow_workspace', 'FileTermCounterWorkflow.workflow_workspace').
+data(8, 'inputfile', 'FileTermCounterWorkflow.inputfile').
+data(9, 'format', 'FileTermCounterWorkflow.format').
+data(10, 'fieldlist', 'FileTermCounterWorkflow.fieldlist').
+data(11, 'term_value_count_report', 'FileTermCounterWorkflow.term_value_count_report').
+data(12, 'output_dictionary', 'FileTermCounterWorkflow.output_dictionary').
+data(13, 'inputfile', 'FileTermCounterWorkflow/count_field_values.inputfile').
+data(14, 'encoding', 'FileTermCounterWorkflow/count_field_values.encoding').
+data(15, 'header', 'FileTermCounterWorkflow/count_field_values.header').
+data(16, 'cleanheader', 'FileTermCounterWorkflow/count_field_values.cleanheader').
+data(17, 'fieldlist', 'FileTermCounterWorkflow/count_field_values.fieldlist').
+data(18, 'cleantermlist', 'FileTermCounterWorkflow/count_field_values.cleantermlist').
+data(19, 'termlist', 'FileTermCounterWorkflow/count_field_values.termlist').
+data(20, 'format', 'FileTermCounterWorkflow/count_field_values.format').
+data(21, 'workflow_workspace', 'FileTermCounterWorkflow/count_field_values.workflow_workspace').
+data(22, 'output_dictionary', 'FileTermCounterWorkflow/count_field_values.output_dictionary').
+data(23, 'term_value_count_report', 'FileTermCounterWorkflow/count_field_values.term_value_count_report').
+
+% FACT: channel(channel_id, data_id).
+channel(22, 5).
+channel(23, 6).
+channel(24, 8).
+channel(25, 9).
+channel(26, 10).
+channel(27, 7).
+channel(28, 7).
+channel(29, 12).
+channel(30, 1).
+channel(31, 2).
+channel(32, 3).
+channel(33, 4).
+channel(34, 11).
+channel(1, 11).
+channel(2, 12).
+channel(3, 13).
+channel(4, 13).
+channel(5, 13).
+channel(6, 14).
+channel(7, 15).
+channel(8, 17).
+channel(9, 18).
+channel(10, 16).
+channel(11, 19).
+channel(12, 20).
+channel(13, 21).
+channel(14, 8).
+channel(15, 8).
+channel(16, 8).
+channel(17, 9).
+channel(18, 10).
+channel(19, 7).
+channel(20, 23).
+channel(21, 22).
+
+% FACT: port_connects_to_channel(port_id, channel_id).
+port_connects_to_channel(12, 22).
+port_connects_to_channel(6, 23).
+port_connects_to_channel(8, 24).
+port_connects_to_channel(9, 25).
+port_connects_to_channel(10, 26).
+port_connects_to_channel(7, 27).
+port_connects_to_channel(11, 27).
+port_connects_to_channel(7, 28).
+port_connects_to_channel(32, 28).
+port_connects_to_channel(13, 29).
+port_connects_to_channel(33, 29).
+port_connects_to_channel(6, 30).
+port_connects_to_channel(8, 31).
+port_connects_to_channel(9, 32).
+port_connects_to_channel(10, 33).
+port_connects_to_channel(12, 34).
+port_connects_to_channel(31, 1).
+port_connects_to_channel(30, 2).
+port_connects_to_channel(14, 3).
+port_connects_to_channel(16, 4).
+port_connects_to_channel(29, 5).
+port_connects_to_channel(15, 6).
+port_connects_to_channel(17, 6).
+port_connects_to_channel(18, 7).
+port_connects_to_channel(19, 7).
+port_connects_to_channel(21, 8).
+port_connects_to_channel(22, 9).
+port_connects_to_channel(23, 9).
+port_connects_to_channel(20, 10).
+port_connects_to_channel(24, 10).
+port_connects_to_channel(25, 11).
+port_connects_to_channel(26, 11).
+port_connects_to_channel(27, 12).
+port_connects_to_channel(28, 13).
+port_connects_to_channel(14, 14).
+port_connects_to_channel(16, 15).
+port_connects_to_channel(29, 16).
+port_connects_to_channel(27, 17).
+port_connects_to_channel(21, 18).
+port_connects_to_channel(28, 19).
+port_connects_to_channel(31, 20).
+port_connects_to_channel(30, 21).
+
+% FACT: inflow_connects_to_channel(port_id, channel_id).
+inflow_connects_to_channel(1, 23).
+inflow_connects_to_channel(2, 24).
+inflow_connects_to_channel(3, 25).
+inflow_connects_to_channel(4, 26).
+inflow_connects_to_channel(1, 30).
+inflow_connects_to_channel(2, 31).
+inflow_connects_to_channel(3, 32).
+inflow_connects_to_channel(4, 33).
+inflow_connects_to_channel(8, 3).
+inflow_connects_to_channel(8, 4).
+inflow_connects_to_channel(8, 5).
+inflow_connects_to_channel(10, 8).
+inflow_connects_to_channel(9, 12).
+inflow_connects_to_channel(11, 13).
+inflow_connects_to_channel(8, 14).
+inflow_connects_to_channel(8, 15).
+inflow_connects_to_channel(8, 16).
+inflow_connects_to_channel(9, 17).
+inflow_connects_to_channel(10, 18).
+inflow_connects_to_channel(11, 19).
+
+% FACT: outflow_connects_to_channel(port_id, channel_id).
+outflow_connects_to_channel(5, 22).
+outflow_connects_to_channel(5, 34).
+outflow_connects_to_channel(12, 1).
+outflow_connects_to_channel(13, 2).
+outflow_connects_to_channel(12, 20).
+outflow_connects_to_channel(13, 21).
+
+% FACT: uri_variable(uri_variable_id, variable_name, port_id).
+uri_variable(1, 'outputoptions.workspace', 5).
+uri_variable(2, 'term', 5).
+uri_variable(3, 'format', 5).
+uri_variable(4, 'outputoptions.workspace', 12).
+uri_variable(5, 'term', 12).
+uri_variable(6, 'format', 12).
+uri_variable(7, 'outputoptions.workspace', 31).
+uri_variable(8, 'term', 31).
+uri_variable(9, 'format', 31).
+
+% FACT: log_template(log_template_id, port_id, entry_template, log_annotation_id).
+log_template(1, 31, '{term_name} {term_count}', 70).
+
+% FACT: log_template_variable(log_variable_id, variable_name, log_template_id).
+log_template_variable(1, 'term_name', 1).
+log_template_variable(2, 'term_count', 1).
+
+% FACT: assert(program_id, subject_id, predicate, object_id).
+

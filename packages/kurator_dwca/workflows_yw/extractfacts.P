@@ -1,0 +1,102 @@
+% FACT: extract_source(source_id, source_path).
+extract_source(1, 'file_term_values_yw_uri.yaml').
+% FACT: annotation(annotation_id, source_id, line_number, tag, keyword, value).
+annotation(1, 1, 50, 'begin', '@begin', 'FileTermCounterWorkflow').
+annotation(2, 1, 51, 'param', '@param', 'workspace').
+annotation(3, 1, 52, 'in', '@in', 'inputfile').
+annotation(4, 1, 52, 'uri', '@uri', 'file:../data/tests/test_barcelona1_clean.txt').
+annotation(5, 1, 53, 'param', '@param', 'format').
+annotation(6, 1, 54, 'param', '@param', 'fieldlist').
+annotation(7, 1, 55, 'out', '@out', 'outputoptions.artifacts').
+annotation(8, 1, 55, 'uri', '@uri', 'file:{outputoptions.workspace}/count_{term}.{format}').
+annotation(9, 1, 55, 'as', '@as', 'term_value_count_report').
+annotation(10, 1, 103, 'begin', '@begin', 'make_workspace').
+annotation(11, 1, 104, 'param', '@param', 'workspace').
+annotation(12, 1, 105, 'out', '@out', 'options.workspace').
+annotation(13, 1, 105, 'as', '@as', 'workflow_workspace').
+annotation(14, 1, 137, 'end', '@end', 'make_workspace').
+annotation(15, 1, 139, 'begin', '@begin', 'count_field_values').
+annotation(16, 1, 140, 'in', '@in', 'inputfile').
+annotation(17, 1, 140, 'uri', '@uri', 'file:../data/tests/test_barcelona1_clean.txt').
+annotation(18, 1, 141, 'param', '@param', 'format').
+annotation(19, 1, 142, 'param', '@param', 'fieldlist').
+annotation(20, 1, 143, 'in', '@in', 'options.workspace').
+annotation(21, 1, 143, 'as', '@as', 'workflow_workspace').
+annotation(22, 1, 144, 'call', '@call', 'read_header').
+annotation(23, 1, 145, 'call', '@call', 'clean_header').
+annotation(24, 1, 146, 'call', '@call', 'csv_file_encoding').
+annotation(25, 1, 147, 'call', '@call', 'term_value_count_reporter').
+annotation(26, 1, 148, 'out', '@out', 'outputoptions.artifacts').
+annotation(27, 1, 148, 'uri', '@uri', 'file:{outputoptions.workspace}/count_{term}.{format}').
+annotation(28, 1, 148, 'as', '@as', 'term_value_count_report').
+annotation(29, 1, 149, 'out', '@out', 'outputoptions').
+annotation(30, 1, 149, 'as', '@as', 'output_dictionary').
+annotation(31, 1, 181, 'begin', '@begin', 'get_file_encoding').
+annotation(32, 1, 182, 'in', '@in', 'inputfile').
+annotation(33, 1, 182, 'uri', '@uri', 'file:../data/tests/test_barcelona1_clean.txt').
+annotation(34, 1, 183, 'out', '@out', 'encoding').
+annotation(35, 1, 191, 'end', '@end', 'get_file_encoding').
+annotation(36, 1, 193, 'begin', '@begin', 'read_header').
+annotation(37, 1, 194, 'in', '@in', 'inputfile').
+annotation(38, 1, 194, 'uri', '@uri', 'file:../data/tests/test_barcelona1_clean.txt').
+annotation(39, 1, 195, 'in', '@in', 'encoding').
+annotation(40, 1, 196, 'call', '@call', 'clean_header').
+annotation(41, 1, 197, 'out', '@out', 'header').
+annotation(42, 1, 199, 'end', '@end', 'read_header').
+annotation(43, 1, 201, 'begin', '@begin', 'clean_header').
+annotation(44, 1, 202, 'in', '@in', 'header').
+annotation(45, 1, 203, 'out', '@out', 'cleanheader').
+annotation(46, 1, 206, 'end', '@end', 'clean_header').
+annotation(47, 1, 208, 'begin', '@begin', 'clean_list').
+annotation(48, 1, 209, 'in', '@in', 'fieldlist').
+annotation(49, 1, 210, 'call', '@call', 'clean_header').
+annotation(50, 1, 211, 'out', '@out', 'cleantermlist').
+annotation(51, 1, 219, 'end', '@end', 'clean_list').
+annotation(52, 1, 222, 'begin', '@begin', 'get_interest_list_in_inputfile').
+annotation(53, 1, 223, 'in', '@in', 'cleantermlist').
+annotation(54, 1, 224, 'in', '@in', 'cleanheader').
+annotation(55, 1, 225, 'out', '@out', 'termlist').
+annotation(56, 1, 233, 'end', '@end', 'get_interest_list_in_inputfile').
+annotation(57, 1, 235, 'begin', '@begin', 'count_term_value').
+annotation(58, 1, 236, 'in', '@in', 'termlist').
+annotation(59, 1, 237, 'in', '@in', 'format').
+annotation(60, 1, 238, 'in', '@in', 'options.workspace').
+annotation(61, 1, 238, 'as', '@as', 'workflow_workspace').
+annotation(62, 1, 239, 'in', '@in', 'inputfile').
+annotation(63, 1, 239, 'uri', '@uri', 'file:../data/tests/test_barcelona1_clean.txt').
+annotation(64, 1, 240, 'call', '@call', 'term_value_count_reporter').
+annotation(65, 1, 241, 'out', '@out', 'outputoptions').
+annotation(66, 1, 241, 'as', '@as', 'output_dictionary').
+annotation(67, 1, 242, 'out', '@out', 'outputoptions.artifacts').
+annotation(68, 1, 242, 'uri', '@uri', 'file:{outputoptions.workspace}/count_{term}.{format}').
+annotation(69, 1, 242, 'as', '@as', 'term_value_count_report').
+annotation(70, 1, 242, 'log', '@log', '{term_name} {term_count}').
+annotation(71, 1, 277, 'end', '@end', 'count_term_value').
+annotation(72, 1, 293, 'end', '@end', 'count_field_values').
+annotation(73, 1, 296, 'begin', '@begin', 'wrap_up').
+annotation(74, 1, 297, 'in', '@in', 'options.workspace').
+annotation(75, 1, 297, 'as', '@as', 'workflow_workspace').
+annotation(76, 1, 298, 'in', '@in', 'outputoptions').
+annotation(77, 1, 298, 'as', '@as', 'output_dictionary').
+annotation(78, 1, 338, 'end', '@end', 'wrap_up').
+annotation(79, 1, 340, 'end', '@end', 'FileTermCounterWorkflow').
+% FACT: annotation_qualifies(qualifying_annotation_id, primary_annotation_id).
+annotation_qualifies(4, 3).
+annotation_qualifies(8, 7).
+annotation_qualifies(9, 7).
+annotation_qualifies(13, 12).
+annotation_qualifies(17, 16).
+annotation_qualifies(21, 20).
+annotation_qualifies(27, 26).
+annotation_qualifies(28, 26).
+annotation_qualifies(30, 29).
+annotation_qualifies(33, 32).
+annotation_qualifies(38, 37).
+annotation_qualifies(61, 60).
+annotation_qualifies(63, 62).
+annotation_qualifies(66, 65).
+annotation_qualifies(68, 67).
+annotation_qualifies(69, 67).
+annotation_qualifies(70, 67).
+annotation_qualifies(75, 74).
+annotation_qualifies(77, 76).
