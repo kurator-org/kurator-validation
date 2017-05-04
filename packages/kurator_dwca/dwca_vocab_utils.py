@@ -14,8 +14,10 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_vocab_utils.py 2016-10-21T14:41+02:00"
+__copyright__ = "Copyright 2017 President and Fellows of Harvard College"
+__version__ = "dwca_vocab_utils.py 2017-04-27T16:37-04:00"
+__kurator_content_type__ = "utility"
+__adapted_from__ = ""
 
 # This file contains common utility functions for dealing with the vocabulary management
 # for Darwin Core-related terms
