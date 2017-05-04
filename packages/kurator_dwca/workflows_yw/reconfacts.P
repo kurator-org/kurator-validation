@@ -1,9 +1,9 @@
 % FACT: resource(resource_id, resource_uri).
 resource(1, '../data/tests/test_barcelona1_clean.txt').
 resource(2, 'file_term_values_workspace/count_genus.csv').
-resource(3, 'file_term_values_workspace/count_genus.tsv').
+resource(3, 'file_term_values_workspace/count_genus.txt').
 resource(4, 'file_term_values_workspace/count_specificepithet.csv').
-resource(5, 'file_term_values_workspace/count_specificepithet.tsv').
+resource(5, 'file_term_values_workspace/count_specificepithet.txt').
 % FACT: data_resource(data_id, resource_id).
 data_resource(2, 1).
 data_resource(5, 2).
@@ -60,7 +60,43 @@ uri_variable_value(5, 7, 'file_term_values_workspace').
 uri_variable_value(5, 8, 'specificepithet').
 uri_variable_value(5, 9, '').
 % FACT: log_variable_value(resource_id, log_entry_id, log_variable_id, log_variable_value).
-log_variable_value(4, 1, 1, 'cf.').
-log_variable_value(4, 1, 2, 'erithaca,1').
-log_variable_value(5, 2, 1, 'cf.').
-log_variable_value(5, 2, 2, 'erithaca	1').
+log_variable_value(2, 1, 1, 'genus').
+log_variable_value(2, 1, 2, 'count').
+log_variable_value(2, 2, 1, 'Drosera').
+log_variable_value(2, 2, 2, '2').
+log_variable_value(2, 3, 1, 'Cyclocephalla').
+log_variable_value(2, 3, 2, '1').
+log_variable_value(2, 4, 1, 'Theba').
+log_variable_value(2, 4, 2, '1').
+log_variable_value(2, 5, 1, 'Peromyscus').
+log_variable_value(2, 5, 2, '1').
+log_variable_value(2, 6, 1, 'Agave').
+log_variable_value(2, 6, 2, '1').
+log_variable_value(2, 7, 1, 'Glaucidium').
+log_variable_value(2, 7, 2, '1').
+log_variable_value(2, 8, 1, 'Erica').
+log_variable_value(2, 8, 2, '1').
+log_variable_value(2, 9, 1, 'Ceyx').
+log_variable_value(2, 9, 2, '1').
+log_variable_value(2, 10, 1, 'Tamarix').
+log_variable_value(2, 10, 2, '1').
+log_variable_value(4, 11, 1, 'specificepithet').
+log_variable_value(4, 11, 2, 'count').
+log_variable_value(4, 12, 1, 'rotundifolia').
+log_variable_value(4, 12, 2, '2').
+log_variable_value(4, 13, 1, 'gallica').
+log_variable_value(4, 13, 2, '1').
+log_variable_value(4, 14, 1, 'pisana').
+log_variable_value(4, 14, 2, '1').
+log_variable_value(4, 15, 1, 'pseudocrinitus?').
+log_variable_value(4, 15, 2, '1').
+log_variable_value(4, 16, 1, 'cf. erithaca').
+log_variable_value(4, 16, 2, '1').
+log_variable_value(4, 17, 1, 'sjostedti').
+log_variable_value(4, 17, 2, '1').
+log_variable_value(4, 18, 1, 'sp.').
+log_variable_value(4, 18, 2, '1').
+log_variable_value(4, 19, 1, 'eurigenia').
+log_variable_value(4, 19, 2, '1').
+log_variable_value(4, 20, 1, 'modesta').
+log_variable_value(4, 20, 2, '1').
