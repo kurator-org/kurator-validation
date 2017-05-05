@@ -14,8 +14,10 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2016-10-17T19:18+02:00"
+__copyright__ = "Copyright 2017 President and Fellows of Harvard College"
+__version__ = "vocab_appender.py 2017-04-27T16:37-04:00"
+__kurator_content_type__ = "actor"
+__adapted_from__ = "actor_template.py"
 
 from dwca_utils import read_header
 from dwca_utils import response

@@ -14,8 +14,10 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2017-01-16T15:26-03:00"
+__copyright__ = "Copyright 2017 President and Fellows of Harvard College"
+__version__ = "dwca_utils.py 2017-03-28T13:06-03:00"
+__kurator_content_type__ = "utility"
+__adapted_from__ = ""
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TXT files.
@@ -1057,7 +1059,7 @@ def csv_file_encoding(inputfile, maxlines=None):
 
     detector.close()
     encoding = detector.result['encoding']
-    print(encoding)
+    # print(encoding)
 
     if encoding is None:
         # Encoding not determined

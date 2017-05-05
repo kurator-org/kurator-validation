@@ -14,8 +14,10 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_converter.py 2016-10-18T19:03+02:00"
+__copyright__ = "Copyright 2017 President and Fellows of Harvard College"
+__version__ = "csv_converter.py 2017-04-27T16:37-04:00"
+__kurator_content_type__ = "actor"
+__adapted_from__ = "actor_template.py"
 
 from dwca_utils import convert_csv
 from dwca_utils import response

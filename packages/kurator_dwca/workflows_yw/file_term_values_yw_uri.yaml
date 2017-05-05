@@ -239,7 +239,7 @@ components:
             # @in inputfile @uri file:../data/tests/test_barcelona1_clean.txt
             # @call term_value_count_reporter 
             # @out outputoptions @as output_dictionary
-            # @out outputoptions.artifacts @uri file:{outputoptions.workspace}/count_{term}.{format} @as term_value_count_report @log {term_name}	{term_count}
+            # @out outputoptions.artifacts @uri file:{outputoptions.workspace}/count_{term}.{format} @as term_value_count_report @log {term_name},{term_count}
 
             # Prepare the output dictionary
             outputoptions = {}

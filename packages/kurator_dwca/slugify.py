@@ -16,8 +16,10 @@
 # Adapted from https://github.com/un33k/python-slugify/blob/master/slugify/slugify.py
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "slugify.py 2016-10-16T16:34+02:00"
+__copyright__ = "Copyright 2017 President and Fellows of Harvard College"
+__version__ = "slugify.py 2017-04-27T16:37-04:00"
+__kurator_content_type__ = "actor"
+__adapted_from__ = "actor_template.py"
 
 import unicodedata
 import re

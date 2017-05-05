@@ -14,8 +14,10 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2017-01-17T11:36-03:00"
+__copyright__ = "Copyright 2017 President and Fellows of Harvard College"
+__version__ = "report_utils.py 2017-04-27T16:37-04:00"
+__kurator_content_type__ = "utility"
+__adapted_from__ = ""
 
 # This file contains common utility functions for dealing with the content of CSV and
 # TSV data.
