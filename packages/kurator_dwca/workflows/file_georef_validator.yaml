@@ -15,7 +15,7 @@
 #         -p workspace=./file_georef_validator_workspace
 #         -p inputfile=../data/tests/test_mcz.txt
 #         -p format=tsv
-#         -p namespace=yes
+#         -p dwcnamespace=y
 #         -l DEBUG (optional)
 #
 #####################################################################################

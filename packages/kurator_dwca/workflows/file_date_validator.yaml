@@ -13,9 +13,9 @@
 # Example command-line usage:
 # kurator -f file_date_validator.yaml
 #         -p workspace=./file_date_validator_workspace
-#         -p inputfile=../data/tests/test_mcz_eventdate.txt
+#         -p inputfile=../data/tests/test_mcz_eventdate.csv
 #         -p format=tsv
-#         -p namespace=no
+#         -p dwcnamespace=n
 #         -l DEBUG (optional)
 #
 #####################################################################################

@@ -13,7 +13,7 @@
 # Example command-line usage:
 # kurator -f dwca_term_values.yaml 
 #         -p workspace=./dwca_term_values_workspace
-#         -p url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
+#         -p dwca_url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
 #         -p format=txt
 #         -p fieldlist="genus|specificepithet"
 #         -l DEBUG (optional)

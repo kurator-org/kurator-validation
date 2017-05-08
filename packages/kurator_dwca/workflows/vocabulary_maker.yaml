@@ -13,7 +13,6 @@
 #         -p workspace=./vocabulary_maker_workspace
 #         -p inputfile=../data/tests/test_barcelona1.txt
 #         -p vocabfile=newvocabfile.csv
-#         -p separator='|'
 #         -p termlist=recordedBy
 #         -p key=recordedBy
 #         -l DEBUG (optional)

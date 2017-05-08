@@ -11,7 +11,7 @@
 # Example command-line usage:
 # kurator -f file_term_values.yaml 
 #         -p workspace=./file_term_values_workspace
-#         -p inputfile=../data/tests/test_barcelona1.txt
+#         -p inputfile=../data/tests/test_barcelona1_clean.txt
 #         -p format=txt
 #         -p fieldlist="genus|specificepithet"
 #         -l DEBUG (optional)
