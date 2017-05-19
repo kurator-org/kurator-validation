@@ -62,6 +62,7 @@ components:
       - !ref MakeWorkspace
       - !ref DownloadArchive
       - !ref ExtractOccurrenceCore
+      - !ref FileToDataStream
       - !ref EnvironmentTagger
       - !ref FilterJustMarine
       - !ref FilterExcludeMarine
