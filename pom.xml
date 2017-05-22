@@ -16,8 +16,8 @@
     <repositories>
         
         <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>ossrh-snapshots</id>
+            <url>https://oss.sonatype.org/content/groups/public/</url>
             <releases>
                 <enabled>false</enabled>
             </releases>
