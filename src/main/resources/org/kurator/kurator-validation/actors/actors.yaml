@@ -18,4 +18,15 @@ types:
   type: Actor
   properties:
     actorClass: org.kurator.validation.actors.StreamSingleTermFilter    
+    
+- id: StreamMerge
+  type: Actor
+  properties:
+    actorClass: org.kurator.validation.actors.StreamMerge     
+    
+    
+#- id: CsvFileWriter
+#  type: Actor
+#  properties:
+#    actorClass: org.kurator.akka.actors.CsvFileWriter    
 
