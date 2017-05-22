@@ -47,6 +47,9 @@
 imports:
 
 - classpath:/org/kurator/akka/types.yaml
+- classpath:/org/kurator/akka/actors.yaml
+- classpath:/org/kurator/kurator-validation/actors/actors.yaml
+
 
 # Definitions of the Workflow and actors
 components:
@@ -63,14 +66,16 @@ components:
       - !ref DownloadArchive
       - !ref ExtractOccurrenceCore
       - !ref FileToDataStream
-      - !ref EnvironmentTagger
+      - !ref EnvironmentTaggerA
       - !ref FilterJustMarine
       - !ref FilterExcludeMarine
       
+      
       # TODO: lookup in WoRMS
       # TODO: lookup in GBIF
-      # TODO: streams to output file
       
+      - !ref StreamMergeA
+      - !ref FileWriter     
       - !ref WrapUp
     # Each parameter defined here enters the workflow from the command line and is 
     # delivered in the options dictionary of the specified actor.
@@ -194,7 +199,7 @@ components:
       - !ref ExtractOccurrenceCore
       
 # Tag each record in the stream that appears to be marine with isMarine=true      
-- id: EnvironmentTagger
+- id: EnvironmentTaggerA
   type: EnvironmentTagger
   properties:
     listensTo:
@@ -205,7 +210,7 @@ components:
   type: SingleTermStreamFilter
   properties:
     listensTo:
-      - !ref EnvironmentTagger
+      - !ref EnvironmentTaggerA
     parameters:
       filterKeyToMatch: isMarine
       matchValue: true
@@ -216,7 +221,7 @@ components:
   type: SingleTermStreamFilter
   properties:
     listensTo:
-      - !ref EnvironmentTagger
+      - !ref EnvironmentTaggerA
     parameters:
       filterKeyToMatch: isMarine
       matchValue: true
@@ -234,12 +239,25 @@ components:
 #    listensTo:
 #      - !ref FilterExcludeMarine
 
-# TODO: Merge streams into output file
-#- id: StreamToFile
-#  properties:
-#    listensTo:
-#      - !ref WoRMSLookup
-#      - !ref GBIFLookup
+
+# Merge the streams
+- id: StreamMergeA      
+  type: StreamMerge
+  properties:
+    listensTo:
+      - !ref FilterExcludeMarine
+      - !ref FilterJustMarine
+    parameters:
+      numberOfInputs: 2
+
+# Write to a csv file
+- id: FileWriter      
+  type: CsvFileWriter
+  properties:
+    listensTo:
+      - !ref StreamMergeA
+    parameters:
+      filePath: mergedoutuputfile.csv 
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
@@ -270,4 +288,4 @@ components:
       messagefrom: 'CreateMissingCountryReport'
     # The "upstream" actor from which to receive a message.
     listensTo:
-#      - !ref StreamToFile 
+      - !ref FileWriter

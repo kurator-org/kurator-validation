@@ -35,6 +35,15 @@ public class StreamSingleTermFilter extends KuratorActor {
 	protected boolean passOnMatch;
 	
 	/**
+	 * Default constructor to satisfy Spring.
+	 */
+	public StreamSingleTermFilter() { 
+		filterKeyToMatch = "";
+		matchValue = "";
+		passOnMatch = false;
+	}
+	
+	/**
 	 * Constructor to configure a stream single term filter messages in the form of a
 	 * Map<String,String> on a single key in the map and a single match value on the key
 	 * 

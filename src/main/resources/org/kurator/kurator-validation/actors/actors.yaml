@@ -18,4 +18,9 @@ types:
   type: Actor
   properties:
     actorClass: org.kurator.validation.actors.StreamSingleTermFilter    
-
+    
+- id: StreamMerge
+  type: Actor
+  properties:
+    actorClass: org.kurator.validation.actors.StreamMerge     
+    

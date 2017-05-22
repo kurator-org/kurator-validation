@@ -16,6 +16,17 @@
     <repositories>
         
         <repository>
+            <id>ossrh-snapshots</id>
+            <url>https://oss.sonatype.org/content/groups/public/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+
+        <repository>
             <id>ncsa.oss-sonatype</id>
             <name>NCSA OSS-Sonatype Repository</name>
             <url>https://opensource.ncsa.illinois.edu/nexus/content/repositories/releases/</url>
@@ -84,6 +95,9 @@
 	<build>
 
         <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
             <resource>
                 <directory>src/main/python</directory>
                 <excludes>
