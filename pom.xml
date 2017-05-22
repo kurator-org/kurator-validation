@@ -16,6 +16,17 @@
     <repositories>
         
         <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+
+        <repository>
             <id>ncsa.oss-sonatype</id>
             <name>NCSA OSS-Sonatype Repository</name>
             <url>https://opensource.ncsa.illinois.edu/nexus/content/repositories/releases/</url>
@@ -25,11 +36,6 @@
             <id>gbif-all</id>
             <url>http://repository.gbif.org/content/groups/gbif</url>
         </repository>        
-        
-        <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </repository>
         
     </repositories>
 
