@@ -26,6 +26,11 @@
             <url>http://repository.gbif.org/content/groups/gbif</url>
         </repository>        
         
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+        
     </repositories>
 
     <dependencies>
