@@ -255,7 +255,7 @@ components:
   type: WorkspaceCsvFileWriter
   properties:
     listensTo:
-      - !ref MakeWorkspace
+      - !ref ExtractOccurrenceCore
       - !ref StreamMergeA
     parameters:
       filePath: mergedoutuputfile.csv 
@@ -287,7 +287,7 @@ components:
         artifacts: artifacts
     parameters:
       # Show the name of the upstream actor.
-      messagefrom: 'CreateMissingCountryReport'
+      messagefrom: 'FileWriter'
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref FileWriter

@@ -21,6 +21,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.csv.CSVFormat;
@@ -51,6 +52,7 @@ public class WorkspaceCsvFileWriter extends KuratorActor {
     
     protected Writer outputWriter = null;
     protected CSVPrinter csvPrinter = null;
+    private Map<String,Object> recievedOptions = null;
     
     /**
      * Number of streams to which this actor listens.
@@ -228,6 +230,7 @@ public class WorkspaceCsvFileWriter extends KuratorActor {
     			options = (Map<String, Object>) data;
     			String workspaceName = (String) options.get("workspace");
     			if (workspaceName !=null) { 
+    				recievedOptions = (Map<String,Object>) data;
     				if (outputWriter == null) {
     					if (filePath != null) {
     						String filename = workspaceName + File.separator + filePath;
@@ -263,7 +266,7 @@ public class WorkspaceCsvFileWriter extends KuratorActor {
     				}
     			}
             
-            csvPrinter.printRecord(record.values());
+    			csvPrinter.printRecord(record.values());
     		}
         }
     }
@@ -289,9 +292,21 @@ public class WorkspaceCsvFileWriter extends KuratorActor {
     
     @Override
     public void onEnd() throws Exception {
+    	// Close the CSV printer.
         if (csvPrinter != null) {
             csvPrinter.close();
         }
+        logger.debug(this.getClass().getSimpleName() + ".onEnd(), closed csvPrinter.");
+        
+        // publish information on the CSV file to the workflow.
+        logger.debug(recievedOptions.toString());
+    	if (recievedOptions!=null) { 
+    		recievedOptions.put("success", "true");
+    		
+    		String workspaceName = (String) recievedOptions.get("workspace");
+    		String filename = workspaceName + File.separator + filePath;
+    		publishProduct("outputfile", filename, "File");
+    	}
     }
     
     private void createCsvPrinter() throws IOException {

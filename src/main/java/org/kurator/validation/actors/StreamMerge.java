@@ -28,19 +28,14 @@ public class StreamMerge extends KuratorActor {
 	private int listensTo = 1;
 	private int eosHeard = 0;
 	
-	public StreamMerge() { 
-		eosHeard = 0;
-		listensTo = inputs.size();
-	}
-	
-	public StreamMerge(int numberOfInputs) { 
-		eosHeard = 0;
-		listensTo = numberOfInputs;
-	}
-	
 	public void setNumberOfInputs(int numberOfInputs) { 
 		listensTo = numberOfInputs;
 	}
+	
+	public void setEndOnEos(boolean endOnEos) { 
+		this.endOnEos = endOnEos;
+	}
+	
 	
 	/**
 	 * Implementation of onEndOfStream that waits for all input streams to send 

@@ -64,48 +64,48 @@ public class FileToFlatDataStreamer extends KuratorActor {
     			if (inputfile.exists() && inputfile.canRead()) { 
     				if (filesReading.containsKey(inputfileName)) {
     					logger.debug("Allready reading input file:" + inputfileName);
-    			    } else { 
-    				filesReading.put(inputfileName, inputfileName);
-    				FileReader inputReader = new FileReader(inputfile);
+    				} else { 
+    					filesReading.put(inputfileName, inputfileName);
+    					FileReader inputReader = new FileReader(inputfile);
 
-    				CSVParser csvParser = new CSVParser(inputReader, tsvFormat);
-    				Map<String,Integer> headerMap = csvParser.getHeaderMap();
-    				if (headerMap.isEmpty() || headerMap.size()==1)  {
-    					Entry<String,Integer> firstHeader = headerMap.entrySet().iterator().next();
-    					if (firstHeader.getKey().contains(",")) { 
-    					    csvParser = new CSVParser(inputReader, csvFormat);
-    					} else if (firstHeader.getKey().contains("|")) {
-    						csvParser = new CSVParser(inputReader, pipeFormat);
-    					} else {
-    						throw new KuratorException("Unable to recognize format of provided input file");
+    					CSVParser csvParser = new CSVParser(inputReader, tsvFormat);
+    					Map<String,Integer> headerMap = csvParser.getHeaderMap();
+    					if (headerMap.isEmpty() || headerMap.size()==1)  {
+    						Entry<String,Integer> firstHeader = headerMap.entrySet().iterator().next();
+    						if (firstHeader.getKey().contains(",")) { 
+    							csvParser = new CSVParser(inputReader, csvFormat);
+    						} else if (firstHeader.getKey().contains("|")) {
+    							csvParser = new CSVParser(inputReader, pipeFormat);
+    						} else {
+    							throw new KuratorException("Unable to recognize format of provided input file");
+    						}
     					}
-    				}
-    				
-    				Map<String,Integer> csvHeader = csvParser.getHeaderMap();
-    				String[] headers = new String[csvHeader.size()];
 
-    				Iterator<CSVRecord> dataIterator = csvParser.iterator();
-    				while (dataIterator.hasNext()) { 
-    				   CSVRecord record = dataIterator.next();
-    				   if (record.isConsistent()) { 
-    					   Map<String,String> recordToStream = new HashMap<String,String>();
-    					   Iterator<String> headerIterator = csvHeader.keySet().iterator();
-    					   while (headerIterator.hasNext()) {
-    						   String header = headerIterator.next();
-    						   recordToStream.put(header, record.get(header));
-    					   } 
-    					   if (recordToStream.size()>0) {
-    						   logger.trace(recordToStream.get("occurrenceID") + " " + this.context().self().toString());
-    						   broadcast(recordToStream);
-    					   } else {
-    						   logger.debug("Skipping record with no fields added.");
-    					   } 
-    					   
-    				   } else {
-    					   logger.debug("Skipping inconsistent record.");
-    				   } 
-    				}
-    				filesReading.remove(inputfileName);
+    					Map<String,Integer> csvHeader = csvParser.getHeaderMap();
+    					String[] headers = new String[csvHeader.size()];
+
+    					Iterator<CSVRecord> dataIterator = csvParser.iterator();
+    					while (dataIterator.hasNext()) { 
+    						CSVRecord record = dataIterator.next();
+    						if (record.isConsistent()) { 
+    							Map<String,String> recordToStream = new HashMap<String,String>();
+    							Iterator<String> headerIterator = csvHeader.keySet().iterator();
+    							while (headerIterator.hasNext()) {
+    								String header = headerIterator.next();
+    								recordToStream.put(header, record.get(header));
+    							} 
+    							if (recordToStream.size()>0) {
+    								logger.trace(recordToStream.get("occurrenceID") + " " + this.context().self().toString());
+    								broadcast(recordToStream);
+    							} else {
+    								logger.debug("Skipping record with no fields added.");
+    							} 
+
+    						} else {
+    							logger.debug("Skipping inconsistent record.");
+    						} 
+    					}
+    					filesReading.remove(inputfileName);
     			    }
     			} else {
     				logger.error(workspaceName);
