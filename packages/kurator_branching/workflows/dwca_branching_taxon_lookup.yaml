@@ -152,7 +152,7 @@ components:
       outputfile: 'dwca.zip'
       # Set the log level in the actor explicitly
       # NOTE: Invoking logging in the Python actor causes kurator-akka thread exceptions.
-      #loglevel: 'DEBUG'
+      # loglevel: 'DEBUG'
       # Show the name of the upstream actor.
       messagefrom: 'DownloadCountryLookup'
     # The "upstream" actor from which to receive a message.
@@ -213,7 +213,7 @@ components:
       - !ref EnvironmentTaggerA
     parameters:
       filterKeyToMatch: isMarine
-      matchValue: true
+      matchValue: 'true'
       passOnMatch: true
 
 # Pass only records not tagged with isMarine=true
@@ -224,7 +224,7 @@ components:
       - !ref EnvironmentTaggerA
     parameters:
       filterKeyToMatch: isMarine
-      matchValue: true
+      matchValue: 'true'
       passOnMatch: false      
 
 # TODO: Lookup names in WoRMS

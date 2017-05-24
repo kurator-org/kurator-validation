@@ -16,8 +16,6 @@
  */
 package org.kurator.validation.actors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.kurator.akka.KuratorActor;
 import org.kurator.akka.messages.EndOfStream;
 
@@ -26,8 +24,6 @@ import org.kurator.akka.messages.EndOfStream;
  *
  */
 public class StreamMerge extends KuratorActor {
-
-	private static final Log logger = LogFactory.getLog(StreamMerge.class);
 	
 	private int listensTo = 1;
 	private int eosHeard = 0;
@@ -46,13 +42,15 @@ public class StreamMerge extends KuratorActor {
 	 * 
 	 */
     protected void onEndOfStream(EndOfStream eos) throws Exception {
-    	logger.debug(inputs.size());
-    	logger.debug(eosHeard);
-    	logger.debug(listensTo);
+    	logger.debug(Integer.toString(inputs.size()));
+    	logger.debug(Integer.toString(eosHeard));
+    	logger.debug(Integer.toString(listensTo));
         logger.trace("StreamMerge ON_END_OF_STREAM_EVENT ("+ eosHeard + " of " + listensTo +") heard.");
         if (endOnEos && eosHeard>=listensTo) {
         	logger.trace("StreamMerge ON_END_OF_STREAM_EVENT handler invoked.");
             endStreamAndStop(eos);
+        } else { 
+        	eosHeard++;
         }
     }	
     

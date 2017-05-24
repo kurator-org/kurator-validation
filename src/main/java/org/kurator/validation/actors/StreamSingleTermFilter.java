@@ -18,8 +18,6 @@ package org.kurator.validation.actors;
 
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.kurator.akka.KuratorActor;
 
 /**
@@ -28,8 +26,6 @@ import org.kurator.akka.KuratorActor;
  */
 public class StreamSingleTermFilter extends KuratorActor {
 
-	private static final Log logger = LogFactory.getLog(StreamSingleTermFilter.class);
-	
 	protected String filterKeyToMatch;
 	protected String matchValue;
 	protected boolean passOnMatch;
@@ -60,29 +56,78 @@ public class StreamSingleTermFilter extends KuratorActor {
 		this.passOnMatch = passOnMatch;
 	}
 	
+	/**
+	 * @return the filterKeyToMatch
+	 */
+	public String getFilterKeyToMatch() {
+		return filterKeyToMatch;
+	}
+
+	/**
+	 * @param filterKeyToMatch the filterKeyToMatch to set
+	 */
+	public void setFilterKeyToMatch(String filterKeyToMatch) {
+		this.filterKeyToMatch = filterKeyToMatch;
+	}
+
+	/**
+	 * @return the matchValue
+	 */
+	public String getMatchValue() {
+		return matchValue;
+	}
+
+	/**
+	 * @param matchValue the matchValue to set
+	 */
+	public void setMatchValue(String matchValue) {
+		logger.debug("setMatchValue called");
+		logger.debug(matchValue);
+		this.matchValue = matchValue;
+	}
+
+	/**
+	 * @return the passOnMatch
+	 */
+	public boolean isPassOnMatch() {
+		return passOnMatch;
+	}
+
+	/**
+	 * @param passOnMatch the passOnMatch to set
+	 */
+	public void setPassOnMatch(boolean passOnMatch) {
+		this.passOnMatch = passOnMatch;
+	}
+	public void setPassOnMatch(String passOnMatch) {
+		this.passOnMatch = Boolean.parseBoolean(passOnMatch);
+	}
+
 	@Override
 	protected void onData(Object message) throws Exception {
 		if (message instanceof Map) {
 			try { 
 			   Map<String,String> record = (Map<String,String>) message;
-			   
+			   logger.debug(Boolean.toString(passOnMatch) + ":" + filterKeyToMatch + ":" + matchValue + "=" + record.get(filterKeyToMatch) );			   
 			   if (passOnMatch) { 
 				   if (record.containsKey(filterKeyToMatch) && record.get(filterKeyToMatch).equals(matchValue)) { 
+					   logger.trace("Matched. Passing " + message);					   
 					   broadcast(message);
 				   } else { 
 					   logger.trace("Not Matched. Dropping " + message);
 				   }
 			   } else { 
 				   if (record.containsKey(filterKeyToMatch) && record.get(filterKeyToMatch).equals(matchValue)) { 
-					   logger.trace("Matched. Dropping " + message);
+					   logger.trace("Matched " +record.get(filterKeyToMatch) +  " = " + matchValue +". Dropping " + message);
 				   } else { 
+					   logger.trace("Not Matched. Passing " + message);					   
 					   broadcast(message);
 				   }
 			   }
 			   
     		} catch (ClassCastException e) { 
     			logger.error("Message was a Map, but unable to cast to Map<String,Stringt>.");
-    			logger.error(e.getMessage(),e);
+    			logger.error(e.getMessage());
     		}			   
 		} 
 	}

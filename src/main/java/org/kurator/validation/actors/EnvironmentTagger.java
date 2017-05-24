@@ -54,6 +54,16 @@ public class EnvironmentTagger extends KuratorActor {
 					   record.put("isMarine", "true");
 				   }
 			   }
+			   if (record.containsKey("higherGeography")) { 
+				   String higherGeog = record.get("higherGeography");
+				   if (higherGeog.matches(".*(Atlantic|Pacific|Arctic|Indian|Southern) Ocean.*")) { 
+					   record.put("isMarine", "true");
+				   }
+			   }
+			   if (!record.containsKey("isMarine")) { 
+				   record.put("isMarine", "false");
+			   }
+			   logger.debug("isMarine=" + record.get("isMarine"));
 			   broadcast(record);
 			   
 			} catch (ClassCastException e) { 

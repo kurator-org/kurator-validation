@@ -3,8 +3,6 @@ package org.kurator.validation.actors;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.kurator.akka.KuratorActor;
 import org.kurator.exceptions.KuratorException;
 
@@ -26,11 +24,11 @@ import java.util.Map.Entry;
  */
 public class FileToFlatDataStreamer extends KuratorActor {
 	
-	private static final Log logger = LogFactory.getLog(FileToFlatDataStreamer.class);
-	
     protected CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader();
     protected CSVFormat tsvFormat = CSVFormat.TDF.withHeader();
     protected CSVFormat pipeFormat = CSVFormat.newFormat('|').withIgnoreSurroundingSpaces(true).withHeader();
+    
+    private Map<String,String> filesReading = null;
 
     /**
      * Expects a message consisting of an object that can be cast into Map<String,Object>.
@@ -39,6 +37,10 @@ public class FileToFlatDataStreamer extends KuratorActor {
      */
     @Override
     protected void onData(Object data) throws Exception {
+    	
+    	if (filesReading==null) { 
+    		filesReading = new HashMap<String,String>();
+    	}
     	
     	if (data instanceof Map) { 
 
@@ -49,14 +51,21 @@ public class FileToFlatDataStreamer extends KuratorActor {
     			String workspaceName = (String) options.get("workspace");
     			String inputfileName = (String) options.get("outputfile"); // output from upstream, input for this actor
 
+    			logger.debug(workspaceName);
+    			logger.debug(inputfileName);
+    			
     			if (inputfileName == null) { 
     				throw new FileNotFoundException("Error: Unable to read upstream file source, no filename provided");
-    			}
+    			} 
 
     			File workspace = new File(workspaceName);
     			File inputfile = new File(inputfileName);
 
     			if (inputfile.exists() && inputfile.canRead()) { 
+    				if (filesReading.containsKey(inputfileName)) {
+    					logger.debug("Allready reading input file:" + inputfileName);
+    			    } else { 
+    				filesReading.put(inputfileName, inputfileName);
     				FileReader inputReader = new FileReader(inputfile);
 
     				CSVParser csvParser = new CSVParser(inputReader, tsvFormat);
@@ -79,7 +88,6 @@ public class FileToFlatDataStreamer extends KuratorActor {
     				while (dataIterator.hasNext()) { 
     				   CSVRecord record = dataIterator.next();
     				   if (record.isConsistent()) { 
-    					   
     					   Map<String,String> recordToStream = new HashMap<String,String>();
     					   Iterator<String> headerIterator = csvHeader.keySet().iterator();
     					   while (headerIterator.hasNext()) {
@@ -87,9 +95,8 @@ public class FileToFlatDataStreamer extends KuratorActor {
     						   recordToStream.put(header, record.get(header));
     					   } 
     					   if (recordToStream.size()>0) {
-    						   
+    						   logger.trace(recordToStream.get("occurrenceID") + " " + this.context().self().toString());
     						   broadcast(recordToStream);
-    						   
     					   } else {
     						   logger.debug("Skipping record with no fields added.");
     					   } 
@@ -98,7 +105,8 @@ public class FileToFlatDataStreamer extends KuratorActor {
     					   logger.debug("Skipping inconsistent record.");
     				   } 
     				}
-    					
+    				filesReading.remove(inputfileName);
+    			    }
     			} else {
     				logger.error(workspaceName);
     				logger.error(inputfileName);
@@ -107,7 +115,7 @@ public class FileToFlatDataStreamer extends KuratorActor {
     			}
     		} catch (ClassCastException e) { 
     			logger.error("Message was a Map, but unable to cast to Map<String,Object>.");
-    			logger.error(e.getMessage(),e);
+    			logger.error(e.getMessage());
     		}
 
     	}
