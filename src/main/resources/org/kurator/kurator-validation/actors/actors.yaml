@@ -24,3 +24,8 @@ types:
   properties:
     actorClass: org.kurator.validation.actors.StreamMerge     
     
+- id: WorkspaceCsvFileWriter
+  type: Actor
+  properties:
+    actorClass: org.kurator.validation.actors.WorkspaceCsvFileWriter       
+    

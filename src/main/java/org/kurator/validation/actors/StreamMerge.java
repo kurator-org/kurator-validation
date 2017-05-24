@@ -38,8 +38,16 @@ public class StreamMerge extends KuratorActor {
 		listensTo = numberOfInputs;
 	}
 	
+	public void setNumberOfInputs(int numberOfInputs) { 
+		listensTo = numberOfInputs;
+	}
+	
 	/**
+	 * Implementation of onEndOfStream that waits for all input streams to send 
+	 * end of stream messages before triggering end of stream and stop.
+	 * Assumes message delivery model of at most once.
 	 * 
+	 * @param eos end of stream signal.
 	 */
     protected void onEndOfStream(EndOfStream eos) throws Exception {
     	logger.debug(Integer.toString(inputs.size()));

@@ -10,8 +10,8 @@
 #    - adds a key/value pair isMarine,true to records appearing to contain marine data
 #    - splits the stream, one branch accepting isMarine=true the other rejecting it.
 #    - TODO: lookup in WoRMS on one stream, look up in GBIF on the other
-#    - TODO: recombine 
-#    - TODO: wraps up the workflow
+#    - recombines the streams into a csv file
+#    - wraps up the workflow
 #
 # Example command-line usage:
 # kurator -f dwca_branching_taxon_lookup.yaml 
@@ -252,12 +252,14 @@ components:
 
 # Write to a csv file
 - id: FileWriter      
-  type: CsvFileWriter
+  type: WorkspaceCsvFileWriter
   properties:
     listensTo:
+      - !ref MakeWorkspace
       - !ref StreamMergeA
     parameters:
       filePath: mergedoutuputfile.csv 
+      numberOfInputs: 2
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
