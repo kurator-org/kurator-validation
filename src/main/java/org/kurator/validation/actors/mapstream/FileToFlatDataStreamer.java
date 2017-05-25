@@ -1,4 +1,4 @@
-package org.kurator.validation.actors;
+package org.kurator.validation.actors.mapstream;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;

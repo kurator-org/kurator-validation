@@ -7,25 +7,34 @@ types:
 - id: FileToFlatDataStreamer
   type: Actor
   properties:
-    actorClass: org.kurator.validation.actors.FileToFlatDataStreamer
+    actorClass: org.kurator.validation.actors.mapstream.FileToFlatDataStreamer
     
 - id: EnvironmentTagger
   type: Actor
   properties:
-    actorClass: org.kurator.validation.actors.EnvironmentTagger
+    actorClass: org.kurator.validation.actors.mapstream.EnvironmentTagger
     
 - id: SingleTermStreamFilter
   type: Actor
   properties:
-    actorClass: org.kurator.validation.actors.StreamSingleTermFilter    
+    actorClass: org.kurator.validation.actors.mapstream.StreamSingleTermFilter    
     
 - id: StreamMerge
   type: Actor
   properties:
-    actorClass: org.kurator.validation.actors.StreamMerge     
+    actorClass: org.kurator.validation.actors.mapstream.StreamMerge     
     
 - id: WorkspaceCsvFileWriter
   type: Actor
   properties:
-    actorClass: org.kurator.validation.actors.WorkspaceCsvFileWriter       
+    actorClass: org.kurator.validation.actors.mapstream.WorkspaceCsvFileWriter       
     
+- id: SimpleGBIFGUIDLookup
+  type: Actor
+  properties:
+    actorClass: org.kurator.validation.actors.mapstream.SimpleGBIFGUIDLookup       
+    
+- id: SimpleWoRMSGUIDLookup
+  type: Actor
+  properties:
+    actorClass: org.kurator.validation.actors.mapstream.SimpleWoRMSGuidLookup       

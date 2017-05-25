@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.kurator.validation.actors;
+package org.kurator.validation.actors.mapstream;
 
 import java.util.Map;
 
