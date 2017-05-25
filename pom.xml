@@ -66,6 +66,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.filteredpush</groupId>
+            <artifactId>sci_name_qc</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>        
+        
+        <dependency>
           <groupId>org.kurator</groupId>
           <artifactId>suds_jurko</artifactId>
           <version>0.6</version>

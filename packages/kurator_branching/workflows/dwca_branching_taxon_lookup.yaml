@@ -69,11 +69,8 @@ components:
       - !ref EnvironmentTaggerA
       - !ref FilterJustMarine
       - !ref FilterExcludeMarine
-      
-      
-      # TODO: lookup in WoRMS
-      # TODO: lookup in GBIF
-      
+      - !ref WoRMSLookup
+      - !ref GBIFLookup
       - !ref StreamMergeA
       - !ref FileWriter     
       - !ref WrapUp
@@ -227,17 +224,19 @@ components:
       matchValue: 'true'
       passOnMatch: false      
 
-# TODO: Lookup names in WoRMS
-#- id: WoRMSLookup
-#  properties:
-#    listensTo:
-#      - !ref FilterJustMarine
+# Lookup GUIDs for names in WoRMS
+- id: WoRMSLookup
+  type: SimpleWoRMSGUIDLookup
+  properties:
+    listensTo:
+      - !ref FilterJustMarine
 
-# TODO: Lookup names in GBIF
-#- id: GBIFLookup
-#  properties:
-#    listensTo:
-#      - !ref FilterExcludeMarine
+# Lookup GUIDs for names in GBIF
+- id: GBIFLookup
+  type: SimpleGBIFGUIDLookup
+  properties:
+    listensTo:
+      - !ref FilterExcludeMarine
 
 
 # Merge the streams
@@ -245,8 +244,8 @@ components:
   type: StreamMerge
   properties:
     listensTo:
-      - !ref FilterExcludeMarine
-      - !ref FilterJustMarine
+      - !ref WoRMSLookup
+      - !ref GBIFLookup
     parameters:
       numberOfInputs: 2
 
