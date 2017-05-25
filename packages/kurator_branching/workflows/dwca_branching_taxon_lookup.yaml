@@ -89,12 +89,14 @@ components:
         # the workspace parameter given on the command line.
         actor: !ref MakeWorkspace
         parameter: workspace
+# @BEGIN BranchingWorkflow
 
 # Inline python actor to make a workspace on the fly to use for writing temporary 
 # if one is not supplied in the workflow-defined parameters. It creates a unique
 # workspace if a workspace location is not explicitly provided, or if the provided
 # one does not exist.
-# @BEGIN setup
+# @BEGIN Setup
+# @PARAM DwCA_URI
 - id: MakeWorkspace
   type: PythonActor
   properties:
@@ -187,25 +189,35 @@ components:
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref DownloadArchive
-# @END setup
+# @OUT Workspace      
+# @OUT OccurrenceFile
+# @END Setup
   
 # take the extracted occurrence core and stream records from it
-#@BEGIN FileToDataStream  
+# @BEGIN FileToDataStream  
+# @IN OccurrenceFile
 - id: FileToDataStream
   type: FileToFlatDataStreamer
   properties:
     listensTo:
       - !ref ExtractOccurrenceCore
-#@END FileToDataStream      
+# @OUT DataRecord
+# @END FileToDataStream      
       
 # Tag each record in the stream that appears to be marine with isMarine=true      
+# @BEGIN EnvironmentTagger
+# @IN DataRecord 
 - id: EnvironmentTaggerA
   type: EnvironmentTagger
   properties:
     listensTo:
       - !ref FileToDataStream
+# @OUT TaggedDataRecord      
+# @END EnvironmentTagger      
       
 # Pass only records tagged with isMarine=true      
+# @BEGIN FilterToJustMarine 
+# @IN TaggedDataRecord      
 - id: FilterJustMarine
   type: SingleTermStreamFilter
   properties:
@@ -215,8 +227,12 @@ components:
       filterKeyToMatch: isMarine
       matchValue: 'true'
       passOnMatch: true
+# @OUT Marine
+# @End FilterToJustMarine
 
 # Pass only records not tagged with isMarine=true
+# @BEGIN FilterExcludingMarine 
+# @IN TaggedDataRecord      
 - id: FilterExcludeMarine      
   type: SingleTermStreamFilter
   properties:
@@ -226,23 +242,35 @@ components:
       filterKeyToMatch: isMarine
       matchValue: 'true'
       passOnMatch: false      
+# @OUT NotMarine
+# @END FilterExcludingMarine
 
 # Lookup GUIDs for names in WoRMS
+# @BEGIN WoRMSLookup
+# @IN Marine
 - id: WoRMSLookup
   type: SimpleWoRMSGUIDLookup
   properties:
     listensTo:
       - !ref FilterJustMarine
+# @OUT WoRMSOutput
+# @END WoRMSLookup
 
 # Lookup GUIDs for names in GBIF
+# @BEGIN GBIFLookup
+# @IN NotMarine
 - id: GBIFLookup
   type: SimpleGBIFGUIDLookup
   properties:
     listensTo:
       - !ref FilterExcludeMarine
-
+# @OUT GBIFOutput
+# @END GBIFLookup
 
 # Merge the streams
+# @BEGIN StreamMerge
+# @IN GBIFOutput
+# @IN WoRMSOutput
 - id: StreamMergeA      
   type: StreamMerge
   properties:
@@ -251,7 +279,12 @@ components:
       - !ref GBIFLookup
     parameters:
       numberOfInputs: 2
+# @OUT MergedStream      
+# @END StreamMerge
 
+# @BEGIN CsvFileWriter
+# @IN Workspace
+# @IN MergedStream
 # Write to a csv file
 - id: FileWriter      
   type: WorkspaceCsvFileWriter
@@ -262,6 +295,7 @@ components:
     parameters:
       filePath: mergedoutuputfile.csv 
       numberOfInputs: 2
+# @END CsvFileWriter
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
@@ -293,3 +327,5 @@ components:
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref FileWriter
+
+# @END BranchingWorkflow
