@@ -94,6 +94,7 @@ components:
 # if one is not supplied in the workflow-defined parameters. It creates a unique
 # workspace if a workspace location is not explicitly provided, or if the provided
 # one does not exist.
+# @BEGIN setup
 - id: MakeWorkspace
   type: PythonActor
   properties:
@@ -186,14 +187,16 @@ components:
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref DownloadArchive
+# @END setup
   
-  
-# take the extracted occurrence core and stream records from it  
+# take the extracted occurrence core and stream records from it
+#@BEGIN FileToDataStream  
 - id: FileToDataStream
   type: FileToFlatDataStreamer
   properties:
     listensTo:
       - !ref ExtractOccurrenceCore
+#@END FileToDataStream      
       
 # Tag each record in the stream that appears to be marine with isMarine=true      
 - id: EnvironmentTaggerA
