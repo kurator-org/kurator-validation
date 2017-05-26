@@ -91,6 +91,7 @@ components:
         parameter: workspace
 # @BEGIN BranchingWorkflow
 # @IN DwCA_URI
+# @PARM LogFile
 
 # Inline python actor to make a workspace on the fly to use for writing temporary 
 # if one is not supplied in the workflow-defined parameters. It creates a unique
@@ -214,12 +215,14 @@ components:
   properties:
     listensTo:
       - !ref FileToDataStream
+# @OUT LogFile @URI file:{LogFile}       
+#    @LOG {timestamp} [{loglevel}] ACTOR<{actorname}> -> isMarine={isMarineValue} for occurrenceID={occurrenceId} 
 # @OUT TaggedDataRecord      
 # @END EnvironmentTagger      
       
 # Pass only records tagged with isMarine=true      
 # @BEGIN FilterToJustMarine 
-# @IN TaggedDataRecord      
+# @IN TaggedDataRecord 
 - id: FilterJustMarine
   type: SingleTermStreamFilter
   properties:
@@ -229,6 +232,8 @@ components:
       filterKeyToMatch: isMarine
       matchValue: 'true'
       passOnMatch: true
+# @OUT LogFile @URI file:{LogFile}       
+#    @LOG {timestamp} [{loglevel}] ACTOR<{actorname}> ->  [{filterKey}]=[{matchValue}]:{match}. Passing occurrenceID={occurrenceID}    
 # @OUT Marine
 # @End FilterToJustMarine
 
@@ -244,6 +249,8 @@ components:
       filterKeyToMatch: isMarine
       matchValue: 'true'
       passOnMatch: false      
+# @OUT LogFile @URI file:{LogFile}       
+#    @LOG {timestamp} [{loglevel}] ACTOR<{actorname}> ->  [{filterKey}]=[{matchValue}]:{match}. Passing occurrenceID={occurrenceID}    
 # @OUT NotMarine
 # @END FilterExcludingMarine
 
@@ -331,4 +338,5 @@ components:
     listensTo:
       - !ref FileWriter
 # @OUT OutputFile
+# @OUT LogFile      
 # @END BranchingWorkflow

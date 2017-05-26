@@ -108,10 +108,17 @@ public class StreamSingleTermFilter extends KuratorActor {
 		if (message instanceof Map) {
 			try { 
 			   Map<String,String> record = (Map<String,String>) message;
+			   String occurrenceId = null;
+			   try { 
+				   occurrenceId = record.get("occurrenceID");
+			   } catch (Exception e) {}
 			   logger.debug(Boolean.toString(passOnMatch) + ":" + filterKeyToMatch + ":" + matchValue + "=" + record.get(filterKeyToMatch) );			   
 			   if (passOnMatch) { 
 				   if (record.containsKey(filterKeyToMatch) && record.get(filterKeyToMatch).equals(matchValue)) { 
 					   logger.trace("Matched. Passing " + message);					   
+					   if (occurrenceId!=null) { 
+					      logger.trace("["+filterKeyToMatch+"]=["+matchValue+"]:Matched. Passing occurrenceID=" + occurrenceId);
+					   }
 					   broadcast(message);
 				   } else { 
 					   logger.trace("Not Matched. Dropping " + message);
@@ -121,6 +128,9 @@ public class StreamSingleTermFilter extends KuratorActor {
 					   logger.trace("Matched " +record.get(filterKeyToMatch) +  " = " + matchValue +". Dropping " + message);
 				   } else { 
 					   logger.trace("Not Matched. Passing " + message);					   
+					   if (occurrenceId!=null) { 
+					      logger.trace("["+filterKeyToMatch+"]=["+matchValue+"]:NotMatched. Passing occurrenceID=" + occurrenceId);
+					   }
 					   broadcast(message);
 				   }
 			   }

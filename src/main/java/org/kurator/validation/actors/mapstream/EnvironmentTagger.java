@@ -41,7 +41,10 @@ public class EnvironmentTagger extends KuratorActor {
 		if (message instanceof Map) {
 			try { 
 			   Map<String,String> record = (Map<String,String>) message;
-			   
+			   String occurrenceId = null;
+			   try { 
+				   occurrenceId = record.get("occurrenceID");
+			   } catch (Exception e) {}
 			   if (record.containsKey("waterBody")) { 
 				   String waterBody = record.get("waterBody");
 				   if (waterBody.contains("Ocean")) { 
@@ -64,6 +67,9 @@ public class EnvironmentTagger extends KuratorActor {
 				   record.put("isMarine", "false");
 			   }
 			   logger.debug("isMarine=" + record.get("isMarine"));
+			   if (occurrenceId!=null) { 
+			      logger.trace("isMarine=" + record.get("isMarine") + " for occurrenceID=" + occurrenceId);
+			   }
 			   broadcast(record);
 			   
 			} catch (ClassCastException e) { 
