@@ -90,6 +90,7 @@ components:
         actor: !ref MakeWorkspace
         parameter: workspace
 # @BEGIN BranchingWorkflow
+# @IN DwCA_URI
 
 # Inline python actor to make a workspace on the fly to use for writing temporary 
 # if one is not supplied in the workflow-defined parameters. It creates a unique
@@ -97,6 +98,7 @@ components:
 # one does not exist.
 # @BEGIN Setup
 # @PARAM DwCA_URI
+# @IN DarwinCoreArchive @URI {DwCA_URI}
 - id: MakeWorkspace
   type: PythonActor
   properties:
@@ -190,7 +192,7 @@ components:
     listensTo:
       - !ref DownloadArchive
 # @OUT Workspace      
-# @OUT OccurrenceFile
+# @OUT OccurrenceFile @URI file:{Workspace}/dwca_extracted_occurrences.txt
 # @END Setup
   
 # take the extracted occurrence core and stream records from it
@@ -295,6 +297,7 @@ components:
     parameters:
       filePath: mergedoutuputfile.csv 
       numberOfInputs: 2
+# @OUT OutputFile @URI file:{Workspace}/mergedoutputfile.csv      
 # @END CsvFileWriter
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
@@ -327,5 +330,5 @@ components:
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref FileWriter
-
+# @OUT OutputFile
 # @END BranchingWorkflow
