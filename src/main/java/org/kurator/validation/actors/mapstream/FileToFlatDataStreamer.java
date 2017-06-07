@@ -25,7 +25,7 @@ import java.util.Map.Entry;
 public class FileToFlatDataStreamer extends KuratorActor {
 	
     protected CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader();
-    protected CSVFormat tsvFormat = CSVFormat.TDF.withHeader();
+	protected CSVFormat tsvFormat = CSVFormat.newFormat('\t').withHeader();
     protected CSVFormat pipeFormat = CSVFormat.newFormat('|').withIgnoreSurroundingSpaces(true).withHeader();
     
     private Map<String,String> filesReading = null;

@@ -16,7 +16,7 @@
 # Example command-line usage:
 # kurator -f dwca_branching_taxon_lookup.yaml 
 #         -p workspace=./dwca_geography_assessor_workspace
-#         -p dwca_url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
+#         -p inputfile=../data/test_branching_wf.txt
 #         -l DEBUG (optional)
 #
 # Requires:
@@ -63,8 +63,8 @@ components:
       # list. Though the order does not matter, it is helpful to keep the list in more
       # or less the order in which they'll be invoked, for clarity.
       - !ref MakeWorkspace
-      - !ref DownloadArchive
-      - !ref ExtractOccurrenceCore
+      - !ref DownloadDarwinCloudLookup
+      - !ref Darwinize
       - !ref FileToDataStream
       - !ref EnvironmentTaggerA
       - !ref FilterJustMarine
@@ -77,18 +77,29 @@ components:
     # Each parameter defined here enters the workflow from the command line and is 
     # delivered in the options dictionary of the specified actor.
     parameters:
-      # Accept a parameter called dwca_url from the command line.
-      dwca_url:
-        # Set the url in the options dictionary of DownloadArchive from the value of
-        # the dwca_url parameter given on the command line.
-        actor: !ref DownloadArchive
-        parameter: url
       # Accept a parameter called workspace from the command line.
       workspace:
         # Set the workspace in the options dictionary of MakeWorkspace from the value of
         # the workspace parameter given on the command line.
         actor: !ref MakeWorkspace
         parameter: workspace
+      inputfile:
+        # Set the inputfile in the options dictionary of the Darwinize actor from the
+        # value of the inputfile parameter given on the command line.
+        actor: !ref Darwinize
+        parameter: inputfile
+      # Accept a parameter called format from the command line.
+      format:
+        # Set the format in the options dictionary of Darwinize from the value
+        # of the format parameter given on the command line.
+        actor: !ref Darwinize
+        parameter: format
+      # Accept a parameter called namespace from the command line.
+      dwcnamespace:
+        # Set the namespace in the options dictionary of Darwinize from the value
+        # of the format parameter given on the command line.
+        actor: !ref Darwinize
+        parameter: namespace
 # @BEGIN BranchingWorkflow
 # @IN DwCA_URI
 # @PARAM LogFile
@@ -124,16 +135,15 @@ components:
                 options['message']='Created workspace %s' % options['workspace']
             return options
 
-# Download a Darwin Core archive from a URL given by workflow-defined url parameter. 
-# Download occurs in workspace provided by the upstream actor.
-- id: DownloadArchive
+# Download darwin_cloud.txt file containing field name to Darwin Core lookups.
+- id: DownloadDarwinCloudLookup
   type: PythonActor
   properties:
     # The location of the actor source code
     module: kurator_dwca.downloader
     # The function to invoke in the module when the actor receives an onData message.
     onData: downloader
-    # A list of parameters to get from the options dictionary passed from an 
+    # A list of parameters to get from the options dictionary passed from an
     # upstream actor.
     inputs:
       # Get the workspace for this actor from the workspace in the options dictionary.
@@ -145,38 +155,33 @@ components:
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
-      # Get the url for the options dictionary from the url parameter defined 
-      # in the Workflow. It is not declared here.
-      # NOTE: Would like to establish the command line source of a parameter here, within
-      # the actor.
-
-      # Set the outputfile to a specific file name.
-      # NOTE: Would like to be able to specify that this file should go in the workspace
-      outputfile: 'dwca.zip'
-      # Set the log level in the actor explicitly
-      # NOTE: Invoking logging in the Python actor causes kurator-akka thread exceptions.
-      # loglevel: 'DEBUG'
+      # Get the file from a specific URL.
+      url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/darwin_cloud.txt'
+      # Download to a specific file name in the workspace received from upstream.
+      # Set the output file to a specific file name.
+      outputfile : 'lookup_darwin_cloud.txt'
       # Show the name of the upstream actor.
-      messagefrom: 'DownloadCountryLookup'
+      messagefrom: 'MakeWorkspace'
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref MakeWorkspace
 
-# Extract core file into a tab-separated value file in workspace from Darwin Core archive.
-- id: ExtractOccurrenceCore
+# Transform the input file to a file with the chosen format and as many field names
+# standardized to Darwin Core as possible.
+- id: Darwinize
   type: PythonActor
   properties:
-    # The location of the actor source code 
-    module: kurator_dwca.dwca_core_to_tsv
+    # The location of the actor source code
+    module: kurator_dwca.darwinize_header
     # The function to invoke in the module when the actor receives an onData message.
-    onData: dwca_core_to_tsv
-    # A list of parameters to get from the options dictionary passed from an 
+    onData: darwinize_header
+    # A list of parameters to get from the options dictionary passed from an
     # upstream actor.
     inputs:
-      # Get the inputfile for this actor from the outputfile in the options dictionary.
-      outputfile: inputfile
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
+      # Get the dwccloudfile for this actor from the output of the previous actor
+      outputfile : dwccloudfile
       # Get the success state from the options dictionary of the previous step
       success: previoussuccess
       # Get the message from the options dictionary of the previous step
@@ -184,26 +189,27 @@ components:
     # A list of parameters to get from the parameters defined at the workflow level or
     # to set explicitly from values given in this section.
     parameters:
-      # Set the outputfile to a specific file name.
-      # NOTE: Would like to be able to specify that this file should go in the workspace
-      outputfile: 'dwca_extracted_occurrences.txt'
+      # Set the output file to a specific file name.
+      outputfile : 'darwinized_file.txt'
+      namespace: 'n'
+      format: 'csv'
       # Show the name of the upstream actor.
-      messagefrom: 'DownloadArchive'
+      messagefrom: 'DownloadDarwinCloudLookup'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref DownloadArchive
-# @OUT Workspace      
-# @OUT OccurrenceFile @URI file:{Workspace}/dwca_extracted_occurrences.txt
+      - !ref DownloadDarwinCloudLookup
+# @OUT Workspace
+# @OUT OccurrenceFile @URI file:{Workspace}/darwinized_file.txt
 # @END Setup
-  
-# take the extracted occurrence core and stream records from it
+
+# take the darwinized occurrence file and stream records from it
 # @BEGIN FileToDataStream  
 # @IN OccurrenceFile
 - id: FileToDataStream
   type: FileToFlatDataStreamer
   properties:
     listensTo:
-      - !ref ExtractOccurrenceCore
+      - !ref Darwinize
 # @OUT DataRecord
 # @END FileToDataStream      
       
@@ -299,7 +305,7 @@ components:
   type: WorkspaceCsvFileWriter
   properties:
     listensTo:
-      - !ref ExtractOccurrenceCore
+      - !ref MakeWorkspace
       - !ref StreamMergeA
     parameters:
       filePath: mergedoutuputfile.csv 
