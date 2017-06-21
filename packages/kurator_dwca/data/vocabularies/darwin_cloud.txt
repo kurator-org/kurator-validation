@@ -39,6 +39,7 @@ DATASETID	datasetID	1	dwc
 DATASETNAME	datasetName	1	dwc		
 DATE		1			Could be one of many fields.
 DATE COLLECTED	verbatimEventDate	1	CSU		
+DATE COLL.	verbatimEventDate	1	CSU		
 DATEIDENTIFIED	dateIdentified	1	dwc		
 DAY	day	1	dwc		
 DAY_COLLECTED	day	1	Arctos		
@@ -318,6 +319,7 @@ NAMEACCORDINGTOID	nameAccordingToID	1	dwc
 NAMEPUBLISHEDIN	namePublishedIn	1	dwc		
 NAMEPUBLISHEDINID	namePublishedInID	1	dwc		
 NAMEPUBLISHEDINYEAR	namePublishedInYear	1	dwc		
+NEAREST CITY	municipality	1	CSU		
 NOMENCLATURALCODE	nomenclaturalCode	1	dwc		
 NOMENCLATURALSTATUS	nomenclaturalStatus	1	dwc		
 NOTES	occurrenceRemarks	1	CSU		
