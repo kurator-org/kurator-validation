@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2017 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2017-03-28T13:06-03:00"
+__version__ = "dwca_utils.py 2017-07-19T09:27-07:00"
 __kurator_content_type__ = "utility"
 __adapted_from__ = ""
 
@@ -745,7 +745,7 @@ def convert_csv(inputfile, outputfile, dialect=None, encoding=None, format=None)
 #         df = pd.read_csv(inputfile, encoding=encoding)
 # 
 #     # df contains the pandas data frame
-#     if format == 'txt':
+#     if is not None and format.lower() == 'txt':
 #         try:
 #             df.to_csv(outputfile, sep='\t', index=False, encoding='utf8', \
 #                 quoting=csv.QUOTE_NONE)

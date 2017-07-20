@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2017 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator.py 2017-04-27T16:37-04:00"
+__version__ = "text_file_aggregator.py 2017-07-19T09:33-07:00"
 __kurator_content_type__ = "actor"
 __adapted_from__ = "actor_template.py"
 
@@ -23,6 +23,7 @@ from dwca_utils import composite_header
 from dwca_utils import csv_file_dialect
 from dwca_utils import csv_file_encoding
 from dwca_utils import utf8_data_encoder
+from dwca_utils import csv_dialect
 from dwca_utils import tsv_dialect
 from dwca_utils import dialect_attributes
 from dwca_utils import response
@@ -117,7 +118,7 @@ def text_file_aggregator(options):
     if format is None or len(format)==0:
         format = 'txt'
 
-    if format == 'txt':
+    if format.lower() == 'txt':
         dialect = tsv_dialect()
     else:
         dialect = csv_dialect()

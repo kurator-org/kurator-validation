@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2017 President and Fellows of Harvard College"
-__version__ = "darwinize_header.py 2017-04-27T16:37-04:00"
+__version__ = "darwinize_header.py 2017-07-19T08:37-07:00"
 __kurator_content_type__ = "actor"
 __adapted_from__ = "actor_template.py"
 
@@ -25,6 +25,8 @@ from dwca_utils import write_header
 from dwca_utils import read_csv_row
 from dwca_utils import csv_file_dialect
 from dwca_utils import csv_file_encoding
+from dwca_utils import csv_dialect
+from dwca_utils import tsv_dialect
 from dwca_utils import response
 from dwca_utils import setup_actor_logging
 import os
@@ -54,6 +56,7 @@ def darwinize_header(options):
         outputfile - name of the output file, without path (required)
         encoding - string signifying the encoding of the input file. If known, it speeds
             up processing a great deal. (optional; default None) (e.g., 'utf-8')
+        format - output file format (e.g., 'csv' or 'txt') (optional; default 'txt')
         namespace - prepend namespace to fields that were darwinized 
         (optional; default 'no') (e.g., 'y', 'n')
     returns a dictionary with information about the results
@@ -85,6 +88,7 @@ def darwinize_header(options):
     outputfile = None
     encoding = None
     namespace = 'n'
+    format = None
 
     ### Required inputs ###
     try:
@@ -152,17 +156,21 @@ def darwinize_header(options):
     except:
         pass
 
-    dialect = csv_file_dialect(inputfile)
-    
-    parts = outputfile.split('.')
-    # If the outputfile name does not have an extension, provide one based on the format.
-    if parts[len(parts)-1] != 'csv' and parts[len(parts)-1] != 'txt':
-        if dialect.delimiter == ',':
-            outputfile = '%s.%s' % (outputfile, 'csv')
-        else:
-            outputfile = '%s.%s' % (outputfile, 'txt')
+    inputdialect = csv_file_dialect(inputfile)
 
-    header = read_header(inputfile, dialect=dialect, encoding=encoding)
+    try:
+        format = options['format']
+    except:
+        pass
+
+    if format is None or len(format)==0:
+        outputdialect = inputdialect
+    elif format.lower()=='csv':
+        outputdialect = csv_dialect()
+    else:
+        outputdialect = tsv_dialect()
+
+    header = read_header(inputfile, dialect=inputdialect, encoding=encoding)
     dwcheader = darwinize_list(header, dwccloudfile, namespace)
 
     if dwcheader is None:
@@ -172,7 +180,7 @@ def darwinize_header(options):
         return response(returnvars, returnvals)
         
     # Write the new header to the outputfile
-    if write_header(outputfile, dwcheader, dialect=dialect) == False:
+    if write_header(outputfile, dwcheader, dialect=outputdialect) == False:
         message = 'Unable to write header to output file. %s' % __version__
         returnvals = [workspace, outputfile, success, message, artifacts]
         logging.debug('message:\n%s' % message)
@@ -181,9 +189,9 @@ def darwinize_header(options):
     # Read the rows of the input file, append them to the output file after the 
     # header with columns in the same order.
     with open(outputfile, 'a') as outfile:
-        writer = csv.DictWriter(outfile, dialect=dialect, encoding='utf-8', 
+        writer = csv.DictWriter(outfile, dialect=outputdialect, encoding='utf-8', 
             fieldnames=header)
-        for row in read_csv_row(inputfile, dialect, encoding):
+        for row in read_csv_row(inputfile, inputdialect, encoding):
             writer.writerow(row)
             #print 'row: %s' % row
 
@@ -212,6 +220,9 @@ def _getoptions():
     help = 'include namespace (optional; default No)'
     parser.add_argument("-n", "--namespace", help=help)
 
+    help = 'report file format (e.g., csv or txt) (optional; default unchanged)'
+    parser.add_argument("-f", "--format", help=help)
+
     help = 'log level (e.g., DEBUG, WARNING, INFO) (optional)'
     parser.add_argument("-l", "--loglevel", help=help)
 
@@ -230,6 +241,7 @@ def main():
         s += ' -o darwinized.csv'
         s += ' -i ./data/tests/test_eight_specimen_records.csv'
         s += ' -n yes'
+        s += ' -f csv'
         s += ' -l DEBUG'
         print '%s' % s
         return
@@ -239,6 +251,7 @@ def main():
     optdict['dwccloudfile'] = options.dwccloudfile
     optdict['outputfile'] = options.outputfile
     optdict['namespace'] = options.namespace
+    optdict['format'] = options.format
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

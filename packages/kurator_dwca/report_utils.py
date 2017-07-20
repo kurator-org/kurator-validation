@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2017 President and Fellows of Harvard College"
-__version__ = "report_utils.py 2017-04-27T16:37-04:00"
+__version__ = "report_utils.py 2017-07-20T10:38-07:00"
 __kurator_content_type__ = "utility"
 __adapted_from__ = ""
 
@@ -78,7 +78,7 @@ def term_recommendation_report(
 
     fieldnames = vocabheader(key, separator)
 
-    if format=='csv' or format is None:
+    if format is None or format.lower()=='csv':
         dialect = csv_dialect()
     else:
         dialect = tsv_dialect()
@@ -137,7 +137,7 @@ def term_list_report(reportfile, termlist, key, separator=None, format=None):
 
     fieldnames = vocabheader(key, separator)
 
-    if format=='csv' or format is None:
+    if format is None or format.lower()=='csv':
         dialect = csv_dialect()
     else:
         dialect = tsv_dialect()
@@ -189,7 +189,7 @@ def term_completeness_report(reportfile, fieldcountdict, format=None):
         logging.debug(s)
         return False
 
-    if format=='csv' or format is None:
+    if format is None or format.lower()=='csv':
         dialect = csv_dialect()
     else:
         dialect = tsv_dialect()
@@ -322,7 +322,7 @@ def term_setter_report(
         logging.debug(s)
         return False
 
-    if format=='txt' or format is None:
+    if  format is None or format.lower()=='txt':
         outputdialect = tsv_dialect()
     else:
         outputdialect = csv_dialect()
@@ -424,7 +424,7 @@ def uuid_term_appender(
         logging.debug(s)
         return False
 
-    if format=='txt' or format is None:
+    if format is None or format.lower()=='txt':
         outputdialect = tsv_dialect()
     else:
         outputdialect = csv_dialect()
@@ -559,12 +559,12 @@ def term_standardizer_report(
         logging.debug(s)
         return False
 
-    if format=='txt' or format is None:
+    if format is None or format.lower()=='txt':
         dialect = tsv_dialect()
     else:
         dialect = csv_dialect()
 
-    if format=='txt' or format is None:
+    if format is None or format.lower()=='txt':
         outputdialect = tsv_dialect()
     else:
         outputdialect = csv_dialect()

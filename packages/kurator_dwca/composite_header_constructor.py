@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2017 President and Fellows of Harvard College"
-__version__ = "composite_header_constructor.py 2017-03-28T12:22-03:00"
+__version__ = "composite_header_constructor.py 2017-07-20T10:33-07:00"
 __kurator_content_type__ = "actor"
 __adapted_from__ = "actor_template.py"
 
@@ -100,6 +100,11 @@ def composite_header_constructor(options):
 
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
+    try:
+        format = options['format']
+    except:
+        pass
+
     # Read the headers of the two files and let read_header figure out the dialects and
     # encodings.
     header1 = read_header(inputfile1)
@@ -107,7 +112,7 @@ def composite_header_constructor(options):
 
     compositeheader = merge_headers(header1, header2)
 
-    if format=='txt' or format is None:
+    if format is None or format.lower()=='txt':
         dialect = tsv_dialect()
     else:
         dialect = csv_dialect()
