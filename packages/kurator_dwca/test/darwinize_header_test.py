@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "darwinize_header_test.py 2017-01-17T21:21-03:00"
+__version__ = "darwinize_header_test.py 2017-07-19T11:03-07:00"
 
 # This file contains unit test for the darwinize_header function.
 #
@@ -25,6 +25,10 @@ __version__ = "darwinize_header_test.py 2017-01-17T21:21-03:00"
 from kurator_dwca.darwinize_header import darwinize_header
 from kurator_dwca.dwca_vocab_utils import terms_not_in_dwc
 from kurator_dwca.dwca_utils import read_header
+from kurator_dwca.dwca_utils import csv_file_dialect
+from kurator_dwca.dwca_utils import csv_dialect
+from kurator_dwca.dwca_utils import tsv_dialect
+from kurator_dwca.dwca_utils import dialects_equal
 import os
 import unittest
 
@@ -294,6 +298,44 @@ class DarwinizeHeaderTestCase(unittest.TestCase):
         'sourcePrimaryKey', 'substrate', 'verbatimAttributes']
         s = 'From input: %s\nFound:\n%s\nExpected:\n%s' % (testfile1, notdwc, expected)
         self.assertEqual(notdwc, expected, s)
+
+    def test_format(self):
+        print 'testing darwinize_header'
+        testfile1 = self.framework.testfile1
+        testdatapath = self.framework.testdatapath
+        dwccloudfile = self.framework.dwccloudfile
+        outputfile = self.framework.outputfile
+
+        inputs = {}
+        inputs['inputfile'] = testfile1
+        inputs['dwccloudfile'] = dwccloudfile
+        inputs['outputfile'] = outputfile
+        inputs['workspace'] = testdatapath
+        inputs['format'] = 'csv'
+
+        # Darwinize the header
+        response=darwinize_header(inputs)
+        outfilelocation = '%s/%s' % (testdatapath, outputfile)
+        dialect = csv_file_dialect(outfilelocation)
+        self.assertTrue(dialects_equal(dialect, csv_dialect()), outfilelocation + ' dialect not csv')
+        
+        inputs['format'] = 'txt'
+
+        # Darwinize the header
+        response=darwinize_header(inputs)
+        outfilelocation = '%s/%s' % (testdatapath, outputfile)
+        dialect = csv_file_dialect(outfilelocation)
+        self.assertTrue(dialects_equal(dialect, tsv_dialect()), outfilelocation + ' dialect not tsv')
+        
+        inputs['format'] = None
+
+        # Darwinize the header
+        response=darwinize_header(inputs)
+        outfilelocation = '%s/%s' % (testdatapath, outputfile)
+        inputdialect = csv_file_dialect(outfilelocation)
+        outputdialect = csv_file_dialect(testfile1)
+        self.assertTrue(dialects_equal(inputdialect, outputdialect), outfilelocation + ' dialect not same as dialect of ' + testfile1)
+        
 
 if __name__ == '__main__':
     print '=== darwinize_header_test.py ==='

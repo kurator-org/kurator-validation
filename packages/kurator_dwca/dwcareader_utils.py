@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2017 President and Fellows of Harvard College"
-__version__ = "dwcareader_utils.py 2017-04-27T16:37-04:00"
+__version__ = "dwcareader_utils.py 2017-07-19T09:24-07:00"
 __kurator_content_type__ = "utility"
 __adapted_from__ = ""
 
@@ -58,7 +58,7 @@ def dwca_metadata_from_file(inputfile, archivetype=None):
     # Make an appropriate reader based on whether the archive is standard or a GBIF
     # download.
     dwcareader = None
-    if archivetype=='gbif':
+    if archivetype is not None and archivetype.lower()=='gbif':
         try:
             dwcareader = GBIFResultsReader(inputfile)
         except Exception, e:
@@ -101,7 +101,7 @@ def get_core_rowcount_from_file(inputfile, archivetype=None):
     # download.
     dwcareader = None
 
-    if archivetype=='gbif':
+    if archivetype is not None and archivetype.lower()=='gbif':
         try:
             dwcareader = GBIFResultsReader(inputfile)
         except Exception, e:
