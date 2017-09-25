@@ -24,7 +24,7 @@ import java.util.*;
  */
 public class GeoRefValidator extends KuratorActor {
     private CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader();
-    private CSVFormat tsvFormat = CSVFormat.TDF.withHeader();
+    private CSVFormat tsvFormat = CSVFormat.newFormat('\t').withHeader();
 
     @Override
     protected void onData(Object data) throws Exception {
