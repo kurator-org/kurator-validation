@@ -1,0 +1,40 @@
+imports:
+
+- classpath:/org/kurator/akka/types.yaml
+
+types:
+
+- id: FileToFlatDataStreamer
+  type: Actor
+  properties:
+    actorClass: org.kurator.validation.actors.mapstream.FileToFlatDataStreamer
+    
+- id: EnvironmentTagger
+  type: Actor
+  properties:
+    actorClass: org.kurator.validation.actors.mapstream.EnvironmentTagger
+    
+- id: SingleTermStreamFilter
+  type: Actor
+  properties:
+    actorClass: org.kurator.validation.actors.mapstream.StreamSingleTermFilter    
+    
+- id: StreamMerge
+  type: Actor
+  properties:
+    actorClass: org.kurator.validation.actors.mapstream.StreamMerge     
+    
+- id: WorkspaceCsvFileWriter
+  type: Actor
+  properties:
+    actorClass: org.kurator.validation.actors.mapstream.WorkspaceCsvFileWriter       
+    
+- id: SimpleGBIFGUIDLookup
+  type: Actor
+  properties:
+    actorClass: org.kurator.validation.actors.mapstream.SimpleGBIFGUIDLookup       
+    
+- id: SimpleWoRMSGUIDLookup
+  type: Actor
+  properties:
+    actorClass: org.kurator.validation.actors.mapstream.SimpleWoRMSGuidLookup       

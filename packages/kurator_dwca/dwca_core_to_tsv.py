@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2017 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2017-04-27T16:37-04:00"
+__version__ = "dwca_core_to_tsv.py 2017-07-20T10:35-07:00"
 __kurator_content_type__ = "actor"
 __adapted_from__ = "actor_template.py"
 
@@ -140,7 +140,7 @@ def dwca_core_to_tsv(options):
     # Note: The DwCAReader creates a temporary directory of its own and cleans it up
     # Make a reader based on whether the archive is standard or a GBIF download.
     dwcareader = None
-    if archivetype=='gbif':
+    if archivetype is not None and archivetype.lower()=='gbif':
         try:
             with GBIFResultsReader(inputfile) as dwcareader:
                 rowcount = write_core_csv_file(dwcareader, outputfile)
@@ -234,7 +234,6 @@ def main():
 
     inputfile = options.inputfile
     outputfile = options.outputfile
-    archivetype = options.type
 
     if inputfile is None or len(inputfile)==0:
         s =  'syntax:\n'
@@ -250,7 +249,7 @@ def main():
     optdict['workspace'] = options.workspace
     optdict['inputfile'] = inputfile
     optdict['outputfile'] = outputfile
-    optdict['archivetype'] = archivetype
+    optdict['archivetype'] = options.archivetype
     optdict['loglevel'] = options.loglevel
     print 'optdict: %s' % optdict
 

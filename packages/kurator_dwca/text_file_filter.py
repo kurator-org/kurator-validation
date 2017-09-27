@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2017 President and Fellows of Harvard College"
-__version__ = "text_file_filter.py 2017-04-27T16:37-04:00"
+__version__ = "text_file_filter.py 2017-07-20T10:40-04:00"
 __kurator_content_type__ = "actor"
 __adapted_from__ = "actor_template.py"
 
@@ -171,7 +171,7 @@ def text_file_filter(options):
     outputfile = '%s/%s' % (workspace.rstrip('/'), outputfile)
 
     # Prepare the outputfile
-    if format=='txt' or format is None:
+    if format is None or format.lower()=='txt':
         outputdialect = tsv_dialect()
     else:
         outputdialect = csv_dialect()

@@ -10,6 +10,32 @@ Other Python classes made available through this package may be used similarly. 
 The TDWG 2015 presentation [Data cleaning with the Kurator toolkit: Bridging the gap between conventional scripting and 
 high-performance workflow automation](http://www.slideshare.net/TimothyMcPhillips/data-cleaning-with-the-kurator-toolkit-bridging-the-gap-between-conventional-scripting-and-highperformance-workflow-automation) provides an overview of the Kurator project and tools described in this README.  For information about the **Kurator-Akka** workflow framework please see the [README](https://github.com/kurator-org/kurator-akka/blob/master/README.md) in the [Kurator-Akka](https://github.com/kurator-org/kurator-akka) repository.
 
+Running Kurator-Validation from the command line
+------------------------------------------------
+
+Run the executable jar with java: 
+
+     java -jar target/kurator-validation-{version}-jar-with-dependencies.jar 
+
+With the following command line options: 
+
+    Option                                  Description                            
+    ------                                  -----------                            
+    -f, --file <definition>                 workflow definition file               
+    -h, --help                              display help                           
+    -l, --loglevel <severity>               minimum severity of log entries shown: 
+                                              ALL, TRACE, VALUE, COMM, DEBUG,      
+                                              INFO, WARN, ERROR, FATAL, OFF        
+    -p, --parameter <key=value>             key-valued parameter assignment 
+
+Workflow definition files can be found in the packages directory.   The -p command line option allows provision of parameters defined in a workflow defintion file.
+
+Example invocation: 
+
+    java -jar target/kurator-validation-1.0.1-SNAPSHOT-jar-with-dependencies.jar -f packages/kurator_branching/workflows/dwca_branching_taxon_lookup.yaml -p dwca_url=http://digir.mcz.harvard.edu/ipt/archive.do?r=kurator_sample_data -l ALL
+
+
+
 Structure of this repository
 ----------------------------
 

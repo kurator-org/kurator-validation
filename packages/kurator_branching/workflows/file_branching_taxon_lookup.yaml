@@ -1,0 +1,348 @@
+#####################################################################################
+# dwca_branching_taxon_lookup.yaml
+#####################################################################################
+#
+# This workflow:
+#    - creates a given directory as a workspace
+#    - downloads a given Darwin Core Archive from a URL
+#    - extracts the core file of a Darwin Core Archive to a tab-separated text file
+#    - streams the core file as records
+#    - adds a key/value pair isMarine,true to records appearing to contain marine data
+#    - splits the stream, one branch accepting isMarine=true the other rejecting it.
+#    - TODO: lookup in WoRMS on one stream, look up in GBIF on the other
+#    - recombines the streams into a csv file
+#    - wraps up the workflow
+#
+# Example command-line usage:
+# kurator -f dwca_branching_taxon_lookup.yaml 
+#         -p workspace=./dwca_geography_assessor_workspace
+#         -p inputfile=../data/test_branching_wf.txt
+#         -l DEBUG (optional)
+#
+# Requires:
+# jython pip install requests
+# jython pip install python-dwca-reader
+# jython pip install py
+# jython pip install unicodecsv
+# jython pip install unidecode
+#
+#####################################################################################
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# __author__ = "John Wieczorek"
+# __author__ = "Paul J. Morris"
+# __copyright__ = "Copyright 2017 President and Fellows of Harvard College"
+# __version__ = "dwca_braching_taxon_lookup.yaml 2017-05-18T08:14-04:00"
+
+imports:
+
+- classpath:/org/kurator/akka/types.yaml
+- classpath:/org/kurator/akka/actors.yaml
+- classpath:/org/kurator/kurator-validation/actors/actors.yaml
+
+
+# Definitions of the Workflow and actors
+components:
+
+### The named workflow ###
+- id: DwCABranchingTaxonLookup
+  type: Workflow
+  properties:
+    actors:
+      # Actors invoked in the workflow. Every actor that will be invoked must be on this
+      # list. Though the order does not matter, it is helpful to keep the list in more
+      # or less the order in which they'll be invoked, for clarity.
+      - !ref MakeWorkspace
+      - !ref DownloadDarwinCloudLookup
+      - !ref Darwinize
+      - !ref FileToDataStream
+      - !ref EnvironmentTaggerA
+      - !ref FilterJustMarine
+      - !ref FilterExcludeMarine
+      - !ref WoRMSLookup
+      - !ref GBIFLookup
+      - !ref StreamMergeA
+      - !ref FileWriter     
+      - !ref WrapUp
+    # Each parameter defined here enters the workflow from the command line and is 
+    # delivered in the options dictionary of the specified actor.
+    parameters:
+      # Accept a parameter called workspace from the command line.
+      workspace:
+        # Set the workspace in the options dictionary of MakeWorkspace from the value of
+        # the workspace parameter given on the command line.
+        actor: !ref MakeWorkspace
+        parameter: workspace
+      inputfile:
+        # Set the inputfile in the options dictionary of the Darwinize actor from the
+        # value of the inputfile parameter given on the command line.
+        actor: !ref Darwinize
+        parameter: inputfile
+      # Accept a parameter called format from the command line.
+      format:
+        # Set the format in the options dictionary of Darwinize from the value
+        # of the format parameter given on the command line.
+        actor: !ref Darwinize
+        parameter: format
+      # Accept a parameter called namespace from the command line.
+      dwcnamespace:
+        # Set the namespace in the options dictionary of Darwinize from the value
+        # of the format parameter given on the command line.
+        actor: !ref Darwinize
+        parameter: namespace
+# @BEGIN BranchingWorkflow
+# @IN DwCA_URI
+# @PARAM LogFile
+
+# Inline python actor to make a workspace on the fly to use for writing temporary 
+# if one is not supplied in the workflow-defined parameters. It creates a unique
+# workspace if a workspace location is not explicitly provided, or if the provided
+# one does not exist.
+# @BEGIN Setup
+# @PARAM DwCA_URI
+# @IN DarwinCoreArchive @URI {DwCA_URI}
+- id: MakeWorkspace
+  type: PythonActor
+  properties:
+    # Inline python code to run.
+    code: |
+        import uuid
+        import os
+        # The function to run when an on_start message is received. Accepts a dictionary
+        # of options.
+        def on_start(options):
+            print '### Started MakeWorkspace ###'
+            print 'MakeWorkspace options: %s' % options
+            options['success']=True
+            if options.has_key('workspace') == False:
+                options['workspace'] ='./workspace_'+str(uuid.uuid1())
+            if not os.path.exists(options['workspace']):
+                os.makedirs(options['workspace'])
+            if not os.path.exists(options['workspace']):
+                options['success']=False
+                options['message']='Unable to create workspace at %s' % options[workspace]
+            else:
+                options['message']='Created workspace %s' % options['workspace']
+            return options
+
+# Download darwin_cloud.txt file containing field name to Darwin Core lookups.
+- id: DownloadDarwinCloudLookup
+  type: PythonActor
+  properties:
+    # The location of the actor source code
+    module: kurator_dwca.downloader
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: downloader
+    # A list of parameters to get from the options dictionary passed from an
+    # upstream actor.
+    inputs:
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
+    parameters:
+      # Get the file from a specific URL.
+      url : 'https://raw.githubusercontent.com/tucotuco/DwCVocabs/master/kurator/darwin_cloud.txt'
+      # Download to a specific file name in the workspace received from upstream.
+      # Set the output file to a specific file name.
+      outputfile : 'lookup_darwin_cloud.txt'
+      # Show the name of the upstream actor.
+      messagefrom: 'MakeWorkspace'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref MakeWorkspace
+
+# Transform the input file to a file with the chosen format and as many field names
+# standardized to Darwin Core as possible.
+- id: Darwinize
+  type: PythonActor
+  properties:
+    # The location of the actor source code
+    module: kurator_dwca.darwinize_header
+    # The function to invoke in the module when the actor receives an onData message.
+    onData: darwinize_header
+    # A list of parameters to get from the options dictionary passed from an
+    # upstream actor.
+    inputs:
+      # Get the workspace for this actor from the workspace in the options dictionary.
+      workspace : workspace
+      # Get the dwccloudfile for this actor from the output of the previous actor
+      outputfile : dwccloudfile
+      # Get the success state from the options dictionary of the previous step
+      success: previoussuccess
+      # Get the message from the options dictionary of the previous step
+      message: previousmessage
+    # A list of parameters to get from the parameters defined at the workflow level or
+    # to set explicitly from values given in this section.
+    parameters:
+      # Set the output file to a specific file name.
+      outputfile : 'darwinized_file.txt'
+      namespace: 'n'
+      format: 'csv'
+      # Show the name of the upstream actor.
+      messagefrom: 'DownloadDarwinCloudLookup'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref DownloadDarwinCloudLookup
+# @OUT Workspace
+# @OUT OccurrenceFile @URI file:{Workspace}/darwinized_file.txt
+# @END Setup
+
+# take the darwinized occurrence file and stream records from it
+# @BEGIN FileToDataStream  
+# @IN OccurrenceFile
+- id: FileToDataStream
+  type: FileToFlatDataStreamer
+  properties:
+    listensTo:
+      - !ref Darwinize
+# @OUT DataRecord
+# @END FileToDataStream      
+      
+# Tag each record in the stream that appears to be marine with isMarine=true      
+# @BEGIN EnvironmentTagger
+# @IN DataRecord 
+- id: EnvironmentTaggerA
+  type: EnvironmentTagger
+  properties:
+    listensTo:
+      - !ref FileToDataStream
+# @OUT LogFile @URI file:{LogFile}       
+#    @LOG {timestamp} [{loglevel}] ACTOR<{actorname}> -> isMarine={isMarineValue} for occurrenceID={occurrenceId} 
+# @OUT TaggedDataRecord      
+# @END EnvironmentTagger      
+      
+# Pass only records tagged with isMarine=true      
+# @BEGIN FilterToJustMarine 
+# @IN TaggedDataRecord 
+- id: FilterJustMarine
+  type: SingleTermStreamFilter
+  properties:
+    listensTo:
+      - !ref EnvironmentTaggerA
+    parameters:
+      filterKeyToMatch: isMarine
+      matchValue: 'true'
+      passOnMatch: true
+# @OUT LogFile @URI file:{LogFile}       
+#    @LOG {timestamp} [{loglevel}] ACTOR<{actorname}> ->  [{filterKey}]=[{matchValue}]:{match}. Passing occurrenceID={occurrenceID}    
+# @OUT Marine
+# @End FilterToJustMarine
+
+# Pass only records not tagged with isMarine=true
+# @BEGIN FilterExcludingMarine 
+# @IN TaggedDataRecord      
+- id: FilterExcludeMarine      
+  type: SingleTermStreamFilter
+  properties:
+    listensTo:
+      - !ref EnvironmentTaggerA
+    parameters:
+      filterKeyToMatch: isMarine
+      matchValue: 'true'
+      passOnMatch: false      
+# @OUT LogFile @URI file:{LogFile}       
+#    @LOG {timestamp} [{loglevel}] ACTOR<{actorname}> ->  [{filterKey}]=[{matchValue}]:{match}. Passing occurrenceID={occurrenceID}    
+# @OUT NotMarine
+# @END FilterExcludingMarine
+
+# Lookup GUIDs for names in WoRMS
+# @BEGIN WoRMSLookup
+# @IN Marine
+- id: WoRMSLookup
+  type: SimpleWoRMSGUIDLookup
+  properties:
+    listensTo:
+      - !ref FilterJustMarine
+# @OUT WoRMSOutput
+# @END WoRMSLookup
+
+# Lookup GUIDs for names in GBIF
+# @BEGIN GBIFLookup
+# @IN NotMarine
+- id: GBIFLookup
+  type: SimpleGBIFGUIDLookup
+  properties:
+    listensTo:
+      - !ref FilterExcludeMarine
+# @OUT GBIFOutput
+# @END GBIFLookup
+
+# Merge the streams
+# @BEGIN StreamMerge
+# @IN GBIFOutput
+# @IN WoRMSOutput
+- id: StreamMergeA      
+  type: StreamMerge
+  properties:
+    listensTo:
+      - !ref WoRMSLookup
+      - !ref GBIFLookup
+    parameters:
+      numberOfInputs: 2
+# @OUT MergedStream      
+# @END StreamMerge
+
+# @BEGIN CsvFileWriter
+# @IN Workspace
+# @IN MergedStream
+# Write to a csv file
+- id: FileWriter      
+  type: WorkspaceCsvFileWriter
+  properties:
+    listensTo:
+      - !ref MakeWorkspace
+      - !ref StreamMergeA
+    parameters:
+      filePath: mergedoutuputfile.csv 
+      numberOfInputs: 2
+# @OUT OutputFile @URI file:{Workspace}/mergedoutputfile.csv      
+# @END CsvFileWriter
+
+# Inline python actor to take care of any unfinished business and finish the workflow.
+- id: WrapUp
+  type: PythonActor
+  properties:
+    # Inline python code to run.
+    code: |
+        # The function to run when an on_data message is received. Accepts a dictionary
+        # of options.
+        def on_data(options):
+            print 'WrapUp options: %s' % options
+            print '### Finished Wrapup ###'
+    # A list of parameters to get from the options dictionary passed from an 
+    # upstream actor.
+    inputs:
+        # Get the workspace for this actor from the workspace in the options dictionary.
+        workspace: workspace
+        # Full path to the output file.
+        outputfile: outputfile
+        # Get the success state from the options dictionary of the previous step
+        success: previoussuccess
+        # Get the message from the options dictionary of the previous step
+        message: previousmessage
+        # Dictionary of persistent objects created.
+        artifacts: artifacts
+    parameters:
+      # Show the name of the upstream actor.
+      messagefrom: 'FileWriter'
+    # The "upstream" actor from which to receive a message.
+    listensTo:
+      - !ref FileWriter
+# @OUT OutputFile
+# @OUT LogFile      
+# @END BranchingWorkflow

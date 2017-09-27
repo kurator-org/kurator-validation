@@ -14,7 +14,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "text_file_aggregator_test.py 2016-10-21T12:39+02:00"
+__version__ = "text_file_aggregator_test.py 2017-07-20T10:17-07:00"
 
 from kurator_dwca.text_file_aggregator import text_file_aggregator
 from kurator_dwca.dwca_utils import read_header
@@ -40,9 +40,9 @@ class TextFileAggregatorFramework():
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-        removeme = self.testdatapath + self.tsvfile
-        if os.path.isfile(removeme):
-            os.remove(removeme)
+#        removeme = self.testdatapath + self.tsvfile
+#        if os.path.isfile(removeme):
+#            os.remove(removeme)
         return True
 
 class TextFileAggregatorTestCase(unittest.TestCase):
@@ -154,13 +154,15 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         inputs['inputpath'] = mixedcompositepath
         inputs['outputfile'] = self.framework.tsvfile
         inputs['workspace'] = workspace
+        inputs['format'] = 'txt'
 
         # Aggregate text file
         response=text_file_aggregator(inputs)
 
         outputfile = response['outputfile']
         self.assertTrue(os.path.isfile(outputfile), outputfile + ' does not exist')
-        self.assertEqual(response['aggregaterowcount'], 11, 'incorrect number of rows')
+
+        self.assertEqual(response['aggregaterowcount'], 19, 'incorrect number of rows')
 
         header = read_header(outputfile)
         modelheader = []
@@ -241,6 +243,7 @@ class TextFileAggregatorTestCase(unittest.TestCase):
         modelheader.append('year')
         modelheader.append('yearCollected')
         modelheader.append('yearIdentified')
+
         #print 'len(header)=%s len(model)=%s\nheader:\n%smodel:\n\n%s' % (len(header), len(modelheader), header, modelheader)
         self.assertEqual(len(header), 77, 'incorrect number of fields in header')
         self.assertEqual(header, modelheader, 'header not equal to the model header')
