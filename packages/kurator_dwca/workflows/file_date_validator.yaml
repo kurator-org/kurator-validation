@@ -83,6 +83,13 @@ components:
         actor: !ref Darwinize
         parameter: namespace
 
+# @BEGIN DateValidatorWorkflow
+# @IN Workspace
+# @IN Inputfile
+
+# @BEGIN Setup
+# @PARAM Workspace
+# @IN DarwinCoreFile @URI {InputFile}
 # Inline python actor to make a workspace on the fly to use for writing temporary
 # if one is not supplied in the workflow-defined parameters. It creates a unique
 # workspace if a workspace location is not explicitly provided, or if the provided
@@ -176,7 +183,11 @@ components:
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref DownloadDarwinCloudLookup
+#@OUT DarwinizedFile @URI file:{Workspace}/darwinized_file.txt
+#@END Setup
 
+# @BEGIN DateValidator
+# @IN DarwinizedFile
 # Validate the eventDate field. Fill in missing values from atomic parts or verbatimEventDate.
 - id: DateValidator
   type: Actor
@@ -191,6 +202,10 @@ components:
       outputfile: inputfile
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
+
+#@OUT Results_json  @URI file:{Workspace}/dq_report.json
+#@OUT ResultsSpreadsheet @URI file:{Workspace}/dq_report.xlxs
+#@END DateValidator
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
@@ -223,3 +238,6 @@ components:
     # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref DateValidator
+
+#@OUT ResultSpreadsheet
+# @END DateValidatorWorkflow
