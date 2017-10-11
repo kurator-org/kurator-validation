@@ -1,0 +1,76 @@
+#####################################################################################
+# outcome_stats.yaml
+#####################################################################################
+#
+# This workflow:
+#
+# Example command-line usage:
+# kurator -f outcome_stats.yaml
+#         -p inputfile=packages/kurator_fp/data/occurrence_qc.json
+#         -l DEBUG (optional)
+#
+# Requires:
+# jython pip install configparser
+# jython pip install xlsxwriter
+# jython pip install unidecode
+#
+#####################################################################################
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# __author__ = "David B. Lowery"
+# __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
+# __version__ = "native_python.yaml 2017-01-30T16:07:09-0500"
+
+imports:
+
+- classpath:/org/kurator/validation/actors.yaml
+
+components:
+
+# Inline python actor to demonstrate making a workspace on the fly to use for
+# writing temporary workflow artifacts.
+- id: MakeWorkspace
+  type: NativePythonActor
+  properties:
+    module: kurator_native.MakeWorkspace
+    onStart: on_start
+
+# Test native python actor
+- id: NativeTest
+  type: NativePythonActor
+  properties:
+    module: kurator_native.Test
+    onData: test
+    inputs:
+      workspace : workspace
+    parameters:
+      firstname: "Bob"
+      lastname: "Morris"
+    listensTo:
+      - !ref MakeWorkspace
+
+- id: WrapUp
+  type: NativePythonActor
+  properties:
+    module: kurator_native.WrapUp
+    onData: on_data
+    listensTo:
+      - !ref NativeTest
+
+- id: NativeTestWorkflow
+  type: Workflow
+  properties:
+    actors:
+      - !ref MakeWorkspace
+      - !ref NativeTest
+      - !ref WrapUp
