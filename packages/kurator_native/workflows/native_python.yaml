@@ -37,13 +37,36 @@ imports:
 
 components:
 
-# Inline python actor to demonstrate making a workspace on the fly to use for
-# writing temporary workflow artifacts.
+# Inline python actor to make a workspace on the fly to use for writing temporary
+# if one is not supplied in the workflow-defined parameters. It creates a unique
+# workspace if a workspace location is not explicitly provided, or if the provided
+# one does not exist.
 - id: MakeWorkspace
   type: NativePythonActor
   properties:
-    module: kurator_native.MakeWorkspace
     onStart: on_start
+    # Inline python code to run.
+    code: |
+        import uuid
+        import os
+        # The function to run when an on_start message is received. Accepts a dictionary
+        # of options.
+        def on_start(options):
+            actor = 'MakeWorkspace'
+            print '### Started %s ###' % actor
+            for key, value in options.iteritems():
+                print '%s: %s' % (key, value)
+            options['success']=True
+            if options.has_key('workspace') == False:
+                options['workspace'] ='./workspace_'+str(uuid.uuid1())
+            if not os.path.exists(options['workspace']):
+                os.makedirs(options['workspace'])
+            if not os.path.exists(options['workspace']):
+                options['success']=False
+                options['message']='Unable to create workspace at %s' % options[workspace]
+            else:
+                options['message']='Created workspace %s' % options['workspace']
+            return options
 
 # Test native python actor
 - id: NativeTest
@@ -59,11 +82,43 @@ components:
     listensTo:
       - !ref MakeWorkspace
 
+# Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
   type: NativePythonActor
   properties:
-    module: kurator_native.WrapUp
     onData: on_data
+    # Inline python code to run.
+    code: |
+        # The function to run when an on_data message is received. Accepts a dictionary
+        # of options.
+        def on_data(options):
+            actor = 'WrapUp'
+            print '### Started %s ###' % actor
+            for key, value in options.iteritems():
+                if key == 'artifacts':
+                    print 'artifacts:'
+                    keylist = []
+                    for akey, avalue in options[key].iteritems():
+                        keylist.append(akey)
+                    sortedkeylist = sorted(keylist)
+                    for skey in sortedkeylist:
+                        print '  %s: %s' % (skey, options[key][skey])
+                else:
+                    print '%s: %s' % (key, value)
+            print '### Finished Wrapup ###'
+    # A list of parameters to get from the options dictionary passed from an
+    # upstream actor.
+    inputs:
+        # Get the workspace for this actor from the workspace in the options dictionary.
+        workspace: workspace
+        # Get the success state from the options dictionary of the previous step
+        success: previoussuccess
+        # Get the message from the options dictionary of the previous step
+        message: previousmessage
+    parameters:
+      # Show the name of the upstream actor.
+      messagefrom: 'NativeTest'
+    # The "upstream" actor from which to receive a message.
     listensTo:
       - !ref NativeTest
 
