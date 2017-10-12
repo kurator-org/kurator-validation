@@ -108,8 +108,9 @@ components:
 # workspace if a workspace location is not explicitly provided, or if the provided
 # one does not exist.
 - id: MakeWorkspace
-  type: PythonActor
+  type: NativePythonActor
   properties:
+    onStart: on_start
     # Inline python code to run.
     code: |
         import uuid
@@ -133,7 +134,7 @@ components:
 
 # Download file containing geography key to standard geography lookup.
 - id: DownloadGeographyLookup
-  type: PythonActor
+  type: NativePythonActor
   properties:
     # The location of the actor source code 
     module: kurator_dwca.downloader
@@ -163,7 +164,7 @@ components:
 
 # Download file containing raw country to standard country lookup.
 - id: DownloadCountryLookup
-  type: PythonActor
+  type: NativePythonActor
   properties:
     # The location of the actor source code 
     module: kurator_dwca.downloader
@@ -193,7 +194,7 @@ components:
 
 # Download file containing raw field names to Darwin Core field names lookups.
 - id: DownloadDarwinCloudLookup
-  type: PythonActor
+  type: NativePythonActor
   properties:
     # The location of the actor source code 
     module: kurator_dwca.downloader
@@ -225,7 +226,7 @@ components:
 # Transform the input file to a file with the chosen format and as many field names 
 # standardized to Darwin Core as possible.
 - id: Darwinize
-  type: PythonActor
+  type: NativePythonActor
   properties:
     # The location of the actor source code 
     module: kurator_dwca.darwinize_header
@@ -256,8 +257,9 @@ components:
 # Inline python actor to create distinct value counts of all DwC terms recommended to 
 # follow controlled vocabularies.
 - id: CountFieldValues
-  type: PythonActor
+  type: NativePythonActor
   properties:
+    onData: on_data
     # Inline python code to run.
     code: |
         # The function to run when an on_data message is received. Accepts a dictionary
@@ -355,7 +357,7 @@ components:
 
 # Create report on geography recommendations.
 - id: CreateGeographyReport
-  type: PythonActor
+  type: NativePythonActor
   properties:
     # The location of the actor source code 
     module: kurator_dwca.term_recommendation_reporter
@@ -395,7 +397,7 @@ components:
 
 # Create a geography combination count report.
 - id: CreateGeographyCountReport
-  type: PythonActor
+  type: NativePythonActor
   properties:
     # The location of the actor source code 
     module: kurator_dwca.term_value_count_reporter
@@ -428,11 +430,11 @@ components:
       messagefrom: 'CountFieldValues'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref CountFieldValues
+      - !ref CreateGeographyReport
 
 # Create report on geography combinations not found in the geography lookup file.
 - id: CreateMissingGeographyReport
-  type: PythonActor
+  type: NativePythonActor
   properties:
     # The location of the actor source code 
     module: kurator_dwca.term_unknown_reporter
@@ -477,7 +479,7 @@ components:
 
 # Create a term count report.
 - id: CreateCountryCountReport
-  type: PythonActor
+  type: NativePythonActor
   properties:
     # The location of the actor source code 
     module: kurator_dwca.term_value_count_reporter
@@ -511,14 +513,14 @@ components:
       messagefrom: 'CountFieldValues'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref CountFieldValues
+      - !ref CreateMissingGeographyReport
 
 # Create report on countries not found in the country lookup file. Note that it may be 
 # rare that an unknown country string arises, as the country vocabulary from 
 # https://raw.githubusercontent.com/kurator-org/kurator-validation/master/packages/kurator_dwca/data/vocabularies/country.txt
 # contains values found in the corpus of GBIF plus VertNet migrators.
 - id: CreateMissingCountryReport
-  type: PythonActor
+  type: NativePythonActor
   properties:
     # The location of the actor source code 
     module: kurator_dwca.term_unknown_reporter
@@ -560,7 +562,7 @@ components:
 
 # Create a new file with geography recommendations integrated.
 - id: CreateFileWithCleanGeography
-  type: PythonActor
+  type: NativePythonActor
   properties:
     # The location of the actor source code 
     module: kurator_dwca.dataset_term_standardizer
@@ -591,12 +593,13 @@ components:
       messagefrom: 'CountFieldValues'
     # The "upstream" actor from which to receive a message.
     listensTo:
-      - !ref CountFieldValues
+      - !ref CreateMissingCountryReport
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
-  type: PythonActor
+  type: NativePythonActor
   properties:
+    onData: on_data
     # Inline python code to run.
     code: |
         # The function to run when an on_data message is received. Accepts a dictionary

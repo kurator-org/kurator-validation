@@ -91,8 +91,9 @@ components:
 # workspace if a workspace location is not explicitly provided, or if the provided
 # one does not exist.
 - id: MakeWorkspace
-  type: PythonActor
+  type: NativePythonActor
   properties:
+    onStart: on_start
     # Inline python code to run.
     code: |
         import uuid
@@ -119,8 +120,9 @@ components:
 # Inline python actor to download lookup files for all DwC terms recommended to follow
 # controlled vocabularies.
 - id: DownloadControlledVocabularyFiles
-  type: PythonActor
+  type: NativePythonActor
   properties:
+    onData: on_data
     # Inline python code to run.
     code: |
         # The function to run when an on_data message is received. Accepts a dictionary
@@ -173,8 +175,9 @@ components:
 # Inline python actor to create distinct value counts all DwC terms recommended to follow
 # controlled vocabularies.
 - id: CountControlledVocabularyValues
-  type: PythonActor
+  type: NativePythonActor
   properties:
+    onData: on_data
     # Inline python code to run.
     code: |
         # The function to run when an on_data message is received. Accepts a dictionary
@@ -259,8 +262,9 @@ components:
 # Inline python actor to report non-standard values that have a recommended standard 
 # value based on the vocabulary lookup files.
 - id: RecommendVocabularyValues
-  type: PythonActor
+  type: NativePythonActor
   properties:
+    onData: on_data
     # Inline python code to run.
     code: |
         # The function to run when an on_data message is received. Accepts a dictionary
@@ -320,8 +324,9 @@ components:
 # Inline python actor to report non-standard values that have a recommended standard 
 # value based on the vocabulary lookup files.
 - id: UnknownVocabularyValues
-  type: PythonActor
+  type: NativePythonActor
   properties:
+    onData: on_data
     # Inline python code to run.
     code: |
         # The function to run when an on_data message is received. Accepts a dictionary
@@ -378,8 +383,9 @@ components:
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
-  type: PythonActor
+  type: NativePythonActor
   properties:
+    onData: on_data
     # Inline python code to run.
     code: |
         # The function to run when an on_data message is received. Accepts a dictionary

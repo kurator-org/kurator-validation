@@ -11,10 +11,9 @@
 #    - wraps up the workflow
 #
 # Example command-line usage:
-# kurator -f file_georef_validator.yaml
-#         -p workspace=./file_georef_validator_workspace
+# kurator -f dwca_georef_validator.yaml
+#         -p workspace=./dwca_georef_validator_workspace
 #         -p dwca_url=http://ipt.vertnet.org:8080/ipt/archive.do?r=ccber_mammals
-#         -p dwcnamespace=y
 #         -l DEBUG (optional)
 #
 #####################################################################################
@@ -75,8 +74,9 @@ components:
 # workspace if a workspace location is not explicitly provided, or if the provided
 # one does not exist.
 - id: MakeWorkspace
-  type: PythonActor
+  type: NativePythonActor
   properties:
+    onStart: on_start
     # Inline python code to run.
     code: |
         import uuid
@@ -103,7 +103,7 @@ components:
 # Download a Darwin Core archive from a URL given by workflow-defined url parameter.
 # Download occurs in workspace provided by the upstream actor.
 - id: DownloadArchive
-  type: PythonActor
+  type: NativePythonActor
   properties:
     # The location of the actor source code
     module: kurator_dwca.downloader
@@ -132,7 +132,7 @@ components:
 
 # Extract core file into a tab-separated value file in workspace from Darwin Core archive.
 - id: ExtractArchiveCore
-  type: PythonActor
+  type: NativePythonActor
   properties:
     # The location of the actor source code
     module: kurator_dwca.dwca_core_to_tsv
@@ -172,8 +172,9 @@ components:
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
-  type: PythonActor
+  type: NativePythonActor
   properties:
+    onData: on_data
     # Inline python code to run.
     code: |
         # The function to run when an on_data message is received. Accepts a dictionary

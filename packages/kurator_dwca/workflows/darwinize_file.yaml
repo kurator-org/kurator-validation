@@ -86,8 +86,9 @@ components:
 # workspace if a workspace location is not explicitly provided, or if the provided
 # one does not exist.
 - id: MakeWorkspace
-  type: PythonActor
+  type: NativePythonActor
   properties:
+    onStart: on_start
     # Inline python code to run.
     code: |
         import uuid
@@ -113,7 +114,7 @@ components:
 
 # Download darwin_cloud.txt file containing field name to Darwin Core lookups.
 - id: DownloadDarwinCloudLookup
-  type: PythonActor
+  type: NativePythonActor
   properties:
     # The location of the actor source code 
     module: kurator_dwca.downloader
@@ -145,7 +146,7 @@ components:
 # Transform the input file to a file with the chosen format and as many field names 
 # standardized to Darwin Core as possible.
 - id: Darwinize
-  type: PythonActor
+  type: NativePythonActor
   properties:
     # The location of the actor source code 
     module: kurator_dwca.darwinize_header
@@ -176,8 +177,9 @@ components:
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
-  type: PythonActor
+  type: NativePythonActor
   properties:
+    onData: on_data
     # Inline python code to run.
     code: |
         # The function to run when an on_data message is received. Accepts a dictionary
