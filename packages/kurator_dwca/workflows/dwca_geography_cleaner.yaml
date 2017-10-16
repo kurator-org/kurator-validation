@@ -285,13 +285,7 @@ components:
             cleanheader = clean_header(header)
 
             # List of terms for which to get distinct value counts.
-            cleantermlist = [ \
-                ['continent'], \
-                ['countrycode'], \
-                ['waterBody'], \
-                ['islandGroup'], \
-                ['island']
-                ]
+            cleantermlist = ['continent', 'countrycode', 'waterBody', 'islandGroup', 'island']
 
             # Get a list of fields from those of interest that actually exist in the 
             # inputfile
