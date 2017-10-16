@@ -188,7 +188,9 @@ def write_core_csv_file(dwcareader, outputfile):
     
     # Make a list of field names without full qualification, ordered as they are in
     # Darwin Core
-    shorttermnames=dwc_ordered_header(short_term_names(termnames))
+    #shorttermnames=dwc_ordered_header(short_term_names(termnames))
+    shorttermnames=short_term_names(termnames);
+    print shorttermnames
 
     dialect = tsv_dialect()
     success = write_header(outputfile, shorttermnames, dialect)
