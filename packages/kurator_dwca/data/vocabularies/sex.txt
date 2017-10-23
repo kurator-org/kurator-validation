@@ -290,6 +290,7 @@ _	unknown	1
 {MALE}	male	1
 ~	unknown	1
 <	unknown	1
+<NO DATA>		1
 =[F]M	unknown	1
 >		1
 ♀	female	1
@@ -382,6 +383,7 @@ _	unknown	1
 4 F, 1 M	female | male	1
 4 F, 2 M	female | male	1
 4 FEMALE,	female	1
+4 MACHOS;  4 HEMBRAS; 1 INDETERM	4 males | 4 females | 1 unknown	1
 46		1
 47		1
 48		1
@@ -526,6 +528,7 @@ COULD NOT DETERMINE	indeterminable	1
 D	unknown	1
 DARK PHASE		1
 DESCONEGUT	unknown	1
+DESCONOCIDO	unknown	1
 DETERMINE	unknown	1
 DEWLAP BICOLOR-DARL ORANGE BASAL		1
 DEWLAP TRICOLORED DARK ORANGE BA		1
@@ -1467,6 +1470,7 @@ MACHO AD TES 7X4	male	1
 MACHO AD TEST 9X5	male	1
 MACHO INM	male	1
 MACHO INMAD.	male	1
+MACHO INMADURO	male	1
 MACHO J	male	1
 MACHO JUV	male	1
 MACHO JUV TEST 5X3	male	1
