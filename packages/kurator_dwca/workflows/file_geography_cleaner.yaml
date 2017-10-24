@@ -44,8 +44,8 @@
 # limitations under the License.
 
 # __author__ = "John Wieczorek"
-# __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "file_geography_cleaner.yaml 2017-01-17T11:42-03:00"
+# __copyright__ = "Copyright 2017 President and Fellows of Harvard College"
+# __version__ = "file_geography_cleaner.yaml 2017-10-23T22:11-03:00"
 
 imports:
 
@@ -247,7 +247,7 @@ components:
     # to set explicitly from values given in this section.
     parameters:
       # Set the output file to a specific file name.
-      outputfile : 'darwinized_file'
+      outputfile : 'darwinized_file.csv'
       # Show the name of the upstream actor.
       messagefrom: 'DownloadDarwinCloudLookup'
     # The "upstream" actor from which to receive a message.
@@ -291,7 +291,8 @@ components:
             cleanheader = clean_header(header)
 
             # List of terms for which to get distinct value counts.
-            cleantermlist = ['continent', 'countrycode', 'waterBody', 'islandGroup', 'island']
+            cleantermlist = ['continent', 'country', 'countrycode', 'stateprovince', \
+              'county', 'municipality', 'waterbody', 'islandgroup', 'island']
 
             # Get a list of fields from those of interest that actually exist in the 
             # inputfile
