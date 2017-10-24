@@ -69,7 +69,13 @@
             <groupId>org.filteredpush</groupId>
             <artifactId>sci_name_qc</artifactId>
             <version>0.0.1-SNAPSHOT</version>
-        </dependency>        
+        </dependency>
+
+        <dependency>
+            <groupId>org.datakurator</groupId>
+            <artifactId>dwc_completeness</artifactId>
+            <version>0.0.1</version>
+        </dependency>
         
         <dependency>
           <groupId>org.kurator</groupId>
