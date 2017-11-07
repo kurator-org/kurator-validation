@@ -40,8 +40,8 @@
 # limitations under the License.
 
 # __author__ = "John Wieczorek"
-# __copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-# __version__ = "file_controlled_term_assessor.yaml 2016-10-13T01:40+02:00"
+# __copyright__ = "Copyright 2017 President and Fellows of Harvard College"
+# __version__ = "file_controlled_term_assessor.yaml 2017-11-07T12:35-03:00"
 
 imports:
 
@@ -145,8 +145,7 @@ components:
             outputoptions['artifacts'] = {}
             for term in termlist:
                 url = 'https://raw.githubusercontent.com/'
-                url += 'kurator-org/kurator-validation/master/packages/kurator_dwca/'
-                url += 'data/vocabularies/'
+                url += 'VertNet/DwCvocabs/master/kurator/'
                 url += '%s.txt' % term.lower()
                 filename = 'vocab_'+term.lower()+'.txt'
                 downloaderoptions = {}

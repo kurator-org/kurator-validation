@@ -15,7 +15,7 @@
 
 __author__ = "John Wieczorek"
 __copyright__ = "Copyright 2017 President and Fellows of Harvard College"
-__version__ = "vocab_appender.py 2017-04-27T16:37-04:00"
+__version__ = "vocab_appender.py 2017-11-03T09:25-03:00"
 __kurator_content_type__ = "actor"
 __adapted_from__ = "actor_template.py"
 
@@ -224,7 +224,7 @@ def main():
         s =  'syntax:\n'
         s += 'python vocab_appender.py'
         s += ' -w ./workspace'
-        s += ' -v ./workspace/dwcgeography.txt'
+        s += ' -v dwcgeography.txt'
         s += ' -c "Oceania|United States|US|Hawaii|Honolulu|Honolulu'
         s += '|North Pacific Ocean|Hawaiian Islands|Oahu, '
         s += '|United States||WA|Chelan Co.||||"'

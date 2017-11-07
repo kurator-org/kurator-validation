@@ -45,7 +45,7 @@
 
 # __author__ = "John Wieczorek"
 # __copyright__ = "Copyright 2017 President and Fellows of Harvard College"
-# __version__ = "file_geography_cleaner.yaml 2017-10-23T22:11-03:00"
+# __version__ = "file_geography_cleaner.yaml 2017-11-07T12:30-03:00"
 
 imports:
 
@@ -153,7 +153,7 @@ components:
     # to set explicitly from values given in this section.
     parameters:
       # Get the file from a specific URL.
-      url : 'https://raw.githubusercontent.com/kurator-org/kurator-validation/master/packages/kurator_dwca/data/vocabularies/dwc_geography.txt'
+      url : 'https://raw.githubusercontent.com/VertNet/DwCvocabs/master/kurator/dwc_geography.txt'
       # Download to a specific file name in the workspace received from upstream.
       outputfile : 'lookup_geography.txt'
       # Show the name of the upstream actor.
@@ -183,7 +183,7 @@ components:
     # to set explicitly from values given in this section.
     parameters:
       # Get the file from a specific URL.
-      url : 'https://raw.githubusercontent.com/kurator-org/kurator-validation/master/packages/kurator_dwca/data/vocabularies/country.txt'
+      url : 'https://raw.githubusercontent.com/VertNet/DwCvocabs/master/kurator/country.txt'
       # Download to a specific file name within the workspace.
       outputfile : 'lookup_country.txt'
       # Show the name of the upstream actor.
@@ -512,7 +512,7 @@ components:
 
 # Create report on countries not found in the country lookup file. Note that it may be 
 # rare that an unknown country string arises, as the country vocabulary from 
-# https://raw.githubusercontent.com/kurator-org/kurator-validation/master/packages/kurator_dwca/data/vocabularies/country.txt
+# https://raw.githubusercontent.com/VertNet/DwCvocabs/master/kurator/country.txt
 # contains values found in the corpus of GBIF plus VertNet migrators.
 - id: CreateMissingCountryReport
   type: NativePythonActor
