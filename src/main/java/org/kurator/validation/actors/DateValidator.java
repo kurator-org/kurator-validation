@@ -27,59 +27,61 @@ public class DateValidator extends KuratorActor {
 
     @Override
     protected void onData(Object data) throws Exception {
-        Map<String, Object> options = (Map<String, Object>) data;
-        File workspace = new File((String) options.get("workspace"));
-        File inputfile = new File((String) options.get("outputfile"));
-
-        String reportFile = "dq_report.json";
-        String xlsxFile = "dq_report.xlsx";
-
-        FileWriter reportWriter = new FileWriter(options.get("workspace") + File.separator + reportFile);
-        //List<String> fields = Arrays.asList("dwc:eventDate", "dwc:month", "dwc:day", "dwc:year", "dwc:startDayOfYear",
-        //        "dwc:endDayOfYear", "dwc:eventTime", "dwc:verbatimEventDate");
-
-        ValidationRunner runner = new ValidationRunner(DwCEventDQ.class, reportWriter);
-
         try {
-            parseInputfile(runner, inputfile, csvFormat);
-        } catch (IllegalArgumentException e) {
-            // Try tsv
-            logger.debug("File does not appear to be csv, trying tsv format.");
-            parseInputfile(runner, inputfile, tsvFormat);
+            Map<String, Object> options = (Map<String, Object>) data;
+            File workspace = new File((String) options.get("workspace"));
+            File inputfile = new File((String) options.get("outputfile"));
+
+            String reportFile = "dq_report.json";
+            String xlsxFile = "dq_report.xlsx";
+
+            FileWriter reportWriter = new FileWriter(options.get("workspace") + File.separator + reportFile);
+            //List<String> fields = Arrays.asList("dwc:eventDate", "dwc:month", "dwc:day", "dwc:year", "dwc:startDayOfYear",
+            //        "dwc:endDayOfYear", "dwc:eventTime", "dwc:verbatimEventDate");
+
+            ValidationRunner runner = new ValidationRunner(DwCEventDQ.class, reportWriter);
+
+            try {
+                parseInputfile(runner, inputfile, csvFormat);
+            } catch (IllegalArgumentException e) {
+                // Try tsv
+                logger.debug("File does not appear to be csv, trying tsv format.");
+                parseInputfile(runner, inputfile, tsvFormat);
+            }
+
+            //String reportXlsFile = "dq_report.xls";
+            //File reportXls = new File(options.get("workspace") + File.separator + reportXlsFile);
+
+            //InputStream config = DateValidator.class.getResourceAsStream("/ffdq-assertions.json");
+            //FFDQPostProcessor postProcessor = new FFDQPostProcessor(summary, config);
+            //postProcessor.reportSummary(reportXls);
+
+
+            Map<String, String> artifacts = (Map<String, String>) options.get("artifacts");
+
+            String reportFileName = options.get("workspace") + File.separator + reportFile;
+            artifacts.put("dq_report_file", reportFileName);
+
+            // Postprocessor
+            String xlsxFileName = options.get("workspace") + File.separator + xlsxFile;
+            XLSXPostProcessor postProcessor = new XLSXPostProcessor(new FileInputStream(reportFileName));
+            postProcessor.postprocess(new FileOutputStream(xlsxFileName));
+            artifacts.put("dq_report_xls_file", xlsxFileName);
+
+            //artifactFileName = options.get("workspace") + File.separator + outputfile;
+            //publishArtifact("event_dates_file", artifactFileName);
+            //artifacts.put("event_dates_file", artifactFileName);
+
+            //artifactFileName = options.get("workspace") + File.separator + reportXlsFile;
+            //publishArtifact("dq_report_xls_file", artifactFileName);
+            //artifacts.put("dq_report_xls_file", artifactFileName);
+            System.out.println("Options: " + options);
+
+            broadcast(options);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-
-        //String reportXlsFile = "dq_report.xls";
-        //File reportXls = new File(options.get("workspace") + File.separator + reportXlsFile);
-
-        //InputStream config = DateValidator.class.getResourceAsStream("/ffdq-assertions.json");
-        //FFDQPostProcessor postProcessor = new FFDQPostProcessor(summary, config);
-        //postProcessor.reportSummary(reportXls);
-
-
-
-        Map<String, String> artifacts = (Map<String, String>) options.get("artifacts");
-
-        String reportFileName = options.get("workspace") + File.separator + reportFile;
-        publishArtifact("dq_report_file", reportFileName, "DQ_REPORT");
-        artifacts.put("dq_report_file", reportFileName);
-
-        // Postprocessor
-        String xlsxFileName = options.get("workspace") + File.separator + xlsxFile;
-        XLSXPostProcessor postProcessor = new XLSXPostProcessor(new FileInputStream(reportFileName));
-        postProcessor.postprocess(new FileOutputStream(xlsxFileName));
-
-        publishArtifact("dq_report_xls_file", xlsxFileName);
-        artifacts.put("dq_report_xls_file", xlsxFileName);
-
-        //artifactFileName = options.get("workspace") + File.separator + outputfile;
-        //publishArtifact("event_dates_file", artifactFileName);
-        //artifacts.put("event_dates_file", artifactFileName);
-
-        //artifactFileName = options.get("workspace") + File.separator + reportXlsFile;
-        //publishArtifact("dq_report_xls_file", artifactFileName);
-        //artifacts.put("dq_report_xls_file", artifactFileName);
-
-        broadcast(options);
     }
 
     private void parseInputfile(ValidationRunner runner, File inputfile, CSVFormat format) throws IOException, IllegalAccessException, InvocationTargetException, InstantiationException, IllegalArgumentException {

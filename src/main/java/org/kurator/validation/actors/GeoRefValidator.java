@@ -28,40 +28,45 @@ public class GeoRefValidator extends KuratorActor {
 
     @Override
     protected void onData(Object data) throws Exception {
-        Map<String, Object> options = (Map<String, Object>) data;
-        File workspace = new File((String) options.get("workspace"));
-        File inputfile = new File((String) options.get("outputfile"));
-
-        String reportFile = "dq_report.json";
-        String xlsxFile = "dq_report.xlsx";
-
-        FileWriter reportWriter = new FileWriter(options.get("workspace") + File.separator + reportFile);
-
-        ValidationRunner runner = new ValidationRunner(DwCGeoRefDQ.class, reportWriter);
-
         try {
-            parseInputfile(runner, inputfile, csvFormat);
-        } catch (IllegalArgumentException e) {
-            // Try tsv
-            logger.debug("File does not appear to be csv, trying tsv format.");
-            parseInputfile(runner, inputfile, tsvFormat);
+            Map<String, Object> options = (Map<String, Object>) data;
+            File workspace = new File((String) options.get("workspace"));
+            File inputfile = new File((String) options.get("outputfile"));
+
+            String reportFile = "dq_report.json";
+            String xlsxFile = "dq_report.xlsx";
+
+            FileWriter reportWriter = new FileWriter(options.get("workspace") + File.separator + reportFile);
+
+            ValidationRunner runner = new ValidationRunner(DwCGeoRefDQ.class, reportWriter);
+
+            try {
+                parseInputfile(runner, inputfile, csvFormat);
+            } catch (IllegalArgumentException e) {
+                // Try tsv
+                logger.debug("File does not appear to be csv, trying tsv format.");
+                parseInputfile(runner, inputfile, tsvFormat);
+            }
+
+            Map<String, String> artifacts = (Map<String, String>) options.get("artifacts");
+
+            String reportFileName = options.get("workspace") + File.separator + reportFile;
+            publishArtifact("dq_report_file", reportFileName, "DQ_REPORT");
+            artifacts.put("dq_report_file", reportFileName);
+
+            // Postprocessor
+            String xlsxFileName = options.get("workspace") + File.separator + xlsxFile;
+            XLSXPostProcessor postProcessor = new XLSXPostProcessor(new FileInputStream(reportFileName));
+            postProcessor.postprocess(new FileOutputStream(xlsxFileName));
+
+            publishArtifact("dq_report_xls_file", xlsxFileName);
+            artifacts.put("dq_report_xls_file", xlsxFileName);
+
+            broadcast(options);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-
-        Map<String, String> artifacts = (Map<String, String>) options.get("artifacts");
-
-        String reportFileName = options.get("workspace") + File.separator + reportFile;
-        publishArtifact("dq_report_file", reportFileName, "DQ_REPORT");
-        artifacts.put("dq_report_file", reportFileName);
-
-        // Postprocessor
-        String xlsxFileName = options.get("workspace") + File.separator + xlsxFile;
-        XLSXPostProcessor postProcessor = new XLSXPostProcessor(new FileInputStream(reportFileName));
-        postProcessor.postprocess(new FileOutputStream(xlsxFileName));
-
-        publishArtifact("dq_report_xls_file", xlsxFileName);
-        artifacts.put("dq_report_xls_file", xlsxFileName);
-
-        broadcast(options);
     }
 
     private void parseInputfile(ValidationRunner runner, File inputfile, CSVFormat format) throws IOException, IllegalAccessException, InvocationTargetException, InstantiationException, IllegalArgumentException {
