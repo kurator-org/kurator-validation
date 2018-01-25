@@ -39,6 +39,9 @@ public class SimpleGBIFGUIDLookup extends KuratorActor {
 					logger.value("Looking Up: " + scientificName + ":" + scientificNameAuthorship); 
 					String guid =  SciNameUtils.simpleGBIRGuidLookup(scientificName, scientificNameAuthorship);
 					logger.value("Found GUID: " + guid);
+					if (guid==null || guid.isEmpty()) { 
+						record.put("taxonID", " ");
+					}	
 					if (!DateUtils.isEmpty(guid)) { 
 						if (DateUtils.isEmpty(record.get("taxonID"))) { 
 						    record.put("taxonID", guid);
