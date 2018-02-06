@@ -14,8 +14,8 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2017 President and Fellows of Harvard College"
-__version__ = "dwca_core_to_tsv.py 2017-07-20T10:35-07:00"
+__copyright__ = "Copyright 2018 President and Fellows of Harvard College"
+__version__ = "dwca_core_to_tsv.py 2018-02-06T11:57-03:00"
 __kurator_content_type__ = "actor"
 __adapted_from__ = "actor_template.py"
 
@@ -188,9 +188,9 @@ def write_core_csv_file(dwcareader, outputfile):
     
     # Make a list of field names without full qualification, ordered as they are in
     # Darwin Core
-    #shorttermnames=dwc_ordered_header(short_term_names(termnames))
-    shorttermnames=short_term_names(termnames);
-    print shorttermnames
+    shorttermnames=dwc_ordered_header(short_term_names(termnames))
+    #shorttermnames=short_term_names(termnames);
+    # print 'short term names:\n%s' % shorttermnames
 
     dialect = tsv_dialect()
     success = write_header(outputfile, shorttermnames, dialect)

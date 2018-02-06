@@ -14,8 +14,8 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2017 President and Fellows of Harvard College"
-__version__ = "dwca_utils.py 2017-07-19T09:27-07:00"
+__copyright__ = "Copyright 2018 President and Fellows of Harvard College"
+__version__ = "dwca_utils.py 2018-02-06T12:16-03:00"
 __kurator_content_type__ = "utility"
 __adapted_from__ = ""
 
@@ -24,8 +24,10 @@ __adapted_from__ = ""
 
 from operator import itemgetter
 from uuid import uuid1
+#from ftfy import fix_text
 import os.path
 import glob
+import codecs
 import logging
 
 # Replace the system csv with unicodecsv. All invocations of csv will use unicodecsv,
@@ -698,6 +700,86 @@ def convert_csv(inputfile, outputfile, dialect=None, encoding=None, format=None)
     logging.debug(s)
     return True
 
+def csv_select_fields(inputfile, outputfile, fieldlist=None, dialect=None, encoding=None, format=None):
+    ''' Write data from selected fields of an input file to an output file.
+    parameters:
+        inputfile - full path to the input file (required)
+        outputfile - full path to the converted file (required)
+        fieldlist - field names separated by | in the desired output order (default None)
+        dialect - csv.dialect object with the attributes of the input file (default None)
+        encoding - a string designating the input file encoding (optional; default None) 
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
+        format - output file format (e.g., 'csv' or 'txt') (optional; default 'txt')
+    returns:
+        True if finished successfully, otherwise False
+    '''
+    functionname = 'csv_select_fields()'
+
+    if inputfile is None or len(inputfile) == 0:
+        s = 'No input file given in %s.' % functionname
+        logging.debug(s)
+        return False
+
+    if outputfile is None or len(outputfile) == 0:
+        s = 'No output file given in %s.' % functionname
+        logging.debug(s)
+        return False
+
+    if os.path.isfile(inputfile) == False:
+        s = 'File %s not found in %s.' % (inputfile, functionname)
+        logging.debug(s)
+        return False
+
+    # Determine the dialect of the input file
+    if dialect is None:
+        dialect = csv_file_dialect(inputfile)
+        # csv_file_dialect() always returns a dialect if there is an input file.
+        # No need to check.
+
+    # Try to determine the encoding of the inputfile.
+    if encoding is None or len(encoding.strip()) == 0:
+        encoding = csv_file_encoding(inputfile)
+        # csv_file_encoding() always returns an encoding if there is an input file.    
+
+    # Create a the dialect object for the output file based on the given format
+    if format is not None and format.lower() == 'csv':
+        outdialect = csv_dialect()
+    else:
+        outdialect = tsv_dialect()
+
+    # Get the header from the input file
+    inputheader = read_header(inputfile, dialect=dialect, encoding=encoding)
+
+    if inputheader is None:
+        s = 'Unable to read header for %s in %s.' % (inputfile, functionname)
+        logging.debug(s)
+        return False
+
+    # Get the output header from the field list
+    if fieldlist is None or len(fieldlist.strip()) == 0:
+        s = 'No output fields specified in %s.' % (functionname)
+        logging.debug(s)
+        return False
+
+    outputheader = fieldlist.split('|')
+
+    with open(outputfile, 'w') as outfile:
+        writer = csv.DictWriter(outfile, dialect=outdialect, encoding='utf-8', 
+            fieldnames=outputheader)
+        writer.writeheader()
+
+        # Iterate through all rows in the input file
+        for row in read_csv_row(inputfile, dialect=dialect, encoding=encoding, 
+            header=True, fieldnames=inputheader):
+            for field in inputheader:
+                if field not in outputheader:
+                    row.pop(field)
+            writer.writerow(row)
+
+    s = 'File written to %s in %s.' % (outputfile, functionname)
+    logging.debug(s)
+    return True
+
 # Unfortunately, pandas will not currently work under JYTHON due to the numpy dependency.
 # def convert_csv_pandas(inputfile, outputfile, encoding=None, format=None):
 #     ''' Convert an arbitrary csv file into a txt file in utf-8 usin pandas.
@@ -1025,8 +1107,50 @@ def filter_non_printable(str, sub = ''):
             newstr += sub
     return newstr
 
+#*** Experimental
+# def file_de_mojibake(inputfile, outputfile, encoding=None):
+#     ''' Read a file line by line as utf8 and remove mojibake.
+#     parameters:
+#         inputfile - the full path to an input file (required)
+#         outputfile - full path to the translated output file (required)
+#         encoding - a string designating the input file encoding (optional; default None) 
+#             (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
+#     returns:
+#         True on success, False otherwise
+#     '''
+#     functionname = 'file_de_mojibake()'
+# 
+#     if inputfile is None or len(inputfile) == 0:
+#         s = 'No input file given in %s.' % functionname
+#         logging.debug(s)
+#         return None
+# 
+#     if os.path.isfile(inputfile) == False:
+#         s = 'File %s not found in %s.' % (inputfile, functionname)
+#         logging.debug(s)
+#         return None
+# 
+#     # Try to determine the encoding of the inputfile.
+#     if encoding is None or len(encoding.strip()) == 0:
+#         encoding = csv_file_encoding(inputfile)
+#         # csv_file_encoding() always returns an encoding if there is an input file.
+# 
+#     with open(outputfile, 'w') as outfile:
+#         with codecs.open(inputfile, encoding=encoding) as infile:
+#             i = 0
+#             for line in infile:
+#                 newline = fix_text(line)
+#                 if line != newline:
+#                     print 'Changed line %s:\n%s\nto:\n%s' % (i, line, newline) 
+#                 i += 1
+#                 outfile.write(newline.encode('utf-8'))
+#     s = 'Output file written to %s in %s.' % (outputfile, functionname)
+#     logging.debug(s)
+#     return True
+
 def csv_file_encoding(inputfile, maxlines=None):
-    ''' Try to discern the encoding of a file.
+    ''' Try to discern the encoding of a file. One can use chardetect filename from the 
+        command line to discern what the results of csv_file_encoding(inputfile) will be.
     parameters:
         inputfile - the full path to an input file (required)
         maxlines  - the maximum number of lines to read from the csv file(optional)
@@ -1061,7 +1185,7 @@ def csv_file_encoding(inputfile, maxlines=None):
     encoding = detector.result['encoding']
     # print(encoding)
 
-    if encoding is None:
+    if encoding is None or len(encoding.strip()) == 0:
         # Encoding not determined
         s = 'No appropriate encoding found for file %s. Forcing utf8 ' % inputfile
         s += 'in %s' % functionname
@@ -1343,8 +1467,8 @@ def utf8_data_encoder(data, encoding):
         try:
             yield utf8_line_encoder(line, encoding)
         except UnicodeDecodeError, e:
-            s = 'Failed to encode line #%s:\n%s\n' % (i, line)
-            s += 'from %s in encoding %s. ' % (inputfile, encoding)
+            s = 'Failed to encode line:\n%s\n' % line
+            s += 'in encoding %s. ' % encoding
             s += 'Exception: %s %s' % (e, functionname)
             logging.debug(s)
 
@@ -1353,7 +1477,7 @@ def utf8_line_encoder(line, encoding):
     parameters:
         line - the line to process (required)
         encoding - a string designating the input file encoding (required) 
-            (e.g., 'utf-8', 'latin_1', 'cp1252')
+            (e.g., 'utf-8', 'mac_roman', 'latin_1', 'cp1252')
     returns:
         the line in utf8
     '''
@@ -1400,3 +1524,32 @@ def response(returnvars, returnvals, version=None):
         response['version']=version
 
     return response
+
+def dwc_ordered_header(header):
+    ''' Construct a header with terms ordered in the Darwin Core term order.
+    parameters:
+        None
+    returns:
+        orderedheader -  Darwin Core-ordered list of field names in the given header
+    '''
+    if header is None or len(header) == 0:
+        return None
+
+    # Make a lower case version of the header to compare against
+    compare = []
+    for term in header:
+        compare.append(term.lower())
+
+    # Search through the Simple Darwin terms in order and add any found in the input 
+    # to an ordered header
+    orderedheader = []
+    for term in simpledwctermlist:
+        if term.lower() in compare:
+            orderedheader.append(term)
+
+    # Add any remaining fields from the input header to the ordered header
+    for term in header:
+        if term not in orderedheader:
+            orderedheader.append(term)
+
+    return orderedheader

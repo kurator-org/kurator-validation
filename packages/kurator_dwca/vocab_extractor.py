@@ -93,7 +93,7 @@ def vocab_extractor(options):
         returnvals = [workspace, extractedvalues, success, message]
         logging.debug('message: %s' % message)
         return response(returnvars, returnvals)
-        
+
     try:
         termlist = options['termlist']
     except:

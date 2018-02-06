@@ -14,8 +14,8 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2017 President and Fellows of Harvard College"
-__version__ = "text_file_filter.py 2017-07-20T10:40-04:00"
+__copyright__ = "Copyright 2018 President and Fellows of Harvard College"
+__version__ = "text_file_filter.py 2018-02-05T19:41-03:00"
 __kurator_content_type__ = "actor"
 __adapted_from__ = "actor_template.py"
 
@@ -143,8 +143,10 @@ def text_file_filter(options):
     inputdialect = csv_file_dialect(inputfile)
 
     # Determine the file encoding
-    if encoding is None:
+    if encoding is None or len(encoding.strip()) == 0:
         encoding = csv_file_encoding(inputfile)
+        # csv_file_encoding() always returns an encoding if there is an input file.
+        # No need to check.
 
     # If the termname is not in the header of the inputfile, nothing to do.
     header = read_header(inputfile, dialect=inputdialect, encoding=encoding)

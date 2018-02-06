@@ -42,7 +42,7 @@
     <dependencies>
 
         <dependency>
-            <groupId>org.kurator</groupId>
+            <groupId>org.datakurator</groupId>
             <artifactId>kurator-akka</artifactId>
             <version>1.0.2-SNAPSHOT</version>
         </dependency>

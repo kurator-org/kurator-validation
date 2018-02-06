@@ -13,8 +13,8 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "csv_converter_test.py 2017-01-17T21:19-03:00"
+__copyright__ = "Copyright 2018 President and Fellows of Harvard College"
+__version__ = "csv_converter_test.py 2018-02-06T12:25-03:00"
 
 # This file contains unit test for the csv_converter function.
 #
@@ -227,6 +227,7 @@ class CSVConverterTestCase(unittest.TestCase):
         self.assertFalse(found)
 
         inputs['inputfile'] = testfile3
+        inputs['encoding'] = 'mac_roman'
 
         # Translate the file to csv
         response=csv_converter(inputs)
