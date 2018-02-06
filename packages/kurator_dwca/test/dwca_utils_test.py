@@ -13,8 +13,8 @@
 # limitations under the License.
 
 __author__ = "John Wieczorek"
-__copyright__ = "Copyright 2016 President and Fellows of Harvard College"
-__version__ = "dwca_utils_test.py 2017-01-17T21:21-03:00"
+__copyright__ = "Copyright 2018 President and Fellows of Harvard College"
+__version__ = "dwca_utils_test.py 2018-02-06T11:19-03:00"
 
 # This file contains unit test for the functions in dwca_utils.
 #
@@ -73,6 +73,7 @@ class DWCAUtilsFramework():
     non_printing_file = testdatapath + 'test_non-printing.csv'
     encodedfile_utf8 = testdatapath + 'test_eight_records_utf8_lf.csv'
     encodedfile_latin_1 = testdatapath + 'test_thirty_records_latin_1_crlf.csv'
+    encodedfile_windows_1252 = testdatapath + 'test_bat_agave_data_idigbio.csv'
 
     symbiotafile = testdatapath + 'test_symbiota_download.csv'
     csvreadheaderfile = testdatapath + 'test_eight_specimen_records.csv'
@@ -148,6 +149,7 @@ class DWCAUtilsTestCase(unittest.TestCase):
         non_printing_file = self.framework.non_printing_file
         encodedfile_utf8 = self.framework.encodedfile_utf8
         encodedfile_latin_1 = self.framework.encodedfile_latin_1
+        encodedfile_windows_1252 = self.framework.encodedfile_windows_1252
         csvreadheaderfile = self.framework.csvreadheaderfile
         tsvreadheaderfile = self.framework.tsvreadheaderfile
         tsvtest1 = self.framework.tsvtest1
@@ -178,6 +180,9 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'File %s does not exist' % file
         self.assertTrue(os.path.isfile(file), s)
 
+        file = encodedfile_windows_1252
+        s = 'File %s does not exist' % file
+        self.assertTrue(os.path.isfile(file), s)
 
         file = csvreadheaderfile
         s = 'File %s does not exist' % file
@@ -398,6 +403,17 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
 
+    def test_read_header7(self):
+        print 'testing read_header7'
+        encodedfile_windows_1252 = self.framework.encodedfile_windows_1252
+        header = read_header(encodedfile_windows_1252)
+        expected = ['id','dwc:class','dwc:coordinateUncertaintyInMeters','dwc:country',
+            'dwc:eventDate','dwc:family','dwc:genus','lat','lon','dwc:locality',
+            'dwc:scientificName','dwc:specificEpithet']
+        self.assertEqual(len(header), 12, 'incorrect number of fields in header')
+        s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
+        self.assertEqual(header, expected, s)
+
     def test_composite_header(self):
         print 'testing composite_header'
         csvcompositepath = self.framework.csvcompositepath
@@ -557,7 +573,21 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'header:\n%s\nnot as expected:\n%s' % (header, expected)
         self.assertEqual(header, expected, s)
 
-    # Unfortunately, pandas will not currently work under JYTHON due to the numpy dependency.
+    def test_convert_csv5(self):
+        print 'testing convert_csv4'
+        csvfile = self.framework.encodedfile_windows_1252
+        tsvfile = self.framework.tsvfromcsvfile2
+
+        try:
+            convert_csv(csvfile, tsvfile)
+            written = os.path.isfile(tsvfile)
+            s = 'tsv %s written when convert should have raised exception' % tsvfile
+            self.assertFalse(written, s)
+        except:
+            s = 'Exception (expected) converting file with UnicodeDecodeError'
+            self.assertTrue(True)
+
+# Unfortunately, pandas will not currently work under JYTHON due to the numpy dependency.
 #     def test_convert_csv_pandas(self):
 #         print 'testing convert_csv_pandas'
 #         csvfile = self.framework.csvtotsvfile1
@@ -750,7 +780,6 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'represents_int False result (%s) does not match expectation (%s)' % (result, expected)
         self.assertEqual(result, expected, s)
 
-
         result = represents_int("0")
         expected = True
         s = 'represents_int "0" result (%s) does not match expectation (%s)' % (result, expected)
@@ -781,33 +810,38 @@ class DWCAUtilsTestCase(unittest.TestCase):
         s = 'represents_int 1.001 result (%s) does not match expectation (%s)' % (result, expected)
         self.assertEqual(result, expected, s)
     
-    
     def test_csv_file_encoding(self):
         print 'testing csv_file_encoding'
         encodedfile_utf8 = self.framework.encodedfile_utf8
         encodedfile_latin_1 = self.framework.encodedfile_latin_1
-       
+        encodedfile_windows_1252 = self.framework.encodedfile_windows_1252
+
         encoding = csv_file_encoding(encodedfile_utf8)
         # UTF8 file containing only ascii and latin2 characters encoded as utf-8 is 
-        # indistinguishable from latin2.
-        expected = 'ISO-8859-2'
+        # indistinguishable from latin1.
+        expected = 'ISO-8859-1'
         s = 'file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding, expected, s)
         
         encoding = csv_file_encoding(encodedfile_latin_1)
-        expected = 'KOI8-R'
+        expected = 'ISO-8859-1'
+        s = 'file encoding (%s) does not match expectation (%s)' % (encoding, expected)
+        self.assertEqual(encoding, expected, s)
+
+        encoding = csv_file_encoding(encodedfile_windows_1252)
+        expected = 'Windows-1252'
         s = 'file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding, expected, s)
 
         # Passing in -1 should be an irrecoverable error
         encoding = csv_file_encoding(encodedfile_latin_1, -1)
-        expected = 'KOI8-R'
+        expected = 'ISO-8859-1'
         s = 'maxlines =-1 file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding, expected, s)
 
         # Passing in a string, 'A', should be an irrecoverable error
         encoding = csv_file_encoding(encodedfile_latin_1, 'A')
-        expected = 'KOI8-R'
+        expected = 'ISO-8859-1'
         s = 'maxlines = \'A\' file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding, expected, s)
 
@@ -818,25 +852,24 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(encoding, expected, s)
 
         # If we read in only the first line there is not enough info for the detector
-        # to make a fully informed descision, so it should return 'ascii' rather than the
-        # the more correct value o 'KOI8-R'
+        # to make a fully informed decision, so it should return 'ascii'
         encoding = csv_file_encoding(encodedfile_latin_1, 1)
         expected = 'ascii'
         s = 'maxlines = 1 file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding, expected, s)
 
         encoding = csv_file_encoding(encodedfile_latin_1, 0)
-        expected = 'KOI8-R'
+        expected = 'ISO-8859-1'
         s = 'maxlines = 0 file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding, expected, s)
 
         encoding = csv_file_encoding(encodedfile_latin_1, 1000)
-        expected = 'KOI8-R'
+        expected = 'ISO-8859-1'
         s = 'maxlines = 1000 file encoding (%s) does not match expectation (%s)' % (encoding, expected)
         self.assertEqual(encoding, expected, s)
 
-
     def test_utf8_file_encoder(self):
+        # TODO: Add more tests for files in other common encodings
         print 'testing utf8_file_encoder'
         tempfile = self.framework.testencoding
 
@@ -850,6 +883,15 @@ class DWCAUtilsTestCase(unittest.TestCase):
         self.assertEqual(encoding, expected, s)
 
         testfile = self.framework.encodedfile_latin_1
+        success = utf8_file_encoder(testfile, tempfile)
+        s = '%s not translated to utf-8' % testfile
+        self.assertEqual(success, True, s)
+        encoding = csv_file_encoding(tempfile)
+        expected = 'utf-8'
+        s = 'Encoding (%s) of %s to %s not utf-8' % (encoding, testfile, tempfile)
+        self.assertEqual(encoding, expected, s)
+
+        testfile = self.framework.encodedfile_windows_1252
         success = utf8_file_encoder(testfile, tempfile)
         s = '%s not translated to utf-8' % testfile
         self.assertEqual(success, True, s)

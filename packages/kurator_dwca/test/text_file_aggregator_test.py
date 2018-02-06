@@ -40,9 +40,9 @@ class TextFileAggregatorFramework():
 
     def dispose(self):
         """Remove any output files created as a result of testing"""
-#        removeme = self.testdatapath + self.tsvfile
-#        if os.path.isfile(removeme):
-#            os.remove(removeme)
+        removeme = self.testdatapath + self.tsvfile
+        if os.path.isfile(removeme):
+            os.remove(removeme)
         return True
 
 class TextFileAggregatorTestCase(unittest.TestCase):
