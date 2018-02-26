@@ -10,6 +10,23 @@ Other Python classes made available through this package may be used similarly. 
 The TDWG 2015 presentation [Data cleaning with the Kurator toolkit: Bridging the gap between conventional scripting and 
 high-performance workflow automation](http://www.slideshare.net/TimothyMcPhillips/data-cleaning-with-the-kurator-toolkit-bridging-the-gap-between-conventional-scripting-and-highperformance-workflow-automation) provides an overview of the Kurator project and tools described in this README.  For information about the **Kurator-Akka** workflow framework please see the [README](https://github.com/kurator-org/kurator-akka/blob/master/README.md) in the [Kurator-Akka](https://github.com/kurator-org/kurator-akka) repository.
 
+Prerequisites for using the kurator_dwca workflows
+--------------------------------------------------
+
+## Install python dependencies with pip ##
+
+The kurator_dwca workflows invoke python and expect certain libraries to be available.  You can install these
+requirements using pip with: 
+
+     pip install -r kurator-validation/packages/kurator_dwca/requirements.txt
+
+## PYTHONPATH ##
+
+You will also need to put the kurator-validation/packages directory into a PYTHONPATH environment variable.
+
+export PYTHONPATH=~/git/kurator-validation/packages/
+
+
 Running Kurator-Validation from the command line
 ------------------------------------------------
 
