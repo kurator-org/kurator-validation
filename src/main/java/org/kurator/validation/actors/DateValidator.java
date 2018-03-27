@@ -25,9 +25,27 @@ public class DateValidator extends KuratorActor {
     private CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader();
     private CSVFormat tsvFormat = CSVFormat.newFormat('\t').withHeader();
 
+    public Integer validationYearLowerBound;
+
+    public Integer whollyOutOfRangeLowerBound;
+    public Boolean whollyOutOfRangeUseLowerBound;
+
+    public Integer extendsOutOfRangeLowerBound;
+    public Boolean extendsOutOfRangeUseLowerBound;
+
     @Override
     protected void onData(Object data) throws Exception {
         try {
+            // Workflow parameters mapped to test parameters to be used as argument to test runner constructor
+            Map<String, Object> params = new HashMap<>();
+            params.put("validationYearLowerBound", validationYearLowerBound);
+
+            params.put("whollyOutOfRangeLowerBound", whollyOutOfRangeLowerBound);
+            params.put("whollyOutOfRangeUseLowerBound", whollyOutOfRangeUseLowerBound);
+
+            params.put("extendsOutOfRangeLowerBound", extendsOutOfRangeLowerBound);
+            params.put("extendsOutOfRangeUseLowerBound", extendsOutOfRangeUseLowerBound);
+
             Map<String, Object> options = (Map<String, Object>) data;
             File workspace = new File((String) options.get("workspace"));
             File inputfile = new File((String) options.get("outputfile"));
@@ -39,7 +57,7 @@ public class DateValidator extends KuratorActor {
             //List<String> fields = Arrays.asList("dwc:eventDate", "dwc:month", "dwc:day", "dwc:year", "dwc:startDayOfYear",
             //        "dwc:endDayOfYear", "dwc:eventTime", "dwc:verbatimEventDate");
 
-            ValidationRunner runner = new ValidationRunner(DwCEventDQ.class, reportWriter);
+            ValidationRunner runner = new ValidationRunner(DwCEventDQ.class, reportWriter, params);
 
             try {
                 parseInputfile(runner, inputfile, csvFormat);
