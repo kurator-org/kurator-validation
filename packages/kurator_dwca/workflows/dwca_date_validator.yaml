@@ -68,6 +68,21 @@ components:
         # of the workspace parameter given on the command line.
         actor: !ref MakeWorkspace
         parameter: workspace
+      validationYearLowerBound:
+        actor: !ref DateValidator
+        parameter: validationYearLowerBound
+      whollyOutOfRangeLowerBound:
+        actor: !ref DateValidator
+        parameter: whollyOutOfRangeLowerBound
+      whollyOutOfRangeUseLowerBound:
+        actor: !ref DateValidator
+        parameter: whollyOutOfRangeUseLowerBound
+      extendsOutOfRangeLowerBound:
+        actor: !ref DateValidator
+        parameter: extendsOutOfRangeLowerBound
+      extendsOutOfRangeUseLowerBound:
+        actor: !ref DateValidator
+        parameter: extendsOutOfRangeLowerBound
 
 # Inline python actor to make a workspace on the fly to use for writing temporary
 # if one is not supplied in the workflow-defined parameters. It creates a unique
@@ -168,6 +183,13 @@ components:
       outputfile: inputfile
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
+    parameters:
+      # default values for test parameters
+      validationYearLowerBound: 1700
+      whollyOutOfRangeLowerBound: 1700
+      whollyOutOfRangeUseLowerBound: true
+      extendsOutOfRangeLowerBound: 1700
+      extendsOutOfRangeUseLowerBound: true
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
 - id: WrapUp
