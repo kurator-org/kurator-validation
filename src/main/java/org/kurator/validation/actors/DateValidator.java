@@ -78,12 +78,16 @@ public class DateValidator extends KuratorActor {
             Map<String, String> artifacts = (Map<String, String>) options.get("artifacts");
 
             String reportFileName = options.get("workspace") + File.separator + reportFile;
+
+            publishArtifact("dq_report_file", reportFileName);
             artifacts.put("dq_report_file", reportFileName);
 
             // Postprocessor
             String xlsxFileName = options.get("workspace") + File.separator + xlsxFile;
             XLSXPostProcessor postProcessor = new XLSXPostProcessor(new FileInputStream(reportFileName));
             postProcessor.postprocess(new FileOutputStream(xlsxFileName));
+
+            publishArtifact("dq_report_xls_file", xlsxFileName);
             artifacts.put("dq_report_xls_file", xlsxFileName);
 
             //artifactFileName = options.get("workspace") + File.separator + outputfile;
