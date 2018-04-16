@@ -20,6 +20,7 @@ __kurator_content_type__ = "actor"
 __adapted_from__ = "actor_template.py"
 
 from dwcareader_utils import short_term_names
+from dwcareader_utils import shortname
 from dwca_vocab_utils import dwc_ordered_header
 from dwca_utils import tsv_dialect
 from dwca_utils import response
@@ -190,7 +191,6 @@ def write_core_csv_file(dwcareader, outputfile):
     # Darwin Core
     shorttermnames=dwc_ordered_header(short_term_names(termnames))
     #shorttermnames=short_term_names(termnames);
-    # print 'short term names:\n%s' % shorttermnames
 
     dialect = tsv_dialect()
     success = write_header(outputfile, shorttermnames, dialect)
@@ -199,12 +199,15 @@ def write_core_csv_file(dwcareader, outputfile):
 
     rowcount = 0
     with open(outputfile, 'a') as outfile:
-        writer = csv.DictWriter(outfile, dialect=dialect, fieldnames=termnames, 
+        writer = csv.DictWriter(outfile, dialect=dialect, fieldnames=shorttermnames,
             encoding='utf-8')
+
+        rowout = {}
+
         for row in dwcareader:
             for f in row.data:
-                row.data[f]=row.data[f].encode('utf-8')
-            writer.writerow(row.data)
+                rowout[shortname(f)]=row.data[f].encode('utf-8')
+            writer.writerow(rowout)
             rowcount += 1
 
     return rowcount
