@@ -1,0 +1,386 @@
+llength([],0).
+llength([_|T], N) :- llength(T, Nt), N is Nt + 1.
+
+printall(Header, G) :-
+    writeln(''),
+    writeln('---------------------------------------------------------------------------------------------------------------------------'),
+    writeln(Header),
+    writeln('---------------------------------------------------------------------------------------------------------------------------'),
+    call(G),
+    writeln(G),
+    fail
+    ;
+    true.
+
+% count including duplicates
+count(Goal, Count) :-
+    findall(_, Goal, List),
+    llength(List, Count).
+
+% remove duplicates from a list.
+member1(X,[H|_]) :- 
+    X==H,!.
+member1(X,[_|T]) :- 
+    member1(X,T).
+
+remove_duplicates([],[]).       
+remove_duplicates([H|T],X) :- 
+    member1(H,T),                
+    !,                          
+    remove_duplicates(T,X).     
+
+remove_duplicates([H|T],[H|X]) :- 
+    remove_duplicates(T,X).
+
+% remove duplicates and cont concerned about order
+% member definition
+member(X, [Y|T]) :- X = Y; member(X, T).
+toSet(List, Set) :-
+	toSetHelper(List, [], Set).
+toSetHelper([], Acc, Acc).
+toSetHelper([H|T], Acc, Set) :-
+	member(H, Acc),
+	toSetHelper(T, Acc, Set).
+toSetHelper([H|T], Acc, Set) :-
+	toSetHelper(T, [H|Acc], Set).
+
+
+% count after removing duplicates
+unique_count(Goal, UniqueCount) :-
+    findall(_, Goal, List),
+	toSet(List, UniqueList),
+    llength(UniqueList, UniqueCount).
+
+% generating list of numbers fitting given range
+range(Low, Low, High).
+range(Out,Low,High) :- NewLow is Low+1, NewLow =< High, range(Out, NewLow, High).
+
+% append program
+append(L1,L2,L3) :-
+        L1 = [],
+        L3 = L2.
+    append(L1,L2,L3) :-
+        L1 = [X|L1t],
+        append(L1t,L2,L3t),
+        L3 = [X|L3t].
+
+% pair values
+pairs_values([], []).
+pairs_values([_-V|T0], [V|T]) :-
+    pairs_values(T0, T).
+
+% sort a list of ages in prolog
+by_date(Sorted) :-
+  findall(Date-Person, born(Person,Date), List),
+  keysort(List, Pairs),
+  pairs_values(Pairs, Sorted).
+
+% sum of a list
+sum(List,Sum) :-
+        List = []
+         ->   Sum = 0
+         ;    List = [Head|Tail],
+              sum(Tail,TailSum),
+              Sum is TailSum + Head.
+
+% compute Index of element in a list? do it recursively: Suppose 0-based index (otherwise just change the 0 with 1 on the first clause)
+indexOf([Element|_], Element, 0). % We found the element
+indexOf([_|Tail], Element, Index):-
+  indexOf(Tail, Element, Index1), % Check in the tail of the list
+  Index is Index1+1.  % and increment the resulting index
+% If you want only to find the first appearance, you could add a cut (!) to avoid backtracking.
+first_indexOf([Element|_], Element, 0):- !.
+first_indexOf([_|Tail], Element, Index):-
+  first_indexOf(Tail, Element, Index1),
+  !,
+  Index is Index1+1.
+
+
+%  find the Nth element of a list in Prolog. a decrement counter: The base case is thus that the index is 0 in which case you return the head, otherwise you query for the i-1-th element of the tail.
+match([H|_],0,H) :-
+    !.
+match([_|T],N,H) :-
+    N > 0, %add for loop prevention
+    N1 is N-1,
+    match(T,N1,H).
+% ?- match([a,b,c,d,e],0,X).
+% X = a.
+% ?- match([a,b,c,d,e],1,X).
+% X = b.
+% ?- match([a,b,c,d,e],2,X).
+% X = c.
+% ?- match([a,b,c,d,e],3,X).
+% X = d.
+% ?- match([a,b,c,d,e],4,X).
+% X = e.
+% ?- match([a,b,c,d,e],5,X).
+% false.
+
+% get the nth element of a list in Prolog
+element_at(X, List, Pos) :-
+    element_at(X, List, 1, Pos).
+element_at(X, [X|_], Pos, Pos).
+element_at(X, [_|T], Acc, Pos) :-
+    (nonvar(Pos) -> Acc < Pos ; true),  % fail if Acc hits ground Pos
+    Acc1 is Acc + 1,
+    element_at(X, T, Acc1, Pos).
+% | ?- element_at(X,[1,2,3,4,5],3).
+% X = 3;
+
+
+% rules created for logging queries 
+
+% RULE: log_template_variable_name(LogTemplateID, PortID, EntryTemplate, LogVariableID, VariableName, LogAnnotationID)
+:- table log_template_variable_name/6.
+log_template_variable_name(LogTemplateID, PortID, EntryTemplate, LogVariableID, VariableName, LogAnnotationID) :-
+    log_template(LogTemplateID, PortID, EntryTemplate, LogAnnotationID),
+	log_template_variable(LogVariableID, VariableName, LogTemplateID).
+
+% RULE: log_template_variable_name_value(ResourceID, LogTemplateID, EntryTemplate, LogEntryID, LogVariableID, VariableName, LogVariableValue). 
+:- table log_template_variable_name_value/7.
+log_template_variable_name_value(ResourceID, LogTemplateID, EntryTemplate, LogEntryID, LogVariableID, VariableName, LogVariableValue) :-
+	log_template_variable_name(LogTemplateID, _, EntryTemplate, LogVariableID, VariableName, _),
+	log_variable_value(ResourceID, LogEntryID, LogVariableID, LogVariableValue).
+
+% RULE: log_record_tag(TimeStamp, OccurrenceID, Tag)
+:- table log_record_marine_match/3.
+log_record_marine_match(TimeStamp, OccurrenceID, MarineValue) :-
+	log_template_variable_name_value(_, LogTemplateID, '{timestamp} [{loglevel}] ACTOR<{actorname}> -> [isMarine]=[true]:{matchMarineValue}. Passing occurrenceID={occurrenceID}', LogEntryID, _, 'timestamp', TimeStamp),
+	log_template_variable_name_value(_, LogTemplateID, _, LogEntryID, _, 'occurrenceID', OccurrenceID),
+	log_template_variable_name_value(_, LogTemplateID, _, LogEntryID, _, 'matchMarineValue', MarineValue).
+
+:- table log_record_tag/3.
+log_record_tag(TimeStamp, OccurrenceID, 'Marine') :-
+	log_record_marine_match(TimeStamp, OccurrenceID, 'Matched').
+log_record_tag(TimeStamp, OccurrenceID, 'NonMarine') :-
+	log_record_marine_match(TimeStamp, OccurrenceID, 'NotMatched').
+
+% log_marine_record_tag(TimeStamp, OccurrenceID, Tag)
+:- table log_marine_record_tag/3.
+log_marine_record_tag(TimeStamp, OccurrenceID, 'Marine') :-
+	log_record_marine_match(TimeStamp, OccurrenceID, 'Matched').
+
+% sort a list of Marine record by date
+log_marine_record_by_date(SortedOccurrenceID) :-
+  findall(TimeStamp-Tag-OccurrenceID, log_marine_record_tag(TimeStamp, OccurrenceID, Tag), List),
+  keysort(List, Pairs),
+  pairs_values(Pairs, SortedOccurrenceID).
+	
+% log_nonmarine_record_tag(TimeStamp, OccurrenceID, Tag)
+:- table log_nonmarine_record_tag/3.
+log_nonmarine_record_tag(TimeStamp, OccurrenceID, 'NonMarine') :-
+	log_record_marine_match(TimeStamp, OccurrenceID, 'NotMatched').
+
+% sort a list of NonMarine record by date
+log_nonmarine_record_by_date(SortedOccurrenceID) :-
+  findall(TimeStamp-Tag-OccurrenceID, log_nonmarine_record_tag(TimeStamp, OccurrenceID, Tag), List),
+  keysort(List, Pairs),
+  pairs_values(Pairs, SortedOccurrenceID).
+	
+% count all records
+:- table log_record_count/1.
+log_record_count(RecordCount) :-
+	count(log_record_tag(_, _,_), RecordCount).
+	
+% count the Marine record
+:- table log_marine_record_count/1.
+log_marine_record_count(MarineCount) :-
+	count(log_marine_record_tag(_, _,_), MarineCount).
+
+:- table log_nonmarine_record_count/1.
+log_nonmarine_record_count(NonMarineCount) :-
+	count(log_nonmarine_record_tag(_, _,_), NonMarineCount).
+
+% generating list of numbers fitting given range for marine_record
+:- table range_marine_record/1.
+range_marine_record(MarineIndex) :-
+	log_marine_record_count(MarineCount),
+	range(MarineIndex, 1, MarineCount).
+
+% generating list of numbers fitting given range for nonmarine_record
+:- table range_marine_record/1.
+range_nonmarine_record(NonMarineIndex) :-
+	log_nonmarine_record_count(NonMarineCount),
+	range(NonMarineIndex, 1, NonMarineCount).
+
+
+% log_lookup(TimeStamp,ActorName,ScientificName,ScientificNameAuthorship)
+:- table log_lookup/4.
+log_lookup(TimeStamp,ActorName,ScientificName,ScientificNameAuthorship) :-
+	log_template_variable_name_value(_, LogTemplateID, '{timestamp} [{loglevel}] ACTOR<{actorname}> -> Looking Up: {scientificName}:{scientificNameAuthorship}', LogEntryID, _, 'timestamp', TimeStamp),
+	log_template_variable_name_value(_, LogTemplateID, _, LogEntryID, _, 'actorname', ActorName),
+	log_template_variable_name_value(_, LogTemplateID, _, LogEntryID, _, 'scientificName', ScientificName),
+	log_template_variable_name_value(_, LogTemplateID, _, LogEntryID, _, 'scientificNameAuthorship', ScientificNameAuthorship).
+
+% log_worms_lookup(TimeStamp,ActorName,ScientificName,ScientificNameAuthorship)	
+:- table log_worms_lookup/4.
+log_worms_lookup(TimeStamp,'WoRMSLookup',ScientificName,ScientificNameAuthorship) :-
+	log_lookup(TimeStamp,'WoRMSLookup',ScientificName,ScientificNameAuthorship).
+
+% sort a list of WoRMSLookup ScientificNameAuthorship by date
+:- table log_marine_scientificNameAuthorship_by_date/1.
+log_marine_scientificNameAuthorship_by_date(SortedWoRMSLookupScientificNameAuthorship) :-
+  findall(TimeStamp-ActorName-ScientificName-ScientificNameAuthorship, log_worms_lookup(TimeStamp,ActorName,ScientificName,ScientificNameAuthorship), List),
+  keysort(List, Pairs),
+  pairs_values(Pairs, SortedWoRMSLookupScientificNameAuthorship).
+
+% sort a list of WoRMSLookup scientificName by date
+:- table log_marine_scientificName_by_date/1.
+log_marine_scientificName_by_date(SortedWoRMSLookupscientificName) :-
+  findall(TimeStamp-ActorName-ScientificNameAuthorship-ScientificName, log_worms_lookup(TimeStamp,ActorName,ScientificName,ScientificNameAuthorship), List),
+  keysort(List, Pairs),
+  pairs_values(Pairs, SortedWoRMSLookupscientificName). 
+
+
+% log_gbif_lookup(TimeStamp,ActorName,ScientificName,ScientificNameAuthorship)	
+:- table log_gbif_lookup/4.
+log_gbif_lookup(TimeStamp,'GBIFLookup',ScientificName,ScientificNameAuthorship) :-
+	log_lookup(TimeStamp,'GBIFLookup',ScientificName,ScientificNameAuthorship).
+
+% sort a list of GBIFLookup ScientificNameAuthorship by date
+:- table log_nonmarine_scientificNameAuthorship_by_date/1.
+log_nonmarine_scientificNameAuthorship_by_date(SortedGBIFLookupScientificNameAuthorship) :-
+  findall(TimeStamp-ActorName-ScientificName-ScientificNameAuthorship, log_gbif_lookup(TimeStamp,ActorName,ScientificName,ScientificNameAuthorship), List),
+  keysort(List, Pairs),
+  pairs_values(Pairs, SortedGBIFLookupScientificNameAuthorship).
+
+% sort a list of GBIFLookup scientificName by date
+:- table log_nonmarine_scientificName_by_date/1.
+log_nonmarine_scientificName_by_date(SortedGBIFLookupscientificName) :-
+  findall(TimeStamp-ActorName-ScientificNameAuthorship-ScientificName, log_gbif_lookup(TimeStamp,ActorName,ScientificName,ScientificNameAuthorship), List),
+  keysort(List, Pairs),
+  pairs_values(Pairs, SortedGBIFLookupscientificName). 
+
+
+% found_guid(TimeStamp,ActorName,LookupValue)
+:- table found_guid/3.
+found_guid(TimeStamp,ActorName,LookupValue) :-
+	log_template_variable_name_value(_, LogTemplateID, '{timestamp} [{loglevel}] ACTOR<{actorname}> -> Found GUID: {LookupValue}', LogEntryID, _, 'timestamp', TimeStamp),
+	log_template_variable_name_value(_, LogTemplateID, _, LogEntryID, _, 'actorname', ActorName),
+	log_template_variable_name_value(_, LogTemplateID, _, LogEntryID, _, 'LookupValue', LookupValue).
+
+% log_worms_lookup_value(TimeStamp,ActorName,LookupValue)	
+:- table log_worms_lookup_value/3.
+log_worms_lookup_value(TimeStamp,'WoRMSLookup',LookupValue) :-
+	found_guid(TimeStamp,'WoRMSLookup',LookupValue).
+	
+% log_gbif_lookup_value(TimeStamp,ActorName,LookupValue)	
+:- table log_gbif_lookup_value/3.
+log_gbif_lookup_value(TimeStamp,'GBIFLookup',LookupValue) :-
+	found_guid(TimeStamp,'GBIFLookup',LookupValue).
+
+% sort a list of LookupValue by date
+log_lookup_value_by_date(SortedLookupValue) :-
+  findall(TimeStamp-ActorName-LookupValue, found_guid(TimeStamp,ActorName,LookupValue) , List),
+  keysort(List, Pairs),
+  pairs_values(Pairs, SortedLookupValue).
+
+% sort a list of WormsLookupValue by date
+log_worms_lookup_value_by_date(SortedWormsLookupValue) :-
+  findall(TimeStamp-ActorName-LookupValue, log_worms_lookup_value(TimeStamp,ActorName,LookupValue), List),
+  keysort(List, Pairs),
+  pairs_values(Pairs, SortedWormsLookupValue).
+
+% sort a list of GBIFLookupValue by date
+log_gbif_lookup_value_by_date(SortedGBIFLookupValue) :-
+  findall(TimeStamp-ActorName-LookupValue, log_gbif_lookup_value(TimeStamp,ActorName,LookupValue), List),
+  keysort(List, Pairs),
+  pairs_values(Pairs, SortedGBIFLookupValue).
+
+% log_record_source(OccurrenceID, MarineValue, Source)
+:- table log_record_source/3.
+log_record_source(OccurrenceID, 'Marine', 'WoRMSLookup') :-
+	log_marine_record_tag(_, OccurrenceID, 'Marine').
+log_record_source(OccurrenceID, 'NonMarine', 'GBIFLookup') :-
+	log_nonmarine_record_tag(_, OccurrenceID, 'NonMarine').
+	
+% compute first_index of element in a list: log_record_index(OccurrenceID, MarineValue, Index)
+:- table log_record_index/3.
+log_record_index(OccurrenceID, MarineValue, Index) :-
+	log_record_source(OccurrenceID, 'Marine', _),
+	log_marine_record_by_date(SortedOccurrenceID),
+	first_indexOf(SortedOccurrenceID, OccurrenceID, Index),
+	log_record_tag(_, OccurrenceID, MarineValue).
+log_record_index(OccurrenceID, MarineValue, Index) :-
+	log_record_source(OccurrenceID, 'NonMarine', _),
+	log_nonmarine_record_by_date(SortedOccurrenceID),
+	first_indexOf(SortedOccurrenceID, OccurrenceID, Index),
+	log_record_tag(_, OccurrenceID, MarineValue).
+% log_record_match_result(OccurrenceID, MarineValue, ScientificName, ScientificNameAuthorship, MatchFound, Source) 
+:- table log_record_match_result/6.
+log_record_match_result(OccurrenceID, 'Marine', ScientificName, ScientificNameAuthorship, MatchFound, 'WoRMSLookup') :-
+	log_record_index(OccurrenceID, 'Marine', MarineIndex),
+	log_worms_lookup_value_by_date(SortedWormsLookupValue),
+	match(SortedWormsLookupValue, MarineIndex, MatchFound),
+	log_marine_scientificNameAuthorship_by_date(SortedWoRMSLookupScientificNameAuthorship),
+	match(SortedWoRMSLookupScientificNameAuthorship, MarineIndex, ScientificNameAuthorship),
+	log_marine_scientificName_by_date(SortedWoRMSLookupscientificName),
+	match(SortedWoRMSLookupscientificName, MarineIndex, ScientificName).
+log_record_match_result(OccurrenceID, 'NonMarine', ScientificName, ScientificNameAuthorship, MatchFound, 'GBIFLookup') :-
+	log_record_index(OccurrenceID, 'NonMarine', NonMarineIndex),
+	log_gbif_lookup_value_by_date(SortedGBIFLookupValue),
+	match(SortedGBIFLookupValue, NonMarineIndex, MatchFound),
+	log_nonmarine_scientificNameAuthorship_by_date(SortedGBIFLookupScientificNameAuthorship),
+	match(SortedGBIFLookupScientificNameAuthorship, NonMarineIndex, ScientificNameAuthorship),
+	log_nonmarine_scientificName_by_date(SortedGBIFLookupscientificName),
+	match(SortedGBIFLookupscientificName, NonMarineIndex, ScientificName). 
+
+% log_record_data_value(H,A,X,B,Y,C,Z,D,U,E,V,F,W) or 
+% log_record_data_value(OccurrenceID,DataRecord, DataRecordValue, TaggedDataRecord,TaggedDataRecordValue, MScientificNameAuthorship,MScientificNameAuthorshipValue, NMScientificNameAuthorship,NMScientificNameAuthorshipValie, WoRMSOutput,WoRMSOutputValue, GBIFOutput, GBIFOutputValue) 
+:- table log_record_data_value/13.
+log_record_data_value(A, 'DataRecord', X, 'TaggedDataRecord', 'Marine','MarineDataRecord', MScientificNameAuthorship, 'notMarineDataRecord', ' ', 'WoRMSUpdatedRecord', V, 'GBIFUpdatedRecord', '')  :-
+	X = A,
+	log_record_match_result(X, 'Marine', Z, U, V, _),
+ 	atom_concat(Z,':',K), 
+ 	atom_concat(K, U, MScientificNameAuthorship).
+log_record_data_value(A, 'DataRecord', X, 'TaggedDataRecord', 'NonMarine','MarineDataRecord', ' ', 'notMarineDataRecord', NMScientificNameAuthorship, 'WoRMSUpdatedRecord', '', 'GBIFUpdatedRecord', V)  :-
+	X = A,
+	log_record_match_result(X, 'NonMarine', Z, U, V, _),
+ 	atom_concat(Z,':',K), 
+ 	atom_concat(K, U, NMScientificNameAuthorship).
+
+% data_record(H, DataName, DataRecord)
+:- table data_record/3.
+data_record(H, DataName, DataRecord) :- 
+	log_record_data_value(H,DataName,DataRecord,_,_,_,_,_,_,_,_,_,_).
+data_record(H, DataName, DataRecord) :- 
+	log_record_data_value(H,_, _, DataName,DataRecord,_,_,_,_,_,_,_,_).
+data_record(H, DataName, DataRecord) :- 
+	log_record_data_value(H,_, _, _, _, DataName,DataRecord,_,_,_,_,_,_).
+data_record(H, DataName, DataRecord) :- 
+	log_record_data_value(H,_, _, _, _, _, _, DataName,DataRecord,_,_,_,_).
+data_record(H, DataName, DataRecord) :- 
+	log_record_data_value(H,_, _, _, _, _, _, _, _, DataName,DataRecord,_,_).
+data_record(H, DataName, DataRecord) :- 
+	log_record_data_value(H,_, _, _, _, _, _, _, _, _, _, DataName,DataRecord).
+
+% How many Marine(noMarine) records found a match?
+:- table log_marine_match/1.
+log_marine_match(OccurrenceID) :- 
+	log_record_match_result(OccurrenceID, 'Marine', _, _, MatchFound, _),
+	MatchFound \== null.
+log_marine_match_count(MarineMatchCount) :-
+	count(log_marine_match(_), MarineMatchCount).
+
+:- table log_nonmarine_match/1.
+log_nonmarine_match(OccurrenceID) :- 
+	log_record_match_result(OccurrenceID, 'NonMarine', _, _, MatchFound, _),
+	MatchFound \== ''.
+log_nonmarine_match_count(NonMarineMatchCount) :-
+	count(log_nonmarine_match(_), NonMarineMatchCount).
+
+% How many Marine(noMarine) records didn't find a match?
+:- table log_marine_match/1.
+log_marine_nomatch(OccurrenceID) :- 
+	log_record_match_result(OccurrenceID, 'Marine', _, _, MatchFound, _),
+	MatchFound == null.
+log_marine_nomatch_count(MarineNoMatchCount) :-
+	count(log_marine_nomatch(_), MarineNoMatchCount).
+
+:- table log_nonmarine_match/1.
+log_nonmarine_nomatch(OccurrenceID) :- 
+	log_record_match_result(OccurrenceID, 'NonMarine', _, _, MatchFound, _),
+	MatchFound == ''.
+log_nonmarine_nomatch_count(NonMarineNoMatchCount) :-
+	count(log_nonmarine_nomatch(_), NonMarineNoMatchCount).
+
