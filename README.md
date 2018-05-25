@@ -375,3 +375,19 @@ Now the workflow can be run using the `ka` command, e.g. taking as input the `Wo
     $
 
 Additional actors that process data records similarly can easily be added to such a workflow--without the composition challenges that scripts typically exhibit.  In addition, each actor in a **Kurator-Akka** workflow runs concurrently in different threads.  This means that once several records have been read into a workflow comprising multiple data cleaning actors connected in series, multiple actors (sometimes *all* of the actors) will be active at the same time.  This can increase the data throughput rate of the workflow compared to that of a single-threaded script.
+
+# Developer deployment: 
+
+To deploy a snapshot to the snapshotRepository:
+
+    mvn clean deploy
+
+To deploy a new release to maven central, set the version in pom.xml to a non-snapshot version, then deploy with the release profile (which adds package signing and deployment to release staging:
+
+    mvn clean deploy -P release
+
+After this, you will need to login to the sonatype oss repository hosting nexus instance (https://oss.sonatype.org/index.html#welcome), find the staged release in the staging repositories, and perform the release.  It should be possible (haven't verified this yet) to perform the release from the command line instead by running:
+
+    mvn nexus-staging:release -P release
+
+
