@@ -4,7 +4,7 @@
 
     <groupId>org.datakurator</groupId>
     <artifactId>kurator-validation</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.0.2</version>
     <packaging>jar</packaging>
     <name>kurator-validation</name>
     <url>http://opensource.ncsa.illinois.edu/projects/KURATOR</url>
