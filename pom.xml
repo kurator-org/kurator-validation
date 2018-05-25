@@ -7,7 +7,43 @@
     <version>1.0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>kurator-validation</name>
-    <url>http://opensource.ncsa.illinois.edu/projects/KURATOR</url>
+	<description>Kurator validation biodiversity data quality tools.  Actors (mostly python based) and workflows building on the Kurator-akka framework for the biodiversity data domain.</description>
+	<url>https://wiki.datakurator.org/</url>
+	<licenses>
+		<license>
+			<name>Apache license, Version 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0.html</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>Timothy McPhillips</name>
+			<email>tmcphillips@absoluteflow.org</email>
+		</developer>
+		<developer>
+			<name>John Wieczorek</name>
+			<email>tuco@berkeley.edu</email>
+            <organization>Museum of Comparative Zoology, Harvard University</organization>
+            <organizationUrl>https://www.mcz.harvard.edu/</organizationUrl>
+		</developer>
+        <developer>
+            <name>David B. Lowery</name>
+            <email>lowerydb@gmail.com</email>
+            <organization>Museum of Comparative Zoology, Harvard University</organization>
+            <organizationUrl>https://www.mcz.harvard.edu/</organizationUrl>
+        </developer>
+		<developer>
+			<name>Paul J. Morris</name>
+			<email>mole@morris.net</email>
+			<organization>Museum of Comparative Zoology, Harvard University</organization>
+			<organizationUrl>https://www.mcz.harvard.edu/</organizationUrl>
+		</developer>
+	</developers>
+	<scm>
+		<connection>scm:git:git@github.com:kurator-org/kurator-validation.git</connection>
+		<developerConnection>scm:git:git@github.com:kurator-org/kurator-validation.git</developerConnection>
+		<url>git@github.com:kurator-org/kurator-validation.git</url>
+	</scm>
 
 	<properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
