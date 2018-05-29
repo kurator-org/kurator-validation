@@ -123,7 +123,7 @@ components:
             print 'MakeWorkspace options: %s' % options
             options['success']=True
             if options.has_key('workspace') == False:
-                options['workspace'] ='./workspace_'+str(uuid.uuid1())
+                options['workspace'] ='workspace_'+str(uuid.uuid1()) # note: yw cannot take '/' in uri_variable_value
             if not os.path.exists(options['workspace']):
                 os.makedirs(options['workspace'])
             if not os.path.exists(options['workspace']):
@@ -197,6 +197,13 @@ components:
     listensTo:
       - !ref DownloadDarwinCloudLookup
 # @OUT workspace @as Workspace
+# @OUT LogFile @URI file:./packages/kurator_FileBranchingTaxonLookup/workflows/results/runlog.log       
+#    @LOG {timestamp} [{loglevel}] ACTOR<{actorname}> -> Published product: darwinized_header_file = {workspace}/darwinized_file.txt
+# 2018-05-24 14:24:32.662 [VALUE] ACTOR<Darwinize> -> Published product: darwinized_header_file = ./packages/kurator_FileBranchingTaxonLookup/workflows/results/workspace_104ef0c0-5f88-11e8-a013-4a0002b0edf0/darwinized_file.txt
+# 2018-05-24 14:24:25.720 [VALUE] ACTOR<DownloadDarwinCloudLookup> -> Published product: downloaded_file = ./packages/kurator_FileBranchingTaxonLookup/workflows/results/workspace_104ef0c0-5f88-11e8-a013-4a0002b0edf0/lookup_darwin_cloud.txt
+# 2018-05-24 14:24:23.305 [DEBUG] ACTOR<FileWriter> -> OutputFile:./packages/kurator_FileBranchingTaxonLookup/workflows/results/workspace_104ef0c0-5f88-11e8-a013-4a0002b0edf0/mergedoutputfile.csv
+# 2018-05-24 14:24:25.720 [VALUE] ACTOR<DownloadDarwinCloudLookup> -> Published product: downloaded_file = ./packages/kurator_FileBranchingTaxonLookup/workflows/results/workspace_104ef0c0-5f88-11e8-a013-4a0002b0edf0/lookup_darwin_cloud.txt
+# 2018-05-24 14:24:32.663 [DEBUG] ACTOR<FileToDataStream> -> ./packages/kurator_FileBranchingTaxonLookup/workflows/results/workspace_104ef0c0-5f88-11e8-a013-4a0002b0edf0/darwinized_file.txt
 # @OUT OccurrenceFile @URI file:{workspace}/darwinized_file.txt
 # @END Setup
 
@@ -219,7 +226,7 @@ components:
   properties:
     listensTo:
       - !ref FileToDataStream
-# @OUT LogFile @URI file:runlog.log       
+# @OUT LogFile @URI file:./packages/kurator_FileBranchingTaxonLookup/workflows/results/runlog.log       
 #    @LOG {timestamp} [{loglevel}] ACTOR<{actorname}> -> {ActorValue}:isMarine:true={isMarineValue}
 # @OUT TaggedDataRecord      
 # @END EnvironmentTagger      
@@ -236,7 +243,7 @@ components:
       filterKeyToMatch: isMarine
       matchValue: 'true'
       passOnMatch: true
-# @OUT LogFile @URI file:runlog.log       
+# @OUT LogFile @URI file:./packages/kurator_FileBranchingTaxonLookup/workflows/results/runlog.log       
 #    @LOG {timestamp} [{loglevel}] ACTOR<{actorname}> -> [isMarine]=[true]:{matchMarineValue}. Passing occurrenceID={occurrenceID}    
 # @OUT MarineDataRecord
 # @End FilterToJustMarine
@@ -253,7 +260,7 @@ components:
       filterKeyToMatch: isMarine
       matchValue: 'true'
       passOnMatch: false      
-# @OUT LogFile @URI file:runlog.log       
+# @OUT LogFile @URI file:./packages/kurator_FileBranchingTaxonLookup/workflows/results/runlog.log       
 #    @LOG {timestamp} [{loglevel}] ACTOR<{actorname}> -> [isMarine]=[true]:{matchMarineValue}. Passing occurrenceID={occurrenceID}    
 # @OUT notMarineDataRecord
 # @END FilterToNonMarine
@@ -267,7 +274,7 @@ components:
     listensTo:
       - !ref FilterJustMarine
 # @OUT WoRMSUpdatedRecord 
-# @OUT LogFile @URI file:runlog.log
+# @OUT LogFile @URI file:./packages/kurator_FileBranchingTaxonLookup/workflows/results/runlog.log
 #    @LOG {timestamp} [{loglevel}] ACTOR<{actorname}> -> Looking Up: {scientificName}:{scientificNameAuthorship}
 #    @LOG {timestamp} [{loglevel}] ACTOR<{actorname}> -> Found GUID: {LookupValue}
 # @END WoRMSLookup
@@ -281,7 +288,7 @@ components:
     listensTo:
       - !ref FilterExcludeMarine
 # @OUT GBIFUpdatedRecord 
-# @OUT LogFile @URI file:runlog.log
+# @OUT LogFile @URI file:./packages/kurator_FileBranchingTaxonLookup/workflows/results/runlog.log
 #    @LOG {timestamp} [{loglevel}] ACTOR<{actorname}> -> Looking Up: {scientificName}:{scientificNameAuthorship}
 #    @LOG {timestamp} [{loglevel}] ACTOR<{actorname}> -> Found GUID: {LookupValue}
 # @END GBIFLookup
@@ -314,7 +321,7 @@ components:
     parameters:
       filePath: mergedoutputfile.csv 
       numberOfInputs: 2
-# @OUT UpdatedOccurrenceFile @URI file:{workspace}/mergedoutputfile.csv    
+# @OUT UpdatedOccurrenceFile @URI file:{workspace}/mergedoutputfile.csv
 # @END CsvFileWriter
 
 # Inline python actor to take care of any unfinished business and finish the workflow.
