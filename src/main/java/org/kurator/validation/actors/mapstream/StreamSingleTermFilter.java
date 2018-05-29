@@ -41,7 +41,7 @@ public class StreamSingleTermFilter extends KuratorActor {
 	
 	/**
 	 * Constructor to configure a stream single term filter messages in the form of a
-	 * Map<String,String> on a single key in the map and a single match value on the key
+	 * Map &lt;String,String&gt; on a single key in the map and a single match value on the key
 	 * 
 	 * @param filterKeyToMatch key in the Map of Key,Value to check for a match
 	 * @param matchValue  value in the Map of Key,Value to match.

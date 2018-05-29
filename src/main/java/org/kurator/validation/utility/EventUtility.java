@@ -192,8 +192,8 @@ public class EventUtility {
     /**
 	 * validation: eventDate format conforms to ISO date format.
      * 
-     * @param EventDate
-     * @return
+     * @param eventDate the event date to assess
+     * @return return true if the provided eventDate conforms to the ISO date format, false otherwise.
      */
 	public static boolean eventDateStandardFormat(String eventDate) {
 		boolean result = false;
@@ -221,8 +221,8 @@ public class EventUtility {
 	/**
 	 * validation: eventDate contains a valid date or date range (e.g. not 1990-Feb-31).
 	 * 
-	 * @param EventDate
-	 * @return
+	 * @param eventDate the event date to assess.
+	 * @return true if the provided eventDate contatains a valid date or date range value, false otherwise.
 	 */
 	public static boolean eventDateExists(String eventDate) {
 		boolean result = false;

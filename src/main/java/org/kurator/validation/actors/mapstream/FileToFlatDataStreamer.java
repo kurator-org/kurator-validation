@@ -31,7 +31,7 @@ public class FileToFlatDataStreamer extends KuratorActor {
     private Map<String,String> filesReading = null;
 
     /**
-     * Expects a message consisting of an object that can be cast into Map<String,Object>.
+     * Expects a message consisting of an object that can be cast into Map &lt;String,Object&gt; .
      * Where the string keys include at least workspace and outputfile (where outputfile
      * is the file name for the input csv file to be streamed.
      */

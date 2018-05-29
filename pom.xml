@@ -2,12 +2,48 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.kurator</groupId>
+    <groupId>org.datakurator</groupId>
     <artifactId>kurator-validation</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.0.2</version>
     <packaging>jar</packaging>
     <name>kurator-validation</name>
-    <url>http://opensource.ncsa.illinois.edu/projects/KURATOR</url>
+	<description>Kurator validation biodiversity data quality tools.  Actors (mostly python based) and workflows building on the Kurator-akka framework for the biodiversity data domain.</description>
+	<url>https://wiki.datakurator.org/</url>
+	<licenses>
+		<license>
+			<name>Apache license, Version 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0.html</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>Timothy McPhillips</name>
+			<email>tmcphillips@absoluteflow.org</email>
+		</developer>
+		<developer>
+			<name>John Wieczorek</name>
+			<email>tuco@berkeley.edu</email>
+            <organization>Museum of Comparative Zoology, Harvard University</organization>
+            <organizationUrl>https://www.mcz.harvard.edu/</organizationUrl>
+		</developer>
+        <developer>
+            <name>David B. Lowery</name>
+            <email>lowerydb@gmail.com</email>
+            <organization>Museum of Comparative Zoology, Harvard University</organization>
+            <organizationUrl>https://www.mcz.harvard.edu/</organizationUrl>
+        </developer>
+		<developer>
+			<name>Paul J. Morris</name>
+			<email>mole@morris.net</email>
+			<organization>Museum of Comparative Zoology, Harvard University</organization>
+			<organizationUrl>https://www.mcz.harvard.edu/</organizationUrl>
+		</developer>
+	</developers>
+	<scm>
+		<connection>scm:git:git@github.com:kurator-org/kurator-validation.git</connection>
+		<developerConnection>scm:git:git@github.com:kurator-org/kurator-validation.git</developerConnection>
+		<url>git@github.com:kurator-org/kurator-validation.git</url>
+	</scm>
 
 	<properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -163,14 +199,35 @@
                 </configuration>
     	   </plugin>       
     
+        	<!-- Build source jar (for maven central) -->      	
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         	<!-- Build javadocs -->      	
-        	<plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>2.10.1</version>
-                <configuration>
-                </configuration>            
-        	</plugin>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
 
             <!-- Make a standalone jar file -->
             <plugin>
@@ -342,6 +399,49 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.5</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.7</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 	  
 </project>
