@@ -184,6 +184,8 @@ components:
       # Get the workspace for this actor from the workspace in the options dictionary.
       workspace : workspace
     parameters:
+      # test definition rdf
+      rdfIn: 'https://github.com/FilteredPush/event_date_qc/blob/master/conf/DwCEventDQ.ttl'
       # default values for test parameters
       validationYearLowerBound: 1700
       whollyOutOfRangeLowerBound: 1700
