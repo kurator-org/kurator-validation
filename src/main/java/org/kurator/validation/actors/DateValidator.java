@@ -13,6 +13,7 @@ import org.kurator.akka.KuratorActor;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 import java.util.*;
 
 /**
@@ -49,7 +50,7 @@ public class DateValidator extends KuratorActor {
             File workspace = new File((String) options.get("workspace"));
             File inputfile = new File((String) options.get("outputfile"));
 
-            String reportFile = "dq_report.json";
+            String reportFile = "dq_report.rdf";
             String xlsxFile = "dq_report.xlsx";
 
             FileWriter reportWriter = new FileWriter(options.get("workspace") + File.separator + reportFile);
@@ -60,12 +61,11 @@ public class DateValidator extends KuratorActor {
             FFDQModel model = new FFDQModel();
 
             // Load test definitions from rdf file into model
-            File rdfFile = new File(rdfIn);
-            if (!rdfFile.exists()) {
-                throw new FileNotFoundException("RDF input file not found: " + rdfFile.getAbsolutePath());
-            }
+            //if (!rdfFile.exists()) {
+            //   throw new FileNotFoundException("RDF input file not found: " + rdfFile.getAbsolutePath());
+            //}
 
-            model.load(new FileInputStream(rdfFile), RDFFormat.TURTLE);
+            model.load(new URL(rdfIn).openStream(), RDFFormat.TURTLE);
 
             TestRunner runner = new TestRunner(DwCEventDQ.class, model, params);
 
@@ -77,6 +77,11 @@ public class DateValidator extends KuratorActor {
                 parseInputfile(runner, inputfile, tsvFormat);
             }
 
+            String reportFileName = options.get("workspace") + File.separator + reportFile;
+            OutputStream reportOut = new FileOutputStream(reportFileName);
+            model.write(RDFFormat.TURTLE, reportOut);
+            reportOut.close();
+
             //String reportXlsFile = "dq_report.xls";
             //File reportXls = new File(options.get("workspace") + File.separator + reportXlsFile);
 
@@ -86,8 +91,6 @@ public class DateValidator extends KuratorActor {
 
 
             Map<String, String> artifacts = (Map<String, String>) options.get("artifacts");
-
-            String reportFileName = options.get("workspace") + File.separator + reportFile;
 
             publishArtifact("dq_report_file", reportFileName);
             artifacts.put("dq_report_file", reportFileName);
@@ -131,15 +134,22 @@ public class DateValidator extends KuratorActor {
 
             for (Iterator<CSVRecord> iterator = csvParser.iterator(); iterator.hasNext(); ) {
 
-                CSVRecord record = iterator.next();
+                CSVRecord csvRecord = iterator.next();
 
-                if (!record.isConsistent()) {
-                    throw new IllegalArgumentException("Wrong number of fields in record " + record.getRecordNumber());
+                if (!csvRecord.isConsistent()) {
+                    throw new IllegalArgumentException("Wrong number of fields in record " + csvRecord.getRecordNumber());
                 }
 
-                runner.run(record.toMap());
-            }
+                Map<String, String> record = new HashMap<>();
 
+                for (String header : headers) {
+                    String value = csvRecord.get(header);
+                    record.put(header, value);
+                }
+
+                logger.info(record.toString());
+                runner.run(record);
+            }
         }
     }
 }
