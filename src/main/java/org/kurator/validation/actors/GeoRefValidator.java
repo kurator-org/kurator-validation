@@ -2,21 +2,19 @@ package org.kurator.validation.actors;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
-import org.datakurator.data.ffdq.DQReport;
-import org.datakurator.data.ffdq.DQReportBuilder;
-import org.datakurator.data.ffdq.runner.ValidationRunner;
-import org.datakurator.data.provenance.BaseRecord;
-import org.datakurator.postprocess.FFDQPostProcessor;
-import org.datakurator.postprocess.xlsx.DQReportParser;
-import org.datakurator.postprocess.xlsx.XLSXPostProcessor;
+import org.datakurator.ffdq.rdf.FFDQModel;
+//import org.datakurator.data.ffdq.runner.ValidationRunner;
+import org.datakurator.ffdq.runner.TestRunner;
+import org.datakurator.postprocess.XLSXPostProcessor;
+import org.eclipse.rdf4j.rio.RDFFormat;
 import org.filteredpush.qc.date.DwCEventDQ;
 import org.filteredpush.qc.georeference.DwCGeoRefDQ;
 import org.kurator.akka.KuratorActor;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 import java.util.*;
 
 /**
@@ -26,6 +24,8 @@ public class GeoRefValidator extends KuratorActor {
     private CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader();
     private CSVFormat tsvFormat = CSVFormat.newFormat('\t').withHeader();
 
+    public String rdfIn;    
+    
     @Override
     protected void onData(Object data) throws Exception {
         try {
@@ -38,7 +38,13 @@ public class GeoRefValidator extends KuratorActor {
 
             FileWriter reportWriter = new FileWriter(options.get("workspace") + File.separator + reportFile);
 
-            ValidationRunner runner = new ValidationRunner(DwCGeoRefDQ.class, reportWriter);
+            // Initialize the the ffdq model
+            FFDQModel model = new FFDQModel();
+
+            model.load(new URL(rdfIn).openStream(), RDFFormat.TURTLE);            
+            
+            //ValidationRunner runner = new ValidationRunner(DwCGeoRefDQ.class, reportWriter);
+            TestRunner runner = new TestRunner(DwCGeoRefDQ.class, model);
 
             try {
                 parseInputfile(runner, inputfile, csvFormat);
@@ -56,7 +62,7 @@ public class GeoRefValidator extends KuratorActor {
 
             // Postprocessor
             String xlsxFileName = options.get("workspace") + File.separator + xlsxFile;
-            XLSXPostProcessor postProcessor = new XLSXPostProcessor(new FileInputStream(reportFileName));
+            XLSXPostProcessor postProcessor = new XLSXPostProcessor(model);
             postProcessor.postprocess(new FileOutputStream(xlsxFileName));
 
             publishArtifact("dq_report_xls_file", xlsxFileName);
@@ -69,7 +75,7 @@ public class GeoRefValidator extends KuratorActor {
         }
     }
 
-    private void parseInputfile(ValidationRunner runner, File inputfile, CSVFormat format) throws IOException, IllegalAccessException, InvocationTargetException, InstantiationException, IllegalArgumentException {
+    private void parseInputfile(TestRunner runner, File inputfile, CSVFormat format) throws IOException, IllegalAccessException, InvocationTargetException, InstantiationException, IllegalArgumentException {
         FileReader reader = new FileReader(inputfile);
 
         try (CSVParser csvParser = new CSVParser(reader, format)) {
@@ -97,12 +103,11 @@ public class GeoRefValidator extends KuratorActor {
                     record.put(header, value);
                 }
 
-                runner.validate(record);
+                runner.run(record);
             }
-
-            runner.close();
         }
     }
+    
 }
 
 
