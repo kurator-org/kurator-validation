@@ -113,6 +113,7 @@ public class DateValidator extends KuratorActor {
 
             broadcast(options);
         } catch (Exception e) {
+        	logger.warn("Exception thrown in DateValidator, check for Caused By:");
             e.printStackTrace();
             throw new RuntimeException(e);
         }
