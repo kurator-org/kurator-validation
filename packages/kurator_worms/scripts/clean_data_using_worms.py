@@ -1,4 +1,4 @@
-from kurator-worms.service import WoRMSService
+from kurator_worms.service import WoRMSService
 import sys
 import csv
 import time
