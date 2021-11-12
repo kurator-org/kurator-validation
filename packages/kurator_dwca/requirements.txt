@@ -1,6 +1,6 @@
 chardet==3.0.2
 requests==2.20.2
 python-dwca-reader==0.10.2
-py==1.4.33
+py==1.10.0
 unicodecsv==0.14.1
 unidecode==0.04.20
